@@ -39,7 +39,7 @@ namespace DeepEyeUnlocker.Core
         {
             if (KnownMappings.TryGetValue((device.Vid, device.Pid), out var result))
             {
-                Logger.Info($"AI Discovery: Matched {device.Vid:X4}:{device.Pid:X4} as {result.Chipset} ({result.Mode})");
+                Logger.Info($"Matched {device.Vid:X4}:{device.Pid:X4} as {result.Chipset} ({result.Mode})", "DISCOVERY");
                 return result;
             }
 
@@ -52,13 +52,13 @@ namespace DeepEyeUnlocker.Core
             if (desc.Contains("mediatek") || desc.Contains("mtk") || desc.Contains("preloader"))
                 return new DiscoveryResult { Chipset = "MediaTek", Mode = "Heuristic Preloader", SuggestedProtocol = "MTK_DA", Confidence = 0.7f };
 
-            Logger.Warning($"AI Discovery: Unknown identity for {device.Vid:X4}:{device.Pid:X4}. FullName: {device.FullName}");
+            Logger.Warn($"Unknown identity for {device.Vid:X4}:{device.Pid:X4}. FullName: {device.FullName}", "DISCOVERY");
             return new DiscoveryResult();
         }
 
         public static async System.Threading.Tasks.Task<DiscoveryResult> HandshakeDiscoveryAsync(LibUsbDotNet.UsbDevice usbDevice)
         {
-            Logger.Info("AI Active Probing: Attempting protocol handshake signatures...");
+            Logger.Info("Attempting protocol handshake signatures...", "PROBE");
 
             // 1. Try MediaTek BROM/Preloader Handshake
             try

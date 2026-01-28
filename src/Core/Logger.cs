@@ -1,39 +1,51 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using DeepEyeUnlocker.Infrastructure.Logging;
+using DeepEyeUnlocker.Infrastructure.Logging.Sinks;
 
 namespace DeepEyeUnlocker.Core;
 
 public static class Logger
 {
-    private static readonly string LogFile = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "DeepEyeUnlocker", "logs", $"{DateTime.Now:yyyy-MM-dd}.log");
+    private static readonly List<ILogSink> Sinks = new();
+    private static readonly object Lock = new();
 
-    public static void Info(string msg) => Write("INFO", msg);
-    public static void Success(string msg) => Write("SUCCESS", msg);
-    public static void Error(string msg) => Write("ERROR", msg);
-    public static void Error(Exception ex, string msg) => Write("ERROR", $"{msg} | {ex.Message}");
-    public static void Warn(string msg) => Write("WARN", msg);
-    public static void Warn(Exception ex, string msg) => Write("WARN", $"{msg} | {ex.Message}");
-    public static void Warning(string msg) => Warn(msg);
-    public static void Debug(string msg) => Write("DEBUG", msg);
-    public static void Debug(Exception ex, string msg) => Write("DEBUG", $"{msg} | {ex.Message}");
-
-    private static void Write(string level, string msg)
+    static Logger()
     {
-        var timestamp = DateTime.Now.ToString("HH:mm:ss");
-        var logEntry = $"[{timestamp}] [{level}] {msg}";
-        
-        Console.WriteLine(logEntry);
-        
-        try
-        {
-            var logDir = Path.GetDirectoryName(LogFile);
-            if (!string.IsNullOrEmpty(logDir) && !Directory.Exists(logDir))
-                Directory.CreateDirectory(logDir);
-            
-            File.AppendAllText(LogFile, logEntry + Environment.NewLine);
-        }
-        catch { /* Ignore file write errors */ }
+        // Default sinks
+        Sinks.Add(new ConsoleLogSink());
+        Sinks.Add(new FileLogSink("DeepEyeUnlocker"));
     }
+
+    public static void AddSink(ILogSink sink)
+    {
+        lock (Lock) Sinks.Add(sink);
+    }
+
+    public static void Log(LogLevel level, string msg, string category = "System", Exception? ex = null)
+    {
+        var entry = new LogEntry 
+        { 
+            Level = level, 
+            Message = msg, 
+            Category = category, 
+            Exception = ex 
+        };
+
+        lock (Lock)
+        {
+            foreach (var sink in Sinks) sink.Write(entry);
+        }
+    }
+
+    public static void Info(string msg, string category = "System") => Log(LogLevel.Info, msg, category);
+    public static void Success(string msg, string category = "System") => Log(LogLevel.Info, "[SUCCESS] " + msg, category);
+    public static void Error(string msg, string category = "System") => Log(LogLevel.Error, msg, category);
+    public static void Error(Exception ex, string msg, string category = "System") => Log(LogLevel.Error, msg, category, ex);
+    public static void Warn(string msg, string category = "System") => Log(LogLevel.Warn, msg, category);
+    public static void Warning(string msg, string category = "System") => Warn(msg, category);
+    public static void Debug(string msg, string category = "System") => Log(LogLevel.Debug, msg, category);
+    public static void Trace(string msg, string category = "System") => Log(LogLevel.Trace, msg, category);
+    public static void Critical(string msg, string category = "System") => Log(LogLevel.Critical, msg, category);
 }
