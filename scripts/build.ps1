@@ -1,6 +1,6 @@
 # DeepEyeUnlocker Build & Package Script
 $config = "Release"
-$version = "1.0.0"
+$version = "1.1.0"
 
 Write-Host "🔨 Building DeepEyeUnlocker v$version ($config)..." -ForegroundColor Cyan
 

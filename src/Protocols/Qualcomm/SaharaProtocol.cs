@@ -27,12 +27,22 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             
             _reader.Read(buffer, 1000, out bytesRead);
             await Task.Yield();
-            if (bytesRead == 0) return false;
+            if (bytesRead < Marshal.SizeOf<SaharaPacketHeader>()) 
+            {
+                Logger.Error($"Received insufficient data ({bytesRead} bytes) for Sahara header.");
+                return false;
+            }
 
             var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
             if (header.Command != SaharaCommand.Hello)
             {
                 Logger.Error($"Expected Hello packet, got {header.Command}");
+                return false;
+            }
+
+            if (bytesRead < Marshal.SizeOf<SaharaHelloPacket>())
+            {
+                Logger.Error($"Received insufficient data for Sahara Hello body.");
                 return false;
             }
 
@@ -75,9 +85,17 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 
                 if (header.Command == SaharaCommand.ReadData)
                 {
+                    if (bytesRead < Marshal.SizeOf<SaharaReadDataPacket>()) continue;
                     var readReq = MemoryMarshal.Cast<byte, SaharaReadDataPacket>(buffer)[0];
+                    
+                    if (readReq.DataOffset + readReq.DataLength > programmerData.Length)
+                    {
+                        Logger.Error($"Device requested out-of-bounds data. Offset: {readReq.DataOffset}, Length: {readReq.DataLength}, Total: {programmerData.Length}");
+                        return false;
+                    }
+
                     byte[] chunk = new byte[readReq.DataLength];
-                    Array.Copy(programmerData, readReq.DataOffset, chunk, 0, readReq.DataLength);
+                    Array.Copy(programmerData, (int)readReq.DataOffset, chunk, 0, (int)readReq.DataLength);
                     
                     int written;
                     _writer.Write(chunk, 1000, out written);
