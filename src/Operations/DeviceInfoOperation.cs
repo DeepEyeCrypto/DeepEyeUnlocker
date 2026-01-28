@@ -1,6 +1,9 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class DeviceInfoOperation : Operation
@@ -10,17 +13,17 @@ namespace DeepEyeUnlocker.Operations
             Name = "Read Device Info";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            ReportProgress(20, "Establishing protocol connection...");
+            Report(progress, 20, "Establishing protocol connection...");
             
             try
             {
-                // In a real implementation, we would query the chipset-specific engine
-                // e.g., if (qualcomm) await engine.ExecuteCommand("get_info")
-                
-                ReportProgress(50, "Reading hardware identifiers...");
-                await Task.Delay(400);
+                if (ct.IsCancellationRequested) return false;
+
+                // Simulated delay for reading
+                Report(progress, 50, "Reading hardware identifiers...");
+                await Task.Delay(400, ct);
 
                 device.Brand = "Detected Brand";
                 device.Model = "Detected Model";
@@ -30,12 +33,18 @@ namespace DeepEyeUnlocker.Operations
 
                 Logger.Info($"Device Info: {device.Brand} {device.Model}, IMEI: {device.Imei}, BL: {device.BootloaderStatus}");
                 
-                ReportProgress(100, "Device information read successfully.");
+                Report(progress, 100, "Device information read successfully.");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Report(progress, 0, "Operation cancelled.", LogLevel.Warn);
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Failed to read device information.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }

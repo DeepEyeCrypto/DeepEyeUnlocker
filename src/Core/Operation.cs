@@ -1,35 +1,26 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Core
 {
     public abstract class Operation
     {
         public string Name { get; protected set; } = string.Empty;
-        public int Progress { get; protected set; }
-        public string Status { get; protected set; } = "Idle";
+        public bool IsRunning { get; private set; }
 
-        public abstract Task<bool> ExecuteAsync(Device device);
-        
-        public event Action<int, string>? OnProgress;
+        public abstract Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct);
 
-        protected void ReportProgress(int progress, string status)
+        protected void Report(IProgress<ProgressUpdate> p, int pct, string status, LogLevel level = LogLevel.Info)
         {
-            Progress = progress;
-            Status = status;
-            OnProgress?.Invoke(progress, status);
-        }
-    }
-
-    public class ProgressChangedEventArgs : EventArgs
-    {
-        public int Progress { get; }
-        public string Status { get; }
-
-        public ProgressChangedEventArgs(int progress, string status)
-        {
-            Progress = progress;
-            Status = status;
+            p?.Report(new ProgressUpdate 
+            { 
+                Percentage = pct, 
+                Status = status, 
+                Level = level,
+                Category = Name
+            });
         }
     }
 }

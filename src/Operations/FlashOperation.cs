@@ -14,36 +14,43 @@ namespace DeepEyeUnlocker.Operations
             _firmwarePath = firmwarePath;
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (!File.Exists(_firmwarePath))
             {
                 Logger.Error($"Firmware file not found: {_firmwarePath}");
+                Report(progress, 0, "Firmware file missing", LogLevel.Error);
                 return false;
             }
 
-            ReportProgress(5, "Preparing flash...");
+            Report(progress, 5, "Preparing flash...");
             
             try
             {
-                // In a production app, we would parse a flash XML or map partitions
-                // byte[] data = await File.ReadAllBytesAsync(_firmwarePath);
-                
-                ReportProgress(20, "Establishing connection...");
-                await Task.Delay(500); // Simulate connection overhead
+                if (ct.IsCancellationRequested) return false;
 
-                ReportProgress(40, "Writing system partition...");
-                await Task.Delay(1000); // Simulate large write
+                Report(progress, 20, "Establishing connection...");
+                await Task.Delay(500, ct); 
 
-                ReportProgress(80, "Writing boot partition...");
-                await Task.Delay(200);
+                Report(progress, 40, "Writing system partition...");
+                await Task.Delay(1000, ct); 
 
-                ReportProgress(100, "Flash Successful! Device rebooting...");
+                if (ct.IsCancellationRequested) return false;
+
+                Report(progress, 80, "Writing boot partition...");
+                await Task.Delay(200, ct);
+
+                Report(progress, 100, "Flash Successful! Device rebooting.");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Flash operation failed.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }
