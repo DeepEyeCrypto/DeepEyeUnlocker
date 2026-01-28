@@ -3,7 +3,7 @@
 ## 💎 Project Identity
 
 - **Name:** DeepEyeUnlocker
-- **Version:** 1.1.0 "Gold"
+- **Version:** 1.1.1 "Archon"
 - **Mission:** Democratizing mobile repair tools by providing a free, professional-grade open-source alternative to paid repair boxes.
 
 ## 🛠 Technical Stack
