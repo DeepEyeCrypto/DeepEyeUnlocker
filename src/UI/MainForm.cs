@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using DeepEyeUnlocker.UI.Themes;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Helpers;
 
 namespace DeepEyeUnlocker.UI
 {

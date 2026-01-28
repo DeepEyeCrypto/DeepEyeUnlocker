@@ -58,5 +58,6 @@ namespace DeepEyeUnlocker.Helpers
 
             return results;
         }
+        public static string GetMissingDrivers() => "";
     }
 }

@@ -44,7 +44,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             return true;
         }
 
-        public async Task<ushort> GetHWCodeAsync()
+        public async Task<ushort> GetHardwareCodeAsync()
         {
             await SendByteAsync((byte)MTKCommand.GetHWCode);
             byte[] response = new byte[2];

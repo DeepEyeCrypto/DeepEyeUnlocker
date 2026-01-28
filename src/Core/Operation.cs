@@ -10,15 +10,15 @@ namespace DeepEyeUnlocker.Core
         public string Status { get; protected set; } = "Idle";
 
         public abstract Task<bool> ExecuteAsync(Device device);
+        
+        public event Action<int, string>? OnProgress;
 
         protected void ReportProgress(int progress, string status)
         {
             Progress = progress;
             Status = status;
-            ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(progress, status));
+            OnProgress?.Invoke(progress, status);
         }
-
-        public event EventHandler<ProgressChangedEventArgs>? ProgressChanged;
     }
 
     public class ProgressChangedEventArgs : EventArgs

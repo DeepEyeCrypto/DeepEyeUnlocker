@@ -32,6 +32,10 @@ namespace DeepEyeUnlocker.Helpers
             }
         }
 
+        public static void ShowSuccess(string msg) => MessageBox.Show(msg ?? "", "✅ Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        public static void ShowError(string msg) => MessageBox.Show(msg ?? "", "❌ Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        public static void ShowWarning(string msg) => MessageBox.Show(msg ?? "", "⚠️ Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
         public static void Dispose()
         {
             if (_notifyIcon != null)

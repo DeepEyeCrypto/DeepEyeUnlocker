@@ -13,7 +13,9 @@ public static class Logger
     public static void Success(string msg) => Write("SUCCESS", msg);
     public static void Error(string msg) => Write("ERROR", msg);
     public static void Error(Exception ex, string msg) => Write("ERROR", $"{msg} | {ex.Message}");
-    public static void Warning(string msg) => Write("WARNING", msg);
+    public static void Warn(string msg) => Write("WARN", msg);
+    public static void Warning(string msg) => Warn(msg);
+    public static void Debug(string msg) => Write("DEBUG", msg);
 
     private static void Write(string level, string msg)
     {

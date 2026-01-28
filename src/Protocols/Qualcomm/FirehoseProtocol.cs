@@ -94,6 +94,8 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             return response != null && response.Contains("ACK");
         }
 
+        public async Task<bool> SendEraseCommandAsync(string partitionName) => await ErasePartitionAsync(partitionName);
+
         private async Task<string?> SendCommandAsync(string xml)
         {
             if (await SendCommandOnlyAsync(xml))

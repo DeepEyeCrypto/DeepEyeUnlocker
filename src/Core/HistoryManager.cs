@@ -81,7 +81,7 @@ namespace DeepEyeUnlocker.Core
                     DeviceName = reader.GetString(1),
                     Operation = reader.GetString(2),
                     Status = reader.GetString(3),
-                    LogSnippet = reader.GetString(reader.IsDBNull(4) ? "" : reader.GetString(4))
+                    LogSnippet = reader.IsDBNull(4) ? "" : reader.GetString(4)
                 });
             }
 

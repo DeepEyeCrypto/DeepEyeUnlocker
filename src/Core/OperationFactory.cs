@@ -7,7 +7,7 @@ namespace DeepEyeUnlocker.Core
 {
     public class OperationFactory
     {
-        public static IProtocol? CreateProtocol(string chipset, UsbDevice usbDevice)
+        public static IProtocol? CreateEngine(string chipset, UsbDevice usbDevice)
         {
             switch (chipset.ToLower())
             {
