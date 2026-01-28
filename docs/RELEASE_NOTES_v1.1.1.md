@@ -1,41 +1,39 @@
-# DeepEyeUnlocker v1.1.1 - Core Model Refactoring & Type Unification
+# RELEASE v1.1.1 - DeepEyeUnlocker "Archon"
 
-We are pleased to announce the release of DeepEyeUnlocker v1.1.1. This release focuses on internal structural improvements, type safety, and architectural consistency to provide a more stable foundation for future multi-protocol updates.
+## 🔷 The Engine Room Update
 
-## Key Changes
+We are excited to release **DeepEyeUnlocker v1.1.1**, codenamed "Archon". This update brings a massive overhaul to the core flashing and diagnostics engines, enabling professional-grade operations on modern devices with large storage.
 
-### 1. Unified FRP Model System
+### 🌟 Key Features
 
-- **Single Source of Truth**: Unified `FrpStatus` and related entities into `Core.Models.LockFrpModels`.
-- **Standardized Enums**: introduced `FrpLockStatus` with explicit states (`Locked`, `Unlocked`, `PartiallyCleared`, `Error`).
-- **consistent Logic**: Updated detection and bypass logic across `FrpBypassManager`, `LockFrpDiagnosticsManager`, and UI panels to use the new unified models.
+#### 🏗️ High-Speed Streaming Flash
 
-### 2. Standardized Partition Management
+- **Gigabyte-Scale Support**: New streaming architecture allows flashing files of any size (system, super, userdata) with minimal RAM usage.
+- **Smart Manifest Parsing**: Automatically reads Qualcomm `rawprogram.xml`, MTK Scatter, and Samsung formats to determine precise partition layouts.
+- **Sector-Level Precision**: Implemented "Pass-Through" flashing for Qualcomm, targeting exact physical sectors defined in firmware manifests.
 
-- **Canonical Model**: Established `PartitionInfo` in `Core.Models` as the universal representation of storage partitions.
-- **Protocol Consistency**: Removed local duplicates in `PartitionTableParser` and protocol engines.
-- **Property Renaming**: Standardized property names to `SizeInBytes` and `StartLba` across all layers to eliminate ambiguity.
+#### 🔐 Advanced Diagnostics Hub 2.0
 
-### 3. Modernized Device Context Architecture
+- **Unified Analysis**: The new `LockFrpDiagnosticsManager` now works across all supported protocols (EDL, BROM, DB) to inspect partition data directly.
+- **Deep Factory Reset**: Smart format operation that auto-detects `userdata`, `cache`, and `metadata` via GPT for a clean device wipe.
+- **Safe Mode**: Flash UI now includes protections for critical partitions (EFS, Modem, Persist) to prevent accidental IMEI loss.
 
-- **Legacy Removal**: Deprecated and removed the inconsistent `Device` class.
-- **Enhanced Context**: Refactored the entire operation pipeline to use `DeviceContext`, providing better metadata management and brand identification.
-- **Robust Integration**: Updated `DeviceManager` and `MainForm` to use the new context model for discovery and execution.
+#### ⚡ Protocol Enhancements
 
-### 4. Interface & Engine Refinement
+- **Multi-Protocol Architecture**: Unified `IProtocol` interface now standardizes operations across Qualcomm, MediaTek, and Samsung engines.
+- **Samsung & MTK Foundations**: Added streaming support structures for Odin and BROM protocols (preliminary support).
 
-- **Consistent Contracts**: Updated `IProtocolEngine` and `Operation` base classes to use unified models.
-- **Improved Progress Tracking**: Standardized progress reporting using `IProgress<ProgressUpdate>` across all asynchronous operations.
+### 🐛 Bug Fixes
 
-## Technical Debt Resolved
+- Fixed memory spikes during large backups.
+- Resolved partition detection issues on newer Qualcomm SoCs.
+- Improved "Device Not Found" handling in operation panels.
 
-- Eliminated redundant definitions of common data structures.
-- Improved type safety for cross-protocol operations.
-- Simplified UI-to-Engine communication patterns.
+### 📦 Installation
 
-## Installation & Usage
-
-Refer to the [USER_MANUAL.md](USER_MANUAL.md) and [BUILD.md](BUILD.md) for instructions on setting up and running the latest version.
+1. Download `DeepEyeUnlocker-v1.1.1-archon.zip` from the Assets below.
+2. Extract to your DeepEyeUnlocker directory (overwrite existing files).
+3. Run `DeepEyeUnlocker.exe` as Administrator.
 
 ---
-*DeepEyeUnlocker - Open Source, Community Driven.*
+**[Download v1.1.1](https://github.com/yourusername/deepeyeunlocker/releases/tag/v1.1.1)**

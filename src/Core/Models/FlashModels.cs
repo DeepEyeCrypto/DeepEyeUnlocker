@@ -20,6 +20,8 @@ namespace DeepEyeUnlocker.Core.Models
         public string FileName { get; set; } = "";
         public string? FilePath { get; set; }
         public long Size { get; set; }
+        public long StartSector { get; set; }
+        public int PhysicalPartition { get; set; }
         public string? Sha256 { get; set; }
         public bool IsSelected { get; set; } = true;
         public bool IsCritical { get; set; } // true for bootloader, efs, modem

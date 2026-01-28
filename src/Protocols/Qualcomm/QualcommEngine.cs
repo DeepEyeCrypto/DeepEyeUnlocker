@@ -72,32 +72,62 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         {
             if (_firehose == null) throw new InvalidOperationException("Firehose protocol not initialized.");
             
-            byte[] data = await _firehose.ReadPartitionAsync(partitionName);
-            await output.WriteAsync(data, 0, data.Length, ct);
-            progress.Report(ProgressUpdate.Info(100, $"Finished streaming {partitionName}"));
-            return true;
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) throw new Exception($"Partition {partitionName} not found.");
+
+            int sectorCount = (int)((part.SizeInBytes + 511) / 512);
+            return await _firehose.ReadToStreamAsync(output, (long)part.StartLba, sectorCount, progress, ct);
         }
 
-        public Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct)
-        {
-             throw new NotImplementedException("Stream writing for Qualcomm is planned for v1.2");
-        }
-
-        public Task<bool> WritePartitionAsync(string partitionName, byte[] data)
+        public async Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (_firehose == null) throw new InvalidOperationException("Firehose protocol not initialized.");
-            return _firehose.WritePartitionAsync(partitionName, data);
+
+            long startSector = -1;
+            int sectorCount = -1;
+
+            if (partitionName.StartsWith("RAW:", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = partitionName.Split(':');
+                if (parts.Length >= 3)
+                {
+                    startSector = long.Parse(parts[1]);
+                    sectorCount = int.Parse(parts[2]);
+                }
+            }
+
+            if (startSector == -1)
+            {
+                var partitions = (await GetPartitionTableAsync()).ToList();
+                var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+                if (part == null) throw new Exception($"Partition {partitionName} not found.");
+
+                startSector = (long)part.StartLba;
+                sectorCount = (int)((part.SizeInBytes + 511) / 512);
+            }
+
+            return await _firehose.WriteFromStreamAsync(input, startSector, sectorCount, progress, ct);
         }
 
         public async Task<IEnumerable<PartitionInfo>> GetPartitionTableAsync()
         {
-            await Task.Yield();
-            return new List<PartitionInfo>
+            if (_firehose == null) throw new InvalidOperationException("Firehose protocol not initialized.");
+
+            // Read first 34 sectors (MBR + GPT Header + GPT Entries)
+            byte[] data = await _firehose.ReadPartitionAsync("GPT", 0, 34);
+            if (data == null || data.Length == 0) return Enumerable.Empty<PartitionInfo>();
+
+            var parser = new PartitionTableParser();
+            var table = parser.Parse(data);
+            
+            if (table.IsValid)
             {
-                new PartitionInfo { Name = "sbl1", SizeInBytes = 524288, StartLba = 0x0 },
-                new PartitionInfo { Name = "aboot", SizeInBytes = 2097152, StartLba = 0x80000 / 512 },
-                new PartitionInfo { Name = "boot", SizeInBytes = 67108864, StartLba = 0x280000 / 512 }
-            };
+                return table.Partitions;
+            }
+
+            Logger.Error($"Failed to parse partition table: {table.ParseError}");
+            return Enumerable.Empty<PartitionInfo>();
         }
 
         public async Task<bool> RebootAsync(string mode = "system")

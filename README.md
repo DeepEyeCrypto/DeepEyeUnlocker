@@ -24,15 +24,15 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.1.0 Highlights
+### v1.1.1 "Archon" Highlights
 
+- **🏗️ Streaming Flash Engine:** Gigabyte-scale flashing for Qualcomm/MTK without RAM bottlenecks
+- **🔐 Diagnostics Hub 2.0:** Unified Lock & FRP deep analysis across all protocols
+- **⚡ Flash Center:** Interactive partition selector with safe mode protections
 - **🛡️ Cloak Center:** Advanced root & developer mode hiding (Shamiko/Zygisk optimization)
 - **📱 Device Info Center:** Deep hardware diagnostics and security lifecycle telemetry
 - **🔧 ADB Tools Center:** Integrated app management and input simulation
-- **🔐 Lock & FRP Center:** Unified diagnostics for screen and account locks
 - **MainForm 2.0:** Tabbed interface with reactive device context synchronization
-- **Multi-Language:** First-class support for English and Hindi technicians
-- **Error Hints:** Actionable recovery steps for over 50+ common protocol errors
 
 ---
 

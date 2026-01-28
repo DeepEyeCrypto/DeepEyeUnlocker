@@ -16,7 +16,7 @@ namespace DeepEyeUnlocker.Operations
     /// </summary>
     public class LockFrpDiagnosticsManager
     {
-        private readonly FirehoseManager? _firehose;
+        private readonly IProtocol? _protocol;
 
         // OEM FRP partition mappings
         private static readonly Dictionary<string, string[]> OemFrpPartitions = new(StringComparer.OrdinalIgnoreCase)
@@ -67,9 +67,9 @@ namespace DeepEyeUnlocker.Operations
             }
         };
 
-        public LockFrpDiagnosticsManager(FirehoseManager? firehose = null)
+        public LockFrpDiagnosticsManager(IProtocol? protocol = null)
         {
-            _firehose = firehose;
+            _protocol = protocol;
         }
 
         #region FRP Diagnostics
@@ -96,9 +96,11 @@ namespace DeepEyeUnlocker.Operations
                         break;
 
                     case ConnectionMode.EDL:
-                        if (_firehose?.IsReady == true)
+                    case ConnectionMode.BROM:
+                    case ConnectionMode.Preloader:
+                        if (_protocol != null)
                         {
-                            status = await DetectFrpViaEdl(device, progress, ct);
+                            status = await DetectFrpViaProtocol(device, progress, ct);
                         }
                         break;
                 }
@@ -189,43 +191,54 @@ namespace DeepEyeUnlocker.Operations
             return status;
         }
 
-        private async Task<FrpStatus> DetectFrpViaEdl(
+        private async Task<FrpStatus> DetectFrpViaProtocol(
             DeviceContext device,
             IProgress<ProgressUpdate>? progress,
             CancellationToken ct)
         {
             var status = new FrpStatus { DetectionMethod = FrpDetectionMethod.EdlPartitionRead };
-            progress?.Report(ProgressUpdate.Info(30, "Analyzing FRP partition via EDL..."));
+            progress?.Report(ProgressUpdate.Info(30, "Analyzing FRP partition via low-level protocol..."));
 
-            if (_firehose == null) return status;
+            if (_protocol == null) return status;
 
-            // Determine FRP partition name for this brand
-            var partitions = GetFrpPartitions(device.Brand);
-            
-            foreach (var partName in partitions)
+            try
             {
-                try
+                var partitions = (await _protocol.GetPartitionTableAsync()).ToList();
+                var frpTargets = GetFrpPartitions(device.Brand);
+                
+                foreach (var partName in frpTargets)
                 {
-                    var data = await _firehose.ReadPartitionAsync(partName, null, ct);
-                    if (data != null && data.Length > 0)
-                    {
-                        status.FrpPartitionName = partName;
-                        status.FrpPartitionSize = (ulong)data.Length;
-                        status.PartitionHasData = !IsPartitionEmpty(data);
+                    if (ct.IsCancellationRequested) return status;
 
-                        if (status.PartitionHasData)
+                    var part = partitions.FirstOrDefault(p => p.Name.Equals(partName, StringComparison.OrdinalIgnoreCase));
+                    if (part != null)
+                    {
+                        progress?.Report(ProgressUpdate.Info(50, $"Reading {partName}..."));
+                        byte[] data = await _protocol.ReadPartitionAsync(partName);
+                        
+                        if (data != null && data.Length > 0)
                         {
-                            status.Status = FrpLockStatus.Locked;
-                            status.AccountHint = TryExtractAccountHint(data);
+                            status.FrpPartitionName = partName;
+                            status.FrpPartitionSize = (ulong)part.SizeInBytes;
+                            status.PartitionHasData = !IsPartitionEmpty(data);
+
+                            if (status.PartitionHasData)
+                            {
+                                status.Status = FrpLockStatus.Locked;
+                                status.AccountHint = TryExtractAccountHint(data);
+                            }
+                            else
+                            {
+                                status.Status = FrpLockStatus.Unlocked;
+                            }
+                            break;
                         }
-                        else
-                        {
-                            status.Status = FrpLockStatus.Unlocked;
-                        }
-                        break;
                     }
                 }
-                catch { continue; }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Protocol FRP detection failed");
             }
 
             return status;

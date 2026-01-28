@@ -351,13 +351,15 @@ namespace DeepEyeUnlocker.UI
                     // Map UI operation name to Operation class
                     Operation op = operationName switch
                     {
-                        "FRP Bypass" => new Operations.FrpBypassOperation(),
-                        "Format" => new Operations.FormatOperation(),
-                        "Flash" => new Operations.FlashOperation("path_to_firmware.zip"),
-                        "Device Info" => new Operations.DeviceInfoOperation(),
-                        "Pattern Clear" => new Operations.PatternClearOperation(),
+                        "FRP Bypass" => new Operations.FrpBypassOperation(engine),
+                        "Format" => new Operations.FormatOperation(engine),
+                        "Flash" => new Operations.FlashOperation(null, engine),
+                        "Device Info" => new Operations.DeviceInfoOperation(engine),
+                        "Pattern Clear" => new Operations.PatternClearOperation(engine),
                         "Backup" => new Operations.BackupOperation(engine),
-                        "Bootloader" => new Operations.BootloaderOperation(),
+                        "Bootloader" => new Operations.BootloaderOperation(engine),
+                        "Xiaomi Mi Account Bypass" => new Operations.XiaomiServiceOperation(engine),
+                        "Oppo/Realme Advanced FRP" => new Operations.OppoServiceOperation(engine),
                         _ => throw new NotSupportedException($"Operation {operationName} not implemented.")
                     };
 

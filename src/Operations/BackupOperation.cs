@@ -45,11 +45,10 @@ namespace DeepEyeUnlocker.Operations
                     
                     try 
                     {
-                        var data = await _protocol.ReadPartitionAsync(part.Name);
                         string filePath = Path.Combine(backupDir, $"{part.Name}.img");
-                        if (data != null && data.Length > 0)
+                        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                         {
-                            await File.WriteAllBytesAsync(filePath, data, ct);
+                            await _protocol.ReadPartitionToStreamAsync(part.Name, fs, progress, ct);
                         }
                     }
                     catch (Exception ex)

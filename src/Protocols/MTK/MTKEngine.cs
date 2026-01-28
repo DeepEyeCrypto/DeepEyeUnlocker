@@ -71,15 +71,87 @@ namespace DeepEyeUnlocker.Protocols.MTK
 
         public async Task<bool> ReadPartitionToStreamAsync(string partitionName, Stream output, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            Logger.Info($"MTK: Streaming partition {partitionName}...");
-            await Task.Delay(500, ct);
-            progress.Report(ProgressUpdate.Info(100, $"Finished streaming {partitionName}"));
+            if (_daProtocol == null) return false;
+
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) return false;
+
+            Logger.Info($"MTK: Streaming read {partitionName}...");
+            
+            long startAddress = (long)part.StartLba * 512;
+            long remaining = part.SizeInBytes;
+            long totalRead = 0;
+            int chunkSize = 1024 * 64; // 64KB
+
+            while (remaining > 0)
+            {
+                if (ct.IsCancellationRequested) return false;
+
+                int toRead = (int)Math.Min(chunkSize, remaining);
+                byte[] data = await _daProtocol.ReadDataAsync((uint)(startAddress + totalRead), toRead);
+                
+                await output.WriteAsync(data, 0, data.Length, ct);
+                
+                totalRead += data.Length;
+                remaining -= data.Length;
+
+                int percent = (int)((totalRead * 100) / part.SizeInBytes);
+                progress?.Report(ProgressUpdate.Info(percent, $"Reading {partitionName}..."));
+            }
+
             return true;
         }
 
-        public Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public async Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            throw new NotImplementedException("MTK Stream writing is in progress for v1.2");
+            if (_daProtocol == null)
+            {
+                 Logger.Error("MTK DA not initialized.");
+                 return false;
+            }
+
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            
+            // Allow flashing unknown partitions if we just assume they exist or if we want to be strict?
+            // For now be strict but maybe log warning.
+            long startAddress = 0; 
+            if (part != null)
+            {
+                startAddress = (long)part.StartLba * 512;
+            }
+            else
+            {
+                Logger.Warn($"MTK: Partition {partitionName} not found in table. Assuming 0x0 or failing...");
+                // Ideally we might want lookup by address if provided (like RAW:address), currently assuming named partitions.
+                return false;
+            }
+
+            Logger.Info($"MTK: Flashing {partitionName} starting at 0x{startAddress:X}...");
+
+            byte[] buffer = new byte[1024 * 64]; 
+            int bytesRead;
+            long totalBytes = 0;
+            long totalSize = input.Length;
+
+            while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
+            {
+                if (ct.IsCancellationRequested) return false;
+
+                bool success = await _daProtocol.WriteDataAsync((uint)(startAddress + totalBytes), buffer, bytesRead);
+                if (!success) return false;
+
+                totalBytes += bytesRead;
+                
+                if (totalSize > 0)
+                {
+                    int percent = (int)((totalBytes * 100) / totalSize);
+                    progress?.Report(ProgressUpdate.Info(percent, $"Flashing {partitionName}..."));
+                }
+            }
+            
+            return true;
         }
 
         public async Task<bool> WritePartitionAsync(string partitionName, byte[] data)
@@ -92,8 +164,8 @@ namespace DeepEyeUnlocker.Protocols.MTK
         {
             return await Task.FromResult(new List<PartitionInfo>
             {
-                new PartitionInfo { Name = "boot", Size = 67108864, StartAddress = 0x0 },
-                new PartitionInfo { Name = "recovery", Size = 67108864, StartAddress = 0x4000 }
+                new PartitionInfo { Name = "boot", SizeInBytes = 67108864, StartLba = 0x0 },
+                new PartitionInfo { Name = "recovery", SizeInBytes = 67108864, StartLba = 0x4000 }
             });
         }
 

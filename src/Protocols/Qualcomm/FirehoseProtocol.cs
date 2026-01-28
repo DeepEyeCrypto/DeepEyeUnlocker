@@ -31,59 +31,99 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             return response != null && response.Contains("ACK");
         }
 
-        public async Task<byte[]> ReadPartitionAsync(string partitionName, long sectorOffset = 0, int sectorCount = 1)
+        public async Task<bool> ReadToStreamAsync(Stream output, long sectorOffset, int sectorCount, IProgress<ProgressUpdate>? progress = null, CancellationToken ct = default)
         {
-            Logger.Info($"Reading partition: {partitionName} at offset {sectorOffset}, count {sectorCount}");
+            Logger.Info($"Streaming sectors from EDL: Offset {sectorOffset}, Count {sectorCount}");
             
             string readXml = $"<?xml version=\"1.0\" ?><data><read SECTOR_SIZE_IN_BYTES=\"512\" num_partition_sectors=\"{sectorCount}\" physical_partition_number=\"0\" start_sector=\"{sectorOffset}\" /></data>";
             
             if (await SendCommandOnlyAsync(readXml))
             {
-                byte[] data = new byte[sectorCount * 512];
-                int totalRead = 0;
-                while (totalRead < data.Length)
+                long totalBytes = (long)sectorCount * 512;
+                long totalRead = 0;
+                byte[] buffer = new byte[MaxPacketSize];
+
+                while (totalRead < totalBytes)
                 {
+                    if (ct.IsCancellationRequested) return false;
+
                     int bytesRead;
-                    byte[] buffer = new byte[Math.Min(MaxPacketSize, data.Length - totalRead)];
+                    int toRead = (int)Math.Min(MaxPacketSize, totalBytes - totalRead);
+                    
                     _reader.Read(buffer, TimeoutMs, out bytesRead);
                     if (bytesRead == 0) break;
-                    Array.Copy(buffer, 0, data, totalRead, bytesRead);
+
+                    await output.WriteAsync(buffer, 0, bytesRead, ct);
                     totalRead += bytesRead;
+
+                    progress?.Report(new ProgressUpdate 
+                    { 
+                        Percentage = (int)((float)totalRead / totalBytes * 100),
+                        Status = $"Streaming: {totalRead / 1024 / 1024}MB / {totalBytes / 1024 / 1024}MB"
+                    });
                 }
                 
-                // Read response footer
                 await ReceiveResponseAsync();
-                return data;
+                return totalRead == totalBytes;
+            }
+            return false;
+        }
+
+        public async Task<byte[]> ReadPartitionAsync(string partitionName, long sectorOffset = 0, int sectorCount = 1)
+        {
+            using var ms = new MemoryStream();
+            if (await ReadToStreamAsync(ms, sectorOffset, sectorCount))
+            {
+                return ms.ToArray();
             }
             return Array.Empty<byte>();
         }
 
-        public async Task<bool> WritePartitionAsync(string partitionName, byte[] data, long sectorOffset = 0)
+        public async Task<bool> WriteFromStreamAsync(Stream input, long sectorOffset, int sectorCount, IProgress<ProgressUpdate>? progress = null, CancellationToken ct = default)
         {
-            int sectorCount = (data.Length + 511) / 512;
-            Logger.Info($"Writing to partition: {partitionName} at offset {sectorOffset} ({data.Length} bytes)");
+            Logger.Info($"Streaming sectors to EDL: Offset {sectorOffset}, Count {sectorCount}");
 
             string writeXml = $"<?xml version=\"1.0\" ?><data><program SECTOR_SIZE_IN_BYTES=\"512\" num_partition_sectors=\"{sectorCount}\" physical_partition_number=\"0\" start_sector=\"{sectorOffset}\" /></data>";
 
             if (await SendCommandOnlyAsync(writeXml))
             {
-                int totalWritten = 0;
-                while (totalWritten < data.Length)
+                long totalBytes = (long)sectorCount * 512;
+                long totalWritten = 0;
+                byte[] buffer = new byte[MaxPacketSize];
+
+                while (totalWritten < totalBytes)
                 {
-                    int toWrite = Math.Min(MaxPacketSize, data.Length - totalWritten);
-                    byte[] chunk = new byte[toWrite];
-                    Array.Copy(data, totalWritten, chunk, 0, toWrite);
-                    
+                    if (ct.IsCancellationRequested) return false;
+
+                    int bytesToRead = (int)Math.Min(MaxPacketSize, totalBytes - totalWritten);
+                    int readFromStream = await input.ReadAsync(buffer, 0, bytesToRead, ct);
+                    if (readFromStream == 0) break;
+
                     int written;
-                    _writer.Write(chunk, TimeoutMs, out written);
+                    _writer.Write(buffer, 0, readFromStream, out written);
                     if (written == 0) return false;
+                    
                     totalWritten += written;
+                    int totalSizeMB = (int)(totalBytes / 1024 / 1024);
+
+                    progress?.Report(new ProgressUpdate 
+                    { 
+                        Percentage = (int)((float)totalWritten / totalBytes * 100),
+                        Status = $"Writing: {totalWritten / 1024 / 1024}MB / {totalSizeMB}MB"
+                    });
                 }
 
                 var response = await ReceiveResponseAsync();
                 return response != null && response.Contains("ACK");
             }
             return false;
+        }
+
+        public async Task<bool> WritePartitionAsync(string partitionName, byte[] data, long sectorOffset = 0)
+        {
+            using var ms = new MemoryStream(data);
+            int sectorCount = (data.Length + 511) / 512;
+            return await WriteFromStreamAsync(ms, sectorOffset, sectorCount);
         }
 
         public async Task<bool> ErasePartitionAsync(string partitionName, long sectorOffset = 0, int sectorCount = 1)

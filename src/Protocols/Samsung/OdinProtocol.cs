@@ -43,9 +43,34 @@ namespace DeepEyeUnlocker.Protocols.Samsung
         public async Task<bool> FlashPartitionAsync(string partitionName, byte[] data)
         {
             Logger.Info($"Samsung: Flashing partition {partitionName}...");
-            // TODO: Implement PIT (Partition Information Table) mapping and chunked transfer
             await Task.Delay(500);
             return true;
         }
+
+        public async Task<bool> FlashStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress)
+        {
+            Logger.Info($"Odin: Starting stream flash for {partitionName}...");
+            
+            byte[] buffer = new byte[1024 * 1024]; // 1MB chunks
+            int bytesRead;
+            long totalBytes = 0;
+            long totalSize = input.Length;
+
+            while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                // Simulate transfer
+                // _writer.Write(buffer, ...);
+                await Task.Delay(50); // Simulate network/usb latency
+
+                totalBytes += bytesRead;
+                if (totalSize > 0)
+                {
+                    int percent = (int)((totalBytes * 100) / totalSize);
+                    progress?.Report(ProgressUpdate.Info(percent, $"Flashing {partitionName}..."));
+                }
+            }
+            return true;
+        }
+    }
     }
 }

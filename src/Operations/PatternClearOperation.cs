@@ -8,8 +8,11 @@ namespace DeepEyeUnlocker.Operations
 {
     public class PatternClearOperation : Operation
     {
-        public PatternClearOperation()
+        private readonly IProtocol _protocol;
+
+        public PatternClearOperation(IProtocol protocol)
         {
+            _protocol = protocol;
             Name = "Clear Pattern / Screen Lock";
         }
 

@@ -69,8 +69,8 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             Logger.Info("Samsung: Retrieving partition table...");
             return await Task.FromResult(new List<PartitionInfo>
             {
-                new PartitionInfo { Name = "SYSTEM", Size = 4096, StartAddress = 0x0 },
-                new PartitionInfo { Name = "USERDATA", Size = 8192, StartAddress = 0x1000 }
+                new PartitionInfo { Name = "SYSTEM", SizeInBytes = 4096, StartLba = 0x0 },
+                new PartitionInfo { Name = "USERDATA", SizeInBytes = 8192, StartLba = 0x1000 }
             });
         }
 
@@ -82,16 +82,19 @@ namespace DeepEyeUnlocker.Protocols.Samsung
 
         public async Task<bool> ReadPartitionToStreamAsync(string partitionName, Stream outputStream, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            Logger.Warn("Samsung: Streaming read not supported in Download mode.");
+            Logger.Warn("Samsung: Streaming read not supported in Download mode (Device limitation).");
             await Task.CompletedTask;
             return false;
         }
 
         public async Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream inputStream, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            Logger.Warn("Samsung: Streaming write not yet implemented.");
-            await Task.CompletedTask;
-            return false;
+            if (_odin == null)
+            {
+                Logger.Error("Odin protocol not initialized.");
+                return false;
+            }
+            return await _odin.FlashStreamAsync(partitionName, inputStream, progress);
         }
     }
 }

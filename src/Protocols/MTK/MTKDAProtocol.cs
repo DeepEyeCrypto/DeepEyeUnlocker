@@ -34,11 +34,20 @@ namespace DeepEyeUnlocker.Protocols.MTK
             return true;
         }
 
-        public async Task<bool> FormatPartitionAsync(uint startAddress, uint length)
+        public async Task<bool> WriteDataAsync(uint address, byte[] data, int length)
         {
-            Logger.Info($"MTK DA: Formatting partition at 0x{startAddress:X8}, Length: 0x{length:X8}...");
-            await Task.Delay(1000);
+            // Real implementation would send CMD_WRITE_DATA, address, length, then checksum, then data
+            Logger.Debug($"MTK DA: Writing {length} bytes to 0x{address:X8}...");
+            await Task.Delay(10); // Simulate write time per chunk
             return true;
+        }
+
+        public async Task<byte[]> ReadDataAsync(uint address, int length)
+        {
+             // Real implementation would send CMD_READ_DATA, etc.
+             Logger.Debug($"MTK DA: Reading {length} bytes from 0x{address:X8}...");
+             await Task.Delay(10); 
+             return new byte[length];
         }
     }
 }

@@ -35,6 +35,13 @@ This document defines the critical testing paths for **TestSprite** and other au
 - **TC_09**: Qualcomm Sahara Hello. Send bitmask, expect valid version negotiation.
 - **TC_10**: MediaTek BROM Handshake. Send `0xA1`, expect `0x5A` ACK.
 
+### 5. Partition & Flash Operations
+
+- **TC_11**: GPT Table Parsing. Read 34 sectors from mocked device. Verify partition names and LBA matches.
+- **TC_12**: Streaming Partition Backup. Stream 1GB from device to file. Verify memory usage stays below 50MB.
+- **TC_13**: Qualcomm XML Parsing. Provide rawprogram0.xml. Verify FlashManager calculates correct sector offsets for all images.
+- **TC_14**: Multi-Partition Flashing. Simulate flashing 5 partitions. Verify order (OrderBy physical_partition).
+
 ---
 
 ## 🛠 Testing Tools & Infrastructure

@@ -72,12 +72,17 @@ namespace DeepEyeUnlocker.Operations
                         if (!string.IsNullOrEmpty(filename) && !string.IsNullOrEmpty(label))
                         {
                             var fullPath = Path.Combine(dir, filename);
+                            var startSectorStr = element.Attribute("start_sector")?.Value ?? "0";
+                            var physicalPartitionStr = element.Attribute("physical_partition_number")?.Value ?? "0";
+
                             var info = new FlashPartitionInfo
                             {
                                 PartitionName = label,
                                 FileName = filename,
                                 FilePath = fullPath,
                                 Size = File.Exists(fullPath) ? new FileInfo(fullPath).Length : 0,
+                                StartSector = long.TryParse(startSectorStr, out var ss) ? ss : 0,
+                                PhysicalPartition = int.TryParse(physicalPartitionStr, out var pp) ? pp : 0,
                                 IsCritical = IsCriticalPartition(label)
                             };
                             manifest.Partitions.Add(info);

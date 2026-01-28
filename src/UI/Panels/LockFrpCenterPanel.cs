@@ -53,15 +53,18 @@ namespace DeepEyeUnlocker.UI.Panels
         // Log
         private RichTextBox _logBox = null!;
 
+        private IProtocol? _currentProtocol;
+
         public LockFrpCenterPanel()
         {
             InitializeComponents();
         }
 
-        public void SetDevice(DeviceContext? device, FirehoseManager? firehose)
+        public void SetDevice(DeviceContext? device, IProtocol? protocol)
         {
             _currentDevice = device;
-            _diagnostics = new LockFrpDiagnosticsManager(firehose);
+            _currentProtocol = protocol;
+            _diagnostics = new LockFrpDiagnosticsManager(protocol);
             UpdateDeviceInfo();
         }
 
@@ -363,7 +366,28 @@ namespace DeepEyeUnlocker.UI.Panels
             if (result == DialogResult.Yes)
             {
                 LogMessage("Factory reset initiated by user", Color.FromArgb(220, 53, 69));
-                // Execute reset command based on device mode
+                
+                if (_currentDevice == null || _currentProtocol == null)
+                {
+                    LogMessage("Error: Connect device in low-level mode (EDL/BROM) first.", Color.Red);
+                    return;
+                }
+
+                Task.Run(async () =>
+                {
+                    var formatOp = new FormatOperation(_currentProtocol);
+                    var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Status));
+                    bool success = await formatOp.ExecuteAsync(_currentDevice, progress, CancellationToken.None);
+                    
+                    if (success)
+                    {
+                        LogMessage("SUCCESS: Device formatted and rebooted.", Color.Lime);
+                    }
+                    else
+                    {
+                        LogMessage("FAILURE: Wipe operation failed.", Color.Red);
+                    }
+                });
             }
         }
 

@@ -9,8 +9,11 @@ namespace DeepEyeUnlocker.Operations
 {
     public class BootloaderOperation : Operation
     {
-        public BootloaderOperation()
+        private readonly IProtocol _protocol;
+
+        public BootloaderOperation(IProtocol protocol)
         {
+            _protocol = protocol;
             Name = "Advanced Bootloader Unlock";
         }
 

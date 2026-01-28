@@ -85,12 +85,12 @@ namespace DeepEyeUnlocker.Core
             // Flash operations - Available in low-level modes
             if (context.Mode == ConnectionMode.EDL || context.Mode == ConnectionMode.BROM)
             {
-                ops.Add(new Operations.BackupOperation(null!)); // Needs protocol instance
-                ops.Add(new Operations.FormatOperation());
-                ops.Add(new Operations.FlashOperation());
-                ops.Add(new Operations.FrpBypassOperation());
-                ops.Add(new Operations.PatternClearOperation());
-                ops.Add(new Operations.BootloaderOperation());
+                ops.Add(new Operations.BackupOperation(null!)); 
+                ops.Add(new Operations.FormatOperation(null!));
+                ops.Add(new Operations.FlashOperation(null, null!));
+                ops.Add(new Operations.FrpBypassOperation(null!));
+                ops.Add(new Operations.PatternClearOperation(null!));
+                ops.Add(new Operations.BootloaderOperation(null!));
             }
 
             // Brand-specific operations

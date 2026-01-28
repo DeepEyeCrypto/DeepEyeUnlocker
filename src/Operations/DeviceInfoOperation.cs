@@ -8,8 +8,11 @@ namespace DeepEyeUnlocker.Operations
 {
     public class DeviceInfoOperation : Operation
     {
-        public DeviceInfoOperation()
+        private readonly IProtocol _protocol;
+
+        public DeviceInfoOperation(IProtocol protocol)
         {
+            _protocol = protocol;
             Name = "Read Device Info";
         }
 
