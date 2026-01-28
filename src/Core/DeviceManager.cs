@@ -1,38 +1,70 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Infrastructure.USB;
+
 namespace DeepEyeUnlocker.Core
 {
-    public class DeviceManager
+    public class DeviceManager : IDisposable
     {
-        public List<UsbRegistry> EnumerateDevices()
+        private readonly UsbWatcher _watcher;
+        public event Action<IEnumerable<DeviceContext>>? OnDevicesChanged;
+
+        public DeviceManager()
         {
-            List<UsbRegistry> devices = new List<UsbRegistry>();
+            _watcher = new UsbWatcher();
+            _watcher.OnDeviceChanged += HandleUsbChange;
+            _watcher.Start();
+        }
+
+        private void HandleUsbChange()
+        {
+            var devices = EnumerateDevices();
+            OnDevicesChanged?.Invoke(devices);
+        }
+
+        public List<DeviceContext> EnumerateDevices()
+        {
+            var activeDevices = new List<DeviceContext>();
             try
             {
-                UsbRegDeviceList allDevices = UsbDevice.AllDevices;
-                foreach (UsbRegistry usbRegistry in allDevices)
+                foreach (UsbRegistry usb in UsbDevice.AllDevices)
                 {
-                    devices.Add(usbRegistry);
-                    Logger.Info($"Found Device: {usbRegistry.FullName} (VID: {usbRegistry.Vid:X4} PID: {usbRegistry.Pid:X4})");
+                    var discovery = ProtocolDiscoveryService.Discover(usb);
+                    activeDevices.Add(new DeviceContext
+                    {
+                        Vid = usb.Vid,
+                        Pid = usb.Pid,
+                        Serial = usb.SymbolicName, // Use symbolic name as unique key if serial missing
+                        Mode = MapMode(discovery.Mode),
+                        Chipset = discovery.Chipset,
+                        Brand = discovery.Chipset // Initial heuristic
+                    });
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Failed to enumerate USB devices.");
             }
-            return devices;
+            return activeDevices;
         }
 
-        public string IdentifyMode(UsbRegistry device)
+        private ConnectionMode MapMode(string mode) => mode.ToLower() switch
         {
-            var discovery = ProtocolDiscoveryService.Discover(device);
-            if (discovery.Chipset != "Unknown")
-            {
-                return $"{discovery.Chipset} {discovery.Mode}";
-            }
-            return "Unknown / MTP";
+            "edl" => ConnectionMode.EDL,
+            "brom" => ConnectionMode.BROM,
+            "preloader" => ConnectionMode.Preloader,
+            "fastboot" => ConnectionMode.Fastboot,
+            "download" => ConnectionMode.DownloadMode,
+            _ => ConnectionMode.MTP
+        };
+
+        public void Dispose()
+        {
+            _watcher.Dispose();
         }
     }
 }
