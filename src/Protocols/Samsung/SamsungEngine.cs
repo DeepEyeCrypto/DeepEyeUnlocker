@@ -1,14 +1,21 @@
 using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core.Engines;
 using LibUsbDotNet;
+
 namespace DeepEyeUnlocker.Protocols.Samsung
 {
     public class SamsungEngine : IProtocol
     {
         private readonly UsbDevice _usbDevice;
         private OdinProtocol? _odin;
-
+        
+        public DeviceContext Context { get; private set; } = new DeviceContext();
         public string Name => "Samsung Download Mode";
 
         public SamsungEngine(UsbDevice usbDevice)
@@ -16,13 +23,12 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             _usbDevice = usbDevice;
         }
 
-        public async Task<bool> ConnectAsync()
+        public async Task<bool> ConnectAsync(CancellationToken ct = default)
         {
             try
             {
                 Logger.Info("Connecting to Samsung device...");
                 _odin = new OdinProtocol(_usbDevice);
-                
                 return await _odin.SendHandshakeAsync();
             }
             catch (Exception ex)
@@ -32,11 +38,11 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             }
         }
 
-        public async Task DisconnectAsync()
+        public async Task<bool> DisconnectAsync()
         {
             Logger.Info("Disconnecting from Samsung device.");
             _usbDevice.Close();
-            await Task.CompletedTask;
+            return await Task.FromResult(true);
         }
 
         public async Task<byte[]> ReadPartitionAsync(string partitionName)
@@ -54,20 +60,38 @@ namespace DeepEyeUnlocker.Protocols.Samsung
         public async Task<bool> ErasePartitionAsync(string partitionName)
         {
             Logger.Info($"Samsung: Erasing partition {partitionName}...");
-            // Samsung typically handles erase through flashing a sparse image or full wipe
             await Task.Delay(100);
             return true;
         }
 
-        public async Task<System.Collections.Generic.List<Core.PartitionInfo>> GetPartitionTableAsync()
+        public async Task<IEnumerable<PartitionInfo>> GetPartitionTableAsync()
         {
             Logger.Info("Samsung: Retrieving partition table...");
-            // Simulate partition table retrieval
-            return await Task.FromResult(new System.Collections.Generic.List<Core.PartitionInfo>
+            return await Task.FromResult(new List<PartitionInfo>
             {
-                new Core.PartitionInfo { Name = "SYSTEM", Size = 4096, StartAddress = 0x0 },
-                new Core.PartitionInfo { Name = "USERDATA", Size = 8192, StartAddress = 0x1000 }
+                new PartitionInfo { Name = "SYSTEM", Size = 4096, StartAddress = 0x0 },
+                new PartitionInfo { Name = "USERDATA", Size = 8192, StartAddress = 0x1000 }
             });
+        }
+
+        public async Task<bool> RebootAsync(string mode = "normal")
+        {
+            Logger.Info($"Samsung: Rebooting to {mode} mode...");
+            return await Task.FromResult(true);
+        }
+
+        public async Task<bool> ReadPartitionToStreamAsync(string partitionName, Stream outputStream, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        {
+            Logger.Warn("Samsung: Streaming read not supported in Download mode.");
+            await Task.CompletedTask;
+            return false;
+        }
+
+        public async Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream inputStream, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        {
+            Logger.Warn("Samsung: Streaming write not yet implemented.");
+            await Task.CompletedTask;
+            return false;
         }
     }
 }

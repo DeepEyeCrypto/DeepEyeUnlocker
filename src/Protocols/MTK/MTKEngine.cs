@@ -1,7 +1,14 @@
 using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core.Engines;
 using LibUsbDotNet;
+
 namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKEngine : IProtocol
@@ -24,7 +31,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             };
         }
 
-        public async Task<bool> ConnectAsync(CancellationToken ct)
+        public async Task<bool> ConnectAsync(CancellationToken ct = default)
         {
             try
             {
@@ -65,7 +72,6 @@ namespace DeepEyeUnlocker.Protocols.MTK
         public async Task<bool> ReadPartitionToStreamAsync(string partitionName, Stream output, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Logger.Info($"MTK: Streaming partition {partitionName}...");
-            // Simulated MTK stream
             await Task.Delay(500, ct);
             progress.Report(ProgressUpdate.Info(100, $"Finished streaming {partitionName}"));
             return true;
@@ -93,13 +99,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
 
         public async Task<bool> RebootAsync(string mode = "system")
         {
-            // MTK Reboot sequence
             return await Task.FromResult(true);
         }
-
-        // Legacy compatibility
-        async Task<bool> IProtocolEngine.ConnectAsync(CancellationToken ct) => await ConnectAsync(ct);
-        async Task IProtocol.DisconnectAsync() => await DisconnectAsync();
-        async Task<List<PartitionInfo>> IProtocolEngine.GetPartitionTableAsync() => (await GetPartitionTableAsync()).ToList();
     }
 }

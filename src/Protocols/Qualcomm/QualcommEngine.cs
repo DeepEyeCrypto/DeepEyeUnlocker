@@ -1,8 +1,15 @@
 using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core.Engines;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
+
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class QualcommEngine : IProtocol
@@ -26,7 +33,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             };
         }
 
-        public async Task<bool> ConnectAsync(CancellationToken ct)
+        public async Task<bool> ConnectAsync(CancellationToken ct = default)
         {
             try
             {
@@ -65,8 +72,6 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         {
             if (_firehose == null) throw new InvalidOperationException("Firehose protocol not initialized.");
             
-            // In v1.1 we wrap the old byte[] read, but in v1.2 we will implement 
-            // chunk-based streaming inside FirehoseProtocol
             byte[] data = await _firehose.ReadPartitionAsync(partitionName);
             await output.WriteAsync(data, 0, data.Length, ct);
             progress.Report(ProgressUpdate.Info(100, $"Finished streaming {partitionName}"));
@@ -98,8 +103,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         public async Task<bool> RebootAsync(string mode = "system")
         {
             if (_sahara == null) return false;
-            // Sahara reset command
-            return true;
+            return await Task.FromResult(true);
         }
 
         public async Task<bool> InitializeFirehoseAsync(string programmerPath)
@@ -112,11 +116,5 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             }
             return false;
         }
-
-        // Legacy compatibility
-        async Task<bool> IProtocolEngine.ConnectAsync(CancellationToken ct) => await ConnectAsync(ct);
-        async Task IProtocol.DisconnectAsync() => await DisconnectAsync();
-        async Task<List<PartitionInfo>> IProtocolEngine.GetPartitionTableAsync() => (await GetPartitionTableAsync()).ToList();
-
     }
 }

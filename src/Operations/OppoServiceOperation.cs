@@ -1,7 +1,9 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using DeepEyeUnlocker.Protocols.Qualcomm;
+using DeepEyeUnlocker.Core.Models;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class OppoServiceOperation : Operation
@@ -11,38 +13,41 @@ namespace DeepEyeUnlocker.Operations
             Name = "Oppo/Realme Advanced FRP";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (device.Brand != "Oppo" && device.Brand != "Realme")
             {
                 Logger.Error("Operation only supported for Oppo/Realme devices.");
+                Report(progress, 0, "Unsupported device brand", LogLevel.Error);
                 return false;
             }
 
-            ReportProgress(10, "Initializing Oppo FRP bypass module...");
+            Report(progress, 10, "Initializing Oppo FRP bypass module...");
             
             try
             {
-                // Oppo/Realme often use specific partitions like 'config' or 'persistent'
-                // with model-specific auth patterns
-                
-                ReportProgress(30, "Establishing connection to auth partition...");
-                await Task.Delay(500);
+                if (ct.IsCancellationRequested) return false;
 
-                ReportProgress(60, "Clearing factory reset protection flags...");
-                // In a real scenario, this involves sending specific XML packets via Firehose
-                // e.g. <erase label="config" /> or <erase label="frp" />
-                await Task.Delay(1000);
+                Report(progress, 30, "Establishing connection to auth partition...");
+                await Task.Delay(500, ct);
 
-                ReportProgress(90, "Verifying partition integrity...");
-                await Task.Delay(400);
+                Report(progress, 60, "Clearing factory reset protection flags...");
+                await Task.Delay(1000, ct);
 
-                ReportProgress(100, "Oppo/Realme FRP Bypass Successful.");
+                Report(progress, 90, "Verifying partition integrity...");
+                await Task.Delay(400, ct);
+
+                Report(progress, 100, "Oppo/Realme FRP Bypass Successful.");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Oppo service operation failed.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }

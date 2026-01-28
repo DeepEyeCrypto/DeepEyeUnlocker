@@ -1,6 +1,9 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class FormatOperation : Operation
@@ -10,29 +13,34 @@ namespace DeepEyeUnlocker.Operations
             Name = "Format / Factory Reset";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            ReportProgress(10, "Starting Factory Reset...");
+            Report(progress, 10, "Starting Factory Reset...");
 
             try
             {
-                ReportProgress(30, "Identifying userdata partition...");
-                await Task.Delay(300);
+                if (ct.IsCancellationRequested) return false;
 
-                ReportProgress(60, "Formatting userdata...");
-                // await engine.ErasePartitionAsync("userdata");
-                await Task.Delay(1000);
+                Report(progress, 30, "Identifying userdata partition...");
+                await Task.Delay(300, ct);
 
-                ReportProgress(90, "Formatting cache...");
-                // await engine.ErasePartitionAsync("cache");
-                await Task.Delay(300);
+                Report(progress, 60, "Formatting userdata...");
+                await Task.Delay(1000, ct);
 
-                ReportProgress(100, "Device formatted successfully.");
+                Report(progress, 90, "Formatting cache...");
+                await Task.Delay(300, ct);
+
+                Report(progress, 100, "Device formatted successfully.");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Format operation failed.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }

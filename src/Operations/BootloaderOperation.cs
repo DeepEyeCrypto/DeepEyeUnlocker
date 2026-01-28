@@ -1,6 +1,10 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Infrastructure.Logging;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class BootloaderOperation : Operation
@@ -30,7 +34,6 @@ namespace DeepEyeUnlocker.Operations
                 };
 
                 Report(progress, 30, $"Executing {method.GetType().Name}...");
-                // Note: ideally the method should also take progress and ct
                 bool result = await method.ExecuteAsync(device);
 
                 if (result)

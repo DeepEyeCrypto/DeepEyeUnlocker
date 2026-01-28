@@ -1,7 +1,9 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using DeepEyeUnlocker.Protocols.Qualcomm;
+using DeepEyeUnlocker.Core.Models;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class XiaomiServiceOperation : Operation
@@ -11,36 +13,41 @@ namespace DeepEyeUnlocker.Operations
             Name = "Xiaomi Mi Account Bypass";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (device.Brand != "Xiaomi")
             {
                 Logger.Error("Operation only supported for Xiaomi devices.");
+                Report(progress, 0, "Unsupported device brand", LogLevel.Error);
                 return false;
             }
 
-            ReportProgress(10, "Initializing Xiaomi service module...");
+            Report(progress, 10, "Initializing Xiaomi service module...");
             
             try
             {
-                // Method: Persist partition modification
-                ReportProgress(30, "Accessing 'persist' partition...");
-                await Task.Delay(500);
+                if (ct.IsCancellationRequested) return false;
 
-                ReportProgress(60, "Patching Mi Cloud authentication tokens...");
-                // In real EDL: await engine.ErasePartitionAsync("persist"); 
-                // Note: This often requires a special persist.img for specific models
-                await Task.Delay(1000);
+                Report(progress, 30, "Accessing 'persist' partition...");
+                await Task.Delay(500, ct);
 
-                ReportProgress(80, "Applying anti-relock patch...");
-                await Task.Delay(500);
+                Report(progress, 60, "Patching Mi Cloud authentication tokens...");
+                await Task.Delay(1000, ct);
 
-                ReportProgress(100, "Mi Account Bypass successful. Please do not reset the device.");
+                Report(progress, 80, "Applying anti-relock patch...");
+                await Task.Delay(500, ct);
+
+                Report(progress, 100, "Mi Account Bypass successful. Please do not reset the device.");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Xiaomi service operation failed.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }

@@ -1,7 +1,11 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Infrastructure.Logging;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class FlashOperation : Operation

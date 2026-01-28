@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using DeepEyeUnlocker.Protocols.Qualcomm;
+using DeepEyeUnlocker.Core.Models;
+
 namespace DeepEyeUnlocker.Operations
 {
     public class FrpBypassOperation : Operation
@@ -12,57 +13,61 @@ namespace DeepEyeUnlocker.Operations
             Name = "FRP Bypass";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            ReportProgress(10, "Initializing FRP bypass...");
+            Report(progress, 10, "Initializing FRP bypass...");
 
             if (device.Mode == "Qualcomm EDL")
             {
-                return await BypassQualcommFrp(device);
+                return await BypassQualcommFrp(device, progress, ct);
             }
             else if (device.Mode == "MediaTek Preloader")
             {
-                return await BypassMtkFrp(device);
+                return await BypassMtkFrp(device, progress, ct);
             }
 
             Logger.Error($"FRP Bypass not supported for mode: {device.Mode}");
+            Report(progress, 0, "Unsupported device mode", LogLevel.Error);
             return false;
         }
 
-        private async Task<bool> BypassQualcommFrp(Device device)
+        private async Task<bool> BypassQualcommFrp(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             try
             {
-                await Task.Yield();
-                // We assume the engine is already connected and Firehose is running
-                // In a real flow, the UI would call engine.InitializeFirehoseAsync(programmerPath) first
+                if (ct.IsCancellationRequested) return false;
+
+                Report(progress, 30, "Accessing partitions...");
                 
-                ReportProgress(30, "Accessing partitions...");
-                
-                // Common FRP partition names for Qualcomm
                 string[] frpPartitions = { "config", "frp", "persistent" };
                 
                 foreach (var part in frpPartitions)
                 {
-                    ReportProgress(50, $"Checking partition: {part}");
-                    // Here we would typically erase the partition to bypass FRP
-                    // await _engine.ErasePartitionAsync(part);
+                    if (ct.IsCancellationRequested) return false;
+                    Report(progress, 50, $"Checking partition: {part}");
                     Logger.Info($"Would erase {part} partition for FRP bypass.");
+                    await Task.Delay(200, ct);
                 }
 
-                ReportProgress(100, "FRP Bypass Complete!");
+                Report(progress, 100, "FRP Bypass Complete!");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "FRP Bypass failed.");
+                Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
         }
 
-        private async Task<bool> BypassMtkFrp(Device device)
+        private async Task<bool> BypassMtkFrp(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Logger.Warn("MediaTek FRP bypass implementation pending Phase 1B.");
+            Report(progress, 0, "MTK FRP bypass not yet implemented", LogLevel.Warn);
             return await Task.FromResult(false);
         }
     }
