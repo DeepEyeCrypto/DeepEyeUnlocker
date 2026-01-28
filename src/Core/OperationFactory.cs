@@ -4,12 +4,29 @@ using LibUsbDotNet;
 using DeepEyeUnlocker.Protocols;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core.Engines;
+using DeepEyeUnlocker.Protocols.Qualcomm;
 
 namespace DeepEyeUnlocker.Core
 {
     public class OperationFactory
     {
         private static readonly EdlManager _edlManager = new();
+        private static FirehoseManager? _firehoseManager;
+        private static PartitionTableParser _partitionParser = new();
+
+        /// <summary>
+        /// Get or create a Firehose manager instance
+        /// </summary>
+        public static FirehoseManager GetFirehoseManager()
+        {
+            _firehoseManager ??= new FirehoseManager();
+            return _firehoseManager;
+        }
+
+        /// <summary>
+        /// Get the partition table parser
+        /// </summary>
+        public static PartitionTableParser GetPartitionParser() => _partitionParser;
 
         public static IProtocol? CreateEngine(DeviceContext context, UsbDevice usbDevice)
         {
@@ -50,6 +67,21 @@ namespace DeepEyeUnlocker.Core
             // EDL Check - Always available
             ops.Add(new Operations.CheckEdlModeOperation(_edlManager));
 
+            // EDL-specific operations (Firehose-based)
+            if (context.Mode == ConnectionMode.EDL && IsQualcommDevice(context))
+            {
+                // Firehose operations require initialized session
+                if (_firehoseManager?.IsReady == true)
+                {
+                    // Partition operations
+                    ops.Add(new Operations.FirehoseReadOperation(_firehoseManager, "boot", "boot.img"));
+                    ops.Add(new Operations.FirehoseReadOperation(_firehoseManager, "recovery", "recovery.img"));
+                    
+                    // FRP specific
+                    ops.Add(new Operations.FirehoseEraseOperation(_firehoseManager, "frp"));
+                }
+            }
+
             // Flash operations - Available in low-level modes
             if (context.Mode == ConnectionMode.EDL || context.Mode == ConnectionMode.BROM)
             {
@@ -62,17 +94,47 @@ namespace DeepEyeUnlocker.Core
             }
 
             // Brand-specific operations
-            if (context.Brand.Equals("Xiaomi", StringComparison.OrdinalIgnoreCase))
-            {
-                ops.Add(new Operations.XiaomiServiceOperation());
-            }
-            else if (context.Brand.Equals("Oppo", StringComparison.OrdinalIgnoreCase) ||
-                     context.Brand.Equals("Realme", StringComparison.OrdinalIgnoreCase))
-            {
-                ops.Add(new Operations.OppoServiceOperation());
-            }
+            AddBrandSpecificOperations(ops, context);
 
             return ops;
+        }
+
+        /// <summary>
+        /// Add brand-specific operations
+        /// </summary>
+        private static void AddBrandSpecificOperations(List<Operation> ops, DeviceContext context)
+        {
+            switch (context.Brand?.ToUpperInvariant())
+            {
+                case "XIAOMI":
+                case "REDMI":
+                case "POCO":
+                    ops.Add(new Operations.XiaomiServiceOperation());
+                    break;
+
+                case "OPPO":
+                case "REALME":
+                case "ONEPLUS":
+                    ops.Add(new Operations.OppoServiceOperation());
+                    break;
+
+                case "SAMSUNG":
+                    // Samsung uses Odin mode, not EDL
+                    if (context.Mode == ConnectionMode.Download)
+                    {
+                        ops.Add(new Operations.FormatOperation());
+                    }
+                    break;
+
+                case "MOTOROLA":
+                case "LENOVO":
+                    // Lenovo-Motorola devices
+                    break;
+
+                case "LG":
+                    // LG devices (legacy)
+                    break;
+            }
         }
 
         /// <summary>
@@ -91,7 +153,15 @@ namespace DeepEyeUnlocker.Core
             return _edlManager.GetProfileFor(context);
         }
 
-        private static bool IsQualcommDevice(DeviceContext context)
+        /// <summary>
+        /// Get EDL manager instance
+        /// </summary>
+        public static EdlManager GetEdlManager() => _edlManager;
+
+        /// <summary>
+        /// Check if device is Qualcomm-based
+        /// </summary>
+        public static bool IsQualcommDevice(DeviceContext context)
         {
             var chipset = context.Chipset?.ToLower() ?? "";
             var soc = context.SoC?.ToLower() ?? "";
@@ -101,6 +171,48 @@ namespace DeepEyeUnlocker.Core
                    soc.StartsWith("sm") ||
                    soc.StartsWith("sdm") ||
                    soc.StartsWith("msm");
+        }
+
+        /// <summary>
+        /// Check if device is MediaTek-based
+        /// </summary>
+        public static bool IsMediaTekDevice(DeviceContext context)
+        {
+            var chipset = context.Chipset?.ToLower() ?? "";
+            var soc = context.SoC?.ToLower() ?? "";
+            
+            return chipset.Contains("mediatek") ||
+                   chipset.Contains("mtk") ||
+                   soc.StartsWith("mt");
+        }
+
+        /// <summary>
+        /// Check if device is Samsung Exynos-based
+        /// </summary>
+        public static bool IsExynosDevice(DeviceContext context)
+        {
+            var soc = context.SoC?.ToLower() ?? "";
+            return soc.Contains("exynos");
+        }
+
+        /// <summary>
+        /// Get recommended protocol for device
+        /// </summary>
+        public static string GetRecommendedProtocol(DeviceContext context)
+        {
+            if (context.Brand?.ToUpperInvariant() == "SAMSUNG")
+                return "Odin (Download Mode)";
+            
+            if (IsQualcommDevice(context))
+                return "Qualcomm EDL (9008)";
+            
+            if (IsMediaTekDevice(context))
+                return "MediaTek BROM";
+            
+            if (IsExynosDevice(context))
+                return "Samsung Download Mode";
+            
+            return "Unknown";
         }
     }
 }
