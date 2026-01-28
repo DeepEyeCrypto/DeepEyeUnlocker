@@ -16,6 +16,7 @@ namespace DeepEyeUnlocker.Core.Models
     {
         public int Percentage { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string Message => Status; // Alias for Status
         public LogLevel Level { get; set; } = LogLevel.Info;
         public string Category { get; set; } = "General";
         public DateTime Timestamp { get; } = DateTime.Now;

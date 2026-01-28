@@ -26,21 +26,24 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ### v1.1.0 Highlights
 
-- **Brand Intelligence:** Automatic profile matching for Xiaomi, Oppo, Samsung
-- **Cloud Resources:** Manifest-based programmer/DA downloads with SHA256 verification
-- **Error Hints:** Technician-friendly error messages with actionable recovery steps
-- **Async Operations:** Non-blocking UI with cancellation support
+- **🛡️ Cloak Center:** Advanced root & developer mode hiding (Shamiko/Zygisk optimization)
+- **📱 Device Info Center:** Deep hardware diagnostics and security lifecycle telemetry
+- **🔧 ADB Tools Center:** Integrated app management and input simulation
+- **🔐 Lock & FRP Center:** Unified diagnostics for screen and account locks
+- **MainForm 2.0:** Tabbed interface with reactive device context synchronization
+- **Multi-Language:** First-class support for English and Hindi technicians
+- **Error Hints:** Actionable recovery steps for over 50+ common protocol errors
 
 ---
 
 ## 📱 Supported Chipsets
 
-| Platform | Mode | Protocol |
-|----------|------|----------|
-| **Qualcomm Snapdragon** | EDL 9008 | Sahara + Firehose |
-| **MediaTek (MTK)** | BROM / Preloader | MTK Download Agent |
-| **Samsung Exynos/QC** | Download Mode | Odin / Loke |
-| **Generic Android** | Fastboot / ADB | Standard Commands |
+| Platform                | Mode             | Protocol           |
+|-------------------------|------------------|--------------------|
+| **Qualcomm Snapdragon** | EDL 9008         | Sahara + Firehose  |
+| **MediaTek (MTK)**      | BROM / Preloader | MTK Download Agent |
+| **Samsung Exynos/QC**   | Download Mode    | Odin / Loke        |
+| **Generic Android**     | Fastboot / ADB   | Standard Commands  |
 
 ---
 
@@ -48,7 +51,7 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 DeepEyeUnlocker v1.1.0 follows a **Clean Layered Architecture**:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │              UI Layer                   │
 │         (WinForms / MainForm)           │
@@ -107,7 +110,7 @@ cd DeepEyeUnlocker
 
 ## 📂 Project Structure
 
-```
+```text
 DeepEyeUnlocker/
 ├── src/
 │   ├── Core/           # Domain models, managers
@@ -147,4 +150,4 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ---
 
-*Built with ❤️ by the DeepEyeUnlocker Community*
+### Built with ❤️ by the DeepEyeUnlocker Community

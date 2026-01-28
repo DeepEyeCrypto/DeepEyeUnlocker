@@ -8,7 +8,7 @@
 
 ## 🛠 Technical Stack
 
-- **Core:** C# / .NET 6.0 (Windows Forms)
+- **Core:** C# / .NET 8.0 (Windows Forms)
 - **Protocols:** LibUsbDotNet (USB), Sahara/Firehose (Qualcomm), BROM/DA (MTK), Odin/Loke (Samsung)
 - **CI/CD:** GitHub Actions (Auto-Build, Auto-Release)
 - **Backend:** Node.js, Express, MongoDB
@@ -18,17 +18,18 @@
 ## 📂 Core Components
 
 1. **Engines (`src/Protocols`)**: Hardware-level communication for the "Big Three" chipsets.
-2. **Operations (`src/Operations`)**: FRP Bypass, Mi Account Bypass, Factory Reset, Flash, Backup, Bootloader Unlock.
-3. **UI (`src/UI`)**: Dashboard with live driver diagnostics, progress tracking, and partition management.
-4. **Cloud (`backend/`)**: Community analytics, firmware repository metadata.
-5. **Cross-Platform (`scripts/linux`)**: Native Linux support with automated installation.
+2. **Operations Center (`src/Operations`)**: Unified logic for FRP Bypass, Flash, Backup, and Device Diagnostics.
+3. **Integrated Hubs**: Dedicated panels for Cloak Center, ADB Tools, and Lock & FRP management.
+4. **UI (`src/UI`)**: Dashboard 2.0 with live device context synchronization and tabbed operational flow.
+5. **Cloud (`backend/`)**: Community analytics, firmware repository metadata.
 
 ## 🚀 Accomplishments
 
 - **Phase 1 Complete**: Full protocol handshakes for Qualcomm, MTK, and Samsung.
-- **Bootloader Mastered**: Integrated EDL Auth Bypass, BROM Exploit, and E-Token methods for 100% brand coverage.
+- **Diagnostics Mastered**: Comprehensive device info collection and security status analysis.
+- **Stealth Expert**: Advanced root and developer mode hiding for high-security applications.
 - **Brand Identity**: Premium Dark Teal (#224A47) ecosystem with AI-generated branding.
-- **Global Ready**: Multi-language support (English/Hindi) and cross-platform (Linux/Windows).
+- **Global Ready**: Multi-language support (English/Hindi) and cross-platform architecture.
 
 ---
 **Status:** PRODUCTION READY.

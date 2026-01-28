@@ -14,7 +14,8 @@ namespace DeepEyeUnlocker.Core.Models
         DownloadMode, 
         MTP,
         Diagnostics,
-        Sideload
+        Sideload,
+        Recovery
     }
 
     public class DeviceContext

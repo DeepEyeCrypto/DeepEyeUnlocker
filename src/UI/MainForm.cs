@@ -32,14 +32,14 @@ namespace DeepEyeUnlocker.UI
         private TabPage deviceInfoTab = null!;
         private TabPage adbToolsTab = null!;
         private TabPage lockFrpTab = null!;
-        private CloakCenterTab cloakTab = null!;
+        private TabPage cloakTab = null!;
         private DriverCenterTab driverTab = null!;
-        private ResourceCenterTab resourceTab = null!
-;
+        private ResourceCenterTab resourceTab = null!;
         // New panels
         private DeviceInfoPanel _deviceInfoPanel = null!;
         private AdbToolsPanel _adbToolsPanel = null!;
         private LockFrpCenterPanel _lockFrpPanel = null!;
+        private CloakCenterPanel _cloakPanel = null!;
 
         private ComboBox langSelector = null!;
 
@@ -78,7 +78,7 @@ namespace DeepEyeUnlocker.UI
             this.deviceInfoTab = new TabPage();
             this.adbToolsTab = new TabPage();
             this.lockFrpTab = new TabPage();
-            this.cloakTab = new CloakCenterTab(_adbClient);
+            this.cloakTab = new TabPage();
             this.driverTab = new DriverCenterTab();
             this.resourceTab = new ResourceCenterTab();
 
@@ -86,6 +86,7 @@ namespace DeepEyeUnlocker.UI
             this._deviceInfoPanel = new DeviceInfoPanel();
             this._adbToolsPanel = new AdbToolsPanel();
             this._lockFrpPanel = new LockFrpCenterPanel();
+            this._cloakPanel = new CloakCenterPanel();
 
             this.SuspendLayout();
 
@@ -133,6 +134,8 @@ namespace DeepEyeUnlocker.UI
             btnRefresh.Location = new Point(430, 25);
             btnRefresh.Click += (s, e) => { RefreshDeviceList(); };
 
+            deviceSelector.SelectedIndexChanged += (s, e) => UpdateDeviceOnPanels();
+
             devicePanel.Controls.AddRange(new Control[] { lblDevice, deviceSelector, btnRefresh });
 
             // Tab Control
@@ -162,6 +165,11 @@ namespace DeepEyeUnlocker.UI
             lockFrpTab.BackColor = BrandColors.Primary;
             _lockFrpPanel.Dock = DockStyle.Fill;
             lockFrpTab.Controls.Add(_lockFrpPanel);
+
+            cloakTab.Text = "🛡️ Cloak Center";
+            cloakTab.BackColor = BrandColors.Primary;
+            _cloakPanel.Dock = DockStyle.Fill;
+            cloakTab.Controls.Add(_cloakPanel);
             
             mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, driverTab, resourceTab });
 
@@ -395,6 +403,47 @@ namespace DeepEyeUnlocker.UI
                 updateLabel.Text = $"🚀 Update Available: v{latest.Version}";
                 logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] New version available: v{latest.Version}. Visit GitHub to download.");
             }
+        }
+
+        private void UpdateDeviceOnPanels()
+        {
+            if (deviceSelector.SelectedIndex == -1)
+            {
+                _deviceInfoPanel.SetDevice(null);
+                _adbToolsPanel.SetDevice(null);
+                _lockFrpPanel.SetDevice(null, null);
+                _cloakPanel.SetDevice(null);
+                return;
+            }
+
+            var selectedRegistry = _usbDevices[deviceSelector.SelectedIndex];
+            var discovery = ProtocolDiscoveryService.Discover(selectedRegistry);
+            
+            ConnectionMode mode = discovery.Mode switch
+            {
+                "ADB" => ConnectionMode.ADB,
+                "Fastboot" => ConnectionMode.Fastboot,
+                "EDL" => ConnectionMode.EDL,
+                "BROM" => ConnectionMode.BROM,
+                "Preloader" => ConnectionMode.Preloader,
+                "Download" => ConnectionMode.DownloadMode,
+                "Recovery" => ConnectionMode.Recovery,
+                _ => ConnectionMode.None
+            };
+
+            var context = new DeviceContext
+            {
+                Serial = selectedRegistry.SymbolicName ?? "Unknown",
+                Brand = selectedRegistry.Vid.ToString("X4"),
+                Model = selectedRegistry.Pid.ToString("X4"),
+                Chipset = discovery.Chipset,
+                Mode = mode
+            };
+
+            _deviceInfoPanel.SetDevice(context);
+            _adbToolsPanel.SetDevice(context);
+            _lockFrpPanel.SetDevice(context, null);
+            _cloakPanel.SetDevice(context);
         }
     }
 }

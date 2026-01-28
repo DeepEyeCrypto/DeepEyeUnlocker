@@ -1,33 +1,41 @@
 # DeepEyeUnlocker v1.1.0 "Gold" – Release Notes
 
-**"Professional Mobile Repair. For Free. Forever."**
+## Professional Mobile Repair. For Free. Forever
 
 We are proud to announce the **v1.1.0 "Gold"** release of DeepEyeUnlocker. This update transforms the core architecture from an MVP into a production-hardened system with advanced safety and performance capabilities.
 
 ---
 
-### 💎 Major Highlights
+## 💎 Major Highlights
 
-#### 🛡️ Protocol Hardening & Safety (Stage 6)
+### 🛡️ Protocol Hardening & Safety (Stage 6)
 
 - **Sahara Integrity:** Implemented synchronous bounds-checking for Qualcomm Sahara packets. Prevents memory corruption from malformed device responses.
 - **Anti-Exploit:** Added host-side validation for `DataOffset` and `DataLength` during programmer uploads.
 - **Improved Detection:** WMI-based reactive USB discovery reduces idle CPU usage by 90%.
 
-#### 🏗️ Layered "God Architecture" (Stage 2 & 3)
+### 🏛️ New Operational Centers
+
+- **🛡️ Cloak Center:** Advanced root and developer mode hiding. Includes Shamiko/Zygisk optimization and stealth profiles for banking/gaming.
+- **📱 Device Info Center:** Deep hardware diagnostics (SoC, storage health, battery stats, security patch level).
+- **🔧 ADB Tools Center:** Integrated app management, screen capture, file transfer, and input simulation.
+- **🔐 Lock & FRP Center:** Unified diagnostics for screen locks and Google Account locks with guided recovery.
+
+### 🏗️ Layered "God Architecture"
 
 - **Operation Abstraction:** Moved all heavy logic out of UI buttons and into dedicated `Operation` classes.
-- **Decoupled Engines:** Protocols (Qualcomm, MTK, Samsung) now live in isolated namespaces, improving maintainability.
+- **MainForm 2.0:** Redesigned tabbed interface for seamless switching between diagnostics and repair tools.
+- **Device Context Sync:** Live synchronization of device state across all UI panels.
 - **Progress Plumbing:** Unified `IProgress<ProgressUpdate>` reporting for smooth UI updates during long transfers.
 
-#### 📈 Performance Optimization
+### 📈 Performance Optimization
 
 - **Streaming I/O:** Initial support for streaming partition data to disk, preparing for 100GB+ backup support without memory overflows.
-- **Throttled Logging:** Backend logging is now non-blocking, ensuring high-speed protocol traffic doesn't freeze the GUI.
+- **Non-Blocking Logic:** Entirely asynchronous operation pipeline ensures the UI remains responsive even during heavy I/O.
 
 ---
 
-### 📱 New Device Support
+## 📱 New Device Support
 
 - **Qualcomm:** Enhanced support for Snapdragon 8 Gen 2 / Gen 3 devices via generic Firehose loaders.
 - **MediaTek:** Improved BROM handshake reliability for Dimensity 9000-series chipsets.
@@ -35,7 +43,7 @@ We are proud to announce the **v1.1.0 "Gold"** release of DeepEyeUnlocker. This 
 
 ---
 
-### 🛠 Fixes & Adjustments
+## 🛠 Fixes & Adjustments
 
 - Fixed a crash in `SaharaProtocol.cs` when receiving zero-length packets.
 - Removed deprecated `nlog.config` in favor of the new `Infrastructure.Logging` system.
@@ -43,7 +51,7 @@ We are proud to announce the **v1.1.0 "Gold"** release of DeepEyeUnlocker. This 
 
 ---
 
-### 🚀 Getting Started
+## 🚀 Getting Started
 
 1. Run `scripts/setup-dev.ps1` to prepare your environment.
 2. Build using `scripts/build.ps1`.

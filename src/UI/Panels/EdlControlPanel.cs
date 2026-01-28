@@ -399,7 +399,7 @@ namespace DeepEyeUnlocker.UI.Panels
             ConnectionMode.Fastboot => "Fastboot",
             ConnectionMode.EDL => "EDL (9008)",
             ConnectionMode.BROM => "BROM",
-            ConnectionMode.Download => "Download",
+            ConnectionMode.DownloadMode => "Download",
             _ => "Unknown"
         };
 
