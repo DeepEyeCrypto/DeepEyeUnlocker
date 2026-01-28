@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=DeepEyeUnlocker
+Comment=Professional Mobile Device Unlock Tool
+Exec=dotnet /opt/DeepEyeUnlocker/DeepEyeUnlocker.dll
+Icon=/opt/DeepEyeUnlocker/icon.png
+Terminal=false
+Type=Application
+Categories=Development;Utility;
+Keywords=android;unlock;qualcomm;mtk;samsung;
+StartupNotify=true

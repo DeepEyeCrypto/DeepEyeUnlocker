@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepEyeUnlocker | Pro Mobile Repair for Everyone</title>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #00d4ff;
+            --text: #e94560;
+            --light: #ffffff;
+            --dark-blue: #0f3460;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at center, var(--secondary) 0%, var(--primary) 100%);
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.1;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            z-index: 1;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin-bottom: 40px;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 1;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            z-index: 1;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--primary);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--accent);
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-box {
+            background: var(--dark-blue);
+            padding: 40px;
+            border-radius: 15px;
+            border-left: 5px solid var(--accent);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: scale(1.05);
+        }
+
+        .feature-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            padding: 50px 20px;
+            text-align: center;
+            background-color: var(--secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="hero">
+        <h1>DeepEyeUnlocker</h1>
+        <p>Professional mobile repair, unlocking, and flashing suite. 100% Free. 100% Open Source.</p>
+        <div class="cta-buttons">
+            <a href="#" class="btn btn-primary">Download v1.0.0</a>
+            <a href="#" class="btn btn-secondary">Source Code</a>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-box">
+            <h3>Qualcomm Pro</h3>
+            <p>Full support for Sahara and Firehose protocols. Erase FRP, Flash Firmware, and Reset Locks on 2,000+
+                models.</p>
+        </div>
+        <div class="feature-box">
+            <h3>MediaTek Master</h3>
+            <p>Low-level BROM and Preloader support. Bypass Auth, Unlock Bootloader, and Format partitions instantly.
+            </p>
+        </div>
+        <div class="feature-box">
+            <h3>Samsung Force</h3>
+            <p>Dedicated ODIN/Loke engine for Galaxy devices. Safe flashing and diagnostic modes.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 DeepEyeUnlocker Community. Developed with passion for technicians worldwide.</p>
+    </footer>
+</body>
+
+</html>

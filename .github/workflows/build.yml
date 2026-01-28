@@ -1,0 +1,29 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build & Test (.NET 6.0)
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore DeepEyeUnlocker.sln
+
+    - name: Build
+      run: dotnet build DeepEyeUnlocker.sln --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test DeepEyeUnlocker.sln --configuration Release --no-build --verbosity normal

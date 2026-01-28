@@ -1,0 +1,34 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Publish WinForms
+      run: dotnet publish src/DeepEyeUnlocker.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishReadyToRun=true
+
+    - name: Create Zip
+      run: |
+        Compress-Archive -Path src/bin/Release/net6.0-windows/win-x64/publish/* -DestinationPath DeepEyeUnlocker-win64.zip
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: DeepEyeUnlocker-win64.zip
+        body_path: docs/RELEASE_NOTES_v1.0.0.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
