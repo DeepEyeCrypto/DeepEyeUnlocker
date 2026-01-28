@@ -70,6 +70,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
         public async Task<System.Collections.Generic.List<Core.PartitionInfo>> GetPartitionTableAsync()
         {
+            await Task.Yield();
             // In real world, parse GPT or Firehose response
             return new System.Collections.Generic.List<Core.PartitionInfo>
             {

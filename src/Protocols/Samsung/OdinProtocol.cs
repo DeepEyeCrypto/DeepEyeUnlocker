@@ -26,6 +26,7 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             byte[] handshake = Encoding.ASCII.GetBytes("ODIN");
             int written;
             _writer.Write(handshake, 1000, out written);
+            await Task.Yield();
             
             byte[] response = new byte[4];
             int read;

@@ -7,7 +7,6 @@ namespace DeepEyeUnlocker.Protocols.MTK
     public class MTKEngine : IProtocol
     {
         private readonly UsbDevice _usbDevice;
-        private MTKPreloader? _preloader;
         private MTKDAProtocol? _daProtocol;
 
         public string Name => "MediaTek Preloader";

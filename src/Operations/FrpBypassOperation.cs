@@ -33,6 +33,7 @@ namespace DeepEyeUnlocker.Operations
         {
             try
             {
+                await Task.Yield();
                 // We assume the engine is already connected and Firehose is running
                 // In a real flow, the UI would call engine.InitializeFirehoseAsync(programmerPath) first
                 

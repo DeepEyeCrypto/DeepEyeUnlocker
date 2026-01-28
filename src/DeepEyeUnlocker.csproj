@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>Resources/Images/deepeye_logo.ico</ApplicationIcon>
     <Version>1.0.0</Version>
     <Authors>DeepEyeUnlocker Community</Authors>
     <Description>Free Open-Source Mobile Device Unlock Tool</Description>

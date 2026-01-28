@@ -26,6 +26,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             int bytesRead;
             
             _reader.Read(buffer, 1000, out bytesRead);
+            await Task.Yield();
             if (bytesRead == 0) return false;
 
             var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
@@ -108,6 +109,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             byte[] buffer = new byte[1024];
             int bytesRead;
             _reader.Read(buffer, 1000, out bytesRead);
+            await Task.Yield();
             
             if (bytesRead > 0)
             {
