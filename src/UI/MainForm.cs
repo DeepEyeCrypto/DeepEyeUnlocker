@@ -40,6 +40,8 @@ namespace DeepEyeUnlocker.UI
         private AdbToolsPanel _adbToolsPanel = null!;
         private LockFrpCenterPanel _lockFrpPanel = null!;
         private CloakCenterPanel _cloakPanel = null!;
+        private FlashCenterPanel _flashPanel = null!;
+        private BootloaderUnlockPanel _bootloaderPanel = null!;
 
         private ComboBox langSelector = null!;
 
@@ -87,6 +89,8 @@ namespace DeepEyeUnlocker.UI
             this._adbToolsPanel = new AdbToolsPanel();
             this._lockFrpPanel = new LockFrpCenterPanel();
             this._cloakPanel = new CloakCenterPanel();
+            this._flashPanel = new FlashCenterPanel();
+            this._bootloaderPanel = new BootloaderUnlockPanel();
 
             this.SuspendLayout();
 
@@ -170,8 +174,16 @@ namespace DeepEyeUnlocker.UI
             cloakTab.BackColor = BrandColors.Primary;
             _cloakPanel.Dock = DockStyle.Fill;
             cloakTab.Controls.Add(_cloakPanel);
+
+            TabPage flashTab = new TabPage("⚡ Flash Center") { BackColor = BrandColors.Primary };
+            _flashPanel.Dock = DockStyle.Fill;
+            flashTab.Controls.Add(_flashPanel);
+
+            TabPage bootloaderTab = new TabPage("🔓 Unlock Assistant") { BackColor = BrandColors.Primary };
+            _bootloaderPanel.Dock = DockStyle.Fill;
+            bootloaderTab.Controls.Add(_bootloaderPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, driverTab, resourceTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, driverTab, resourceTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
@@ -413,6 +425,8 @@ namespace DeepEyeUnlocker.UI
                 _adbToolsPanel.SetDevice(null);
                 _lockFrpPanel.SetDevice(null, null);
                 _cloakPanel.SetDevice(null);
+                _flashPanel.SetDevice(null);
+                _bootloaderPanel.SetDevice(null);
                 return;
             }
 
@@ -444,6 +458,8 @@ namespace DeepEyeUnlocker.UI
             _adbToolsPanel.SetDevice(context);
             _lockFrpPanel.SetDevice(context, null);
             _cloakPanel.SetDevice(context);
+            _flashPanel.SetDevice(context);
+            _bootloaderPanel.SetDevice(context);
         }
     }
 }

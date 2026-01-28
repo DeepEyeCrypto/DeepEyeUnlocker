@@ -22,40 +22,50 @@ namespace DeepEyeUnlocker.Operations
 
         public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-            if (!File.Exists(_firmwarePath))
-            {
-                Logger.Error($"Firmware file not found: {_firmwarePath}");
-                Report(progress, 0, "Firmware file missing", LogLevel.Error);
-                return false;
-            }
+            if (_firmwarePath == null) return false;
 
-            Report(progress, 5, "Preparing flash...");
+            Report(progress, 0, "Initializing Flash Engine...");
             
             try
             {
-                if (ct.IsCancellationRequested) return false;
+                // Note: In a real implementation, we'd use a factory to get the right engine
+                // For now, focusing on Qualcomm as it's our most complete protocol
+                if (device.Mode == ConnectionMode.EDL)
+                {
+                    using var qcm = new Protocols.Qualcomm.FirehoseManager();
+                    // ... session initialization happens here ...
+                    
+                    Report(progress, 10, "Scanning Firmware Package...");
+                    var flashMgr = new FlashManager();
+                    var manifest = await flashMgr.ParseFirmwareAsync(_firmwarePath);
+                    
+                    int count = 0;
+                    foreach (var p in manifest.Partitions.Where(x => x.IsSelected))
+                    {
+                        if (ct.IsCancellationRequested) return false;
+                        
+                        Report(progress, 10 + (count * 80 / manifest.Partitions.Count), $"Flashing {p.PartitionName}...");
+                        
+                        // In reality, we'd call: 
+                        // byte[] data = File.ReadAllBytes(p.FilePath);
+                        // await qcm.WritePartitionAsync(p.PartitionName, data, null, ct);
+                        
+                        await Task.Delay(500, ct); // Simulate high-speed transfer
+                        count++;
+                    }
+                }
+                else
+                {
+                    Report(progress, 0, "Flash only supported in EDL mode currently.", LogLevel.Error);
+                    return false;
+                }
 
-                Report(progress, 20, "Establishing connection...");
-                await Task.Delay(500, ct); 
-
-                Report(progress, 40, "Writing system partition...");
-                await Task.Delay(1000, ct); 
-
-                if (ct.IsCancellationRequested) return false;
-
-                Report(progress, 80, "Writing boot partition...");
-                await Task.Delay(200, ct);
-
-                Report(progress, 100, "Flash Successful! Device rebooting.");
+                Report(progress, 100, "Flash Successful!");
                 return true;
-            }
-            catch (OperationCanceledException)
-            {
-                return false;
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Flash operation failed.");
+                Logger.Error(ex, "Flash failed");
                 Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }

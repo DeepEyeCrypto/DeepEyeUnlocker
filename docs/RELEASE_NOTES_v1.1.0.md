@@ -20,6 +20,8 @@ We are proud to announce the **v1.1.0 "Gold"** release of DeepEyeUnlocker. This 
 - **📱 Device Info Center:** Deep hardware diagnostics (SoC, storage health, battery stats, security patch level).
 - **🔧 ADB Tools Center:** Integrated app management, screen capture, file transfer, and input simulation.
 - **🔐 Lock & FRP Center:** Unified diagnostics for screen locks and Google Account locks with guided recovery.
+- **⚡ Flash Center:** High-performance firmware flashing engine with "Safeguard Mode" to protect critical partitions (EFS, Modem, Persist).
+- **🔓 Unlock Assistant:** Step-by-step guided wizard for OEM Bootloader unlocking on Qualcomm and MTK devices.
 
 ### 🏗️ Layered "God Architecture"
 

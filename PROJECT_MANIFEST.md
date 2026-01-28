@@ -19,7 +19,7 @@
 
 1. **Engines (`src/Protocols`)**: Hardware-level communication for the "Big Three" chipsets.
 2. **Operations Center (`src/Operations`)**: Unified logic for FRP Bypass, Flash, Backup, and Device Diagnostics.
-3. **Integrated Hubs**: Dedicated panels for Cloak Center, ADB Tools, and Lock & FRP management.
+3. **Integrated Hubs**: Dedicated panels for Cloak Center, ADB Tools, Lock & FRP, Flash Center, and Unlock Assistant.
 4. **UI (`src/UI`)**: Dashboard 2.0 with live device context synchronization and tabbed operational flow.
 5. **Cloud (`backend/`)**: Community analytics, firmware repository metadata.
 
