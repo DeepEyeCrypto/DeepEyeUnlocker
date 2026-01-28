@@ -19,7 +19,7 @@ namespace DeepEyeUnlocker.UI
         private ComboBox deviceSelector;
         private Button btnRefresh;
         private DeviceManager _deviceManager;
-        private System.Collections.Generic.List<LibUsbDotNet.UsbRegistry> _usbDevices;
+        private System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry> _usbDevices;
 
         private ComboBox langSelector;
 
@@ -28,7 +28,7 @@ namespace DeepEyeUnlocker.UI
         public MainForm()
         {
             _deviceManager = new DeviceManager();
-            _usbDevices = new System.Collections.Generic.List<LibUsbDotNet.UsbRegistry>();
+            _usbDevices = new System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry>();
             _toolTip = new ToolTip();
             InitializeComponent();
             DarkTheme.Apply(this);

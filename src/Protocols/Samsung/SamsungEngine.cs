@@ -61,5 +61,16 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             await Task.Delay(100);
             return true;
         }
+
+        public async Task<System.Collections.Generic.List<Core.PartitionInfo>> GetPartitionTableAsync()
+        {
+            Logger.Info("Samsung: Retrieving partition table...");
+            // Simulate partition table retrieval
+            return await Task.FromResult(new System.Collections.Generic.List<Core.PartitionInfo>
+            {
+                new Core.PartitionInfo { Name = "SYSTEM", Size = 4096, StartAddress = 0x0 },
+                new Core.PartitionInfo { Name = "USERDATA", Size = 8192, StartAddress = 0x1000 }
+            });
+        }
     }
 }

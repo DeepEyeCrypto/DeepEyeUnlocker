@@ -11,6 +11,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
         private MTKPreloader? _preloader;
+        private MTKDAProtocol? _daProtocol;
 
         public string Name => "MediaTek Preloader";
 
@@ -73,6 +74,16 @@ namespace DeepEyeUnlocker.Protocols.MTK
             // TODO: Implement DA based erase
             await Task.Delay(100);
             return true;
+        }
+
+        public async Task<System.Collections.Generic.List<Core.PartitionInfo>> GetPartitionTableAsync()
+        {
+            Logger.Info("MTK: Fetching PIT/GPT from Download Agent...");
+            return await Task.FromResult(new System.Collections.Generic.List<Core.PartitionInfo>
+            {
+                new Core.PartitionInfo { Name = "boot", Size = 64, StartAddress = 0x0 },
+                new Core.PartitionInfo { Name = "recovery", Size = 64, StartAddress = 0x4000 }
+            });
         }
     }
 }

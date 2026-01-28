@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using LibUsbDotNet;
 using NLog;
+using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.Core
 {
