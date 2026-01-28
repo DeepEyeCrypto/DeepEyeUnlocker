@@ -25,7 +25,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Reboot to EDL (Qualcomm 9008)";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 5, "Checking EDL capability...");
 
@@ -159,7 +159,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Check EDL Mode";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 50, "Scanning for Qualcomm 9008 devices...");
             

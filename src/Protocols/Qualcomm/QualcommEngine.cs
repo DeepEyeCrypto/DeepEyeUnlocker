@@ -94,9 +94,9 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             await Task.Yield();
             return new List<PartitionInfo>
             {
-                new PartitionInfo { Name = "sbl1", Size = 524288, StartAddress = 0x0 },
-                new PartitionInfo { Name = "aboot", Size = 2097152, StartAddress = 0x80000 },
-                new PartitionInfo { Name = "boot", Size = 67108864, StartAddress = 0x280000 }
+                new PartitionInfo { Name = "sbl1", SizeInBytes = 524288, StartLba = 0x0 },
+                new PartitionInfo { Name = "aboot", SizeInBytes = 2097152, StartLba = 0x80000 / 512 },
+                new PartitionInfo { Name = "boot", SizeInBytes = 67108864, StartLba = 0x280000 / 512 }
             };
         }
 

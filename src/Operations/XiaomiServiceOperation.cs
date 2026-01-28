@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Xiaomi Mi Account Bypass";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (device.Brand != "Xiaomi")
             {

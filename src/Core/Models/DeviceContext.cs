@@ -30,6 +30,9 @@ namespace DeepEyeUnlocker.Core.Models
         public int Pid { get; set; }
         public bool IsAuthorized { get; set; }
         public int BatteryLevel { get; set; } = -1;
+        public string? Imei { get; set; }
+        public string? BootloaderStatus { get; set; }
+        public string? AndroidVersion { get; set; }
 
         // Metadata Store for brand-specific properties (HWID, ARB Version, etc.)
         public Dictionary<string, string> Properties { get; } = new(StringComparer.OrdinalIgnoreCase);

@@ -1,4 +1,4 @@
-# DeepEyeUnlocker v1.1.0 "Gold"
+# DeepEyeUnlocker v1.1.1 "Archon"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 

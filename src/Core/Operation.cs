@@ -10,7 +10,7 @@ namespace DeepEyeUnlocker.Core
         public string Name { get; protected set; } = string.Empty;
         public bool IsRunning { get; private set; }
 
-        public abstract Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct);
+        public abstract Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct);
 
         protected void Report(IProgress<ProgressUpdate> p, int pct, string status, LogLevel level = LogLevel.Info)
         {

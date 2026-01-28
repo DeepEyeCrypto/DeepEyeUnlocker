@@ -303,15 +303,15 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private void UpdateFrpDisplay(FrpStatus status)
         {
-            var (icon, color) = status.State switch
+            var (icon, color) = status.Status switch
             {
-                FrpTriggerState.Triggered => ("🔴", Color.FromArgb(220, 53, 69)),
-                FrpTriggerState.NotTriggered => ("🟢", Color.FromArgb(40, 167, 69)),
-                FrpTriggerState.PartiallyCleared => ("🟡", Color.FromArgb(255, 193, 7)),
+                FrpLockStatus.Locked => ("🔴", Color.FromArgb(220, 53, 69)),
+                FrpLockStatus.Unlocked => ("🟢", Color.FromArgb(40, 167, 69)),
+                FrpLockStatus.PartiallyCleared => ("🟡", Color.FromArgb(255, 193, 7)),
                 _ => ("⚪", Color.Gray)
             };
 
-            _frpStatusLabel.Text = $"Status: {icon} {status.State}";
+            _frpStatusLabel.Text = $"Status: {icon} {status.Status}";
             _frpStatusLabel.ForeColor = color;
 
             _frpAccountLabel.Text = $"Account: {status.AccountHint ?? "(not detected)"}";

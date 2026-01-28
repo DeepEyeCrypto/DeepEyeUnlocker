@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Format / Factory Reset";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 10, "Starting Factory Reset...");
 

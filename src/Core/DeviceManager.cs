@@ -42,11 +42,14 @@ namespace DeepEyeUnlocker.Core
                     {
                         Vid = usb.Vid,
                         Pid = usb.Pid,
-                        Serial = usb.SymbolicName,
+                        Serial = usb.DeviceProperties.ContainsKey("SymbolicName") ? usb.DeviceProperties["SymbolicName"].ToString() : usb.SymbolicName,
                         Mode = MapMode(discovery.Mode),
                         Chipset = discovery.Chipset,
                         Brand = profile.BrandName
                     };
+
+                    // Store symbolic name in properties for reopening
+                    context.Properties["SymbolicName"] = context.Serial ?? "";
 
                     // Add brand-specific configs to properties
                     foreach (var cfg in profile.Configs)
@@ -62,6 +65,16 @@ namespace DeepEyeUnlocker.Core
                 Logger.Error(ex, "Failed to enumerate USB devices.");
             }
             return activeDevices;
+        }
+
+        public UsbDevice? OpenDevice(DeviceContext context)
+        {
+            if (context.Properties.TryGetValue("SymbolicName", out var symName))
+            {
+                var reg = UsbDevice.AllDevices.FirstOrDefault(r => r.SymbolicName == symName);
+                return reg?.Device;
+            }
+            return null;
         }
 
         private ConnectionMode MapMode(string mode) => mode.ToLower() switch

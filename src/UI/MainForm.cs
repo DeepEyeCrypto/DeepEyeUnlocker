@@ -24,7 +24,7 @@ namespace DeepEyeUnlocker.UI
         private ComboBox deviceSelector = null!;
         private Button btnRefresh = null!;
         private DeviceManager _deviceManager;
-        private System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry> _usbDevices;
+        private System.Collections.Generic.List<DeviceContext> _usbDevices;
         private AdbClient _adbClient;
 
         private TabControl mainTabs = null!;
@@ -50,7 +50,7 @@ namespace DeepEyeUnlocker.UI
         public MainForm()
         {
             _deviceManager = new DeviceManager();
-            _usbDevices = new System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry>();
+            _usbDevices = new System.Collections.Generic.List<DeviceContext>();
             _adbClient = new AdbClient();
             _toolTip = new ToolTip();
             InitializeComponent();
@@ -307,11 +307,10 @@ namespace DeepEyeUnlocker.UI
             _usbDevices = _deviceManager.EnumerateDevices();
             deviceSelector.Items.Clear();
             
-            foreach (var dev in _usbDevices)
+            foreach (var context in _usbDevices)
             {
-                var discovery = ProtocolDiscoveryService.Discover(dev);
-                string displayMode = discovery.Chipset == "Unknown" ? "Unknown / MTP" : $"{discovery.Chipset} {discovery.Mode}";
-                deviceSelector.Items.Add($"{dev.FullName} [{displayMode}]");
+                string displayMode = context.Chipset == "Unknown" ? "Unknown / MTP" : $"{context.Chipset} {context.Mode}";
+                deviceSelector.Items.Add($"{context.Brand} {context.Model} [{displayMode}] ({context.Serial})");
             }
 
             if (deviceSelector.Items.Count > 0)
@@ -333,35 +332,21 @@ namespace DeepEyeUnlocker.UI
                 return;
             }
 
-            var selectedRegistry = _usbDevices[deviceSelector.SelectedIndex];
-            var discovery = ProtocolDiscoveryService.Discover(selectedRegistry);
+            var context = _usbDevices[deviceSelector.SelectedIndex];
             
             logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] {LocalizationManager.GetString("OperationStarted")} {operationName}");
             progressBar.Value = 0;
 
             try 
             {
-                using var usbDevice = selectedRegistry.Device;
+                using var usbDevice = _deviceManager.OpenDevice(context);
                 if (usbDevice == null) throw new Exception("Could not open USB device.");
 
-                if (discovery.Confidence < 0.5f)
-                {
-                    statusLabel.Text = "Probing protocol...";
-                    var activeDiscovery = await ProtocolDiscoveryService.HandshakeDiscoveryAsync(usbDevice);
-                    if (activeDiscovery.Chipset != "Unknown")
-                    {
-                        discovery = activeDiscovery;
-                    }
-                }
+                var engine = OperationFactory.CreateEngine(context, usbDevice);
+                if (engine == null) throw new Exception($"No engine available for {context.Chipset}");
 
-                string chipset = discovery.Chipset.ToLower();
-                string mode = $"{discovery.Chipset} {discovery.Mode}";
-
-                var engine = OperationFactory.CreateEngine(chipset, usbDevice);
-                if (engine == null) throw new Exception($"No engine available for {chipset}");
-
-                statusLabel.Text = $"Connecting to {mode}...";
-                if (await engine.ConnectAsync())
+                statusLabel.Text = $"Connecting to {context.Mode}...";
+                if (await engine.ConnectAsync(CancellationToken.None))
                 {
                     // Map UI operation name to Operation class
                     Operation op = operationName switch
@@ -376,14 +361,18 @@ namespace DeepEyeUnlocker.UI
                         _ => throw new NotSupportedException($"Operation {operationName} not implemented.")
                     };
 
-                    op.OnProgress += (progress, status) => {
+                    var progress = new Progress<ProgressUpdate>(u => {
                         this.Invoke(new Action(() => {
-                            progressBar.Value = progress;
-                            statusLabel.Text = status;
+                            progressBar.Value = u.Percentage;
+                            statusLabel.Text = u.Status;
+                            if (!string.IsNullOrEmpty(u.Message))
+                            {
+                                logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] {u.Message}");
+                            }
                         }));
-                    };
+                    });
 
-                    bool success = await op.ExecuteAsync(new Device { Mode = mode, Chipset = chipset });
+                    bool success = await op.ExecuteAsync(context, progress, CancellationToken.None);
                     
                     if (success)
                     {
@@ -430,30 +419,8 @@ namespace DeepEyeUnlocker.UI
                 return;
             }
 
-            var selectedRegistry = _usbDevices[deviceSelector.SelectedIndex];
-            var discovery = ProtocolDiscoveryService.Discover(selectedRegistry);
+            var context = _usbDevices[deviceSelector.SelectedIndex];
             
-            ConnectionMode mode = discovery.Mode switch
-            {
-                "ADB" => ConnectionMode.ADB,
-                "Fastboot" => ConnectionMode.Fastboot,
-                "EDL" => ConnectionMode.EDL,
-                "BROM" => ConnectionMode.BROM,
-                "Preloader" => ConnectionMode.Preloader,
-                "Download" => ConnectionMode.DownloadMode,
-                "Recovery" => ConnectionMode.Recovery,
-                _ => ConnectionMode.None
-            };
-
-            var context = new DeviceContext
-            {
-                Serial = selectedRegistry.SymbolicName ?? "Unknown",
-                Brand = selectedRegistry.Vid.ToString("X4"),
-                Model = selectedRegistry.Pid.ToString("X4"),
-                Chipset = discovery.Chipset,
-                Mode = mode
-            };
-
             _deviceInfoPanel.SetDevice(context);
             _adbToolsPanel.SetDevice(context);
             _lockFrpPanel.SetDevice(context, null);

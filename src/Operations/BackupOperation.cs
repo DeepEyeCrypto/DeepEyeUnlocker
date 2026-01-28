@@ -20,7 +20,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Full Partition Backup";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace DeepEyeUnlocker.Operations
                         return false;
                     }
 
-                    Logger.Info($"Backing up {part.Name} ({part.Size} bytes)...");
+                    Logger.Info($"Backing up {part.Name} ({part.SizeInBytes} bytes)...");
                     Report(progress, (int)((float)completed / partitions.Count * 100), $"Backing up {part.Name}...");
                     
                     try 

@@ -1,16 +1,17 @@
 using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
 namespace DeepEyeUnlocker.Operations
 {
     public abstract class BootloaderUnlockMethod
     {
-        public abstract Task<bool> ExecuteAsync(Device device);
+        public abstract Task<bool> ExecuteAsync(DeviceContext device);
     }
 
     public class QualcommBootloaderUnlock : BootloaderUnlockMethod
     {
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(DeviceContext device)
         {
             Logger.Info($"Qualcomm: Unlocking bootloader for {device.Brand} {device.Model}...");
             
@@ -34,7 +35,7 @@ namespace DeepEyeUnlocker.Operations
 
     public class MTKBootloaderUnlock : BootloaderUnlockMethod
     {
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(DeviceContext device)
         {
             Logger.Info("MTK: Initializing BROM exploit for Bootloader Unlock...");
             
@@ -52,7 +53,7 @@ namespace DeepEyeUnlocker.Operations
 
     public class SamsungBootloaderUnlock : BootloaderUnlockMethod
     {
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(DeviceContext device)
         {
             Logger.Info("Samsung: Requesting E-Token for Download Mode Unlock...");
             
@@ -69,7 +70,7 @@ namespace DeepEyeUnlocker.Operations
 
     public class GenericOemUnlock : BootloaderUnlockMethod
     {
-        public override async Task<bool> ExecuteAsync(Device device)
+        public override async Task<bool> ExecuteAsync(DeviceContext device)
         {
             Logger.Info("Generic: Executing Fastboot OEM Unlock...");
             await Task.Delay(500);

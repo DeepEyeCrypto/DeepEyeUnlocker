@@ -13,15 +13,15 @@ namespace DeepEyeUnlocker.Operations
             Name = "FRP Bypass";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 10, "Initializing FRP bypass...");
 
-            if (device.Mode == "Qualcomm EDL")
+            if (device.Mode == ConnectionMode.EDL)
             {
                 return await BypassQualcommFrp(device, progress, ct);
             }
-            else if (device.Mode == "MediaTek Preloader")
+            else if (device.Mode == ConnectionMode.Preloader)
             {
                 return await BypassMtkFrp(device, progress, ct);
             }
@@ -31,7 +31,7 @@ namespace DeepEyeUnlocker.Operations
             return false;
         }
 
-        private async Task<bool> BypassQualcommFrp(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        private async Task<bool> BypassQualcommFrp(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace DeepEyeUnlocker.Operations
             }
         }
 
-        private async Task<bool> BypassMtkFrp(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        private async Task<bool> BypassMtkFrp(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Logger.Warn("MediaTek FRP bypass implementation pending Phase 1B.");
             Report(progress, 0, "MTK FRP bypass not yet implemented", LogLevel.Warn);

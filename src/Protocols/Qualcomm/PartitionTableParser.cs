@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
@@ -106,37 +106,6 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
     #endregion
 
-    /// <summary>
-    /// Partition information parsed from GPT/MBR
-    /// </summary>
-    public class PartitionInfo
-    {
-        public string Name { get; set; } = "";
-        public int Index { get; set; }
-        public ulong StartLba { get; set; }
-        public ulong EndLba { get; set; }
-        public ulong SizeInBytes { get; set; }
-        public string SizeFormatted => FormatSize(SizeInBytes);
-        public Guid TypeGuid { get; set; }
-        public Guid UniqueGuid { get; set; }
-        public ulong Attributes { get; set; }
-        public bool IsBootable => (Attributes & 0x4) != 0;
-        public bool IsReadOnly => (Attributes & 0x1000000000000000) != 0;
-        public string TypeName { get; set; } = "Unknown";
-
-        private static string FormatSize(ulong bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
-    }
 
     /// <summary>
     /// Complete partition table information

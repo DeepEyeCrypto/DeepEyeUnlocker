@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Read Device Info";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 20, "Establishing protocol connection...");
             

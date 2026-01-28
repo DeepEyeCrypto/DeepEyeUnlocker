@@ -105,7 +105,7 @@ namespace DeepEyeUnlocker.Operations
             }
             catch (Exception ex)
             {
-                status.State = FrpTriggerState.Error;
+                status.Status = FrpLockStatus.Error;
                 status.Notes = $"Detection error: {ex.Message}";
             }
 
@@ -113,7 +113,7 @@ namespace DeepEyeUnlocker.Operations
             status.OemInfo = GetOemInfo(device.Brand);
             status.RecommendedActions = GenerateFrpRecommendations(status);
 
-            progress?.Report(ProgressUpdate.Info(100, $"FRP Status: {status.State}"));
+            progress?.Report(ProgressUpdate.Info(100, $"FRP Status: {status.Status}"));
             return status;
         }
 
@@ -145,12 +145,12 @@ namespace DeepEyeUnlocker.Operations
                 if (output.Contains("frp: on", StringComparison.OrdinalIgnoreCase) ||
                     output.Contains("frp-lock: 1", StringComparison.OrdinalIgnoreCase))
                 {
-                    status.State = FrpTriggerState.Triggered;
+                    status.Status = FrpLockStatus.Locked;
                 }
                 else if (output.Contains("frp: off", StringComparison.OrdinalIgnoreCase) ||
                          output.Contains("frp-lock: 0", StringComparison.OrdinalIgnoreCase))
                 {
-                    status.State = FrpTriggerState.NotTriggered;
+                    status.Status = FrpLockStatus.Unlocked;
                 }
             }
             catch { /* Fall through to unknown */ }
@@ -176,12 +176,12 @@ namespace DeepEyeUnlocker.Operations
 
                 if (setupComplete.Trim() == "0")
                 {
-                    status.State = FrpTriggerState.Triggered;
+                    status.Status = FrpLockStatus.Locked;
                     status.Notes = "Setup not complete - FRP likely active";
                 }
                 else if (setupComplete.Trim() == "1")
                 {
-                    status.State = FrpTriggerState.NotTriggered;
+                    status.Status = FrpLockStatus.Unlocked;
                 }
             }
             catch { /* Fall through */ }
@@ -215,12 +215,12 @@ namespace DeepEyeUnlocker.Operations
 
                         if (status.PartitionHasData)
                         {
-                            status.State = FrpTriggerState.Triggered;
+                            status.Status = FrpLockStatus.Locked;
                             status.AccountHint = TryExtractAccountHint(data);
                         }
                         else
                         {
-                            status.State = FrpTriggerState.NotTriggered;
+                            status.Status = FrpLockStatus.Unlocked;
                         }
                         break;
                     }
@@ -412,7 +412,7 @@ namespace DeepEyeUnlocker.Operations
         {
             var actions = new List<string>();
 
-            if (status.State == FrpTriggerState.Triggered)
+            if (status.Status == FrpLockStatus.Locked)
             {
                 actions.Add("Sign in with the Google account previously linked to this device");
                 actions.Add("Use Google Account Recovery: accounts.google.com/signin/recovery");
@@ -422,7 +422,7 @@ namespace DeepEyeUnlocker.Operations
                     actions.Add($"Check {status.OemInfo.OemAccountType}: {status.OemInfo.OfficialUnlockUrl}");
                 }
             }
-            else if (status.State == FrpTriggerState.NotTriggered)
+            else if (status.Status == FrpLockStatus.Unlocked)
             {
                 actions.Add("No FRP bypass needed - proceed with normal setup");
             }

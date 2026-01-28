@@ -14,7 +14,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Advanced Bootloader Unlock";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 5, "Initializing Security Check...");
 

@@ -17,7 +17,7 @@ namespace DeepEyeUnlocker.UI.Panels
     {
         private FrpBypassManager? _manager;
         private DeviceContext? _currentDevice;
-        private FrpInfo? _currentFrpInfo;
+        private FrpStatus? _currentFrpInfo;
         
         // UI Components
         private Label _titleLabel = null!;
@@ -277,11 +277,11 @@ namespace DeepEyeUnlocker.UI.Panels
             _statusLabel.ForeColor = GetStatusColor(_currentFrpInfo.Status);
             
             _accountLabel.Text = _currentFrpInfo.AccountHint ?? 
-                                (_currentFrpInfo.HasGoogleAccount ? "Account linked" : "No account");
+                                (_currentFrpInfo.IsGoogleAccountBound ? "Account linked" : "No account");
             
-            _methodLabel.Text = _currentFrpInfo.DetectionMethod ?? "Direct scan";
+            _methodLabel.Text = _currentFrpInfo.DetectionMethod.ToString();
 
-            _bypassGroup.Enabled = _currentFrpInfo.Status == FrpStatus.Locked;
+            _bypassGroup.Enabled = _currentFrpInfo.Status == FrpLockStatus.Locked;
         }
 
         private async void OnDetectClicked(object? sender, EventArgs e)
@@ -305,11 +305,11 @@ namespace DeepEyeUnlocker.UI.Panels
 
                 LogMessage($"Status: {_currentFrpInfo.Status}", GetStatusColor(_currentFrpInfo.Status));
                 
-                if (_currentFrpInfo.Status == FrpStatus.Locked)
+                if (_currentFrpInfo.Status == FrpLockStatus.Locked)
                 {
                     LogMessage("FRP is locked. You can attempt bypass.", Color.FromArgb(255, 193, 7));
                 }
-                else if (_currentFrpInfo.Status == FrpStatus.Unlocked)
+                else if (_currentFrpInfo.Status == FrpLockStatus.Unlocked)
                 {
                     LogMessage("FRP is not locked. No bypass needed.", Color.FromArgb(40, 167, 69));
                 }
@@ -409,20 +409,20 @@ namespace DeepEyeUnlocker.UI.Panels
             }
         }
 
-        private static string GetStatusText(FrpStatus status) => status switch
+        private static string GetStatusText(FrpLockStatus status) => status switch
         {
-            FrpStatus.Locked => "🔒 LOCKED",
-            FrpStatus.Unlocked => "🔓 Unlocked",
-            FrpStatus.PartiallyCleared => "⚠️ Partially Cleared",
-            FrpStatus.Error => "❌ Error",
+            FrpLockStatus.Locked => "🔒 LOCKED",
+            FrpLockStatus.Unlocked => "🔓 Unlocked",
+            FrpLockStatus.PartiallyCleared => "⚠️ Partially Cleared",
+            FrpLockStatus.Error => "❌ Error",
             _ => "❓ Unknown"
         };
 
-        private static Color GetStatusColor(FrpStatus status) => status switch
+        private static Color GetStatusColor(FrpLockStatus status) => status switch
         {
-            FrpStatus.Locked => Color.FromArgb(220, 53, 69),
-            FrpStatus.Unlocked => Color.FromArgb(40, 167, 69),
-            FrpStatus.PartiallyCleared => Color.FromArgb(255, 193, 7),
+            FrpLockStatus.Locked => Color.FromArgb(220, 53, 69),
+            FrpLockStatus.Unlocked => Color.FromArgb(40, 167, 69),
+            FrpLockStatus.PartiallyCleared => Color.FromArgb(255, 193, 7),
             _ => Color.Gray
         };
 

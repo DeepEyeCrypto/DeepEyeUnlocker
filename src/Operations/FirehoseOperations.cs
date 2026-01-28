@@ -29,7 +29,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Initialize Firehose Session";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (_usbDevice == null)
             {
@@ -96,7 +96,7 @@ namespace DeepEyeUnlocker.Operations
             Name = $"Read Partition: {partitionName}";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (!_manager.IsReady)
             {
@@ -150,7 +150,7 @@ namespace DeepEyeUnlocker.Operations
             Name = $"Write Partition: {partitionName}";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (!_manager.IsReady)
             {
@@ -207,7 +207,7 @@ namespace DeepEyeUnlocker.Operations
             Name = $"Erase Partition: {partitionName}";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (!_manager.IsReady)
             {
@@ -257,7 +257,7 @@ namespace DeepEyeUnlocker.Operations
             Name = $"Batch Flash ({files.Length} partitions)";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (!_manager.IsReady)
             {

@@ -20,7 +20,7 @@ namespace DeepEyeUnlocker.Operations
             _resourceManager = new ResourceManager();
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             if (_firmwarePath == null) return false;
 

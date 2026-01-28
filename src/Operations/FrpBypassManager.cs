@@ -10,61 +10,6 @@ using DeepEyeUnlocker.Protocols.Qualcomm;
 
 namespace DeepEyeUnlocker.Operations
 {
-    #region FRP Models
-
-    /// <summary>
-    /// FRP lock status
-    /// </summary>
-    public enum FrpStatus
-    {
-        Unknown,
-        Locked,
-        Unlocked,
-        PartiallyCleared,
-        Error
-    }
-
-    /// <summary>
-    /// FRP bypass method
-    /// </summary>
-    public enum FrpBypassMethod
-    {
-        PartitionErase,         // Erase FRP partition directly
-        PartitionOverwrite,     // Overwrite with clean data
-        PersistClear,           // Clear persist partition
-        UserdataFormat,         // Full userdata format
-        AdbBypass,              // ADB-based bypass (requires debug enabled)
-        FastbootUnlock,         // Fastboot OEM unlock
-        ServiceMode             // OEM-specific service mode
-    }
-
-    /// <summary>
-    /// FRP information from device
-    /// </summary>
-    public class FrpInfo
-    {
-        public FrpStatus Status { get; set; }
-        public bool HasGoogleAccount { get; set; }
-        public string? AccountHint { get; set; }
-        public bool AllowOemUnlock { get; set; }
-        public string? PartitionName { get; set; }
-        public ulong PartitionSize { get; set; }
-        public string? DetectionMethod { get; set; }
-    }
-
-    /// <summary>
-    /// FRP bypass result
-    /// </summary>
-    public class FrpBypassResult
-    {
-        public bool Success { get; set; }
-        public FrpBypassMethod MethodUsed { get; set; }
-        public string Message { get; set; } = "";
-        public bool RequiresReboot { get; set; }
-        public string? AdditionalSteps { get; set; }
-    }
-
-    #endregion
 
     /// <summary>
     /// Factory Reset Protection (FRP) bypass manager
@@ -110,12 +55,12 @@ namespace DeepEyeUnlocker.Operations
         /// <summary>
         /// Detect FRP status from device
         /// </summary>
-        public async Task<FrpInfo> DetectFrpStatusAsync(
+        public async Task<FrpStatus> DetectFrpStatusAsync(
             DeviceContext device,
             IProgress<ProgressUpdate>? progress = null,
             CancellationToken ct = default)
         {
-            var info = new FrpInfo { Status = FrpStatus.Unknown };
+            var info = new FrpStatus { Status = FrpLockStatus.Unknown };
 
             try
             {
@@ -137,14 +82,14 @@ namespace DeepEyeUnlocker.Operations
                             var data = await _firehose.ReadPartitionAsync(partName, null, ct);
                             if (data.Length > 0)
                             {
-                                info.PartitionName = partName;
-                                info.PartitionSize = (ulong)data.Length;
+                                info.FrpPartitionName = partName;
+                                info.FrpPartitionSize = (ulong)data.Length;
                                 info.Status = AnalyzeFrpData(data);
-                                info.DetectionMethod = "Firehose partition read";
+                                info.DetectionMethod = FrpDetectionMethod.EdlPartitionRead;
                                 
-                                if (info.Status == FrpStatus.Locked)
+                                if (info.Status == FrpLockStatus.Locked)
                                 {
-                                    info.HasGoogleAccount = true;
+                                    info.IsGoogleAccountBound = true;
                                     info.AccountHint = ExtractAccountHint(data);
                                 }
                                 
@@ -168,7 +113,7 @@ namespace DeepEyeUnlocker.Operations
             }
             catch (Exception ex)
             {
-                info.Status = FrpStatus.Error;
+                info.Status = FrpLockStatus.Error;
                 Logger.Error(ex, "FRP detection failed");
             }
 
@@ -178,16 +123,16 @@ namespace DeepEyeUnlocker.Operations
         /// <summary>
         /// Analyze FRP partition data to determine lock status
         /// </summary>
-        private FrpStatus AnalyzeFrpData(byte[] data)
+        private FrpLockStatus AnalyzeFrpData(byte[] data)
         {
             if (data.All(b => b == 0x00))
             {
-                return FrpStatus.Unlocked;
+                return FrpLockStatus.Unlocked;
             }
 
             if (data.All(b => b == 0xFF))
             {
-                return FrpStatus.Unlocked;
+                return FrpLockStatus.Unlocked;
             }
 
             // Check for Google account signature patterns
@@ -203,17 +148,17 @@ namespace DeepEyeUnlocker.Operations
                 dataStr.Contains("account") ||
                 ContainsFrpSignature(data))
             {
-                return FrpStatus.Locked;
+                return FrpLockStatus.Locked;
             }
 
             // Check if partially cleared (some data but no account)
             var nonZeroCount = data.Count(b => b != 0x00 && b != 0xFF);
             if (nonZeroCount > 0 && nonZeroCount < data.Length / 10)
             {
-                return FrpStatus.PartiallyCleared;
+                return FrpLockStatus.PartiallyCleared;
             }
 
-            return FrpStatus.Unknown;
+            return FrpLockStatus.Unknown;
         }
 
         /// <summary>
@@ -284,9 +229,9 @@ namespace DeepEyeUnlocker.Operations
         /// <summary>
         /// Detect FRP status via ADB
         /// </summary>
-        private async Task<FrpInfo> DetectViaAdbAsync(DeviceContext device, IProgress<ProgressUpdate>? progress, CancellationToken ct)
+        private async Task<FrpStatus> DetectViaAdbAsync(DeviceContext device, IProgress<ProgressUpdate>? progress, CancellationToken ct)
         {
-            var info = new FrpInfo { Status = FrpStatus.Unknown };
+            var info = new FrpStatus { Status = FrpLockStatus.Unknown };
 
             try
             {
@@ -299,10 +244,10 @@ namespace DeepEyeUnlocker.Operations
                 
                 // Check for Google account
                 var accounts = await ExecuteAdbCommand("shell pm list packages com.google.android.gms", ct);
-                info.HasGoogleAccount = !string.IsNullOrEmpty(accounts);
+                info.IsGoogleAccountBound = !string.IsNullOrEmpty(accounts);
 
-                info.Status = info.HasGoogleAccount ? FrpStatus.Locked : FrpStatus.Unlocked;
-                info.DetectionMethod = "ADB settings query";
+                info.Status = info.IsGoogleAccountBound ? FrpLockStatus.Locked : FrpLockStatus.Unlocked;
+                info.DetectionMethod = FrpDetectionMethod.AdbSettings;
             }
             catch (Exception ex)
             {

@@ -28,9 +28,9 @@ namespace DeepEyeUnlocker.Core
                 await Task.Delay(500); 
                 var latest = new VersionInfo 
                 { 
-                    Version = "1.1.0", 
-                    DownloadUrl = "https://github.com/yourusername/deepeyeunlocker/releases/v1.1.0",
-                    Changelog = "Added Hindi localization and MSI installer support."
+                    Version = "1.1.1", 
+                    DownloadUrl = "https://github.com/yourusername/deepeyeunlocker/releases/v1.1.1",
+                    Changelog = "Core model refactoring, type unification, and FRP data structure consolidation."
                 };
 
                 if (IsNewerVersion(currentVersion, latest.Version))

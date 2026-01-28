@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Clear Pattern / Screen Lock";
         }
 
-        public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             Report(progress, 10, "Initializing screen lock removal...");
 
@@ -21,12 +21,12 @@ namespace DeepEyeUnlocker.Operations
             {
                 if (ct.IsCancellationRequested) return false;
 
-                if (device.Mode == "Qualcomm EDL")
+                if (device.Mode == ConnectionMode.EDL)
                 {
                     Report(progress, 40, "Searching for keymaster/gatekeeper partitions...");
                     await Task.Delay(800, ct);
                 }
-                else if (device.Mode == "MediaTek Preloader")
+                else if (device.Mode == ConnectionMode.Preloader)
                 {
                     Report(progress, 40, "Accessing user partition metadata...");
                     await Task.Delay(800, ct);

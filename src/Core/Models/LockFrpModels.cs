@@ -5,11 +5,11 @@ namespace DeepEyeUnlocker.Core.Models
 {
     #region FRP Models
 
-    public enum FrpTriggerState
+    public enum FrpLockStatus
     {
         Unknown,
-        NotTriggered,
-        Triggered,
+        Locked,
+        Unlocked,
         PartiallyCleared,
         Error
     }
@@ -27,11 +27,12 @@ namespace DeepEyeUnlocker.Core.Models
 
     public class FrpStatus
     {
-        public FrpTriggerState State { get; set; } = FrpTriggerState.Unknown;
+        public FrpLockStatus Status { get; set; } = FrpLockStatus.Unknown;
         public bool IsGoogleAccountBound { get; set; }
         public string? AccountHint { get; set; }
         public OemFrpInfo? OemInfo { get; set; }
         public FrpDetectionMethod DetectionMethod { get; set; }
+        public bool AllowOemUnlock { get; set; }
         public string? FrpPartitionName { get; set; }
         public ulong FrpPartitionSize { get; set; }
         public bool PartitionHasData { get; set; }
@@ -47,6 +48,26 @@ namespace DeepEyeUnlocker.Core.Models
         public string? OemAccountType { get; set; }
         public bool RequiresServerVerification { get; set; }
         public string? OfficialUnlockUrl { get; set; }
+    }
+
+    public enum FrpBypassMethod
+    {
+        PartitionErase,
+        PartitionOverwrite,
+        PersistClear,
+        UserdataFormat,
+        AdbBypass,
+        FastbootUnlock,
+        ServiceMode
+    }
+
+    public class FrpBypassResult
+    {
+        public bool Success { get; set; }
+        public FrpBypassMethod MethodUsed { get; set; }
+        public string Message { get; set; } = "";
+        public bool RequiresReboot { get; set; }
+        public string? AdditionalSteps { get; set; }
     }
 
     #endregion
@@ -116,7 +137,7 @@ namespace DeepEyeUnlocker.Core.Models
 
         private string GenerateSummary()
         {
-            var frp = FrpStatus.State == FrpTriggerState.Triggered ? "🔴 FRP Active" : "🟢 FRP Clear";
+            var frp = FrpStatus.Status == FrpLockStatus.Locked ? "🔴 FRP Active" : "🟢 FRP Clear";
             var lockStr = LockStatus.IsLockEnabled == true ? "🔒 Locked" : "🔓 Unknown";
             return $"{frp} | {lockStr} | {Device.Brand} {Device.Model}";
         }
