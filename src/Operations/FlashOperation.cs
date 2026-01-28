@@ -6,12 +6,14 @@ namespace DeepEyeUnlocker.Operations
 {
     public class FlashOperation : Operation
     {
-        private readonly string _firmwarePath;
+        private readonly string? _firmwarePath;
+        private readonly ResourceManager _resourceManager;
 
-        public FlashOperation(string firmwarePath)
+        public FlashOperation(string? firmwarePath = null)
         {
             Name = "Flash Firmware";
             _firmwarePath = firmwarePath;
+            _resourceManager = new ResourceManager();
         }
 
         public override async Task<bool> ExecuteAsync(Device device, IProgress<ProgressUpdate> progress, CancellationToken ct)

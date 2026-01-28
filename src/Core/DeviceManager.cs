@@ -11,10 +11,12 @@ namespace DeepEyeUnlocker.Core
     public class DeviceManager : IDisposable
     {
         private readonly UsbWatcher _watcher;
+        private readonly ProfileManager _profiles;
         public event Action<IEnumerable<DeviceContext>>? OnDevicesChanged;
 
         public DeviceManager()
         {
+            _profiles = new ProfileManager();
             _watcher = new UsbWatcher();
             _watcher.OnDeviceChanged += HandleUsbChange;
             _watcher.Start();
@@ -34,15 +36,25 @@ namespace DeepEyeUnlocker.Core
                 foreach (UsbRegistry usb in UsbDevice.AllDevices)
                 {
                     var discovery = ProtocolDiscoveryService.Discover(usb);
-                    activeDevices.Add(new DeviceContext
+                    var profile = _profiles.GetProfileForDevice(usb.Vid, usb.Pid);
+
+                    var context = new DeviceContext
                     {
                         Vid = usb.Vid,
                         Pid = usb.Pid,
-                        Serial = usb.SymbolicName, // Use symbolic name as unique key if serial missing
+                        Serial = usb.SymbolicName,
                         Mode = MapMode(discovery.Mode),
                         Chipset = discovery.Chipset,
-                        Brand = discovery.Chipset // Initial heuristic
-                    });
+                        Brand = profile.BrandName
+                    };
+
+                    // Add brand-specific configs to properties
+                    foreach (var cfg in profile.Configs)
+                    {
+                        context.Properties[cfg.Key] = cfg.Value;
+                    }
+
+                    activeDevices.Add(context);
                 }
             }
             catch (Exception ex)

@@ -1,0 +1,66 @@
+{
+    "Profiles": [
+        {
+            "BrandName": "Xiaomi",
+            "CommonVids": [
+                "05C6",
+                "2717"
+            ],
+            "CommonPids": [
+                "9008",
+                "D001"
+            ],
+            "SupportsBypassAuth": true,
+            "RequiresCredit": false,
+            "AuthServerUrl": "",
+            "Configs": {
+                "AccountType": "MiAccount",
+                "EDL_Programmer_Prefix": "prog_firehose_xiaomi",
+                "Fastboot_Unlock_Command": "oem unlock"
+            },
+            "ProtocolOverrides": {
+                "Qualcomm": "Firehose",
+                "MTK": "MTK_DA"
+            }
+        },
+        {
+            "BrandName": "Oppo",
+            "CommonVids": [
+                "22D1"
+            ],
+            "CommonPids": [
+                "9008"
+            ],
+            "SupportsBypassAuth": false,
+            "RequiresCredit": true,
+            "AuthServerUrl": "https://auth.deep-eye.io/oppo",
+            "Configs": {
+                "Region": "Global",
+                "AuthType": "TokenBased"
+            },
+            "ProtocolOverrides": {}
+        },
+        {
+            "BrandName": "Samsung",
+            "CommonVids": [
+                "04E8"
+            ],
+            "CommonPids": [
+                "685D",
+                "6860"
+            ],
+            "SupportsBypassAuth": false,
+            "RequiresCredit": false,
+            "AuthServerUrl": "",
+            "Configs": {
+                "DefaultProtocol": "Odin",
+                "PIT_Mapping": "Standard_V2"
+            },
+            "ProtocolOverrides": {
+                "Download": "Loke"
+            }
+        }
+    ],
+    "LastUpdated": "2026-01-28T19:20:00",
+    "Version": "1.1.0"
+}
