@@ -27,22 +27,11 @@ namespace DeepEyeUnlocker.Core
 
         public string IdentifyMode(UsbRegistry device)
         {
-            // Qualcomm EDL: VID 05C6, PID 9008
-            if (device.Vid == 0x05C6 && device.Pid == 0x9008)
-                return "Qualcomm EDL";
-
-            // MediaTek Preloader: VID 0E8D, PID 2000
-            if (device.Vid == 0x0E8D && device.Pid == 0x2000)
-                return "MediaTek Preloader";
-
-            // Samsung Download: VID 04E8, PID 685D
-            if (device.Vid == 0x04E8 && device.Pid == 0x685D)
-                return "Samsung Download";
-
-            // Fastboot: VID 18D1, PID D00D
-            if (device.Vid == 0x18D1 && device.Pid == 0xD00D)
-                return "Fastboot";
-
+            var discovery = ProtocolDiscoveryService.Discover(device);
+            if (discovery.Chipset != "Unknown")
+            {
+                return $"{discovery.Chipset} {discovery.Mode}";
+            }
             return "Unknown / MTP";
         }
     }

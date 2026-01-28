@@ -231,8 +231,9 @@ namespace DeepEyeUnlocker.UI
             
             foreach (var dev in _usbDevices)
             {
-                string mode = _deviceManager.IdentifyMode(dev);
-                deviceSelector.Items.Add($"{dev.FullName} [{mode}]");
+                var discovery = ProtocolDiscoveryService.Discover(dev);
+                string displayMode = discovery.Chipset == "Unknown" ? "Unknown / MTP" : $"{discovery.Chipset} {discovery.Mode}";
+                deviceSelector.Items.Add($"{dev.FullName} [{displayMode}]");
             }
 
             if (deviceSelector.Items.Count > 0)
@@ -255,16 +256,28 @@ namespace DeepEyeUnlocker.UI
             }
 
             var selectedRegistry = _usbDevices[deviceSelector.SelectedIndex];
-            string mode = _deviceManager.IdentifyMode(selectedRegistry);
-            string chipset = mode.Split(' ')[0].ToLower(); // e.g., "qualcomm"
-
+            var discovery = ProtocolDiscoveryService.Discover(selectedRegistry);
+            
             logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] {LocalizationManager.GetString("OperationStarted")} {operationName}");
             progressBar.Value = 0;
-            
+
             try 
             {
                 using var usbDevice = selectedRegistry.Device;
                 if (usbDevice == null) throw new Exception("Could not open USB device.");
+
+                if (discovery.Confidence < 0.5f)
+                {
+                    statusLabel.Text = "Probing protocol...";
+                    var activeDiscovery = await ProtocolDiscoveryService.HandshakeDiscoveryAsync(usbDevice);
+                    if (activeDiscovery.Chipset != "Unknown")
+                    {
+                        discovery = activeDiscovery;
+                    }
+                }
+
+                string chipset = discovery.Chipset.ToLower();
+                string mode = $"{discovery.Chipset} {discovery.Mode}";
 
                 var engine = OperationFactory.CreateEngine(chipset, usbDevice);
                 if (engine == null) throw new Exception($"No engine available for {chipset}");
