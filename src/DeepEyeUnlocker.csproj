@@ -14,16 +14,9 @@
 
   <ItemGroup>
     <PackageReference Include="LibUsbDotNet" Version="2.2.29" />
-    <PackageReference Include="NLog" Version="5.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.0" />
     <PackageReference Include="System.Management" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="nlog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
