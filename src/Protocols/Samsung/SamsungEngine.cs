@@ -2,13 +2,10 @@ using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using LibUsbDotNet;
-using NLog;
-
 namespace DeepEyeUnlocker.Protocols.Samsung
 {
     public class SamsungEngine : IProtocol
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
         private OdinProtocol? _odin;
 

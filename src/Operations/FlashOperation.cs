@@ -2,13 +2,10 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class FlashOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly string _firmwarePath;
 
         public FlashOperation(string firmwarePath)

@@ -1,13 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using LibUsbDotNet;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKDAProtocol
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
 
         public MTKDAProtocol(UsbDevice usbDevice)

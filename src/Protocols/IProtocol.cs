@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Protocols
 {

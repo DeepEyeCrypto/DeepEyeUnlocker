@@ -2,14 +2,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Drivers
 {
     public class DriverInstaller
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public static async Task<bool> InstallMtkDriversAsync()
         {
             Logger.Info("Installing MediaTek USB Drivers...");

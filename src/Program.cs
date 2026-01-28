@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 using DeepEyeUnlocker.UI;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker
 {

@@ -1,8 +1,7 @@
 using System;
 using System.Management;
 using System.Collections.Generic;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Helpers
 {
     public class DriverStatus
@@ -14,8 +13,6 @@ namespace DeepEyeUnlocker.Helpers
 
     public static class DriverChecker
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public static List<DriverStatus> CheckDrivers()
         {
             var results = new List<DriverStatus>();

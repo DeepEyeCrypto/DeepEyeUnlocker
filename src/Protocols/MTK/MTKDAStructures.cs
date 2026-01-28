@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Protocols.MTK
 {

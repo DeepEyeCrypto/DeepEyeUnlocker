@@ -1,13 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Protocols.Android
 {
     public class AdbEngine
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly string _adbPath = "adb.exe"; // Assumes adb is in path or Resources
 
         public async Task<string> ExecuteCommandAsync(string arguments)

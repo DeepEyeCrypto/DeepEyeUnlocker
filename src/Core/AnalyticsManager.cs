@@ -3,13 +3,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using NLog;
-
 namespace DeepEyeUnlocker.Core
 {
     public class AnalyticsManager
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly HttpClient Client = new HttpClient();
         private const string ApiUrl = "https://api.deepeyeunlocker.io/api/logs"; // Placeholder
 

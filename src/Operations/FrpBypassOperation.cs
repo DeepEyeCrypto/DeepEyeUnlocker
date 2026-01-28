@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Protocols.Qualcomm;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class FrpBypassOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public FrpBypassOperation()
         {
             Name = "FRP Bypass";

@@ -1,13 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Protocols.Android
 {
     public class FastbootEngine
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly string _fastbootPath = "fastboot.exe";
 
         public async Task<string> ExecuteCommandAsync(string arguments)

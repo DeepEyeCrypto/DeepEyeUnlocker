@@ -2,14 +2,10 @@ using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Protocols.Qualcomm;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class OppoServiceOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public OppoServiceOperation()
         {
             Name = "Oppo/Realme Advanced FRP";

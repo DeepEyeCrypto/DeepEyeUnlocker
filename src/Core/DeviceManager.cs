@@ -2,14 +2,10 @@ using System;
 using System.Collections.Generic;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using NLog;
-
 namespace DeepEyeUnlocker.Core
 {
     public class DeviceManager
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public List<UsbRegistry> EnumerateDevices()
         {
             List<UsbRegistry> devices = new List<UsbRegistry>();

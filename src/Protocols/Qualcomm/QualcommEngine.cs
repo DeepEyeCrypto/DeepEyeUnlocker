@@ -3,13 +3,10 @@ using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using NLog;
-
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class QualcommEngine : IProtocol
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
         private SaharaProtocol? _sahara;
         private FirehoseProtocol? _firehose;

@@ -2,13 +2,10 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using NLog;
-
 namespace DeepEyeUnlocker.Core
 {
     public class UpdateManager
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly HttpClient Client = new HttpClient();
         private const string VersionApi = "https://api.deepeyeunlocker.io/api/version/latest"; // Placeholder
 

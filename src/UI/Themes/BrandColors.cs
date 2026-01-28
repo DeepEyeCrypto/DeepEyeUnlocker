@@ -1,4 +1,5 @@
 using System.Drawing;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.UI.Themes
 {

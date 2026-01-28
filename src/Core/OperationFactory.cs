@@ -1,15 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using LibUsbDotNet;
-using NLog;
 using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.Core
 {
     public class OperationFactory
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public static IProtocol? CreateProtocol(string chipset, UsbDevice usbDevice)
         {
             switch (chipset.ToLower())

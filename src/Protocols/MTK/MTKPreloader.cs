@@ -3,13 +3,11 @@ using System.IO;
 using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKPreloader
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
         private readonly UsbEndpointReader _reader;
         private readonly UsbEndpointWriter _writer;

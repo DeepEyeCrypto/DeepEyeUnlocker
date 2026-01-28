@@ -4,13 +4,11 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
-using NLog;
-
+using DeepEyeUnlocker.Core;
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class SaharaProtocol
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UsbDevice _usbDevice;
         private readonly UsbEndpointReader _reader;
         private readonly UsbEndpointWriter _writer;

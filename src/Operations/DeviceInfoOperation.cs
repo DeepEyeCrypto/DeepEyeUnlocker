@@ -1,14 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class DeviceInfoOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public DeviceInfoOperation()
         {
             Name = "Read Device Info";

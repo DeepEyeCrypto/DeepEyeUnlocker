@@ -1,14 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class FormatOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public FormatOperation()
         {
             Name = "Format / Factory Reset";

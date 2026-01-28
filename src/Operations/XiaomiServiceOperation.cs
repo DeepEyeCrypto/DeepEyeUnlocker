@@ -2,14 +2,10 @@ using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Protocols.Qualcomm;
-using NLog;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class XiaomiServiceOperation : Operation
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public XiaomiServiceOperation()
         {
             Name = "Xiaomi Mi Account Bypass";

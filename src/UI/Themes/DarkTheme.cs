@@ -1,5 +1,6 @@
 using System.Windows.Forms;
 using DeepEyeUnlocker.UI.Themes;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.UI.Themes
 {
