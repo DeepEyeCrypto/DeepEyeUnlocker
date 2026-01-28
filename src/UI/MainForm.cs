@@ -4,6 +4,9 @@ using System.Windows.Forms;
 using DeepEyeUnlocker.UI.Themes;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Helpers;
+using DeepEyeUnlocker.Infrastructure;
+using DeepEyeUnlocker.Cloak.Root;
+using DeepEyeUnlocker.Cloak.Dev;
 
 namespace DeepEyeUnlocker.UI
 {
@@ -21,6 +24,11 @@ namespace DeepEyeUnlocker.UI
         private Button btnRefresh = null!;
         private DeviceManager _deviceManager;
         private System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry> _usbDevices;
+        private AdbClient _adbClient;
+
+        private TabControl mainTabs = null!;
+        private TabPage operationsTab = null!;
+        private CloakCenterTab cloakTab = null!;
 
         private ComboBox langSelector = null!;
 
@@ -30,6 +38,7 @@ namespace DeepEyeUnlocker.UI
         {
             _deviceManager = new DeviceManager();
             _usbDevices = new System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry>();
+            _adbClient = new AdbClient();
             _toolTip = new ToolTip();
             InitializeComponent();
             DarkTheme.Apply(this);
@@ -53,6 +62,9 @@ namespace DeepEyeUnlocker.UI
             this.deviceSelector = new ComboBox();
             this.btnRefresh = new Button();
             this.langSelector = new ComboBox();
+            this.mainTabs = new TabControl();
+            this.operationsTab = new TabPage();
+            this.cloakTab = new CloakCenterTab(_adbClient);
 
             this.SuspendLayout();
 
@@ -102,10 +114,19 @@ namespace DeepEyeUnlocker.UI
 
             devicePanel.Controls.AddRange(new Control[] { lblDevice, deviceSelector, btnRefresh });
 
-            // Operation Panel
+            // Tab Control
+            mainTabs.Dock = DockStyle.Fill;
+            operationsTab.Text = "Operations";
+            operationsTab.BackColor = BrandColors.Primary;
+            operationsTab.Padding = new Padding(10);
+            
+            // Move operationPanel to operationsTab
             operationPanel.Dock = DockStyle.Fill;
-            operationPanel.Padding = new Padding(20);
+            operationPanel.BackColor = BrandColors.Primary;
             AddOperationButtons();
+            operationsTab.Controls.Add(operationPanel);
+            
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, cloakTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
@@ -153,7 +174,7 @@ namespace DeepEyeUnlocker.UI
             headerPanel.Controls.AddRange(new Control[] { titleLabel, langSelector, driverFlow });
 
             // Final Assembly
-            this.Controls.Add(operationPanel);
+            this.Controls.Add(mainTabs);
             this.Controls.Add(devicePanel);
             this.Controls.Add(progressPanel);
             this.Controls.Add(headerPanel);
