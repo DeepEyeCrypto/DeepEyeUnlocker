@@ -63,6 +63,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
         {
             int written;
             _writer.Write(new byte[] { b }, 1000, out written);
+            await Task.Yield();
             return written == 1;
         }
     }

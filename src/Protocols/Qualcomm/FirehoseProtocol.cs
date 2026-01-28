@@ -110,6 +110,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             byte[] data = Encoding.UTF8.GetBytes(xml);
             int written;
             _writer.Write(data, TimeoutMs, out written);
+            await Task.Yield();
             return written == data.Length;
         }
 
@@ -118,6 +119,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             byte[] buffer = new byte[MaxPacketSize];
             int bytesRead;
             _reader.Read(buffer, TimeoutMs, out bytesRead);
+            await Task.Yield();
             if (bytesRead > 0)
             {
                 string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);

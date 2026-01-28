@@ -10,9 +10,9 @@ namespace DeepEyeUnlocker.UI
 {
     public class PartitionManagerForm : Form
     {
-        private DataGridView grid;
-        private Button btnRead;
-        private Button btnErase;
+        private DataGridView grid = null!;
+        private Button btnRead = null!;
+        private Button btnErase = null!;
         private IProtocol _protocol;
 
         public PartitionManagerForm(IProtocol protocol)

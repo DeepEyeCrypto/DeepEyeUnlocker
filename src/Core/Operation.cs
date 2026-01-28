@@ -5,7 +5,7 @@ namespace DeepEyeUnlocker.Core
 {
     public abstract class Operation
     {
-        public string Name { get; protected set; }
+        public string Name { get; protected set; } = string.Empty;
         public int Progress { get; protected set; }
         public string Status { get; protected set; } = "Idle";
 

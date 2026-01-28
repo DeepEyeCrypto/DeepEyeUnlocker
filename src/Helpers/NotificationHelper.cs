@@ -7,7 +7,7 @@ namespace DeepEyeUnlocker.Helpers
 {
     public static class NotificationHelper
     {
-        private static NotifyIcon _notifyIcon;
+        private static NotifyIcon? _notifyIcon;
 
         public static void Initialize(Form mainForm)
         {

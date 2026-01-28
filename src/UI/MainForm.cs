@@ -9,20 +9,20 @@ namespace DeepEyeUnlocker.UI
 {
     public partial class MainForm : Form
     {
-        private Panel headerPanel;
-        private Panel devicePanel;
-        private Panel operationPanel;
-        private Panel progressPanel;
-        private ListBox logConsole;
-        private ProgressBar progressBar;
-        private Label statusLabel;
-        private Label updateLabel;
-        private ComboBox deviceSelector;
-        private Button btnRefresh;
+        private Panel headerPanel = null!;
+        private Panel devicePanel = null!;
+        private Panel operationPanel = null!;
+        private Panel progressPanel = null!;
+        private ListBox logConsole = null!;
+        private ProgressBar progressBar = null!;
+        private Label statusLabel = null!;
+        private Label updateLabel = null!;
+        private ComboBox deviceSelector = null!;
+        private Button btnRefresh = null!;
         private DeviceManager _deviceManager;
         private System.Collections.Generic.List<LibUsbDotNet.Main.UsbRegistry> _usbDevices;
 
-        private ComboBox langSelector;
+        private ComboBox langSelector = null!;
 
         private ToolTip _toolTip;
 
@@ -161,7 +161,7 @@ namespace DeepEyeUnlocker.UI
             this.ResumeLayout(false);
         }
 
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        private void MainForm_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.R)
             {
