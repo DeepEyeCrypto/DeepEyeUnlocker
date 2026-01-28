@@ -1,0 +1,238 @@
+{
+    "profiles": [
+        {
+            "Brand": "Xiaomi",
+            "Model": "Redmi Note 10 Pro",
+            "Codename": "sweet",
+            "SoC": "SM7150",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false,
+            "Notes": "Works on MIUI 12.x, may require unlock for MIUI 13+"
+        },
+        {
+            "Brand": "Xiaomi",
+            "Model": "Redmi Note 11",
+            "Codename": "spes",
+            "SoC": "SM6225",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false,
+            "Notes": "MIUI 13 may block EDL"
+        },
+        {
+            "Brand": "Xiaomi",
+            "Model": "Redmi Note 12 Pro",
+            "Codename": "ruby",
+            "SoC": "MT6877",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": true,
+            "RequiresTestPoint": true,
+            "AuthToolName": "Mi Flash Pro",
+            "Notes": "MediaTek SoC - EDL not applicable. Uses BROM mode."
+        },
+        {
+            "Brand": "Xiaomi",
+            "Model": "POCO X3 NFC",
+            "Codename": "surya",
+            "SoC": "SM7150",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false
+        },
+        {
+            "Brand": "Xiaomi",
+            "Model": "Mi 11",
+            "Codename": "venus",
+            "SoC": "SM8350",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": true,
+            "RequiresTestPoint": false,
+            "AuthToolName": "Mi Flash Pro (Authorized)",
+            "Notes": "SDM888+ requires signed firehose via Xiaomi Auth"
+        },
+        {
+            "Brand": "OnePlus",
+            "Model": "OnePlus 6",
+            "Codename": "enchilada",
+            "SoC": "SDM845",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false,
+            "Notes": "Good EDL support on OxygenOS 9-10"
+        },
+        {
+            "Brand": "OnePlus",
+            "Model": "OnePlus 6T",
+            "Codename": "fajita",
+            "SoC": "SDM845",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false
+        },
+        {
+            "Brand": "OnePlus",
+            "Model": "OnePlus 8",
+            "Codename": "instantnoodle",
+            "SoC": "SM8250",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true,
+            "Notes": "OxygenOS 11+ blocks software EDL"
+        },
+        {
+            "Brand": "OnePlus",
+            "Model": "OnePlus 9",
+            "Codename": "lemonade",
+            "SoC": "SM8350",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true,
+            "Notes": "ColorOS-based firmware blocks EDL"
+        },
+        {
+            "Brand": "Samsung",
+            "Model": "Galaxy S21",
+            "Codename": "o1s",
+            "SoC": "SM8350",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true,
+            "TestPointDiagramUrl": "https://gsmforum.com/threads/samsung-s21-edl-points.12345/",
+            "Notes": "Samsung uses Download Mode (Odin). EDL requires test-point."
+        },
+        {
+            "Brand": "Samsung",
+            "Model": "Galaxy S22",
+            "Codename": "dm1q",
+            "SoC": "SM8550",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true,
+            "Notes": "Samsung never supports software EDL"
+        },
+        {
+            "Brand": "Samsung",
+            "Model": "Galaxy A52",
+            "Codename": "a52q",
+            "SoC": "SM7125",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true
+        },
+        {
+            "Brand": "Google",
+            "Model": "Pixel 4a",
+            "Codename": "sunfish",
+            "SoC": "SM7150",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true,
+            "Notes": "Google blocks EDL commands at aboot level"
+        },
+        {
+            "Brand": "Google",
+            "Model": "Pixel 5",
+            "Codename": "redfin",
+            "SoC": "SM7250",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": true
+        },
+        {
+            "Brand": "Realme",
+            "Model": "Realme 8 Pro",
+            "Codename": "RMX3081",
+            "SoC": "SM7125",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": true,
+            "RequiresTestPoint": false,
+            "AuthToolName": "MSMDownloadTool",
+            "Notes": "Requires Realme authorized service tool"
+        },
+        {
+            "Brand": "Oppo",
+            "Model": "Find X3 Pro",
+            "Codename": "PEEM00",
+            "SoC": "SM8350",
+            "SupportsAdbRebootEdl": false,
+            "SupportsFastbootOemEdl": false,
+            "RequiresAuthTool": true,
+            "RequiresTestPoint": false,
+            "AuthToolName": "MSMDownloadTool"
+        },
+        {
+            "Brand": "Motorola",
+            "Model": "Moto G Power 2021",
+            "Codename": "borneo",
+            "SoC": "SM6115",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false,
+            "Notes": "Most Moto G series support EDL"
+        },
+        {
+            "Brand": "Motorola",
+            "Model": "Moto G Stylus 5G",
+            "Codename": "denver",
+            "SoC": "SM4350",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false
+        },
+        {
+            "Brand": "LG",
+            "Model": "LG V60",
+            "Codename": "v60thinq",
+            "SoC": "SM8250",
+            "SupportsAdbRebootEdl": true,
+            "SupportsFastbootOemEdl": true,
+            "RequiresAuthTool": false,
+            "RequiresTestPoint": false,
+            "Notes": "LG exited market, but most devices support EDL"
+        }
+    ],
+    "testPoints": [
+        {
+            "DeviceModel": "Galaxy S21",
+            "Description": "Short the test pad near the SIM tray connector to GND during boot",
+            "DiagramUrl": "https://gsmforum.com/threads/samsung-s21-edl-points.12345/",
+            "ToolsNeeded": "Fine-tip tweezers, plastic spudger, heat gun for back glass",
+            "Difficulty": "Hard",
+            "RequiresBatteryDisconnect": true
+        },
+        {
+            "DeviceModel": "OnePlus 8",
+            "Description": "Test point located under the motherboard shielding near volume button",
+            "DiagramUrl": "https://gsmforum.com/threads/oneplus8-edl.67890/",
+            "ToolsNeeded": "Tweezers, T2 screwdriver, plastic pry tools",
+            "Difficulty": "Moderate",
+            "RequiresBatteryDisconnect": true
+        },
+        {
+            "DeviceModel": "Pixel 4a",
+            "Description": "EDL pad near the USB-C connector on the main board",
+            "DiagramUrl": "https://ifixit.com/guide/pixel-4a-teardown",
+            "ToolsNeeded": "Tweezers, suction cup, plastic pry tools",
+            "Difficulty": "Moderate",
+            "RequiresBatteryDisconnect": true
+        }
+    ]
+}
