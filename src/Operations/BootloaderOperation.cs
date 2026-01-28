@@ -1,3 +1,10 @@
+using System;
+using System.Threading.Tasks;
+using DeepEyeUnlocker.Core;
+using NLog;
+
+namespace DeepEyeUnlocker.Operations
+{
     public class BootloaderOperation : Operation
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
