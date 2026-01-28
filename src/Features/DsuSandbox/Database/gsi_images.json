@@ -1,0 +1,123 @@
+{
+    "images": [
+        {
+            "id": "gsi-aosp-arm64-14",
+            "name": "AOSP Android 14 (ARM64)",
+            "osName": "AOSP",
+            "version": "14",
+            "architecture": "arm64",
+            "sizeMb": 2048,
+            "sha256Checksum": "",
+            "downloadUrl": "https://dl.google.com/developers/android/gsi/gsi_arm64-userdebug.img.xz",
+            "minAndroidVersion": 10,
+            "source": "google",
+            "notes": "Official Google AOSP GSI. Best compatibility. May lack some device features (camera, fingerprint).",
+            "compatibility": {
+                "snapdragon": "excellent",
+                "mediatek": "good",
+                "exynos": "fair",
+                "kirin": "partial"
+            }
+        },
+        {
+            "id": "gsi-aosp-arm64-13",
+            "name": "AOSP Android 13 (ARM64)",
+            "osName": "AOSP",
+            "version": "13",
+            "architecture": "arm64",
+            "sizeMb": 1920,
+            "sha256Checksum": "",
+            "downloadUrl": "https://dl.google.com/developers/android/gsi/gsi-13-arm64.img.xz",
+            "minAndroidVersion": 10,
+            "source": "google",
+            "notes": "Stable AOSP Android 13. Recommended for compatibility testing.",
+            "compatibility": {
+                "snapdragon": "excellent",
+                "mediatek": "good",
+                "exynos": "good"
+            }
+        },
+        {
+            "id": "lineage-gsi-21-arm64",
+            "name": "LineageOS 21 GSI (ARM64)",
+            "osName": "LineageOS",
+            "version": "21",
+            "architecture": "arm64",
+            "sizeMb": 2560,
+            "sha256Checksum": "",
+            "downloadUrl": "https://sourceforge.net/projects/andyyan-gsi/files/lineage-21-arm64-bvN.img.xz/download",
+            "minAndroidVersion": 10,
+            "source": "lineageos",
+            "notes": "LineageOS 21 GSI by AndyYan. Good alternative to AOSP with extra features.",
+            "compatibility": {
+                "snapdragon": "excellent",
+                "mediatek": "good"
+            }
+        },
+        {
+            "id": "lineage-gsi-20-arm64",
+            "name": "LineageOS 20 GSI (ARM64)",
+            "osName": "LineageOS",
+            "version": "20",
+            "architecture": "arm64",
+            "sizeMb": 2304,
+            "sha256Checksum": "",
+            "downloadUrl": "https://sourceforge.net/projects/andyyan-gsi/files/lineage-20-arm64-bvN.img.xz/download",
+            "minAndroidVersion": 10,
+            "source": "lineageos",
+            "notes": "Stable LineageOS 20 GSI. Well-tested with many devices.",
+            "compatibility": {
+                "snapdragon": "excellent",
+                "mediatek": "good",
+                "exynos": "fair"
+            }
+        }
+    ],
+    "deviceCapabilityMatrix": [
+        {
+            "model": "Pixel 5",
+            "bootloader": "redfin",
+            "minAndroid": 10,
+            "dsuAdbSupport": true,
+            "dsuRecoverySupport": true,
+            "preferredMethod": "dsu_adb",
+            "notes": "Excellent DSU support - Google reference device"
+        },
+        {
+            "model": "Pixel 6",
+            "bootloader": "oriole",
+            "minAndroid": 12,
+            "dsuAdbSupport": true,
+            "dsuRecoverySupport": true,
+            "preferredMethod": "dsu_adb",
+            "notes": "Full DSU support with Tensor chip"
+        },
+        {
+            "model": "OnePlus 9",
+            "bootloader": "lemonade",
+            "minAndroid": 11,
+            "dsuAdbSupport": true,
+            "dsuRecoverySupport": true,
+            "preferredMethod": "dsu_recovery",
+            "notes": "DSU via TWRP recommended"
+        },
+        {
+            "model": "Samsung Galaxy S21",
+            "bootloader": "o1s",
+            "minAndroid": 11,
+            "dsuAdbSupport": false,
+            "dsuRecoverySupport": false,
+            "preferredMethod": "ab_slot",
+            "notes": "Requires bootloader unlock + TWRP for full functionality"
+        },
+        {
+            "model": "Xiaomi 12",
+            "bootloader": "cupid",
+            "minAndroid": 12,
+            "dsuAdbSupport": true,
+            "dsuRecoverySupport": true,
+            "preferredMethod": "dsu_adb",
+            "notes": "Good DSU support after bootloader unlock"
+        }
+    ]
+}
