@@ -4,7 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
-using DeepEyeUnlocker.Infrastructure.Logging;
+using DeepEyeUnlocker.Protocols;
+
 
 namespace DeepEyeUnlocker.Operations
 {

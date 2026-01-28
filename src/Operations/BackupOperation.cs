@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Protocols;
-using DeepEyeUnlocker.Infrastructure.Logging;
+using System.Linq;
+using LogLevel = DeepEyeUnlocker.Core.Models.LogLevel;
 
 namespace DeepEyeUnlocker.Operations
 {
@@ -25,7 +26,7 @@ namespace DeepEyeUnlocker.Operations
             try
             {
                 Logger.Info($"Starting unified backup using {_protocol.Name}...");
-                var partitions = await _protocol.GetPartitionTableAsync();
+                var partitions = (await _protocol.GetPartitionTableAsync()).ToList();
                 if (ct.IsCancellationRequested) return false;
                 
                 string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups", DateTime.Now.ToString("yyyyMMdd_HHmmss"));

@@ -353,7 +353,7 @@ namespace DeepEyeUnlocker.UI.Panels
                     LogMessage(update.Message);
                     if (_progressBar.Style != ProgressBarStyle.Marquee)
                     {
-                        _progressBar.Value = Math.Min(update.ProgressPercent, 100);
+                        _progressBar.Value = Math.Min(update.Percentage, 100);
                     }
                 });
 
@@ -527,7 +527,7 @@ namespace DeepEyeUnlocker.UI.Panels
             {
                 var progress = new Progress<ProgressUpdate>(update =>
                 {
-                    _progressBar.Value = Math.Min(update.ProgressPercent, 100);
+                    _progressBar.Value = Math.Min(update.Percentage, 100);
                 });
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));

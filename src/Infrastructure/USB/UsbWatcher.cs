@@ -1,6 +1,7 @@
 using System;
 using System.Management;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Infrastructure.USB
 {

@@ -24,10 +24,17 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         public QualcommEngine(UsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
+            // Extract VID/PID from device - LibUsbDotNet 2.x compatible
+            int vid = 0, pid = 0;
+            if (usbDevice.UsbRegistryInfo != null)
+            {
+                vid = usbDevice.UsbRegistryInfo.Vid;
+                pid = usbDevice.UsbRegistryInfo.Pid;
+            }
             Context = new DeviceContext 
             { 
-                Vid = usbDevice.UsbRegistry.Vid, 
-                Pid = usbDevice.UsbRegistry.Pid,
+                Vid = vid, 
+                Pid = pid,
                 Mode = ConnectionMode.EDL,
                 Chipset = "Qualcomm"
             };
@@ -145,6 +152,28 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 return true;
             }
             return false;
+        }
+
+        public async Task<bool> WritePartitionAsync(string partitionName, byte[] data)
+        {
+            using (var stream = new MemoryStream(data))
+            {
+                return await WritePartitionFromStreamAsync(partitionName, stream, null!, CancellationToken.None);
+            }
+        }
+
+        public async Task<bool> ErasePartitionAsync(string partitionName, IProgress<ProgressUpdate>? progress, CancellationToken ct)
+        {
+            if (_firehose == null) throw new InvalidOperationException("Firehose protocol not initialized.");
+
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) throw new Exception($"Partition {partitionName} not found.");
+
+            long startSector = (long)part.StartLba;
+            int sectorCount = (int)((part.SizeInBytes + 511) / 512);
+
+            return await _firehose.ErasePartitionAsync(partitionName, startSector, sectorCount);
         }
     }
 }

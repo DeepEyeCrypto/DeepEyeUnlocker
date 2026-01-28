@@ -55,7 +55,7 @@ namespace DeepEyeUnlocker.Core
         {
             var ops = new List<Operation>
             {
-                new Operations.DeviceInfoOperation()
+                // DeviceInfoOperation added when protocol is available
             };
 
             // EDL Operations - Add for Qualcomm devices not already in EDL
@@ -120,9 +120,9 @@ namespace DeepEyeUnlocker.Core
 
                 case "SAMSUNG":
                     // Samsung uses Odin mode, not EDL
-                    if (context.Mode == ConnectionMode.Download)
+                    if (context.Mode == ConnectionMode.DownloadMode)
                     {
-                        ops.Add(new Operations.FormatOperation());
+                        // FormatOperation requires protocol - skip here
                     }
                     break;
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {

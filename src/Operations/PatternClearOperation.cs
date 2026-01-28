@@ -3,6 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core.Engines;
+using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.Operations
 {

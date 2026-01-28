@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class FirehoseProtocol
@@ -100,7 +101,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                     if (readFromStream == 0) break;
 
                     int written;
-                    _writer.Write(buffer, 0, readFromStream, out written);
+                    _writer.Write(buffer, 0, readFromStream, TimeoutMs, out written);
                     if (written == 0) return false;
                     
                     totalWritten += written;

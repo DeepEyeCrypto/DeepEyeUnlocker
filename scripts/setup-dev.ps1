@@ -1,12 +1,20 @@
 # DeepEyeUnlocker Dev Setup Script
 Write-Host "🚀 Setting up DeepEyeUnlocker Development Environment..." -ForegroundColor Cyan
 
-# 1. Check for .NET 6.0 SDK
+# 1. Check for .NET 8.0 SDK
 if (Get-Command dotnet -ErrorAction SilentlyContinue) {
-    dotnet --version
-    Write-Host "✅ .NET SDK is installed." -ForegroundColor Green
-} else {
-    Write-Host "❌ .NET SDK not found. Please install .NET 6.0 SDK." -ForegroundColor Red
+    $version = dotnet --version
+    if ($version -match "^8\.") {
+        Write-Host "✅ .NET SDK 8.0 is installed ($version)." -ForegroundColor Green
+    }
+    else {
+        Write-Host "⚠️ .NET SDK found but version is $version. DeepEyeUnlocker requires .NET 8.0." -ForegroundColor Yellow
+    }
+}
+else {
+    Write-Host "❌ .NET SDK not found. Please install .NET 8.0 SDK." -ForegroundColor Red
+    Write-Host "   Mac: brew install --cask dotnet-sdk" -ForegroundColor Gray
+    Write-Host "   Win: winget install Microsoft.DotNet.SDK.8" -ForegroundColor Gray
 }
 
 # 2. Restore NuGet Packages

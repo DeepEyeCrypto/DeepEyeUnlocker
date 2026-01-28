@@ -33,7 +33,7 @@ namespace DeepEyeUnlocker.Core
             }
             catch (Exception ex)
             {
-                Logger.Debug(ex, "Analytics logging bypassed.");
+                Logger.Debug($"Analytics logging bypassed: " + ex.Message);
             }
             await Task.CompletedTask;
         }

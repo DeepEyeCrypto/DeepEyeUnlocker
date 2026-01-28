@@ -22,10 +22,17 @@ namespace DeepEyeUnlocker.Protocols.MTK
         public MTKEngine(UsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
+            // Extract VID/PID from device - LibUsbDotNet 2.x compatible
+            int vid = 0, pid = 0;
+            if (usbDevice.UsbRegistryInfo != null)
+            {
+                vid = usbDevice.UsbRegistryInfo.Vid;
+                pid = usbDevice.UsbRegistryInfo.Pid;
+            }
             Context = new DeviceContext
             {
-                Vid = usbDevice.UsbRegistry.Vid,
-                Pid = usbDevice.UsbRegistry.Pid,
+                Vid = vid, 
+                Pid = pid,
                 Mode = ConnectionMode.BROM,
                 Chipset = "MediaTek"
             };
@@ -80,7 +87,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             Logger.Info($"MTK: Streaming read {partitionName}...");
             
             long startAddress = (long)part.StartLba * 512;
-            long remaining = part.SizeInBytes;
+            long remaining = (long)part.SizeInBytes;
             long totalRead = 0;
             int chunkSize = 1024 * 64; // 64KB
 
@@ -96,10 +103,19 @@ namespace DeepEyeUnlocker.Protocols.MTK
                 totalRead += data.Length;
                 remaining -= data.Length;
 
-                int percent = (int)((totalRead * 100) / part.SizeInBytes);
+                int percent = (int)((totalRead * 100) / (long)part.SizeInBytes);
                 progress?.Report(ProgressUpdate.Info(percent, $"Reading {partitionName}..."));
             }
 
+            return true;
+        }
+        
+        public async Task<bool> ErasePartitionAsync(string partitionName, IProgress<ProgressUpdate>? progress, CancellationToken ct)
+        {
+            // TODO: Implement MTK specific erase logic
+            Logger.Info($"MTK: Erasing {partitionName} (SIMULATED)");
+            await Task.Delay(500, ct); 
+            // In real world, use _daProtocol.FormatPartition(...)
             return true;
         }
 

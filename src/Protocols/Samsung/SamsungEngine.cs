@@ -57,7 +57,7 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             return await _odin.FlashPartitionAsync(partitionName, data);
         }
 
-        public async Task<bool> ErasePartitionAsync(string partitionName)
+        public async Task<bool> ErasePartitionAsync(string partitionName, IProgress<ProgressUpdate>? progress, CancellationToken ct)
         {
             Logger.Info($"Samsung: Erasing partition {partitionName}...");
             await Task.Delay(100);

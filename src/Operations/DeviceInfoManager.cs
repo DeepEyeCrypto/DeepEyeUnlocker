@@ -193,7 +193,10 @@ namespace DeepEyeUnlocker.Operations
             {
                 var trimmed = line.Trim();
                 if (trimmed.StartsWith("level:"))
-                    int.TryParse(trimmed.Split(':').LastOrDefault()?.Trim(), out info.Battery.Level);
+                {
+                    if (int.TryParse(trimmed.Split(':').LastOrDefault()?.Trim(), out int level))
+                        info.Battery.Level = level;
+                }
                 else if (trimmed.StartsWith("status:"))
                     info.Battery.Status = trimmed.Split(':').LastOrDefault()?.Trim() ?? "";
                 else if (trimmed.StartsWith("health:"))
@@ -204,7 +207,10 @@ namespace DeepEyeUnlocker.Operations
                         info.Battery.Temperature = temp / 10.0; // Usually in tenths of degree
                 }
                 else if (trimmed.StartsWith("voltage:"))
-                    int.TryParse(trimmed.Split(':').LastOrDefault()?.Trim(), out info.Battery.Voltage);
+                {
+                    if (int.TryParse(trimmed.Split(':').LastOrDefault()?.Trim(), out int voltage))
+                        info.Battery.Voltage = voltage;
+                }
                 else if (trimmed.StartsWith("technology:"))
                     info.Battery.Technology = trimmed.Split(':').LastOrDefault()?.Trim() ?? "";
             }

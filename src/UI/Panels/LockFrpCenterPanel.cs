@@ -7,6 +7,8 @@ using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Operations;
 using DeepEyeUnlocker.Protocols.Qualcomm;
+using DeepEyeUnlocker.Core.Engines;
+using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.UI.Panels
 {

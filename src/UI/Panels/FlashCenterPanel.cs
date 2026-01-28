@@ -9,6 +9,7 @@ using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Operations;
 using DeepEyeUnlocker.UI.Themes;
 using DeepEyeUnlocker.Infrastructure.Logging;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.UI.Panels
 {
@@ -284,7 +285,7 @@ namespace DeepEyeUnlocker.UI.Panels
             }
             else
             {
-                lblStatus.Text = $"Status: {_device.FullName} ({_device.Mode}) Connected";
+                lblStatus.Text = $"Status: {_device.Brand} {_device.Model} ({_device.Mode}) Connected";
                 lblStatus.ForeColor = Color.Lime;
             }
         }

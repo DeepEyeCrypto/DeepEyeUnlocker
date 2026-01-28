@@ -9,6 +9,7 @@
     <Version>1.1.1</Version>
     <Authors>DeepEyeUnlocker Community</Authors>
     <Description>Free Open-Source Mobile Device Unlock Tool</Description>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>

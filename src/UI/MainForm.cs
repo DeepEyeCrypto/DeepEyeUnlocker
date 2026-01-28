@@ -8,6 +8,8 @@ using DeepEyeUnlocker.Infrastructure;
 using DeepEyeUnlocker.Cloak.Root;
 using DeepEyeUnlocker.Cloak.Dev;
 using DeepEyeUnlocker.UI.Panels;
+using DeepEyeUnlocker.Core.Engines;
+using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.UI
 {

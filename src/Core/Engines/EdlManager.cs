@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Infrastructure.USB;
 using LibUsbDotNet;
+using LibUsbDotNet.Main;
 
 namespace DeepEyeUnlocker.Core.Engines
 {
@@ -58,7 +59,7 @@ namespace DeepEyeUnlocker.Core.Engines
             }
 
             // STEP 1: Try ADB path if device is in ADB mode
-            if (device.Mode == ConnectionMode.ADB || device.Mode == ConnectionMode.Normal)
+            if (device.Mode == ConnectionMode.ADB)
             {
                 if (profile?.SupportsAdbRebootEdl != false) // Try if profile allows or unknown
                 {
@@ -95,7 +96,7 @@ namespace DeepEyeUnlocker.Core.Engines
             }
 
             // STEP 2: Try Fastboot path
-            if (device.Mode == ConnectionMode.Fastboot || device.Mode == ConnectionMode.Download)
+            if (device.Mode == ConnectionMode.Fastboot || device.Mode == ConnectionMode.DownloadMode)
             {
                 if (profile?.SupportsFastbootOemEdl != false)
                 {
@@ -179,9 +180,11 @@ namespace DeepEyeUnlocker.Core.Engines
             {
                 foreach (UsbRegistry usb in UsbDevice.AllDevices)
                 {
-                    if (EdlPids.Any(e => usb.Vid == e.Vid && usb.Pid == e.Pid))
+                    var vid = usb.Vid;
+                    var pid = usb.Pid;
+                    if (EdlPids.Any(e => vid == e.Vid && pid == e.Pid))
                     {
-                        Logger.Debug($"EDL device found: {usb.Vid:X4}:{usb.Pid:X4}", "EDL");
+                        Logger.Debug($"EDL device found: {vid:X4}:{pid:X4}", "EDL");
                         return true;
                     }
                 }

@@ -3,7 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Protocols;
 using DeepEyeUnlocker.Infrastructure.Logging;
+using LogLevel = DeepEyeUnlocker.Core.Models.LogLevel;
 
 namespace DeepEyeUnlocker.Operations
 {

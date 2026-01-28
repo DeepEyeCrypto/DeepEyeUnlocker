@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Protocols;
 using DeepEyeUnlocker.UI.Themes;
+using DeepEyeUnlocker.Core.Models;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace DeepEyeUnlocker.UI
 {
@@ -68,10 +72,10 @@ namespace DeepEyeUnlocker.UI
         private async Task LoadPartitionsAsync()
         {
             grid.Rows.Clear();
-            var partitions = await _protocol.GetPartitionTableAsync();
+            var partitions = (await _protocol.GetPartitionTableAsync()).ToList();
             foreach (var p in partitions)
             {
-                grid.Rows.Add(p.Name, p.Size, $"0x{p.StartAddress:X8}");
+                grid.Rows.Add(p.Name, p.SizeInBytes, $"0x{p.StartLba:X8}");
             }
             lblTotalPartitions.Text = $"Partitions: {partitions.Count}";
         }
@@ -119,7 +123,7 @@ namespace DeepEyeUnlocker.UI
             var res = MessageBox.Show($"Are you SURE you want to ERASE '{partName}'? This cannot be undone.", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (res == DialogResult.Yes)
             {
-                await _protocol.ErasePartitionAsync(partName);
+                await _protocol.ErasePartitionAsync(partName, null, CancellationToken.None);
                 MessageBox.Show("Partition erased.");
             }
         }

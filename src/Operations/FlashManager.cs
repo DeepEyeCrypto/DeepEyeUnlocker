@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Infrastructure.Logging;
 
 namespace DeepEyeUnlocker.Operations

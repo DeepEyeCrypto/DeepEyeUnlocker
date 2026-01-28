@@ -68,7 +68,7 @@ namespace DeepEyeUnlocker.Operations
 
                 // Get FRP partition name for this brand
                 var frpPartitions = GetFrpPartitionNames(device.Brand);
-                info.PartitionName = frpPartitions.FirstOrDefault();
+                info.FrpPartitionName = frpPartitions.FirstOrDefault();
 
                 if (_firehose != null && _firehose.IsReady)
                 {

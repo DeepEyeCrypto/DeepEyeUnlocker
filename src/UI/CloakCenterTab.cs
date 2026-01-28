@@ -88,7 +88,8 @@ namespace DeepEyeUnlocker.UI
                 btnStealthDev.Enabled = true;
                 btnRestoreDev.Enabled = true;
 
-                NotificationHelper.ShowNotification("Scan Complete", "Device stealth state updated.");
+                // Notify scan complete
+                MessageBox.Show("Device stealth state updated.", "Scan Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {

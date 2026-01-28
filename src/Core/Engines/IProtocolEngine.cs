@@ -25,6 +25,11 @@ namespace DeepEyeUnlocker.Core.Engines
         /// </summary>
         Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct);
 
+        /// <summary>
+        /// Erases a specific partition.
+        /// </summary>
+        Task<bool> ErasePartitionAsync(string partitionName, IProgress<ProgressUpdate>? progress, CancellationToken ct);
+
         Task<IEnumerable<PartitionInfo>> GetPartitionTableAsync();
         
         Task<bool> RebootAsync(string mode = "system");

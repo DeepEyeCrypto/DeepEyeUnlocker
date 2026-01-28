@@ -5,6 +5,7 @@ using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Engines;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Infrastructure.Logging;
+using LogLevel = DeepEyeUnlocker.Core.Models.LogLevel;
 
 namespace DeepEyeUnlocker.Operations
 {

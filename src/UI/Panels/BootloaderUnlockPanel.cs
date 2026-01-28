@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Operations;
 using DeepEyeUnlocker.UI.Themes;
-using DeepEyeUnlocker.Infrastructure.Logging;
+using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.UI.Panels
 {
@@ -187,7 +187,7 @@ namespace DeepEyeUnlocker.UI.Panels
 
             try
             {
-                var op = new BootloaderOperation();
+                var op = new BootloaderOperation(null!);
                 var progress = new Progress<ProgressUpdate>(p => {
                     this.Invoke(new Action(() => {
                         prgStatus.Value = p.Percentage;
@@ -196,10 +196,7 @@ namespace DeepEyeUnlocker.UI.Panels
                     }));
                 });
 
-                bool success = await op.ExecuteAsync(new Device { 
-                    Mode = _device.Mode.ToString(), 
-                    Chipset = _device.Chipset 
-                }, progress, _cts.Token);
+                bool success = await op.ExecuteAsync(_device, progress, _cts.Token);
 
                 if (success)
                 {
@@ -232,7 +229,7 @@ namespace DeepEyeUnlocker.UI.Panels
             }
             else
             {
-                lblPhaseTitle.Text = $"Ready to Unlock: {_device.FullName}";
+                lblPhaseTitle.Text = $"Ready to Unlock: {_device.Brand} {_device.Model}";
                 lblPhaseDesc.Text = $"Detected Strategy: {GetRecommendedStrategy(_device)}";
                 ValidateCheckboxes();
             }

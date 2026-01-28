@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
 namespace DeepEyeUnlocker.Protocols.Samsung
 {
     public class OdinProtocol
@@ -71,6 +72,5 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             }
             return true;
         }
-    }
     }
 }
