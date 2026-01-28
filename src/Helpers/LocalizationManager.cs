@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace DeepEyeUnlocker.Helpers
@@ -8,50 +7,23 @@ namespace DeepEyeUnlocker.Helpers
         public enum Language { English, Hindi }
         public static Language CurrentLanguage { get; set; } = Language.English;
 
-        private static readonly Dictionary<string, string> EnStrings = new()
+        private static readonly Dictionary<string, Dictionary<Language, string>> Resources = new()
         {
-            { "AppTitle", "DeepEyeUnlocker v1.0 - Professional Mobile Repair" },
-            { "HeaderTitle", "🔷 DEEPEYE UNLOCKER" },
-            { "TargetDevice", "Target Device:" },
-            { "Refresh", "Refresh" },
-            { "Format", "Format" },
-            { "FrpBypass", "FRP Bypass" },
-            { "PatternClear", "Pattern Clear" },
-            { "Backup", "Backup" },
-            { "Flash", "Flash" },
-            { "Bootloader", "Bootloader" },
-            { "DeviceInfo", "Device Info" },
-            { "Scanning", "Scanning for devices..." },
-            { "Ready", "Ready for operation..." },
-            { "NoDevice", "No supported devices found." },
-            { "OperationStarted", "Starting operation:" },
-            { "OperationFinished", "Operation finished." }
-        };
-
-        private static readonly Dictionary<string, string> HiStrings = new()
-        {
-            { "AppTitle", "DeepEyeUnlocker v1.0 - प्रोफेशनल मोबाइल रिपेयर" },
-            { "HeaderTitle", "🔷 डीपआई अनलॉकर" },
-            { "TargetDevice", "लक्ष्य डिवाइस:" },
-            { "Refresh", "ताज़ा करें" },
-            { "Format", "फॉर्मेट" },
-            { "FrpBypass", "FRP बाईपास" },
-            { "PatternClear", "पैटर्न साफ़ करें" },
-            { "Backup", "बैकअप" },
-            { "Flash", "फ्लैश" },
-            { "Bootloader", "बूटलोडर" },
-            { "DeviceInfo", "डिवाइस जानकारी" },
-            { "Scanning", "डिवाइस की तलाश की जा रही है..." },
-            { "Ready", "ऑपरेशन के लिए तैयार..." },
-            { "NoDevice", "कोई समर्थित डिवाइस नहीं मिला।" },
-            { "OperationStarted", "ऑपरेशन शुरू हो रहा है:" },
-            { "OperationFinished", "ऑपरेशन पूरा हुआ।" }
+            ["AppTitle"] = new() { [Language.English] = "DeepEyeUnlocker Pro v1.1", [Language.Hindi] = "डीपआई अनलॉकर प्रो v1.1" },
+            ["Ready"] = new() { [Language.English] = "Ready for operation...", [Language.Hindi] = "ऑपरेशन के लिए तैयार..." },
+            ["Scanning"] = new() { [Language.English] = "Scanning for devices...", [Language.Hindi] = "डिवाइस की खोज कर रहे हैं..." },
+            ["NoDevice"] = new() { [Language.English] = "No device detected.", [Language.Hindi] = "कोई डिवाइस नहीं मिला।" },
+            ["OperationStarted"] = new() { [Language.English] = "Operation started:", [Language.Hindi] = "ऑपरेशन शुरू हुआ:" },
+            ["OperationFinished"] = new() { [Language.English] = "Completed!", [Language.Hindi] = "पूरा हुआ!" },
+            ["Refresh"] = new() { [Language.English] = "Refresh", [Language.Hindi] = "रिफ्रेश" },
+            ["HeaderTitle"] = new() { [Language.English] = "DEEPEYE DASHBOARD", [Language.Hindi] = "डीपआई डैशबोर्ड" }
         };
 
         public static string GetString(string key)
         {
-            var dict = CurrentLanguage == Language.Hindi ? HiStrings : EnStrings;
-            return dict.ContainsKey(key) ? dict[key] : key;
+            if (Resources.ContainsKey(key))
+                return Resources[key][CurrentLanguage];
+            return key;
         }
     }
 }
