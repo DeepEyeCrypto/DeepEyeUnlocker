@@ -316,7 +316,7 @@ namespace DeepEyeUnlocker.UI
                         "Flash" => new Operations.FlashOperation("path_to_firmware.zip"),
                         "Device Info" => new Operations.DeviceInfoOperation(),
                         "Pattern Clear" => new Operations.PatternClearOperation(),
-                        "Backup" => new Operations.BackupOperation("backups/full_dump.bin"),
+                        "Backup" => new Operations.BackupOperation(engine),
                         "Bootloader" => new Operations.BootloaderOperation(),
                         _ => throw new NotSupportedException($"Operation {operationName} not implemented.")
                     };
