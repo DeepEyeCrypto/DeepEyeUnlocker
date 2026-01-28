@@ -7,6 +7,7 @@ using DeepEyeUnlocker.Helpers;
 using DeepEyeUnlocker.Infrastructure;
 using DeepEyeUnlocker.Cloak.Root;
 using DeepEyeUnlocker.Cloak.Dev;
+using DeepEyeUnlocker.UI.Panels;
 
 namespace DeepEyeUnlocker.UI
 {
@@ -28,9 +29,17 @@ namespace DeepEyeUnlocker.UI
 
         private TabControl mainTabs = null!;
         private TabPage operationsTab = null!;
+        private TabPage deviceInfoTab = null!;
+        private TabPage adbToolsTab = null!;
+        private TabPage lockFrpTab = null!;
         private CloakCenterTab cloakTab = null!;
         private DriverCenterTab driverTab = null!;
-        private ResourceCenterTab resourceTab = null!;
+        private ResourceCenterTab resourceTab = null!
+;
+        // New panels
+        private DeviceInfoPanel _deviceInfoPanel = null!;
+        private AdbToolsPanel _adbToolsPanel = null!;
+        private LockFrpCenterPanel _lockFrpPanel = null!;
 
         private ComboBox langSelector = null!;
 
@@ -66,9 +75,17 @@ namespace DeepEyeUnlocker.UI
             this.langSelector = new ComboBox();
             this.mainTabs = new TabControl();
             this.operationsTab = new TabPage();
+            this.deviceInfoTab = new TabPage();
+            this.adbToolsTab = new TabPage();
+            this.lockFrpTab = new TabPage();
             this.cloakTab = new CloakCenterTab(_adbClient);
             this.driverTab = new DriverCenterTab();
             this.resourceTab = new ResourceCenterTab();
+
+            // Initialize new panels
+            this._deviceInfoPanel = new DeviceInfoPanel();
+            this._adbToolsPanel = new AdbToolsPanel();
+            this._lockFrpPanel = new LockFrpCenterPanel();
 
             this.SuspendLayout();
 
@@ -129,8 +146,24 @@ namespace DeepEyeUnlocker.UI
             operationPanel.BackColor = BrandColors.Primary;
             AddOperationButtons();
             operationsTab.Controls.Add(operationPanel);
+
+            // Configure new tabs
+            deviceInfoTab.Text = "📱 Device Info";
+            deviceInfoTab.BackColor = BrandColors.Primary;
+            _deviceInfoPanel.Dock = DockStyle.Fill;
+            deviceInfoTab.Controls.Add(_deviceInfoPanel);
+
+            adbToolsTab.Text = "🔧 ADB Tools";
+            adbToolsTab.BackColor = BrandColors.Primary;
+            _adbToolsPanel.Dock = DockStyle.Fill;
+            adbToolsTab.Controls.Add(_adbToolsPanel);
+
+            lockFrpTab.Text = "🔐 Lock & FRP";
+            lockFrpTab.BackColor = BrandColors.Primary;
+            _lockFrpPanel.Dock = DockStyle.Fill;
+            lockFrpTab.Controls.Add(_lockFrpPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, cloakTab, driverTab, resourceTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, driverTab, resourceTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
