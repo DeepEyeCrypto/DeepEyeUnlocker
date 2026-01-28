@@ -29,6 +29,7 @@ namespace DeepEyeUnlocker.UI
         private TabControl mainTabs = null!;
         private TabPage operationsTab = null!;
         private CloakCenterTab cloakTab = null!;
+        private DriverCenterTab driverTab = null!;
 
         private ComboBox langSelector = null!;
 
@@ -65,6 +66,7 @@ namespace DeepEyeUnlocker.UI
             this.mainTabs = new TabControl();
             this.operationsTab = new TabPage();
             this.cloakTab = new CloakCenterTab(_adbClient);
+            this.driverTab = new DriverCenterTab();
 
             this.SuspendLayout();
 
@@ -126,7 +128,7 @@ namespace DeepEyeUnlocker.UI
             AddOperationButtons();
             operationsTab.Controls.Add(operationPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, cloakTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, cloakTab, driverTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
