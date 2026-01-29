@@ -1,8 +1,8 @@
-# DeepEyeUnlocker v1.5.0 "Health & Stealth"
+# DeepEyeUnlocker v1.6.0 "Security Intelligence"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v1.5.0](https://img.shields.io/badge/Download-v1.5.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.5.0)
+[![Download DeepEyeUnlocker v1.6.0](https://img.shields.io/badge/Download-v1.6.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.6.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,9 +15,9 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v1.5.0**
+Latest stable release: **v1.6.0**
 
-- ⬇️ [Download DeepEyeUnlocker v1.5.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.5.0)
+- ⬇️ [Download DeepEyeUnlocker v1.6.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.6.0)
 - Platform: Windows (x64)
 - Status: Stable Release (Sentinel Pro) - Operations, Stealth, and Fleet enabled.
 
@@ -35,14 +35,15 @@ Latest stable release: **v1.5.0**
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.5.0 "Health & Stealth" Highlights
+### v1.6.0 "Security Intelligence" Highlights
 
-- **⚡ FRP Bypass Engine:** Automated partition-level reset for Qualcomm and MediaTek chipsets (Epic A).
-- **🛡️ Flash Integrity Center:** Granular flashing with mandatory SHA-256 checks and size-mismatch guards (Epic B).
-- **🕵️ Cloak Stealth Pro:** Advanced system prop hiding (`resetprop`) and the **2025 Golden Standard Stealth Advisor** (Epic C+).
+- **📊 CVE Intelligence Scanner:** logic-based vulnerability audit identifying critical Android threats based on patch levels.
+- **🛑 Expert Mode & Restore:** Safely write to device block devices with mandatory integrity verification and simulated "dry-runs".
+- **📦 Encrypted Partition Backups:** AES-256-CBC encrypted partition imaging with SHA-256 streaming verification.
+- **🛠️ Technician Toolkit:** Automated Magisk fingerprint spoofing and Frida/LSPosed hook template generation.
+- **🚢 Fleet Analytics:** Dashboard for aggregate health and risk scores across multiple connected device fleet.
+- **🛡️ Cloak Stealth Pro:** Advanced system prop hiding (`resetprop`) and the **2025 Golden Standard Stealth Advisor**.
 - **📋 Health & Security Audit:** Modular diagnostic engine with Luhn-validated IMEI extraction and kernel security probes.
-- **🚢 Fleet Management:** Parallel ADB orchestration and batch operations across multiple workstations (Epic E).
-- **🥇 GOLD Build Standard:** Enforced "0 Errors / 0 Warnings" CI/CD with absolute artifact integrity.
 
 ---
 
@@ -156,6 +157,16 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v1.6.0 – Security Intelligence Release (2026-01-29)
+
+#### New in v1.6.0
+
+- **Analytics Dashboard:** Integrated CVE Scanner and Fleet Analytics for high-level security reporting.
+- **Expert Mode:** Introduced gated "Expert Mode" for dangerous write operations with safety rails.
+- **Partition Restorer:** Securely flash backups back to the device with pre-flight integrity checks.
+- **Advanced Tools:** Integrated Magisk `system.prop` spoofer and Frida script generator.
+- **Enterprise Reporting:** Export high-quality security audit summaries to text/markdown.
 
 ### v1.5.0 – Health & Stealth Release (2026-01-29)
 
