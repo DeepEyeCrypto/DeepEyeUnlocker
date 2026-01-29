@@ -1,14 +1,25 @@
-# DeepEyeUnlocker v1.1.1 "Archon"
+# DeepEyeUnlocker v1.2.0 "Sandbox"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Build Status](https://github.com/yourusername/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/yourusername/DeepEyeUnlocker/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/yourusername/DeepEyeUnlocker?color=cyan)](https://github.com/yourusername/DeepEyeUnlocker/releases)
+[![Download DeepEyeUnlocker v1.2.0](https://img.shields.io/badge/Download-v1.2.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.2.0)
+[![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🔷 Professional Mobile Repair. For Free. Forever
 
 DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair boxes. It provides enterprise-grade device unlocking, firmware management, and diagnostic tools.
+
+---
+
+## 🔽 Download
+
+Latest stable release: **v1.2.0**
+
+- ⬇️ [Download DeepEyeUnlocker v1.2.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.2.0)
+- Platform: Windows (x64)
+- Status: Stable preview for Android tooling (bootloader, FRP, root cloak, drivers)
 
 ---
 
@@ -24,8 +35,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.1.1 "Archon" Highlights
+### v1.2.0 "Sandbox" Highlights
 
+- **🧪 ROM Sandbox (DSU):** Safe ROM/GSI testing via Dynamic System Updates – zero risk to original system
+- **📦 GSI Database:** Curated catalog of Google AOSP, LineageOS, and Pixel Experience images
+- **🔄 Boot Health Monitor:** Automatic crash detection and one-click revert to original system
 - **🏗️ Streaming Flash Engine:** Gigabyte-scale flashing for Qualcomm/MTK without RAM bottlenecks
 - **🔐 Diagnostics Hub 2.0:** Unified Lock & FRP deep analysis across all protocols
 - **⚡ Flash Center:** Interactive partition selector with safe mode protections
@@ -39,7 +53,7 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 ## 📱 Supported Chipsets
 
 | Platform                | Mode             | Protocol           |
-|-------------------------|------------------|--------------------|
+|-------------------------|------------------|---------------------|
 | **Qualcomm Snapdragon** | EDL 9008         | Sahara + Firehose  |
 | **MediaTek (MTK)**      | BROM / Preloader | MTK Download Agent |
 | **Samsung Exynos/QC**   | Download Mode    | Odin / Loke        |
@@ -49,7 +63,7 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🏗️ Architecture
 
-DeepEyeUnlocker v1.1.0 follows a **Clean Layered Architecture**:
+DeepEyeUnlocker v1.2.0 follows a **Clean Layered Architecture**:
 
 ```text
 ┌─────────────────────────────────────────┐
@@ -94,7 +108,7 @@ DeepEyeUnlocker v1.1.0 follows a **Clean Layered Architecture**:
 ### Build from Source
 
 ```powershell
-git clone https://github.com/yourusername/DeepEyeUnlocker.git
+git clone https://github.com/DeepEyeCrypto/DeepEyeUnlocker.git
 cd DeepEyeUnlocker
 .\scripts\setup-dev.ps1
 .\scripts\build.ps1
@@ -117,12 +131,65 @@ DeepEyeUnlocker/
 │   ├── Operations/     # Business logic operations
 │   ├── Protocols/      # Chipset-specific engines
 │   ├── Infrastructure/ # USB, Logging, Cloud
+│   ├── Features/       # DSU Sandbox, future features
 │   └── UI/             # WinForms components
 ├── assets/             # Profiles.json, resources
 ├── tests/              # Unit & integration tests
 ├── docs/               # Documentation
 └── scripts/            # Build & setup automation
 ```
+
+---
+
+## 🗺️ Next Milestone
+
+You can track upcoming work via the [`Next Milestone`](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/issues?q=is%3Aissue+label%3A%22Next+Milestone%22) label.
+
+Planned for the next releases (high level):
+
+- **Device Health Center** – IMEI/MAC, battery health, kernel & bootloader audit.
+- **Partition Backup Center** – Safe, encrypted partition backup (EDL/ADB) with verification.
+- **ROM Sandbox (DSU/GSI)** – Test GSIs/custom ROMs in a sandbox without touching the original system.
+- **Cloak Center** – Magisk/Zygisk/Shamiko-aware root & developer-options stealth helpers.
+- **Driver Center** – Unified USB/Qualcomm/MTK driver checks and quick-fix workflow.
+
+Contributions, ideas and bug reports are welcome – just open an issue and tag it with `Next Milestone` if it's roadmap material.
+
+---
+
+## 📦 Changelog
+
+### v1.2.0 – Initial public toolkit preview (2026-01-29)
+
+**New**
+
+- Core operation engine for Android device detection, ADB/Fastboot orchestration, and logging.
+- Initial "Safe Unlock" workflows (structured operations layer, no aggressive one-click bypasses).
+- Basic FRP & screen-lock diagnostics models (foundation for future Lock & FRP Center).
+- Qualcomm protocol scaffolding (EDL/partition table interfaces) for upcoming backup/restore features.
+- DSU Sandbox feature for safe ROM testing via Dynamic System Updates.
+- GSI Database with curated AOSP and LineageOS images.
+- Build pipeline with GitHub Actions and signed release artifacts for Windows.
+
+**Known issues / limitations**
+
+- Partition/FRP models and protocol engines are still evolving; some advanced features are stubbed or disabled.
+- No production-ready IMEI/EDL/FRP write operations yet (read/diagnostics focus only).
+- DSU sandbox UI is implemented but not yet integrated into MainForm tabs.
+- UI/UX is functional but not final; layout and theming will change in upcoming releases.
+
+### v1.1.1 – Archon (2026-01-28)
+
+- Core model refactoring and type unification
+- Consolidated FRP models, established canonical PartitionInfo
+- Refactored operation pipeline to use DeviceContext
+
+### v1.1.0 – Gold (2026-01-27)
+
+- Full protocol handshakes for Qualcomm, MTK, and Samsung
+- Streaming Flash Engine for gigabyte-scale flashing
+- Cloak Center, Device Info Center, ADB Tools Center
+- GitHub Actions CI/CD pipeline
 
 ---
 
