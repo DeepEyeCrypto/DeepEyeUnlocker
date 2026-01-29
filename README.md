@@ -1,8 +1,8 @@
-# DeepEyeUnlocker v1.2.0 "Sandbox"
+# DeepEyeUnlocker v1.3.0 "Sentinel"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v1.2.0](https://img.shields.io/badge/Download-v1.2.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.2.0)
+[![Download DeepEyeUnlocker v1.3.0](https://img.shields.io/badge/Download-v1.3.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.3.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,11 +15,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v1.2.0**
+Latest stable release: **v1.3.0**
 
-- ⬇️ [Download DeepEyeUnlocker v1.2.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.2.0)
+- ⬇️ [Download DeepEyeUnlocker v1.3.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.3.0)
 - Platform: Windows (x64)
-- Status: Stable preview for Android tooling (bootloader, FRP, root cloak, drivers)
+- Status: Stable Release (Sentinel) - Health, Backup, and Sandbox enabled.
 
 ---
 
@@ -35,18 +35,15 @@ Latest stable release: **v1.2.0**
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.2.0 "Sandbox" Highlights
+### v1.3.0 "Sentinel" Highlights
 
-- **🧪 ROM Sandbox (DSU):** Safe ROM/GSI testing via Dynamic System Updates – zero risk to original system
-- **📦 GSI Database:** Curated catalog of Google AOSP, LineageOS, and Pixel Experience images
-- **🔄 Boot Health Monitor:** Automatic crash detection and one-click revert to original system
-- **🏗️ Streaming Flash Engine:** Gigabyte-scale flashing for Qualcomm/MTK without RAM bottlenecks
-- **🔐 Diagnostics Hub 2.0:** Unified Lock & FRP deep analysis across all protocols
-- **⚡ Flash Center:** Interactive partition selector with safe mode protections
-- **🛡️ Cloak Center:** Advanced root & developer mode hiding (Shamiko/Zygisk optimization)
-- **📱 Device Info Center:** Deep hardware diagnostics and security lifecycle telemetry
-- **🔧 ADB Tools Center:** Integrated app management and input simulation
-- **MainForm 2.0:** Tabbed interface with reactive device context synchronization
+- **📋 Report Center:** One-click deep health audits (IMEI, Battery, Kernel, Security Patch).
+- **📦 Backup Center:** Secure, multi-partition backups with SHA256 verification and manifest generation.
+- **🧪 ROM Sandbox (DSU):** Safely test GSIs/ROMs via Dynamic System Updates (fully integrated).
+- **🏗️ Canonical DTOs:** Unified models for DeviceHealth, PartitionBackup, and FrpStatus.
+- **🛡️ Cloak Center:** Enhanced root detection (Magisk/Zygisk/Shamiko aware).
+- **⚡ Flash Center:** Integrated partition selector with safety mode.
+- **📱 Device Info Center:** Real-time telemetry and hardware diagnostics.
 
 ---
 
@@ -147,11 +144,13 @@ You can track upcoming work via the [`Next Milestone`](https://github.com/DeepEy
 
 Planned for the next releases (high level):
 
-- **Device Health Center** – IMEI/MAC, battery health, kernel & bootloader audit.
-- **Partition Backup Center** – Safe, encrypted partition backup (EDL/ADB) with verification.
-- **ROM Sandbox (DSU/GSI)** – Test GSIs/custom ROMs in a sandbox without touching the original system.
-- **Cloak Center** – Magisk/Zygisk/Shamiko-aware root & developer-options stealth helpers.
-- **Driver Center** – Unified USB/Qualcomm/MTK driver checks and quick-fix workflow.
+### Planned for v1.4.0+
+
+- **FRP Bypass Engine** – Standardized one-click FRP removal (QC Firehose / MTK DA).
+- **Partition Restore Center** – Secure flashing of specific partitions (EDL/ADB) with safety checks.
+- **Cloak Stealth Mode** – Active Magisk/Zygisk/Shamiko hiding automation.
+- **Driver Center Pro** – One-click driver repair and USB filtering.
+- **Fleet Management** – Basic support for managing multiple connected devices.
 
 Contributions, ideas and bug reports are welcome – just open an issue and tag it with `Next Milestone` if it's roadmap material.
 
@@ -159,9 +158,20 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 
 ## 📦 Changelog
 
-### v1.2.0 – Initial public toolkit preview (2026-01-29)
+### v1.3.0 – Sentinel Release (2026-01-29)
 
-#### New
+#### New in v1.3.0
+
+- **Report Center:** Complete device health and security audit dashboard (IMEI, Battery, Kernel, Patch Level).
+- **Backup Center:** Safe partition-level backup orchestration with manifest generation and SHA256 verify.
+- **ROM Sandbox integration:** Fully integrated DSU testing tab in MainForm.
+- **Architecture:** Canonical models for health reports and backup jobs; standardized `IProtocolEngine`.
+- **UI:** Tabbed interface updated with Report Center, Backup Center, and ROM Sandbox.
+- **Tests:** Added model validation unit tests for core DTOs.
+
+### v1.2.0 – Sandbox Preview (2026-01-29)
+
+#### New in v1.2.0
 
 - Core operation engine for Android device detection, ADB/Fastboot orchestration, and logging.
 - Initial "Safe Unlock" workflows (structured operations layer, no aggressive one-click bypasses).
