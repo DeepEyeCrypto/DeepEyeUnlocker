@@ -29,7 +29,7 @@ namespace DeepEyeUnlocker.Features.DsuSandbox.UI
         private DsuCapability? _deviceCapability;
         private DsuImage? _selectedImage;
         private CancellationTokenSource? _cts;
-        private bool _isFlashing;
+        // _isFlashing is managed via UI state
 
         // UI Controls
         private Label lblTitle = null!;
@@ -488,7 +488,6 @@ namespace DeepEyeUnlocker.Features.DsuSandbox.UI
 
             if (result != DialogResult.Yes) return;
 
-            _isFlashing = true;
             _cts = new CancellationTokenSource();
             SetFlashingState(true);
 
@@ -536,7 +535,6 @@ namespace DeepEyeUnlocker.Features.DsuSandbox.UI
             }
             finally
             {
-                _isFlashing = false;
                 SetFlashingState(false);
             }
         }

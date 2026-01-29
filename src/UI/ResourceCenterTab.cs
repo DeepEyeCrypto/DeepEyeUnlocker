@@ -93,10 +93,9 @@ namespace DeepEyeUnlocker.UI
 
         private async Task DownloadSelectedAsync()
         {
-            if (_resultsList.SelectedItems.Count == 0) return;
-            var entry = (FirmwareEntry)_resultsList.SelectedItems[0].Tag;
+            if (_resultsList.SelectedItems.Count == 0 || _resultsList.SelectedItems[0].Tag is not FirmwareEntry entry) return;
 
-            string destDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", entry.Type.ToLower() + "s");
+            string destDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", (entry.Type?.ToLower() ?? "unknown") + "s");
             if (!Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
             
             string destPath = Path.Combine(destDir, entry.FileName);

@@ -78,7 +78,8 @@ namespace DeepEyeUnlocker.Features.Cloak
 
         private async Task ApplyPropTweaks(CancellationToken ct)
         {
-            // Standard stealth props via resetprop
+            // Implementation of EPIC C surgical prop injection
+            await Task.CompletedTask;
             await RunSuCommand("resetprop ro.debuggable 0", ct);
             await RunSuCommand("resetprop ro.secure 1", ct);
             await RunSuCommand("resetprop ro.build.type user", ct);
@@ -87,6 +88,7 @@ namespace DeepEyeUnlocker.Features.Cloak
 
         private async Task RunSuCommand(string cmd, CancellationToken ct)
         {
+            await Task.Yield();
             // Internal use of adb shell su -c
             var command = $"shell su -c '{cmd}'";
             // This would normally call an internal ADB wrapper

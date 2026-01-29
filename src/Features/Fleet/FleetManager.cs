@@ -68,6 +68,7 @@ namespace DeepEyeUnlocker.Features.Fleet
                     });
                 }
             }
+            await Task.CompletedTask;
         }
 
         public async Task<BatchResult> BatchExecuteShellAsync(IEnumerable<string> serials, string command)

@@ -426,6 +426,7 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private async void OnBackupFrpClicked(object? sender, EventArgs e)
         {
+            await Task.Yield();
             LogMessage("FRP partition backup - feature requires EDL mode");
         }
 

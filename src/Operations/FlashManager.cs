@@ -52,6 +52,7 @@ namespace DeepEyeUnlocker.Operations
 
         private async Task<FirmwareManifest> ParseQualcommAsync(string dir, string xmlPath)
         {
+            await Task.Yield();
             var manifest = new FirmwareManifest
             {
                 Type = FirmwareType.QualcommFirehose,

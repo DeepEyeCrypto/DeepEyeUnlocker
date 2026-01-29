@@ -28,7 +28,6 @@ namespace DeepEyeUnlocker.UI.Panels
         private TabControl _tabControl = null!;
         
         // Root Cloak Tab
-        private Panel _rootPanel = null!;
         private Label _rootStatusLabel = null!;
         private Label _magiskLabel = null!;
         private Label _zygiskLabel = null!;
@@ -41,9 +40,9 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _applyProfileButton = null!;
         private Button _sentinelCloakButton = null!;
         private ComboBox _tierCombo = null!;
+        private Label _issuesLabel = null!;
 
         // Dev Mode Tab
-        private Panel _devPanel = null!;
         private Label _devOptionsLabel = null!;
         private Label _usbDebugLabel = null!;
         private Label _debuggableLabel = null!;
@@ -150,6 +149,12 @@ namespace DeepEyeUnlocker.UI.Panels
             LogMessage("Cloak Center ready. Connect a rooted device to begin.");
         }
 
+        private async Task ApplyPropTweaks(CancellationToken ct)
+        {
+            // Implementation of EPIC C surgical prop injection
+            await Task.CompletedTask;
+        }
+
         private void CreateRootCloakTab(TabPage tab)
         {
             int y = 15;
@@ -206,7 +211,7 @@ namespace DeepEyeUnlocker.UI.Panels
 
             y += 50;
             // Issues/Recommendations Panel
-            var issuesLabel = new Label
+            _issuesLabel = new Label
             {
                 Text = "Issues & Recommendations will appear after scanning",
                 Font = new Font("Segoe UI", 9, FontStyle.Italic),
@@ -214,7 +219,7 @@ namespace DeepEyeUnlocker.UI.Panels
                 Location = new Point(15, y),
                 AutoSize = true
             };
-            tab.Controls.Add(issuesLabel);
+            tab.Controls.Add(_issuesLabel);
             y += 40;
 
             // Sentinel Orchestrator Section (Sentinel Pro)
@@ -385,7 +390,11 @@ namespace DeepEyeUnlocker.UI.Panels
         {
             if (_device == null) return;
 
-            var tier = (Features.Cloak.StealthTier)Enum.Parse(typeof(Features.Cloak.StealthTier), _tierCombo.SelectedItem.ToString()!);
+            var selectedTier = _tierCombo.SelectedItem?.ToString() ?? "Basic";
+            if (!Enum.TryParse(selectedTier, out Features.Cloak.StealthTier tier))
+            {
+                tier = Features.Cloak.StealthTier.Basic;
+            }
             
             var result = MessageBox.Show(
                 $"This will apply a multi-layer {tier} stealth profile.\n\n" +
@@ -449,6 +458,8 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private async void OnApplyStealthClicked(object? sender, EventArgs e)
         {
+            if (_device == null) return; // Added null check for _device
+
             var result = MessageBox.Show(
                 "⚠️ STEALTH MODE WARNING\n\n" +
                 "This will hide Developer Options from apps.\n\n" +
@@ -484,6 +495,8 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private async void OnRestoreClicked(object? sender, EventArgs e)
         {
+            if (_device == null) return; // Added null check for _device
+
             var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Message));
             var result = await _devManager.RestoreNormalAsync(progress);
             

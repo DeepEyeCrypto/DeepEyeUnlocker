@@ -42,7 +42,7 @@ namespace DeepEyeUnlocker.Core
                     {
                         Vid = usb.Vid,
                         Pid = usb.Pid,
-                        Serial = usb.DeviceProperties.ContainsKey("SymbolicName") ? usb.DeviceProperties["SymbolicName"].ToString() : usb.SymbolicName,
+                        Serial = usb.DeviceProperties.ContainsKey("SymbolicName") ? usb.DeviceProperties["SymbolicName"]?.ToString() ?? "" : usb.SymbolicName,
                         Mode = MapMode(discovery.Mode),
                         Chipset = discovery.Chipset,
                         Brand = profile.BrandName

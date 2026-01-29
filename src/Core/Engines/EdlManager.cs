@@ -176,6 +176,7 @@ namespace DeepEyeUnlocker.Core.Engines
         /// <inheritdoc />
         public async Task<bool> IsInEdlModeAsync(CancellationToken ct)
         {
+            await Task.Yield();
             try
             {
                 foreach (UsbRegistry usb in UsbDevice.AllDevices)
