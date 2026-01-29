@@ -35,7 +35,7 @@ Latest stable release: **v1.5.0**
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.4.0 "Sentinel Pro" Highlights
+### v1.5.0 "Health & Stealth" Highlights
 
 - **⚡ FRP Bypass Engine:** Automated partition-level reset for Qualcomm and MediaTek chipsets (Epic A).
 - **🛡️ Flash Integrity Center:** Granular flashing with mandatory SHA-256 checks and size-mismatch guards (Epic B).

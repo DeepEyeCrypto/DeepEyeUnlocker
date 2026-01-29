@@ -482,7 +482,7 @@ namespace DeepEyeUnlocker.UI
             _driverProPanel.SetDevice(context);
             
             // For backup panel, we need the protocol engine if available
-            _backupPanel.SetDevice(context, null);
+            _backupPanel.SetDevice(context, null, _adbClient);
             _frpPanel.SetDevice(context, null); 
             _restorePanel.SetDevice(context, null);
         }

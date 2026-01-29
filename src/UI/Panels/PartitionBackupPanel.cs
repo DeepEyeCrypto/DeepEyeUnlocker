@@ -8,15 +8,22 @@ using System.Windows.Forms;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Engines;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Infrastructure;
 using DeepEyeUnlocker.Features.PartitionBackup;
+using DeepEyeUnlocker.Features.PartitionBackup.Engine;
+using DeepEyeUnlocker.Features.PartitionBackup.Models;
 
 namespace DeepEyeUnlocker.UI.Panels
 {
     public class PartitionBackupPanel : UserControl
     {
         private IProtocolEngine? _engine;
+        private IAdbClient? _adb;
         private BackupOrchestrator? _orchestrator;
+        private BackupEngine? _adbBackupEngine;
+        private PartitionMetadataCollector? _metadataCollector;
         private DeviceContext? _device;
+        private List<PartitionInfo> _partitionInfos = new();
         
         private CheckedListBox _chkPartitions = null!;
         private Button _btnBackup = null!;
@@ -32,19 +39,55 @@ namespace DeepEyeUnlocker.UI.Panels
             InitializeComponent();
         }
 
-        public void SetDevice(DeviceContext? device, IProtocolEngine? engine)
+        public void SetDevice(DeviceContext? device, IProtocolEngine? engine, IAdbClient? adb = null)
         {
             _device = device;
             _engine = engine;
+            _adb = adb;
+
+            if (_adb != null)
+            {
+                _adb.TargetSerial = device?.Serial;
+                _adbBackupEngine = new BackupEngine(_adb);
+                _metadataCollector = new PartitionMetadataCollector(_adb);
+            }
+
             if (_engine != null)
             {
                 _orchestrator = new BackupOrchestrator(_engine);
                 _ = LoadPartitionsAsync();
             }
+            else if (_adb != null && _device != null && _device.Mode == ConnectionMode.ADB)
+            {
+                _ = LoadPartitionsAdbAsync();
+            }
             else
             {
                 _chkPartitions.Items.Clear();
                 _btnBackup.Enabled = false;
+            }
+        }
+
+        private async Task LoadPartitionsAdbAsync()
+        {
+            if (_metadataCollector == null) return;
+            try
+            {
+                _lblStatus.Text = "Scanning partitions via ADB (Root suggested)...";
+                _partitionInfos = await _metadataCollector.GetPartitionsViaAdbAsync();
+                
+                this.Invoke(new Action(() => {
+                    _chkPartitions.Items.Clear();
+                    foreach (var p in _partitionInfos)
+                        _chkPartitions.Items.Add(p.Name);
+                    
+                    _btnBackup.Enabled = _chkPartitions.Items.Count > 0;
+                    _lblStatus.Text = $"ADB Discovery: {_chkPartitions.Items.Count} partitions found.";
+                }));
+            }
+            catch (Exception ex)
+            {
+                _lblStatus.Text = "ADB Scan Failed: " + ex.Message;
             }
         }
 
@@ -164,7 +207,7 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private async Task StartBackupAsync()
         {
-            if (_orchestrator == null || _device == null) return;
+            if (_device == null) return;
 
             var selected = _chkPartitions.CheckedItems.Cast<string>().ToList();
             if (selected.Count == 0)
@@ -173,13 +216,7 @@ namespace DeepEyeUnlocker.UI.Panels
                 return;
             }
 
-            var job = new PartitionBackupJob
-            {
-                DeviceSerial = _device.Serial,
-                Partitions = selected,
-                OutputDirectory = Path.Combine(_txtOutputPath.Text, $"{_device.Model}_{DateTime.Now:yyyyMMdd_HHmm}"),
-                Encrypt = _chkEncrypt.Checked
-            };
+            string outDir = Path.Combine(_txtOutputPath.Text, $"{_device.Model}_{DateTime.Now:yyyyMMdd_HHmm}");
 
             try
             {
@@ -196,16 +233,41 @@ namespace DeepEyeUnlocker.UI.Panels
                     }));
                 });
 
-                bool success = await _orchestrator.RunBackupAsync(job, progress, CancellationToken.None);
+                bool success = false;
+
+                if (_engine != null && _orchestrator != null)
+                {
+                    var oldJob = new DeepEyeUnlocker.Core.Models.PartitionBackupJob
+                    {
+                        DeviceSerial = _device.Serial,
+                        Partitions = selected,
+                        OutputDirectory = outDir,
+                        Encrypt = _chkEncrypt.Checked
+                    };
+                    success = await _orchestrator.RunBackupAsync(oldJob, progress, CancellationToken.None);
+                }
+                else if (_adb != null && _adbBackupEngine != null)
+                {
+                    var newJob = new BackupJob
+                    {
+                        DeviceSerial = _device.Serial,
+                        TargetPartitions = _partitionInfos.Where(p => selected.Contains(p.Name)).ToList(),
+                        DestinationPath = outDir,
+                        Encrypt = _chkEncrypt.Checked,
+                        Compress = true
+                    };
+                    await _adbBackupEngine.ExecuteAsync(newJob, progress, CancellationToken.None);
+                    success = newJob.Status == DeepEyeUnlocker.Features.PartitionBackup.Models.BackupStatus.Completed;
+                }
 
                 if (success)
                 {
-                    MessageBox.Show($"Backup completed successfully!\nLocation: {job.OutputDirectory}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"Backup completed successfully!\nLocation: {outDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _lblStatus.Text = "Backup finished.";
                 }
                 else
                 {
-                    MessageBox.Show($"Backup failed: {job.ErrorMessage}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Backup failed. Check logs.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     _lblStatus.Text = "Backup failed.";
                 }
             }

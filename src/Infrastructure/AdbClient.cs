@@ -22,6 +22,27 @@ namespace DeepEyeUnlocker.Infrastructure
             return await RunCommandAsync($"shell \"{command}\"", ct);
         }
 
+        public Task<System.IO.Stream> OpenShellStreamAsync(string command, CancellationToken ct = default)
+        {
+            string args = string.IsNullOrEmpty(TargetSerial) ? $"shell \"{command}\"" : $"-s {TargetSerial} shell \"{command}\"";
+            
+            var psi = new ProcessStartInfo
+            {
+                FileName = _adbPath,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var process = new Process { StartInfo = psi };
+            process.Start();
+
+            // Note: Caller is responsible for disposing the stream and ensuring process exit
+            return Task.FromResult(process.StandardOutput.BaseStream);
+        }
+
         public async Task<bool> PushFileAsync(string localPath, string remotePath, CancellationToken ct = default)
         {
             var result = await RunCommandAsync($"push \"{localPath}\" \"{remotePath}\"", ct);
@@ -43,6 +64,12 @@ namespace DeepEyeUnlocker.Infrastructure
         public async Task RebootAsync(CancellationToken ct = default)
         {
             await RunCommandAsync("reboot", ct);
+        }
+
+        public async Task<bool> HasRootAsync(CancellationToken ct = default)
+        {
+            var result = await ExecuteShellAsync("id", ct);
+            return result.Contains("uid=0(root)");
         }
 
         public bool IsConnected()

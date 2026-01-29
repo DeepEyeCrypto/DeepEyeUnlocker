@@ -1,151 +1,80 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Infrastructure;
+using DeepEyeUnlocker.Features.DeviceHealth.Interfaces;
+using DeepEyeUnlocker.Features.DeviceHealth.Readers;
 
 namespace DeepEyeUnlocker.Features.DeviceHealth
 {
-    /// <summary>
-    /// Core scanner for gathering device health and security data via ADB.
-    /// </summary>
     public class DeviceHealthScanner
     {
         private readonly IAdbClient _adb;
+        private readonly List<IDeviceHealthReader> _readers = new();
 
         public DeviceHealthScanner(IAdbClient adb)
         {
             _adb = adb ?? throw new ArgumentNullException(nameof(adb));
+            
+            // Register Phase 1 Readers (Architecture Tier 1)
+            _readers.Add(new ImeiReader(_adb));
+            _readers.Add(new MacReader(_adb));
+            _readers.Add(new BatteryReader(_adb));
+            _readers.Add(new KernelAudit(_adb));
         }
 
         public async Task<DeviceHealthReport> ScanAsync(CancellationToken ct = default)
         {
-            Logger.Info("Starting deep device health scan...");
-            var report = new DeviceHealthReport();
+            Logger.Info("Initializing Deep Device Health Audit...");
+            var report = new DeviceHealthReport
+            {
+                ScanTimestamp = DateTime.UtcNow,
+                ToolVersion = "1.5.0-proto" // Advancement toward Phase 1 goals
+            };
 
-            // 1. Identification & OS
-            report.SerialNumber = await GetPropAsync("ro.serialno");
-            report.AndroidVersion = await GetPropAsync("ro.build.version.release");
-            report.SecurityPatchLevel = await GetPropAsync("ro.build.version.security_patch");
-            report.BuildNumber = await GetPropAsync("ro.build.display.id");
-            report.KernelVersion = await GetKernelVersionAsync();
-            report.BasebandVersion = await GetPropAsync("gsm.version.baseband");
-            
-            // 2. Hardware Status (Battery)
-            await PopulateBatteryInfoAsync(report);
-            await PopulateStorageInfoAsync(report);
+            // Basic Identification (Phase 0/1)
+            report.SerialNumber = (await _adb.ExecuteShellAsync("getprop ro.serialno", ct)).Trim();
+            report.AndroidVersion = (await _adb.ExecuteShellAsync("getprop ro.build.version.release", ct)).Trim();
+            report.BuildNumber = (await _adb.ExecuteShellAsync("getprop ro.build.display.id", ct)).Trim();
 
-            // 3. IMEIs & Connectvity
-            report.Imei1 = await GetImeiAsync(0);
-            report.Imei2 = await GetImeiAsync(1);
-            report.MacAddress = await GetPropAsync("ro.boot.mac") ?? await GetPropAsync("wlan.driver.macaddr");
-            report.BluetoothAddress = await GetPropAsync("ro.boot.btmacaddr");
+            // Run specialized readers (Architecture Tier 1)
+            foreach (var reader in _readers)
+            {
+                try
+                {
+                    Logger.Debug($"Running {reader.Name}...");
+                    await reader.ReadAsync(report, ct);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, $"Reader {reader.Name} failed");
+                    report.AuditFindings.Add($"[Error] {reader.Name} failed: {ex.Message}");
+                }
+            }
 
-            // 4. Security & Bootloader
-            report.IsBootloaderUnlocked = (await GetPropAsync("ro.boot.flash.locked")) == "0";
-            report.IsOemUnlockEnabled = (await GetPropAsync("ro.oem_unlock_supported")) == "1";
-            report.IsDevOptionsEnabled = (await GetPropAsync("persist.sys.usb.config")).Contains("adb");
-            report.IsSelinuxEnforcing = (await _adb.ExecuteShellAsync("getenforce")).Contains("Enforcing");
-            
-            // 5. Root Detection
-            await DetectRootStatusAsync(report);
+            // Final Root/Security Checks
+            await FinalSecurityChecks(report, ct);
 
-            Logger.Info($"Scan complete for {report.SerialNumber}. Root: {report.IsRooted}");
+            Logger.Info($"Health Audit finished for {report.SerialNumber}. Findings: {report.AuditFindings.Count}");
             return report;
         }
 
-        private async Task<string> GetPropAsync(string prop)
+        private async Task FinalSecurityChecks(DeviceHealthReport report, CancellationToken ct)
         {
-            var result = await _adb.ExecuteShellAsync($"getprop {prop}");
-            return result?.Trim() ?? "";
-        }
-
-        private async Task<string> GetKernelVersionAsync()
-        {
-            var result = await _adb.ExecuteShellAsync("uname -a");
-            return result?.Trim() ?? "Unknown";
-        }
-
-        private async Task PopulateBatteryInfoAsync(DeviceHealthReport report)
-        {
-            var dumpsys = await _adb.ExecuteShellAsync("dumpsys battery");
-            if (string.IsNullOrEmpty(dumpsys)) return;
-
-            report.BatteryLevel = ParseIntMatch(dumpsys, @"level: (\d+)", 0);
-            report.BatteryTemperature = ParseIntMatch(dumpsys, @"temperature: (\d+)", 0) / 10.0;
-            report.BatteryStatus = ParseStringMatch(dumpsys, @"status: (\d+)") switch
-            {
-                "2" => "Charging",
-                "3" => "Discharging",
-                "4" => "Not charging",
-                "5" => "Full",
-                _ => "Unknown"
-            };
-            
-            // Heuristic for health if not directly exposed
-            report.BatteryHealth = ParseIntMatch(dumpsys, @"health: (\d+)", 0) switch
-            {
-                2 => 100, // Good
-                3 => 70,  // Overheat
-                4 => 30,  // Dead
-                _ => 50
-            };
-        }
-
-        private async Task PopulateStorageInfoAsync(DeviceHealthReport report)
-        {
-            var df = await _adb.ExecuteShellAsync("df /data");
-            if (string.IsNullOrEmpty(df)) return;
-
-            // Simple parsing of df output
-            var matches = Regex.Matches(df, @"(\d+)");
-            if (matches.Count >= 3)
-            {
-                // df output usually: size, used, free
-                if (long.TryParse(matches[0].Value, out long total)) report.StorageTotalBytes = total * 1024;
-                if (long.TryParse(matches[2].Value, out long free)) report.StorageFreeBytes = free * 1024;
-            }
-        }
-
-        private async Task<string> GetImeiAsync(int slot)
-        {
-            // Note: This often requires root or service-mode access on modern Android
-            // We bait with service queries, fallback to empty
-            var result = await _adb.ExecuteShellAsync($"service call iphonesubinfo {slot + 1}");
-            if (string.IsNullOrEmpty(result) || result.Contains("Permission denied"))
-            {
-                return ""; // Expected failure on non-root in standard ADB
-            }
-            return ""; // Placeholder for hex-to-string IMEI parsing if enabled
-        }
-
-        private async Task DetectRootStatusAsync(DeviceHealthReport report)
-        {
-            var whichSu = await _adb.ExecuteShellAsync("which su");
-            report.IsRooted = !string.IsNullOrEmpty(whichSu) && whichSu.Contains("/su");
+            var suCheck = await _adb.ExecuteShellAsync("which su", ct);
+            report.IsRooted = !string.IsNullOrEmpty(suCheck) && suCheck.Contains("/su");
             
             if (report.IsRooted)
             {
-                var magisk = await _adb.ExecuteShellAsync("magisk -v");
-                if (!string.IsNullOrEmpty(magisk)) report.RootMethod = "Magisk (" + magisk.Trim() + ")";
-                else report.RootMethod = "Unknown / Legacy";
+                var magisk = await _adb.ExecuteShellAsync("magisk -v", ct);
+                report.RootMethod = !string.IsNullOrEmpty(magisk) ? $"Magisk {magisk.Trim()}" : "Generic SU";
             }
-        }
 
-        private int ParseIntMatch(string input, string pattern, int defaultValue)
-        {
-            var match = Regex.Match(input, pattern);
-            return match.Success && int.TryParse(match.Groups[1].Value, out int val) ? val : defaultValue;
-        }
-
-        private string ParseStringMatch(string input, string pattern)
-        {
-            var match = Regex.Match(input, pattern);
-            return match.Success ? match.Groups[1].Value : "";
+            report.IsBootloaderUnlocked = (await _adb.ExecuteShellAsync("getprop ro.boot.flash.locked", ct)).Trim() == "0";
+            report.IsOemUnlockEnabled = (await _adb.ExecuteShellAsync("getprop ro.oem_unlock_supported", ct)).Trim() == "1";
         }
     }
 }
