@@ -45,6 +45,7 @@ namespace DeepEyeUnlocker.Core.Models
         public string VerifiedBootState { get; set; } = "Unknown";
         public bool HasSuspiciousApps { get; set; }
         public List<string> AuditFindings { get; set; } = new();
+        public bool IsHealthy => AuditFindings.Count == 0;
 
         // Metadata
         public DateTime ScanTimestamp { get; set; } = DateTime.UtcNow;

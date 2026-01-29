@@ -13,6 +13,8 @@ namespace DeepEyeUnlocker.Features.DeviceHealth
         private readonly IAdbClient _adb;
         private readonly DeviceHealthScanner _scanner;
         
+        public event Action<DeviceHealthReport>? ReportScanned;
+
         private Label _headerLabel = null!;
         private Label _statusLabel = null!;
         private FlowLayoutPanel _findingsPanel = null!;
@@ -125,6 +127,7 @@ namespace DeepEyeUnlocker.Features.DeviceHealth
             {
                 var report = await _scanner.ScanAsync();
                 DisplayReport(report);
+                ReportScanned?.Invoke(report);
             }
             catch (Exception ex)
             {
