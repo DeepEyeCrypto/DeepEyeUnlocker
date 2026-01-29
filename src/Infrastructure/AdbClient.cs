@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
 
@@ -16,32 +17,32 @@ namespace DeepEyeUnlocker.Infrastructure
             _adbPath = adbPath;
         }
 
-        public async Task<string> ExecuteShellAsync(string command)
+        public async Task<string> ExecuteShellAsync(string command, CancellationToken ct = default)
         {
-            return await RunCommandAsync($"shell \"{command}\"");
+            return await RunCommandAsync($"shell \"{command}\"", ct);
         }
 
-        public async Task<bool> PushFileAsync(string localPath, string remotePath)
+        public async Task<bool> PushFileAsync(string localPath, string remotePath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"push \"{localPath}\" \"{remotePath}\"");
+            var result = await RunCommandAsync($"push \"{localPath}\" \"{remotePath}\"", ct);
             return !result.ToLower().Contains("failed") && !result.ToLower().Contains("error");
         }
 
-        public async Task<bool> PullFileAsync(string remotePath, string localPath)
+        public async Task<bool> PullFileAsync(string remotePath, string localPath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"pull \"{remotePath}\" \"{localPath}\"");
+            var result = await RunCommandAsync($"pull \"{remotePath}\" \"{localPath}\"", ct);
             return !result.ToLower().Contains("failed") && !result.ToLower().Contains("error");
         }
 
-        public async Task<bool> InstallPackageAsync(string apkPath)
+        public async Task<bool> InstallPackageAsync(string apkPath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"install -r \"{apkPath}\"");
+            var result = await RunCommandAsync($"install -r \"{apkPath}\"", ct);
             return result.ToLower().Contains("success");
         }
 
-        public async Task RebootAsync()
+        public async Task RebootAsync(CancellationToken ct = default)
         {
-            await RunCommandAsync("reboot");
+            await RunCommandAsync("reboot", ct);
         }
 
         public bool IsConnected()
@@ -50,7 +51,7 @@ namespace DeepEyeUnlocker.Infrastructure
             return result.Trim().ToLower() == "device";
         }
 
-        private async Task<string> RunCommandAsync(string args)
+        private async Task<string> RunCommandAsync(string args, CancellationToken ct = default)
         {
             string finalArgs = string.IsNullOrEmpty(TargetSerial) ? args : $"-s {TargetSerial} {args}";
             try
@@ -68,9 +69,9 @@ namespace DeepEyeUnlocker.Infrastructure
                 using var process = new Process { StartInfo = psi };
                 process.Start();
 
-                string output = await process.StandardOutput.ReadToEndAsync();
-                string error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
+                string output = await process.StandardOutput.ReadToEndAsync(ct);
+                string error = await process.StandardError.ReadToEndAsync(ct);
+                await process.WaitForExitAsync(ct);
 
                 if (!string.IsNullOrEmpty(error) && !output.Contains(error))
                 {

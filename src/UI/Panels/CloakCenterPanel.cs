@@ -25,6 +25,10 @@ namespace DeepEyeUnlocker.UI.Panels
         private DevModeStatus? _devStatus;
         private bool _expertModeEnabled;
 
+        // Features
+        private Features.Cloak.CloakHealthChecker _healthChecker;
+        private Features.Cloak.CloakSetupWizard _setupWizard;
+
         // UI Components
         private TabControl _tabControl = null!;
         
@@ -61,6 +65,8 @@ namespace DeepEyeUnlocker.UI.Panels
         {
             _adbClient = adbClient;
             _orchestrator = new Features.Cloak.CloakOrchestrator(adbClient);
+            _healthChecker = new Features.Cloak.CloakHealthChecker(adbClient);
+            _setupWizard = new Features.Cloak.CloakSetupWizard(adbClient);
             InitializeComponents();
         }
 
@@ -119,6 +125,12 @@ namespace DeepEyeUnlocker.UI.Panels
             devTab.BackColor = Color.FromArgb(35, 35, 40);
             CreateDevModeTab(devTab);
             _tabControl.TabPages.Add(devTab);
+
+            // Stealth Advisor Tab (Sentinel Pro)
+            var advisorTab = new TabPage("💡 Stealth Advisor");
+            advisorTab.BackColor = Color.FromArgb(35, 35, 40);
+            CreateStealthAdvisorTab(advisorTab);
+            _tabControl.TabPages.Add(advisorTab);
 
             this.Controls.Add(_tabControl);
             y += 430;
@@ -288,6 +300,107 @@ namespace DeepEyeUnlocker.UI.Panels
                 Size = new Size(490, 40)
             };
             tab.Controls.Add(warningLabel);
+        }
+
+        private ListBox _healthCheckList = null!;
+        private RichTextBox _wizardOutput = null!;
+        private Button _runAdvisorButton = null!;
+
+        private void CreateStealthAdvisorTab(TabPage tab)
+        {
+            int y = 15;
+
+            var infoLabel = new Label
+            {
+                Text = "2025 Golden Standard Root Hiding Analysis",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.FromArgb(255, 193, 7),
+                Location = new Point(15, y),
+                AutoSize = true
+            };
+            tab.Controls.Add(infoLabel);
+            y += 30;
+
+            _runAdvisorButton = CreateButton("🚀 Run Full Stealth Analysis", 15, y, 220, 35, Color.FromArgb(75, 0, 130));
+            _runAdvisorButton.Click += OnRunAdvisorClicked;
+            tab.Controls.Add(_runAdvisorButton);
+
+            y += 45;
+
+            var healthGroup = CreateGroup("Common Trap Health Check", 10, y, 510, 120);
+            tab.Controls.Add(healthGroup);
+
+            _healthCheckList = new ListBox
+            {
+                Location = new Point(10, 25),
+                Size = new Size(490, 85),
+                BackColor = Color.FromArgb(25, 25, 30),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                Font = new Font("Segoe UI", 8.5f)
+            };
+            healthGroup.Controls.Add(_healthCheckList);
+
+            y += 130;
+
+            var wizardGroup = CreateGroup("Setup Wizard Guidance", 10, y, 510, 160);
+            tab.Controls.Add(wizardGroup);
+
+            _wizardOutput = new RichTextBox
+            {
+                Location = new Point(10, 25),
+                Size = new Size(490, 125),
+                BackColor = Color.FromArgb(20, 20, 25),
+                ForeColor = Color.FromArgb(200, 200, 200),
+                BorderStyle = BorderStyle.None,
+                ReadOnly = true,
+                Font = new Font("Consolas", 8.5f)
+            };
+            wizardGroup.Controls.Add(_wizardOutput);
+        }
+
+        private async void OnRunAdvisorClicked(object? sender, EventArgs e)
+        {
+            if (_device == null) return;
+
+            _runAdvisorButton.Enabled = false;
+            _healthCheckList.Items.Clear();
+            _healthCheckList.Items.Add("Running health check...");
+            _wizardOutput.Clear();
+            _wizardOutput.AppendText("Performing environment detection...");
+
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+                // 1. Health Check
+                var traps = await _healthChecker.RunFullHealthCheckAsync(cts.Token);
+                _healthCheckList.Items.Clear();
+                foreach (var trap in traps)
+                {
+                    string icon = trap.Detected ? "❌" : "✅";
+                    _healthCheckList.Items.Add($"{icon} {trap.TrapName}: {(trap.Detected ? "DETECTED - " + trap.FixSuggestion : "Safe")}");
+                }
+
+                // 2. Setup Wizard
+                var env = await _setupWizard.DetectEnvironmentAsync(cts.Token);
+                var apps = Features.Cloak.CloakProfiles.PopularBankingApps;
+                var guide = _setupWizard.GenerateSetupGuide(env, apps);
+                
+                _wizardOutput.Clear();
+                _wizardOutput.AppendText(guide);
+
+                LogMessage("Stealth analysis complete.", Color.FromArgb(40, 167, 69));
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"Advisor error: {ex.Message}", Color.FromArgb(220, 53, 69));
+                _healthCheckList.Items.Add("Error during analysis.");
+            }
+            finally
+            {
+                _runAdvisorButton.Enabled = true;
+            }
         }
 
         #region Event Handlers
