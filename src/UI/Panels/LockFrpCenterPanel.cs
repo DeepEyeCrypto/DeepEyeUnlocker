@@ -45,6 +45,7 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _ownerRecoveryButton = null!;
         private Button _oemSupportButton = null!;
         private Button _factoryResetButton = null!;
+        private Button _bypassFrpButton = null!;
 
         // Expert Mode
         private CheckBox _expertModeToggle = null!;
@@ -153,6 +154,10 @@ namespace DeepEyeUnlocker.UI.Panels
             _factoryResetButton = CreateActionButton("🗑️ Factory Reset", 15, 70, 220, 35, Color.FromArgb(220, 53, 69));
             _factoryResetButton.Click += OnFactoryResetClicked;
             _actionsGroup.Controls.Add(_factoryResetButton);
+
+            _bypassFrpButton = CreateActionButton("⚡ Bypass FRP (Auto)", 245, 70, 230, 35, Color.FromArgb(75, 0, 130));
+            _bypassFrpButton.Click += OnBypassFrpClicked;
+            _actionsGroup.Controls.Add(_bypassFrpButton);
 
             y += 130;
 
@@ -273,6 +278,8 @@ namespace DeepEyeUnlocker.UI.Panels
 
             _deviceInfoLabel.Text = $"📱 {_currentDevice.Brand} {_currentDevice.Model} ({_currentDevice.Mode})";
             _scanButton.Enabled = true;
+            _bypassFrpButton.Enabled = _currentDevice.Mode != ConnectionMode.MTP;
+            _backupFrpButton.Enabled = _currentDevice.Mode != ConnectionMode.MTP;
         }
 
         private async void OnScanClicked(object? sender, EventArgs e)
@@ -426,8 +433,89 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private async void OnBackupFrpClicked(object? sender, EventArgs e)
         {
-            await Task.Yield();
-            LogMessage("FRP partition backup - feature requires EDL mode");
+            if (_currentDevice == null || _currentProtocol == null)
+            {
+                LogMessage("Error: Connect device in low-level mode (EDL/BROM) first.", Color.Red);
+                return;
+            }
+
+            LogMessage("Starting FRP Partition Backup (Epic B)...", Color.Cyan);
+            
+            try
+            {
+                var backupOp = new BackupOperation(_currentProtocol);
+                string targetPart = _lastScan?.FrpStatus.FrpPartitionName ?? "frp";
+                backupOp.TargetPartitions = new List<string> { targetPart };
+                
+                var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Status));
+                
+                bool success = await backupOp.ExecuteAsync(_currentDevice, progress, CancellationToken.None);
+                
+                if (success)
+                {
+                    LogMessage($"SUCCESS: {targetPart} backed up to assets/backups/", Color.Lime);
+                }
+                else
+                {
+                    LogMessage("FAILURE: FRP Backup failed.", Color.Red);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"Backup error: {ex.Message}", Color.Red);
+            }
+        }
+
+        private async void OnBypassFrpClicked(object? sender, EventArgs e)
+        {
+            if (_currentDevice == null || _currentProtocol == null)
+            {
+                LogMessage("Error: Connect device in low-level mode (EDL/BROM) first.", Color.Red);
+                return;
+            }
+
+            if (!EnsureDisclaimerAccepted()) return;
+
+            var result = MessageBox.Show(
+                "⚡ SENTINEL PRO: FRP BYPASS\n\n" +
+                "This will attempt to clear the FRP partition.\n" +
+                "A backup will be attempted automatically first.\n\n" +
+                "Continue?",
+                "FRP Bypass Confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                _bypassFrpButton.Enabled = false;
+                LogMessage("\n--- Starting Sentinel FRP Bypass (Epic A) ---", Color.FromArgb(75, 0, 130));
+
+                try
+                {
+                    var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Message));
+                    var bypassOp = new FrpBypassOperation(_currentProtocol);
+                    
+                    bool success = await bypassOp.ExecuteAsync(_currentDevice, progress, CancellationToken.None);
+
+                    if (success)
+                    {
+                        LogMessage("FRP BYPASS COMPLETED SUCCESSFULLY", Color.Lime);
+                        MessageBox.Show("FRP Bypass successful!\n\nDevice will reboot. You can now complete the setup wizard.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        LogMessage("Bypass failed or was unsupported for this model.", Color.Red);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Bypass error: {ex.Message}", Color.Red);
+                }
+                finally
+                {
+                    _bypassFrpButton.Enabled = true;
+                }
+            }
         }
 
         private async void OnExportReportClicked(object? sender, EventArgs e)

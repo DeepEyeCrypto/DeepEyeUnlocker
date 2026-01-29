@@ -14,11 +14,12 @@ namespace DeepEyeUnlocker.Operations
     public class BackupOperation : Operation
     {
         private readonly IProtocol _protocol;
+        public List<string>? TargetPartitions { get; set; }
 
         public BackupOperation(IProtocol protocol)
         {
             _protocol = protocol;
-            Name = "Full Partition Backup";
+            Name = "Partition Backup";
         }
 
         public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
@@ -27,6 +28,12 @@ namespace DeepEyeUnlocker.Operations
             {
                 Logger.Info($"Starting unified backup using {_protocol.Name}...");
                 var partitions = (await _protocol.GetPartitionTableAsync()).ToList();
+
+                if (TargetPartitions != null && TargetPartitions.Count > 0)
+                {
+                    partitions = partitions.Where(p => TargetPartitions.Contains(p.Name, StringComparer.OrdinalIgnoreCase)).ToList();
+                }
+
                 if (ct.IsCancellationRequested) return false;
                 
                 string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
