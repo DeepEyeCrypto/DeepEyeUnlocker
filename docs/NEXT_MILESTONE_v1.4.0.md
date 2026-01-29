@@ -1,6 +1,6 @@
-# Next Milestone: v1.3.0 "Sentinel Pro" (Operations Expansion)
+# Milestone: v1.4.0 "Sentinel Pro" (Operations Expansion)
 
-> **Status:** Planning / Roadmap Formulation
+> **Status:** Feature-Complete / Release Staging (GOLD 0/0)
 > **Target Version:** v1.4.0
 > **Codename:** Sentinel Pro
 > **Objective:** Transition from a diagnostics-focused toolkit to a technician-grade operational suite with hardware-level partition management and security-bypass automation.

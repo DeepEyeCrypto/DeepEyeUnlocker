@@ -22,8 +22,25 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore DeepEyeUnlocker.sln
 
-    - name: Build
-      run: dotnet build DeepEyeUnlocker.sln --configuration Release --no-restore
+    - name: Build (Sentinel GOLD Standard)
+      run: dotnet build DeepEyeUnlocker.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=true
+
+    - name: Verify Artifact Integrity
+      shell: pwsh
+      run: |
+        $dllPath = "src/bin/Release/net8.0-windows/DeepEyeUnlocker.dll"
+        if (!(Test-Path $dllPath)) { throw "DeepEyeUnlocker.dll not found!" }
+        $hash = Get-FileHash $dllPath -Algorithm SHA256
+        echo "GOLD ARTIFACT SHA256: $($hash.Hash)"
+        echo "$($hash.Hash)" > artifacts/build_hash.txt
 
     - name: Test
       run: dotnet test DeepEyeUnlocker.sln --configuration Release --no-build --verbosity normal
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: sentinel-pro-gold
+        path: |
+          src/bin/Release/net8.0-windows/DeepEyeUnlocker.dll
+          artifacts/build_hash.txt
