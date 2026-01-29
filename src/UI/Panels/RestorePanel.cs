@@ -119,9 +119,9 @@ namespace DeepEyeUnlocker.UI.Panels
                     _partitionGrid.Rows.Clear();
                     foreach (var p in parts)
                     {
-                        var risk = GetRiskLabel(p.Name);
-                        int idx = _partitionGrid.Rows.Add(p.Name, FormatSize(p.SizeInBytes), risk);
-                        ApplyRiskColoring(_partitionGrid.Rows[idx], risk);
+                        string risk = p.IsHighRisk ? "CALIBRATION" : (p.IsCritical ? "CRITICAL" : "STANDARD");
+                        int idx = _partitionGrid.Rows.Add(p.Name, p.SizeFormatted, risk);
+                        ApplyRiskColoring(_partitionGrid.Rows[idx], p);
                     }
                     _lblStatus.Text = $"{parts.Count()} partitions detected.";
                     _btnRestore.Enabled = true;
@@ -133,18 +133,10 @@ namespace DeepEyeUnlocker.UI.Panels
             }
         }
 
-        private string GetRiskLabel(string name)
+        private void ApplyRiskColoring(DataGridViewRow row, PartitionInfo part)
         {
-            string n = name.ToLower();
-            if (n.Contains("efs") || n.Contains("modem") || n.Contains("nv") || n.Contains("sec")) return "DANGER";
-            if (n.Contains("boot") || n.Contains("system") || n.Contains("vendor")) return "SYSTEM";
-            return "SAFE";
-        }
-
-        private void ApplyRiskColoring(DataGridViewRow row, string risk)
-        {
-            if (risk == "DANGER") row.DefaultCellStyle.ForeColor = Color.Salmon;
-            else if (risk == "SYSTEM") row.DefaultCellStyle.ForeColor = Color.Gold;
+            if (part.IsHighRisk) row.DefaultCellStyle.ForeColor = Color.Salmon;
+            else if (part.IsCritical) row.DefaultCellStyle.ForeColor = Color.Gold;
             else row.DefaultCellStyle.ForeColor = Color.LightGreen;
         }
 
@@ -162,9 +154,9 @@ namespace DeepEyeUnlocker.UI.Panels
                 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    if (risk == "DANGER")
+                    if (risk == "CALIBRATION")
                     {
-                        var res = MessageBox.Show($"WARNING: {partName} is a calibration/security partition. Writing incorrect data WILL result in permanent IMEI loss or hardware brick. Proceed?", " Sentinel Pro - HIGH RISK ZONE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        var res = MessageBox.Show($"⚠️ TOTAL DATA LOSS WARNING\n\n{partName} contains unique device identifiers (IMEI, MAC, SN).\nRestoring an incorrect image will permanently brick network functionality.\n\nAre you ABSOLUTELY sure you want to proceed?", "Sentinel Pro - High Risk", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                         if (res != DialogResult.Yes) return;
                     }
 

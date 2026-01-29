@@ -14,6 +14,7 @@ namespace DeepEyeUnlocker.UI.Panels
     {
         private readonly IAdbClient _adb;
         private readonly DeviceHealthScanner _scanner;
+        private DeviceContext? _device;
         
         private TableLayoutPanel _mainLayout = null!;
         private DataGridView _healthDataGrid = null!;
@@ -28,6 +29,12 @@ namespace DeepEyeUnlocker.UI.Panels
             _adb = adb ?? throw new ArgumentNullException(nameof(adb));
             _scanner = new DeviceHealthScanner(_adb);
             InitializeComponent();
+        }
+
+        public void SetDevice(DeviceContext? device)
+        {
+            _device = device;
+            _btnScan.Enabled = _device != null && _device.Mode == ConnectionMode.ADB;
         }
 
         private void InitializeComponent()

@@ -108,6 +108,11 @@ namespace DeepEyeUnlocker.UI
             this._driverProPanel = new DriverProPanel();
             this._fleetPanel = new FleetPanel(_adbClient);
 
+            _fleetPanel.FleetManager.SelectedDeviceChanged += (s, device) => 
+            {
+                UpdateDeviceOnPanels(device);
+            };
+
             this.SuspendLayout();
 
             // Form Settings
@@ -456,27 +461,29 @@ namespace DeepEyeUnlocker.UI
         {
             if (deviceSelector.SelectedIndex == -1)
             {
-                _deviceInfoPanel.SetDevice(null);
-                _adbToolsPanel.SetDevice(null);
-                _lockFrpPanel.SetDevice(null, null);
-                _cloakPanel.SetDevice(null);
-                _flashPanel.SetDevice(null);
-                _bootloaderPanel.SetDevice(null);
+                UpdateDeviceOnPanels(null);
                 return;
             }
 
             var context = _usbDevices[deviceSelector.SelectedIndex];
-            
+            UpdateDeviceOnPanels(context);
+        }
+
+        private void UpdateDeviceOnPanels(DeviceContext? context)
+        {
             _deviceInfoPanel.SetDevice(context);
             _adbToolsPanel.SetDevice(context);
             _lockFrpPanel.SetDevice(context, null);
             _cloakPanel.SetDevice(context);
             _flashPanel.SetDevice(context);
             _bootloaderPanel.SetDevice(context);
+            _healthPanel.SetDevice(context);
+            _sandboxPanel.SetDevice(context);
+            _driverProPanel.SetDevice(context);
             
             // For backup panel, we need the protocol engine if available
             _backupPanel.SetDevice(context, null);
-            _frpPanel.SetDevice(context, null); // Engine will be updated via protocol switch
+            _frpPanel.SetDevice(context, null); 
             _restorePanel.SetDevice(context, null);
         }
     }

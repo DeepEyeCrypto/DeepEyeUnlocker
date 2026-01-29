@@ -29,6 +29,18 @@ namespace DeepEyeUnlocker.UI.Panels
         public FRPPanel()
         {
             InitializeComponent();
+            PopulateProfiles();
+        }
+
+        private void PopulateProfiles()
+        {
+            _cmbModel.Items.Clear();
+            var profiles = FRPProfiles.GetStandardProfiles();
+            foreach (var p in profiles)
+            {
+                _cmbModel.Items.Add(p.Model);
+            }
+            if (_cmbModel.Items.Count > 0) _cmbModel.SelectedIndex = 0;
         }
 
         public void SetDevice(DeviceContext? device, IProtocolEngine? engine)
@@ -70,8 +82,6 @@ namespace DeepEyeUnlocker.UI.Panels
             var configFlow = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10) };
             
             _cmbModel = new ComboBox { Width = 250, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(30, 30, 30), ForeColor = Color.White };
-            _cmbModel.Items.AddRange(new[] { "Generic Qualcomm (EDL)", "Generic MediaTek (BROM)", "Samsung Generic (Download)", "Xiaomi Multi-Auth", "OPPO/Realme Manual" });
-            _cmbModel.SelectedIndex = 0;
 
             _chkOwnership = new CheckBox { Text = "I confirm I am the legal owner of this device", AutoSize = true, ForeColor = Color.Gold };
             _chkDataBackup = new CheckBox { Text = "Perform emergency partition backup before erase", AutoSize = true, Checked = true };
@@ -130,11 +140,15 @@ namespace DeepEyeUnlocker.UI.Panels
 
             if (_manager == null || _engine == null) return;
 
+            var selectedProfileName = _cmbModel.SelectedItem?.ToString() ?? "Generic";
+            var profiles = FRPProfiles.GetStandardProfiles();
+            var profile = profiles.FirstOrDefault(p => p.Model == selectedProfileName) ?? profiles[0];
+
             var plan = new FRPResetPlan
             {
-                ModelName = _cmbModel.SelectedItem.ToString() ?? "Generic",
-                TargetPartitions = new List<string> { "frp", "config" }, // Logic based on profile
-                RequiresAuthBypass = _cmbModel.SelectedIndex == 3 // Simple example
+                ModelName = profile.Model,
+                TargetPartitions = profile.Partitions,
+                RequiresAuthBypass = profile.Model.Contains("Xiaomi")
             };
 
             try

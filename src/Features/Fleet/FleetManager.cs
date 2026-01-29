@@ -25,6 +25,22 @@ namespace DeepEyeUnlocker.Features.Fleet
     {
         private readonly IAdbClient _adb;
         private readonly ConcurrentDictionary<string, FleetDevice> _devices = new();
+        private DeviceContext? _selectedDevice;
+
+        public event EventHandler<DeviceContext?>? SelectedDeviceChanged;
+
+        public DeviceContext? SelectedDevice
+        {
+            get => _selectedDevice;
+            set
+            {
+                if (_selectedDevice != value)
+                {
+                    _selectedDevice = value;
+                    SelectedDeviceChanged?.Invoke(this, _selectedDevice);
+                }
+            }
+        }
 
         public FleetManager(IAdbClient adb)
         {

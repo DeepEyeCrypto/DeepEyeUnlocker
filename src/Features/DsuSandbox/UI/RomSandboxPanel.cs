@@ -71,6 +71,20 @@ namespace DeepEyeUnlocker.Features.DsuSandbox.UI
             _ = LoadDatabaseAsync();
         }
 
+        public void SetDevice(DeviceContext? device)
+        {
+            if (device != null)
+            {
+                _ = UpdateDeviceStatusAsync(device);
+            }
+            else
+            {
+                _currentDevice = null;
+                lblDeviceStatus.Text = "Device: Not connected";
+                lblDsuStatus.Text = "DSU Support: Unknown";
+            }
+        }
+
         private void InitializeControls()
         {
             // Title

@@ -18,6 +18,7 @@ namespace DeepEyeUnlocker.UI.Panels
         private DeviceContext? _device;
         private RootCloakManager _rootManager = new();
         private DevModeCloakManager _devManager = new();
+        private Features.Cloak.CloakOrchestrator _orchestrator = new();
         
         private RootCloakStatus? _rootStatus;
         private DevModeStatus? _devStatus;
@@ -38,6 +39,8 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _showGuideButton = null!;
         private ComboBox _profileCombo = null!;
         private Button _applyProfileButton = null!;
+        private Button _sentinelCloakButton = null!;
+        private ComboBox _tierCombo = null!;
 
         // Dev Mode Tab
         private Panel _devPanel = null!;
@@ -202,7 +205,6 @@ namespace DeepEyeUnlocker.UI.Panels
             tab.Controls.Add(_applyProfileButton);
 
             y += 50;
-
             // Issues/Recommendations Panel
             var issuesLabel = new Label
             {
@@ -213,6 +215,24 @@ namespace DeepEyeUnlocker.UI.Panels
                 AutoSize = true
             };
             tab.Controls.Add(issuesLabel);
+            y += 40;
+
+            // Sentinel Orchestrator Section (Sentinel Pro)
+            var sentinelGroup = CreateGroup("⚡ Sentinel Pro Orchestrator", 10, y, 510, 80);
+            tab.Controls.Add(sentinelGroup);
+
+            var tierLabel = new Label { Text = "Stealth Tier:", Location = new Point(15, 30), AutoSize = true };
+            _tierCombo = new ComboBox { Location = new Point(100, 26), Size = new Size(120, 25), DropDownStyle = ComboBoxStyle.DropDownList };
+            _tierCombo.Items.AddRange(Enum.GetNames(typeof(Features.Cloak.StealthTier)));
+            _tierCombo.SelectedIndex = 1; // Hybrid
+
+            _sentinelCloakButton = CreateButton("🚀 Apply Full Sentinel Cloak", 240, 24, 250, 35, Color.FromArgb(75, 0, 130));
+            _sentinelCloakButton.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+            _sentinelCloakButton.Click += OnSentinelCloakClicked;
+
+            sentinelGroup.Controls.Add(tierLabel);
+            sentinelGroup.Controls.Add(_tierCombo);
+            sentinelGroup.Controls.Add(_sentinelCloakButton);
         }
 
         private void CreateDevModeTab(TabPage tab)
@@ -358,6 +378,45 @@ namespace DeepEyeUnlocker.UI.Panels
                 var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Message));
                 await _rootManager.ApplyDenyListProfile(profile, progress);
                 LogMessage("Profile applied. Refresh DenyList in Magisk app.", Color.FromArgb(40, 167, 69));
+            }
+        }
+
+        private async void OnSentinelCloakClicked(object? sender, EventArgs e)
+        {
+            if (_device == null) return;
+
+            var tier = (Features.Cloak.StealthTier)Enum.Parse(typeof(Features.Cloak.StealthTier), _tierCombo.SelectedItem.ToString()!);
+            
+            var result = MessageBox.Show(
+                $"This will apply a multi-layer {tier} stealth profile.\n\n" +
+                "Includes:\n" +
+                $"• Root hiding for standard profiles\n" +
+                $"• Developer Mode stealth features\n" +
+                ((tier == Features.Cloak.StealthTier.Maximum) ? "• System prop (resetprop) surgical tweaks\n" : "") +
+                "\nContinue?",
+                "Sentinel Pro Orchestration",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                _sentinelCloakButton.Enabled = false;
+                LogMessage($"\n--- Starting Sentinel {tier} Orchestration ---", Color.FromArgb(75, 0, 130));
+                
+                var progress = new Progress<ProgressUpdate>(u => LogMessage(u.Message));
+                bool success = await _orchestrator.ApplyFullStealthProfileAsync(_device, tier, progress, CancellationToken.None);
+                
+                if (success)
+                {
+                    LogMessage("SENTINEL CLOAK APPLIED SUCCESSFULLY", Color.FromArgb(40, 167, 69));
+                    MessageBox.Show("Stealth Orchestration Complete.\nReboot recommended to finalize all changes.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    LogMessage("Orchestration encountered errors", Color.FromArgb(220, 53, 69));
+                }
+                
+                _sentinelCloakButton.Enabled = true;
             }
         }
 

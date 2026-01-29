@@ -22,6 +22,27 @@ namespace DeepEyeUnlocker.UI.Panels
         {
             _manager = new FleetManager(adb);
             InitializeComponent();
+            _deviceList.SelectionChanged += OnSelectionChanged;
+        }
+
+        public FleetManager FleetManager => _manager;
+
+        private void OnSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_deviceList.SelectedRows.Count == 1)
+            {
+                var serial = _deviceList.SelectedRows[0].Cells[0].Value.ToString();
+                var devices = _manager.GetDevices();
+                var selectedFleetDevice = devices.FirstOrDefault(d => d.Context.Serial == serial);
+                if (selectedFleetDevice != null)
+                {
+                    _manager.SelectedDevice = selectedFleetDevice.Context;
+                }
+            }
+            else
+            {
+                _manager.SelectedDevice = null;
+            }
         }
 
         private void InitializeComponent()

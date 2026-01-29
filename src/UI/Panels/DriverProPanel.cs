@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Features.Drivers;
 
 namespace DeepEyeUnlocker.UI.Panels
@@ -12,6 +13,7 @@ namespace DeepEyeUnlocker.UI.Panels
     public class DriverProPanel : UserControl
     {
         private readonly DriverCenterEngine _engine;
+        private DeviceContext? _device;
         private DataGridView _driverGrid = null!;
         private Button _btnScan = null!;
         private Button _btnRepair = null!;
@@ -21,6 +23,12 @@ namespace DeepEyeUnlocker.UI.Panels
         {
             _engine = new DriverCenterEngine();
             InitializeComponent();
+        }
+
+        public void SetDevice(DeviceContext? device)
+        {
+            _device = device;
+            _lblStatus.Text = _device != null ? $"Context available: {_device.Mode}" : "No device context selected.";
         }
 
         private void InitializeComponent()

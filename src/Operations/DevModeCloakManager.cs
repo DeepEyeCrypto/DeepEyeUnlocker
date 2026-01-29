@@ -207,7 +207,6 @@ namespace DeepEyeUnlocker.Operations
                 Description = "Hide developer options for banking apps",
                 HideDeveloperOptions = true,
                 HideUsbDebugging = false, // Don't break ADB
-                SpoofDebuggableProp = true,
                 SettingsOverrides = new Dictionary<string, string>
                 {
                     ["mock_location"] = "0"
@@ -223,11 +222,22 @@ namespace DeepEyeUnlocker.Operations
                 Description = "Hide all developer indicators (will disconnect ADB!)",
                 HideDeveloperOptions = true,
                 HideUsbDebugging = true,
-                SpoofDebuggableProp = true,
                 SettingsOverrides = new Dictionary<string, string>
                 {
                     ["mock_location"] = "0"
                 }
+            };
+        }
+
+        public static StealthProfile GetStandardProfile()
+        {
+            return new StealthProfile
+            {
+                Name = "Standard Stealth",
+                Description = "Balanced stealth hiding developer options",
+                HideDeveloperOptions = true,
+                HideUsbDebugging = false,
+                SettingsOverrides = new Dictionary<string, string>()
             };
         }
 
