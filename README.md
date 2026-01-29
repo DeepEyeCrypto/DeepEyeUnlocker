@@ -1,8 +1,8 @@
-# DeepEyeUnlocker v1.3.0 "Sentinel"
+# DeepEyeUnlocker v1.4.0 "Sentinel Pro"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v1.3.0](https://img.shields.io/badge/Download-v1.3.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.3.0)
+[![Download DeepEyeUnlocker v1.4.0](https://img.shields.io/badge/Download-v1.4.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.4.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,11 +15,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v1.3.0**
+Latest stable release: **v1.4.0**
 
-- ⬇️ [Download DeepEyeUnlocker v1.3.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.3.0)
+- ⬇️ [Download DeepEyeUnlocker v1.4.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.4.0)
 - Platform: Windows (x64)
-- Status: Stable Release (Sentinel) - Health, Backup, and Sandbox enabled.
+- Status: Stable Release (Sentinel Pro) - Operations, Stealth, and Fleet enabled.
 
 ---
 
@@ -35,15 +35,14 @@ Latest stable release: **v1.3.0**
 - **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.3.0 "Sentinel" Highlights
+### v1.4.0 "Sentinel Pro" Highlights
 
-- **📋 Report Center:** One-click deep health audits (IMEI, Battery, Kernel, Security Patch).
-- **📦 Backup Center:** Secure, multi-partition backups with SHA256 verification and manifest generation.
-- **🧪 ROM Sandbox (DSU):** Safely test GSIs/ROMs via Dynamic System Updates (fully integrated).
-- **🏗️ Canonical DTOs:** Unified models for DeviceHealth, PartitionBackup, and FrpStatus.
-- **🛡️ Cloak Center:** Enhanced root detection (Magisk/Zygisk/Shamiko aware).
-- **⚡ Flash Center:** Integrated partition selector with safety mode.
-- **📱 Device Info Center:** Real-time telemetry and hardware diagnostics.
+- **⚡ FRP Bypass Engine:** Automated partition-level reset for Qualcomm and MediaTek chipsets (Epic A).
+- **🛡️ Flash Integrity Center:** Granular flashing with mandatory SHA-256 checks and size-mismatch guards (Epic B).
+- **🕵️ Cloak Stealth Pro:** Advanced system prop hiding (`resetprop`) to fool modern integrity checks (Epic C).
+- **🛠️ Driver Center Pro:** Host-side utility for resolving chipset driver conflicts and INF repair (Epic D).
+- **🚢 Fleet Management:** Parallel ADB orchestration and batch operations across multiple workstations (Epic E).
+- **🥇 GOLD Build Standard:** Enforced "0 Errors / 0 Warnings" CI/CD with artifact integrity verification.
 
 ---
 
@@ -157,6 +156,16 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v1.4.0 – Sentinel Pro Release (2026-01-29)
+
+#### New in v1.4.0
+
+- **FRP Engine:** Standardized partition-erase workflows for Qualcomm (Firehose) and MTK (BROM).
+- **Flash Safety:** Implemented partition size validation and SHA-256 integrity checks.
+- **Stealth Pro:** Automated system property manipulation (`ro.boot.*`) via surgical `resetprop` injection.
+- **Fleet Hub:** Multi-device device context support with parallel batch command execution.
+- **CI/CD:** Hardened build pipeline enforcing "Warnings as Errors" (GOLD Standard).
 
 ### v1.3.0 – Sentinel Release (2026-01-29)
 
