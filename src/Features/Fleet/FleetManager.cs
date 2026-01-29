@@ -51,24 +51,43 @@ namespace DeepEyeUnlocker.Features.Fleet
 
         public async Task RefreshDevicesAsync()
         {
-            // Note: Real implementation would poll AdbClient for device list
             Logger.Info("Refreshing fleet device list...");
             
-            // Simulation logic for demonstration
-            var serials = new[] { "SERIAL_A_123", "SERIAL_B_456" };
+            // Execute 'adb devices' via the shell bridge
+            var rawDevices = await _adb.ExecuteShellAsync("devices"); 
             
-            foreach (var s in serials)
+            var lines = rawDevices.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var activeSerials = new List<string>();
+
+            foreach (var line in lines)
             {
-                if (!_devices.ContainsKey(s))
+                if (line.Contains("\tdevice"))
                 {
-                    _devices.TryAdd(s, new FleetDevice 
-                    { 
-                        Alias = $"Bench-{(char)('A' + _devices.Count)}",
-                        Context = new DeviceContext { Serial = s, Model = "Generic Android" } 
-                    });
+                    var serial = line.Split('\t')[0].Trim();
+                    activeSerials.Add(serial);
+
+                    if (!_devices.ContainsKey(serial))
+                    {
+                        var device = new FleetDevice 
+                        { 
+                            Alias = $"Bench-{(char)('A' + _devices.Count)}",
+                            Context = new DeviceContext 
+                            { 
+                                Serial = serial, 
+                                Mode = ConnectionMode.ADB,
+                                Model = "Android Device"
+                            },
+                            ConnectedAt = DateTime.UtcNow
+                        };
+                        _devices.TryAdd(serial, device);
+                    }
                 }
             }
-            await Task.CompletedTask;
+
+            // Cleanup disconnected devices
+            var currentKeys = _devices.Keys.ToList();
+            var toRemove = currentKeys.Except(activeSerials).ToList();
+            foreach (var s in toRemove) _devices.TryRemove(s, out _);
         }
 
         public async Task<BatchResult> BatchExecuteShellAsync(IEnumerable<string> serials, string command)
@@ -76,36 +95,57 @@ namespace DeepEyeUnlocker.Features.Fleet
             Logger.Info($"Fleet: Batch executing command on {serials.Count()} devices: {command}");
             var result = new BatchResult { TotalDevices = serials.Count() };
 
-            var tasks = serials.Select(async s => 
+            foreach (var serial in serials)
             {
                 try 
                 {
-                    // In a real scenario, we'd need an AdbClient that supports -s parameter
-                    // For now, we simulate success
-                    await Task.Delay(100); 
+                    // Set context to specific device
+                    _adb.TargetSerial = serial;
+                    await _adb.ExecuteShellAsync(command);
+                    
                     result.SuccessCount++;
-                    Logger.Debug($"Fleet: Command success on {s}");
+                    Logger.Debug($"Fleet: Command success on {serial}");
                 }
                 catch (Exception ex)
                 {
                     result.FailCount++;
-                    result.Errors.Add($"{s}: {ex.Message}");
+                    result.Errors.Add($"{serial}: {ex.Message}");
                 }
-            });
+                finally
+                {
+                    _adb.TargetSerial = null; // Reset context
+                }
+            }
 
-            await Task.WhenAll(tasks);
             return result;
         }
 
         public async Task BatchInstallApkAsync(IEnumerable<string> serials, string apkPath)
         {
-            // Safety Check: Avoid destructive batch actions without explicit single-selection in UI
-            // This manager provides the logic, UI forces the selection.
+            if (!File.Exists(apkPath))
+            {
+                Logger.Error($"Fleet: APK not found at {apkPath}");
+                return;
+            }
+
             foreach (var serial in serials)
             {
-                Logger.Info($"Fleet: Pushing APK to {serial}...");
-                // Simulation
-                await Task.Delay(200);
+                try 
+                {
+                    _adb.TargetSerial = serial;
+                    Logger.Info($"Fleet: Installing APK on {serial}...");
+                    bool success = await _adb.InstallPackageAsync(apkPath);
+                    if (success) Logger.Info($"Fleet: Install success on {serial}");
+                    else Logger.Error($"Fleet: Install failed on {serial}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Fleet: Batch install error on {serial}: {ex.Message}");
+                }
+                finally
+                {
+                    _adb.TargetSerial = null;
+                }
             }
         }
     }

@@ -9,6 +9,8 @@ namespace DeepEyeUnlocker.Infrastructure
     {
         private readonly string _adbPath;
 
+        public string? TargetSerial { get; set; }
+
         public AdbClient(string adbPath = "adb")
         {
             _adbPath = adbPath;
@@ -50,12 +52,13 @@ namespace DeepEyeUnlocker.Infrastructure
 
         private async Task<string> RunCommandAsync(string args)
         {
+            string finalArgs = string.IsNullOrEmpty(TargetSerial) ? args : $"-s {TargetSerial} {args}";
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = _adbPath,
-                    Arguments = args,
+                    Arguments = finalArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,

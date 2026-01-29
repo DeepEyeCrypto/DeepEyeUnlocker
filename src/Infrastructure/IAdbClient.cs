@@ -11,5 +11,6 @@ namespace DeepEyeUnlocker.Infrastructure
         Task<bool> InstallPackageAsync(string apkPath);
         Task RebootAsync();
         bool IsConnected();
+        string? TargetSerial { get; set; }
     }
 }
