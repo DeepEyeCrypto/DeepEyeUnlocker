@@ -43,6 +43,27 @@ namespace DeepEyeUnlocker.Infrastructure
             return Task.FromResult(process.StandardOutput.BaseStream);
         }
 
+        public Task<System.IO.Stream> OpenShellWritableStreamAsync(string command, CancellationToken ct = default)
+        {
+            string args = string.IsNullOrEmpty(TargetSerial) ? $"shell \"{command}\"" : $"-s {TargetSerial} shell \"{command}\"";
+            
+            var psi = new ProcessStartInfo
+            {
+                FileName = _adbPath,
+                Arguments = args,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var process = new Process { StartInfo = psi };
+            process.Start();
+
+            return Task.FromResult(process.StandardInput.BaseStream);
+        }
+
         public async Task<bool> PushFileAsync(string localPath, string remotePath, CancellationToken ct = default)
         {
             var result = await RunCommandAsync($"push \"{localPath}\" \"{remotePath}\"", ct);

@@ -10,6 +10,7 @@ using DeepEyeUnlocker.Cloak.Dev;
 using DeepEyeUnlocker.UI.Panels;
 using DeepEyeUnlocker.Core.Engines;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Features.Modifications;
 
 namespace DeepEyeUnlocker.UI
 {
@@ -51,6 +52,7 @@ namespace DeepEyeUnlocker.UI
         private RestorePanel _restorePanel = null!;
         private DriverProPanel _driverProPanel = null!;
         private FleetPanel _fleetPanel = null!;
+        private ExpertPanel _expertPanel = null!;
 
         private ComboBox langSelector = null!;
 
@@ -107,6 +109,7 @@ namespace DeepEyeUnlocker.UI
             this._restorePanel = new RestorePanel();
             this._driverProPanel = new DriverProPanel();
             this._fleetPanel = new FleetPanel(_adbClient);
+            this._expertPanel = new ExpertPanel(_adbClient);
 
             _fleetPanel.FleetManager.SelectedDeviceChanged += (s, device) => 
             {
@@ -231,8 +234,12 @@ namespace DeepEyeUnlocker.UI
             TabPage fleetTab = new TabPage("🚢 Fleet Manager") { BackColor = BrandColors.Primary };
             _fleetPanel.Dock = DockStyle.Fill;
             fleetTab.Controls.Add(_fleetPanel);
+
+            TabPage expertTab = new TabPage("🛑 Expert Mode") { BackColor = BrandColors.Primary };
+            _expertPanel.Dock = DockStyle.Fill;
+            expertTab.Controls.Add(_expertPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, backupTab, frpTab, restoreTab, driverProTab, fleetTab, driverTab, resourceTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, backupTab, frpTab, restoreTab, driverProTab, fleetTab, expertTab, driverTab, resourceTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
@@ -480,6 +487,7 @@ namespace DeepEyeUnlocker.UI
             _healthPanel.SetDevice(context);
             _sandboxPanel.SetDevice(context);
             _driverProPanel.SetDevice(context);
+            _expertPanel.SetDevice(context);
             
             // For backup panel, we need the protocol engine if available
             _backupPanel.SetDevice(context, null, _adbClient);

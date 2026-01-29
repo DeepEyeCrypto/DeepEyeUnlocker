@@ -7,6 +7,7 @@ namespace DeepEyeUnlocker.Infrastructure
     {
         Task<string> ExecuteShellAsync(string command, CancellationToken ct = default);
         Task<System.IO.Stream> OpenShellStreamAsync(string command, CancellationToken ct = default);
+        Task<System.IO.Stream> OpenShellWritableStreamAsync(string command, CancellationToken ct = default);
         Task<bool> PushFileAsync(string localPath, string remotePath, CancellationToken ct = default);
         Task<bool> PullFileAsync(string remotePath, string localPath, CancellationToken ct = default);
         Task<bool> InstallPackageAsync(string apkPath, CancellationToken ct = default);
