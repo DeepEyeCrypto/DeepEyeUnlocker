@@ -53,7 +53,7 @@ Latest stable release: **v1.2.0**
 ## 📱 Supported Chipsets
 
 | Platform                | Mode             | Protocol           |
-|-------------------------|------------------|---------------------|
+|-------------------------|------------------|--------------------|
 | **Qualcomm Snapdragon** | EDL 9008         | Sahara + Firehose  |
 | **MediaTek (MTK)**      | BROM / Preloader | MTK Download Agent |
 | **Samsung Exynos/QC**   | Download Mode    | Odin / Loke        |
@@ -161,7 +161,7 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 
 ### v1.2.0 – Initial public toolkit preview (2026-01-29)
 
-**New**
+#### New
 
 - Core operation engine for Android device detection, ADB/Fastboot orchestration, and logging.
 - Initial "Safe Unlock" workflows (structured operations layer, no aggressive one-click bypasses).
@@ -171,7 +171,7 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 - GSI Database with curated AOSP and LineageOS images.
 - Build pipeline with GitHub Actions and signed release artifacts for Windows.
 
-**Known issues / limitations**
+#### Known Issues / Limitations
 
 - Partition/FRP models and protocol engines are still evolving; some advanced features are stubbed or disabled.
 - No production-ready IMEI/EDL/FRP write operations yet (read/diagnostics focus only).
