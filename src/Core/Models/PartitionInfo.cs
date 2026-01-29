@@ -13,11 +13,18 @@ namespace DeepEyeUnlocker.Core.Models
         public ulong EndLba { get; set; }
         public ulong SizeInBytes { get; set; }
         public string? FileSystem { get; set; }
-        public bool IsCritical { get; set; } // true for bootloader, efs, modem, persistent
+        public bool IsCritical { get; set; } // true for bootloader, system, vbmeta
+        public bool IsHighRisk => GetIsHighRisk(Name);
         public ulong Attributes { get; set; }
         public Guid TypeGuid { get; set; }
         public Guid UniqueGuid { get; set; }
         public string TypeName { get; set; } = "Unknown";
+
+        private static bool GetIsHighRisk(string name)
+        {
+            string n = name.ToLower();
+            return n.Contains("efs") || n.Contains("modem") || n.Contains("nv") || n.Contains("persist") || n.Contains("sec");
+        }
 
         public string SizeFormatted => FormatSize(SizeInBytes);
 
