@@ -18,7 +18,8 @@ namespace DeepEyeUnlocker.UI.Panels
         private DeviceContext? _device;
         private RootCloakManager _rootManager = new();
         private DevModeCloakManager _devManager = new();
-        private Features.Cloak.CloakOrchestrator _orchestrator = new();
+        private Features.Cloak.CloakOrchestrator _orchestrator;
+        private Infrastructure.IAdbClient _adbClient;
         
         private RootCloakStatus? _rootStatus;
         private DevModeStatus? _devStatus;
@@ -56,8 +57,10 @@ namespace DeepEyeUnlocker.UI.Panels
         private CheckBox _expertToggle = null!;
         private RichTextBox _logBox = null!;
 
-        public CloakCenterPanel()
+        public CloakCenterPanel(Infrastructure.IAdbClient adbClient)
         {
+            _adbClient = adbClient;
+            _orchestrator = new Features.Cloak.CloakOrchestrator(adbClient);
             InitializeComponents();
         }
 
@@ -149,11 +152,6 @@ namespace DeepEyeUnlocker.UI.Panels
             LogMessage("Cloak Center ready. Connect a rooted device to begin.");
         }
 
-        private async Task ApplyPropTweaks(CancellationToken ct)
-        {
-            // Implementation of EPIC C surgical prop injection
-            await Task.CompletedTask;
-        }
 
         private void CreateRootCloakTab(TabPage tab)
         {

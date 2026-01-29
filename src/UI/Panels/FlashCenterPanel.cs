@@ -10,6 +10,7 @@ using DeepEyeUnlocker.Operations;
 using DeepEyeUnlocker.UI.Themes;
 using DeepEyeUnlocker.Infrastructure.Logging;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Protocols;
 
 namespace DeepEyeUnlocker.UI.Panels
 {
@@ -17,6 +18,7 @@ namespace DeepEyeUnlocker.UI.Panels
     {
         private readonly FlashManager _flashManager = new();
         private DeviceContext? _device;
+        private IProtocol? _protocol;
         private FirmwareManifest? _currentManifest;
         private CancellationTokenSource? _cts;
 
@@ -37,9 +39,10 @@ namespace DeepEyeUnlocker.UI.Panels
             InitializeComponent();
         }
 
-        public void SetDevice(DeviceContext? device)
+        public void SetDevice(DeviceContext? device, IProtocol? protocol)
         {
             _device = device;
+            _protocol = protocol;
             UpdateStatus();
         }
 
@@ -239,30 +242,48 @@ namespace DeepEyeUnlocker.UI.Panels
 
             try
             {
-                lblStatus.Text = "Initializing Engines...";
+                lblStatus.Text = "Verifying Package...";
                 prgOverall.Value = 0;
 
-                // For the UI panel, we need a protocol. In a real app, we'd get this from MainForm session
-                // Since this is a standalone panel update, we'll simulate the operation check
-                // or assume MainForm handles the execution. 
-                
-                // Triggering via Operation pipeline for consistency
-                Logger.Info($"Starting flash for {_currentManifest.FirmwareName}");
-                
+                // Sync UI Selection back to Manifest
+                foreach (DataGridViewRow row in partitionGrid.Rows)
+                {
+                    var partitionName = row.Cells["Name"].Value.ToString();
+                    var isSelected = (bool)row.Cells["Selected"].Value;
+                    var p = _currentManifest.Partitions.FirstOrDefault(x => x.PartitionName == partitionName);
+                    if (p != null) p.IsSelected = isSelected;
+                }
+
+                if (_protocol == null)
+                {
+                    lblStatus.Text = "Protocol Engine Not Initialized";
+                    return;
+                }
+
+                var operation = new FlashOperation(_currentManifest.BaseDirectory, _protocol)
+                {
+                    IsSafeMode = chkSafeMode.Checked
+                };
+
                 var progress = new Progress<ProgressUpdate>(u => {
                     this.Invoke(new Action(() => {
-                        prgOverall.Value = u.Percentage;
-                        lblStatus.Text = u.Status;
+                        prgOverall.Value = Math.Max(0, Math.Min(100, u.Percentage));
+                        lblStatus.Text = u.Message;
                     }));
                 });
 
-                // In a production environment, we'd use the current session's protocol
-                // For this UI update, we're marking the intent to use FlashOperation
-                lblStatus.Text = "Flash in progress... (Refer to main console for details)";
-                await Task.Delay(1000, _cts.Token);
-                
-                // Note: The actual execution usually happens in MainForm.ExecuteOperationAsync
-                // But we're updating the UI to reflect it's ready for real integration.
+                LogMessage("--- Starting EPIC B Secure Flash ---", Color.Lime);
+                bool success = await operation.ExecuteAsync(_device, progress, _cts.Token);
+
+                if (success)
+                {
+                    lblStatus.Text = "Flash Completed Successfully";
+                    MessageBox.Show("Flash Successful!\n\nDevice is rebooting.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    lblStatus.Text = "Flash Failed";
+                }
             }
             catch (Exception ex)
             {
@@ -288,6 +309,12 @@ namespace DeepEyeUnlocker.UI.Panels
                 lblStatus.Text = $"Status: {_device.Brand} {_device.Model} ({_device.Mode}) Connected";
                 lblStatus.ForeColor = Color.Lime;
             }
+        }
+
+        private void LogMessage(string message, Color color)
+        {
+            // Internal logging for progress feedback
+            Logger.Info(message);
         }
 
         private string FormatSize(long bytes)

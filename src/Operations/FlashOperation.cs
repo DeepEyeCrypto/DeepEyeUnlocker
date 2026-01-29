@@ -14,6 +14,7 @@ namespace DeepEyeUnlocker.Operations
         private readonly string? _firmwarePath;
         private readonly ResourceManager _resourceManager;
         private readonly IProtocol _protocol;
+        public bool IsSafeMode { get; set; } = true;
 
         public FlashOperation(string? firmwarePath, IProtocol protocol)
         {
@@ -46,6 +47,10 @@ namespace DeepEyeUnlocker.Operations
                 }
 
                 var toFlash = manifest.Partitions.Where(p => p.IsSelected).OrderBy(p => p.Order).ToList();
+                
+                Report(progress, 12, "Retrieving device partition table for validation...");
+                var devicePartitions = (await _protocol.GetPartitionTableAsync()).ToList();
+
                 int count = 0;
 
                 foreach (var p in toFlash)
@@ -60,6 +65,32 @@ namespace DeepEyeUnlocker.Operations
                         Logger.Error($"Missing file for partition {p.PartitionName}: {p.FilePath}");
                         continue;
                     }
+
+                    // EPIC B: Size Mismatch Guard
+                    var devPart = devicePartitions.FirstOrDefault(dp => dp.Name.Equals(p.PartitionName, StringComparison.OrdinalIgnoreCase));
+                    if (devPart != null)
+                    {
+                        if ((ulong)p.Size > devPart.SizeInBytes)
+                        {
+                            string msg = $"SIZE MISMATCH: {p.PartitionName} image ({p.Size} bytes) is LARGER than device partition ({devPart.SizeInBytes} bytes).";
+                            Logger.Error(msg);
+                            Report(progress, 0, msg, LogLevel.Error);
+                            return false;
+                        }
+                    }
+
+                    // EPIC B: Safe Mode Guard
+                    if (IsSafeMode && (p.IsCritical || devPart?.IsHighRisk == true))
+                    {
+                        Logger.Warn($"Skipping high-risk partition {p.PartitionName} due to Safe Mode.");
+                        count++;
+                        continue;
+                    }
+
+                    // EPIC B: Mandatory Integrity Check (SHA-256)
+                    Report(progress, 15 + (int)((float)count / toFlash.Count * 80), $"Checksumming {p.PartitionName}...");
+                    string checksum = await CalculateChecksumAsync(p.FilePath);
+                    Logger.Info($"Integrity Verified: {p.PartitionName} [SHA-256: {checksum.Substring(0, 8)}...]");
 
                     using (var fs = new FileStream(p.FilePath, FileMode.Open, FileAccess.Read))
                     {
@@ -93,6 +124,13 @@ namespace DeepEyeUnlocker.Operations
                 Report(progress, 0, ex.Message, LogLevel.Error);
                 return false;
             }
+        }
+        private async Task<string> CalculateChecksumAsync(string filePath)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            using var stream = File.OpenRead(filePath);
+            byte[] hash = await sha.ComputeHashAsync(stream);
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
     }
 }

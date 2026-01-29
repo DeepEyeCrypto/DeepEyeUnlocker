@@ -12,9 +12,11 @@ namespace DeepEyeUnlocker.Features.Cloak
     {
         private readonly RootCloakManager _rootManager;
         private readonly DevModeCloakManager _devManager;
+        private readonly Infrastructure.IAdbClient _adbClient;
 
-        public CloakOrchestrator()
+        public CloakOrchestrator(Infrastructure.IAdbClient adbClient)
         {
+            _adbClient = adbClient;
             _rootManager = new RootCloakManager();
             _devManager = new DevModeCloakManager();
         }
@@ -78,21 +80,30 @@ namespace DeepEyeUnlocker.Features.Cloak
 
         private async Task ApplyPropTweaks(CancellationToken ct)
         {
-            // Implementation of EPIC C surgical prop injection
-            await Task.CompletedTask;
+            // Surgical prop injection to fool advanced integrity checks
             await RunSuCommand("resetprop ro.debuggable 0", ct);
             await RunSuCommand("resetprop ro.secure 1", ct);
             await RunSuCommand("resetprop ro.build.type user", ct);
             await RunSuCommand("resetprop ro.build.tags release-keys", ct);
+            await RunSuCommand("resetprop ro.boot.verifiedbootstate green", ct);
+            await RunSuCommand("resetprop ro.boot.flash.locked 1", ct);
+            await RunSuCommand("resetprop ro.boot.veritymode enforcing", ct);
+            await RunSuCommand("resetprop sys.usb.config mtp,adb", ct);
         }
 
         private async Task RunSuCommand(string cmd, CancellationToken ct)
         {
-            await Task.Yield();
-            // Internal use of adb shell su -c
-            var command = $"shell su -c '{cmd}'";
-            // This would normally call an internal ADB wrapper
-            Logger.Debug($"Orchestrator Su Exec: {command}");
+            if (ct.IsCancellationRequested) return;
+            
+            Logger.Debug($"Orchestrator Su Exec: {cmd}");
+            try 
+            {
+                await _adbClient.ExecuteShellAsync($"su -c '{cmd}'");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Su Command Failed: {cmd} - {ex.Message}");
+            }
         }
     }
 

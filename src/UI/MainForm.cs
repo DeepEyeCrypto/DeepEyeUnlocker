@@ -97,7 +97,7 @@ namespace DeepEyeUnlocker.UI
             this._deviceInfoPanel = new DeviceInfoPanel();
             this._adbToolsPanel = new AdbToolsPanel();
             this._lockFrpPanel = new LockFrpCenterPanel();
-            this._cloakPanel = new CloakCenterPanel();
+            this._cloakPanel = new CloakCenterPanel(_adbClient);
             this._flashPanel = new FlashCenterPanel();
             this._bootloaderPanel = new BootloaderUnlockPanel();
             this._healthPanel = new DeviceHealthPanel(_adbClient);
@@ -475,7 +475,7 @@ namespace DeepEyeUnlocker.UI
             _adbToolsPanel.SetDevice(context);
             _lockFrpPanel.SetDevice(context, null);
             _cloakPanel.SetDevice(context);
-            _flashPanel.SetDevice(context);
+            _flashPanel.SetDevice(context, null);
             _bootloaderPanel.SetDevice(context);
             _healthPanel.SetDevice(context);
             _sandboxPanel.SetDevice(context);
