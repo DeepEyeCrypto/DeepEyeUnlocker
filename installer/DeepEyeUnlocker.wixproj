@@ -22,9 +22,9 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\DeepEyeUnlocker.csproj">
+    <ProjectReference Include="..\DeepEye.UI.Modern\DeepEye.UI.Modern.csproj">
       <Name>DeepEyeUnlocker</Name>
-      <Project>{b1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1}</Project>
+      <Project>{f44675e4-9ad4-45b0-8b58-4305fa6dc56d}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>

@@ -84,6 +84,7 @@
                     <TextBlock Text="DeepEye" Style="{StaticResource DeepEye.Text.GlowingTitle}" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" FontSize="16"/>
                     <TextBlock Text="Unlocker" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="Light" FontSize="16" Margin="5,0"/>
                     <TextBlock Text="Pro" Foreground="{StaticResource DeepEye.Brush.Orange}" FontWeight="Bold" FontSize="10" VerticalAlignment="Top" Margin="2,4,0,0"/>
+                    <TextBlock Text="{Binding VersionDisplay}" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.4" FontSize="9" VerticalAlignment="Bottom" Margin="10,0,0,5"/>
                 </StackPanel>
                 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0">

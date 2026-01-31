@@ -33,6 +33,8 @@ namespace DeepEye.UI.Modern.ViewModels
         [ObservableProperty]
         private double _progressValue = 0;
 
+        public string VersionDisplay => VersionManager.FullVersionDisplay;
+
         public ObservableCollection<DeviceContext> ConnectedDevices { get; } = new();
 
         public MainViewModel()
