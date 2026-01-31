@@ -127,33 +127,35 @@ namespace DeepEyeUnlocker.Features.DriverCenter.Services
 
         private async Task<bool> ExecuteZipDeploymentAsync(DriverPackage package, string path, IProgress<ProgressUpdate> progress)
         {
-            if (package.SilentFlags == "EXTRACT_TO_PATH")
+            return await Task.Run(() =>
             {
-                string targetDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeepEyeUnlocker", "platform-tools");
-                Logger.Info($"[DRIVER-INSTALLER] Deploying Platform-Tools to: {targetDir}");
+                if (package.SilentFlags == "EXTRACT_TO_PATH")
+                {
+                    string targetDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeepEyeUnlocker", "platform-tools");
+                    Logger.Info($"[DRIVER-INSTALLER] Deploying Platform-Tools to: {targetDir}");
 
-                try
-                {
-                    if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-                    // System.IO.Compression.ZipFile.ExtractToDirectory(path, targetDir, true);
-                    
-                    // Add to User PATH
-                    string currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) ?? "";
-                    if (!currentPath.Contains(targetDir))
+                    try
                     {
-                        string newPath = currentPath + ";" + targetDir;
-                        Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
-                        Logger.Info("[DRIVER-INSTALLER] System PATH updated with Platform-Tools.");
+                        if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+                        
+                        // Add to User PATH
+                        string currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) ?? "";
+                        if (!currentPath.Contains(targetDir))
+                        {
+                            string newPath = (string.IsNullOrEmpty(currentPath) ? "" : currentPath + ";") + targetDir;
+                            Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
+                            Logger.Info("[DRIVER-INSTALLER] System PATH updated with Platform-Tools.");
+                        }
+                        
+                        return true;
                     }
-                    
-                    return true;
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"[DRIVER-INSTALLER] ZIP deployment failed: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Logger.Error($"[DRIVER-INSTALLER] ZIP deployment failed: {ex.Message}");
-                }
-            }
-            return false;
+                return false;
+            });
         }
     }
 }
