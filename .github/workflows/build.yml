@@ -28,10 +28,11 @@ jobs:
     - name: Verify Artifact Integrity
       shell: pwsh
       run: |
-        $dllPath = "src/bin/Release/net8.0-windows/DeepEyeUnlocker.dll"
-        if (!(Test-Path $dllPath)) { throw "DeepEyeUnlocker.dll not found!" }
+        $dllPath = "src/bin/Release/net8.0-windows/DeepEyeUnlocker.Core.dll"
+        if (!(Test-Path $dllPath)) { throw "DeepEyeUnlocker.Core.dll not found!" }
         $hash = Get-FileHash $dllPath -Algorithm SHA256
         echo "GOLD ARTIFACT SHA256: $($hash.Hash)"
+        if (!(Test-Path "artifacts")) { New-Item -ItemType Directory -Path "artifacts" }
         echo "$($hash.Hash)" > artifacts/build_hash.txt
 
     - name: Test
@@ -42,5 +43,6 @@ jobs:
       with:
         name: sentinel-pro-gold
         path: |
-          src/bin/Release/net8.0-windows/DeepEyeUnlocker.dll
+          src/bin/Release/net8.0-windows/DeepEyeUnlocker.Core.dll
+          DeepEye.UI.Modern/bin/Release/net8.0-windows/DeepEyeUnlocker.dll
           artifacts/build_hash.txt
