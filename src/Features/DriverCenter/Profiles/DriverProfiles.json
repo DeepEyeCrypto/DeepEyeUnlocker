@@ -1,0 +1,105 @@
+[
+    {
+        "BrandId": "google",
+        "BrandName": "Google ADB/Fastboot (Universal)",
+        "Vids": [
+            "0x18D1"
+        ],
+        "Packages": [
+            {
+                "Id": "google_usb",
+                "Name": "Google USB Driver",
+                "Url": "https://dl.google.com/android/repository/latest_usb_driver_windows.zip",
+                "InstallMethod": "INF",
+                "SilentFlags": "/S /SW"
+            },
+            {
+                "Id": "platform_tools",
+                "Name": "Android Platform-Tools (ADB/Fastboot)",
+                "Url": "https://dl.google.com/android/repository/platform-tools-latest-windows.zip",
+                "InstallMethod": "ZIP",
+                "SilentFlags": "EXTRACT_TO_PATH"
+            }
+        ]
+    },
+    {
+        "BrandId": "samsung",
+        "BrandName": "Samsung Electronics",
+        "Vids": [
+            "0x04E8"
+        ],
+        "Packages": [
+            {
+                "Id": "samsung_usb",
+                "Name": "Samsung USB Driver for Windows",
+                "Url": "https://developer.samsung.com/android-usb-driver",
+                "InstallMethod": "EXE",
+                "SilentFlags": "/S"
+            }
+        ]
+    },
+    {
+        "BrandId": "xiaomi",
+        "BrandName": "Xiaomi / Redmi / Poco",
+        "Vids": [
+            "0x2717"
+        ],
+        "Packages": [
+            {
+                "Id": "xiaomi_usb",
+                "Name": "Xiaomi USB Driver Pro",
+                "Url": "https://miuirom.org/tools/xiaomi-usb-drivers",
+                "InstallMethod": "EXE",
+                "SilentFlags": "/quiet"
+            }
+        ]
+    },
+    {
+        "BrandId": "motorola",
+        "BrandName": "Motorola Solutions",
+        "Vids": [
+            "0x22B8"
+        ],
+        "Packages": [
+            {
+                "Id": "motorola_usb",
+                "Name": "Motorola Device Manager",
+                "Url": "https://motorola-global-portal.custhelp.com/app/answers/detail/a_id/88481",
+                "InstallMethod": "EXE",
+                "SilentFlags": "/S"
+            }
+        ]
+    },
+    {
+        "BrandId": "qualcomm",
+        "BrandName": "Qualcomm HS-USB QDLoader (EDL)",
+        "Vids": [
+            "0x05C6"
+        ],
+        "Packages": [
+            {
+                "Id": "qualcomm_edl",
+                "Name": "Qualcomm QDLoader 9008 Driver",
+                "Url": "https://androiddatahost.com/up79y",
+                "InstallMethod": "EXE",
+                "SilentFlags": "/S /v/qn"
+            }
+        ]
+    },
+    {
+        "BrandId": "mediatek",
+        "BrandName": "MediaTek Preloader / VCOM",
+        "Vids": [
+            "0x0E8D"
+        ],
+        "Packages": [
+            {
+                "Id": "mtk_vcom",
+                "Name": "MTK All-in-One USB Driver",
+                "Url": "https://androidmtk.com/download-mtk-usb-all-drivers",
+                "InstallMethod": "EXE",
+                "SilentFlags": "/SILENT"
+            }
+        ]
+    }
+]

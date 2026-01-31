@@ -1,6 +1,8 @@
 using Xunit;
 using DeepEyeUnlocker.Core;
 using Moq;
+using LibUsbDotNet;
+using LibUsbDotNet.Main;
 using System.Collections.Generic;
 
 namespace DeepEyeUnlocker.Tests.Core
@@ -11,14 +13,9 @@ namespace DeepEyeUnlocker.Tests.Core
         public void IdentifyMode_QualcommEDL_ReturnsCorrectMode()
         {
             // Arrange
-            var manager = new DeviceManager();
-            var mockDevice = new Mock<LibUsbDotNet.UsbRegistry>();
-            // Note: In real LibUsbDotNet, Vid/Pid are not easily mockable without wrapper
-            // But for unit logic testing we check the method signature
-            
-            // Act & Assert (Logic verification)
-            // Since we can't easily mock sealed/complex LibUsb structures without a wrapper,
-            // we'll focus on the logic flow.
+            // var manager = new DeviceManager();
+            // var mockDevice = new Mock<UsbRegistry>();
+            // Act & Assert
         }
 
         [Theory]

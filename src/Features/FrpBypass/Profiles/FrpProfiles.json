@@ -1,0 +1,86 @@
+[
+    {
+        "brand": "Xiaomi",
+        "os": "HyperOS 1.0 (BROM Edition)",
+        "chipset_family": "MediaTek (Dimensing 6080)",
+        "method": "MTK_BROM_FORMAT",
+        "target_partition": "frp",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "mandatory_backup",
+        "detection_prop": "ro.frp.pst",
+        "codename": "moonstone"
+    },
+    {
+        "brand": "Xiaomi",
+        "os": "HyperOS 2.0 (EDL Edition)",
+        "chipset_family": "Snapdragon 7s Gen 2",
+        "method": "QUALCOMM_EDL_ERASE",
+        "target_partition": "frp",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "verify_partition_backup_present",
+        "detection_prop": "ro.frp.pst",
+        "codename": "garnet"
+    },
+    {
+        "brand": "Samsung",
+        "os": "OneUI 7.0 (Android 15)",
+        "chipset_family": "Snapdragon 8 Gen 5",
+        "method": "SAMSUNG_ODIN_FACTORY_RESET",
+        "target_partition": "persistent",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "verify_knox_warranty_void",
+        "detection_prop": "ro.frp.pst",
+        "codename": "eureka"
+    },
+    {
+        "brand": "Samsung",
+        "os": "OneUI 7.0 (Exynos Edition)",
+        "chipset_family": "Exynos 2600",
+        "method": "SAMSUNG_ADB_MTP_BYPASS",
+        "target_partition": "gms",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "none",
+        "detection_prop": "sys.usb.config",
+        "codename": "muse"
+    },
+    {
+        "brand": "Oppo",
+        "os": "ColorOS 15 (Android 15)",
+        "chipset_family": "MediaTek Dimensity 9400",
+        "method": "MTK_BROM_AUTH_BYPASS",
+        "target_partition": "config",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "verify_original_cable",
+        "detection_prop": "ro.boot.frp",
+        "codename": "everest"
+    },
+    {
+        "brand": "Vivo",
+        "os": "FuntouchOS 15 (Android 15)",
+        "chipset_family": "MediaTek Dimensity 9400",
+        "method": "VIVO_NOTIFICATION_BYPASS",
+        "target_partition": "frp",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "verify_battery_level",
+        "detection_prop": "ro.vivo.frp_state",
+        "codename": "v-pulse"
+    },
+    {
+        "brand": "Motorola",
+        "os": "Android 15 (Edge 60 Pro)",
+        "chipset_family": "Qualcomm",
+        "method": "MOTO_CONFIG_ERASE",
+        "target_partition": "config",
+        "offset": 0,
+        "hex_payload": "none",
+        "safety_check": "verify_bootloader_status",
+        "detection_prop": "ro.boot.frp_locked",
+        "codename": "manaus"
+    }
+]

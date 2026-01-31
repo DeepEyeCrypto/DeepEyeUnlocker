@@ -1,0 +1,85 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.CloudSyncView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DeepEye.UI.Modern.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.GlowingTitle}"/>
+            <TextBlock Text="Encrypted AES-256 Off-Device Partition Storage" Foreground="Gray" FontSize="12"/>
+        </StackPanel>
+
+        <!-- 2. Controls & Status -->
+        <Border Grid.Row="1" Background="{StaticResource DeepEye.Brush.GlassGradient}" CornerRadius="12" Padding="25" Margin="0,0,0,25">
+            <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Right" Content="SYNC TO CLOUD" Command="{Binding TriggerUploadCommand}" 
+                        IsEnabled="{Binding IsSyncing, Converter={StaticResource InverseBooleanConverter}}"
+                        Style="{StaticResource DeepEye.Button.Modern}" Width="180" Height="45" FontWeight="Bold"/>
+                
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="CLOUD CONNECTIVITY: SECURE" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" FontSize="10"/>
+                    <TextBlock Text="{Binding SyncStatus}" Foreground="White" FontSize="16" Margin="0,5,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 3. Remote Backups List -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="REMOTE REPOSITORY (PRIVATE VAULT)" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontSize="12" FontWeight="Bold" Margin="0,0,0,15"/>
+
+            <ListView Grid.Row="1" ItemsSource="{Binding RemoteBackups}" Background="Transparent" BorderThickness="0">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#10FFFFFF" Margin="0,0,0,10" Padding="15" CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Icon/Marker -->
+                                <Border Grid.Column="0" Width="30" Height="30" Background="#2000F2FF" CornerRadius="15" Margin="0,0,20,0">
+                                    <TextBlock Text="☁" Foreground="{StaticResource DeepEye.Brush.Cyan}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Details -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PartitionName}" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="{Binding BackupId}" Foreground="Gray" FontSize="9"/>
+                                </StackPanel>
+
+                                <!-- Meta -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding SizeBytes, StringFormat={}{0:N0} Bytes}" Foreground="White" FontSize="11" TextAlignment="Right"/>
+                                    <TextBlock Text="{Binding UploadDate, StringFormat={}{0:g}}" Foreground="Gray" FontSize="10" TextAlignment="Right"/>
+                                </StackPanel>
+
+                                <!-- Status -->
+                                <Border Grid.Column="3" Background="#3000FF00" Height="25" VerticalAlignment="Center" Margin="20,0,0,0" CornerRadius="4">
+                                    <TextBlock Text="{Binding Status}" Foreground="#00FF00" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </Grid>
+</UserControl>

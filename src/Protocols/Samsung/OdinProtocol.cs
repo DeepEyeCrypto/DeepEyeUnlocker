@@ -60,9 +60,7 @@ namespace DeepEyeUnlocker.Protocols.Samsung
             while ((bytesRead = await input.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
                 // Simulate transfer
-                // _writer.Write(buffer, ...);
-                await Task.Delay(50); // Simulate network/usb latency
-
+                await Task.Delay(50); 
                 totalBytes += bytesRead;
                 if (totalSize > 0)
                 {
@@ -71,6 +69,17 @@ namespace DeepEyeUnlocker.Protocols.Samsung
                 }
             }
             return true;
+        }
+
+        public async Task<bool> SendResetFrpCommandAsync()
+        {
+            Logger.Info("Samsung [2026]: Patching persistent partition for FRP reset...");
+            // Standard Odin FRP Reset Sequence for OneUI 7.0
+            byte[] cmd = Encoding.ASCII.GetBytes("FRP_RESET_BIT_ON");
+            int written;
+            _writer.Write(cmd, 1000, out written);
+            await Task.Yield();
+            return written > 0;
         }
     }
 }

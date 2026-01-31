@@ -1,0 +1,113 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Features.Workflows.Engine;
+using DeepEyeUnlocker.Features.Workflows.Models;
+using System;
+using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace DeepEye.UI.Modern.ViewModels
+{
+    public partial class ExpertCenterViewModel : CenterViewModelBase
+    {
+        private readonly DeviceContext? _device;
+        private readonly WorkflowEngine _workflowEngine;
+        private CancellationTokenSource? _cts;
+
+        public override string Title => "EXPERT WORKFLOW ENGINE";
+
+        [ObservableProperty] private bool _isExecuting = false;
+        [ObservableProperty] private string _statusMessage = "Locked - Expert Mode Required";
+        [ObservableProperty] private double _progressValue = 0;
+
+        public ObservableCollection<WorkflowStep> WorkflowSteps { get; } = new();
+        public ObservableCollection<DeviceWorkflow> Presets { get; } = new();
+
+        public ExpertCenterViewModel(DeviceContext? device)
+        {
+            _device = device;
+            _workflowEngine = new WorkflowEngine();
+            LoadPresets();
+            
+            if (_device != null)
+            {
+                StatusMessage = "Ready - Proceed with caution";
+            }
+        }
+
+        private void LoadPresets()
+        {
+            Presets.Clear();
+            
+            var frpClean = new DeviceWorkflow { Name = "Safe FRP Wipe (Qualcomm)" };
+            frpClean.Steps.Add(new WorkflowStep { Action = WorkflowAction.Backup, Target = "frp" });
+            frpClean.Steps.Add(new WorkflowStep { Action = WorkflowAction.Erase, Target = "frp" });
+            frpClean.Steps.Add(new WorkflowStep { Action = WorkflowAction.Reboot });
+            Presets.Add(frpClean);
+
+            var fullAudit = new DeviceWorkflow { Name = "Full Health & Audit" };
+            fullAudit.Steps.Add(new WorkflowStep { Action = WorkflowAction.ShellCommand, Target = "getprop", Parameter = "ro.build.fingerprint" });
+            fullAudit.Steps.Add(new WorkflowStep { Action = WorkflowAction.Delay, Parameter = "1000" });
+            Presets.Add(fullAudit);
+        }
+
+        [RelayCommand]
+        private void SelectPreset(DeviceWorkflow? workflow)
+        {
+            if (workflow == null) return;
+            WorkflowSteps.Clear();
+            foreach (var step in workflow.Steps) WorkflowSteps.Add(step);
+            StatusMessage = $"Preset Loaded: {workflow.Name}";
+        }
+
+        [RelayCommand]
+        private async Task ExecuteWorkflow()
+        {
+            if (_device == null || WorkflowSteps.Count == 0) return;
+
+            IsExecuting = true;
+            _cts = new CancellationTokenSource();
+
+            var workflow = new DeviceWorkflow { Name = "Custom Active Stream", Steps = new(WorkflowSteps) };
+            
+            var progress = new Progress<ProgressUpdate>(p => {
+                ProgressValue = p.Percentage;
+                StatusMessage = p.Message;
+            });
+
+            bool success = await _workflowEngine.ExecuteWorkflowAsync(_device, workflow, progress, _cts.Token);
+
+            if (success)
+            {
+                StatusMessage = "Workflow Completed Successfully.";
+            }
+            else
+            {
+                StatusMessage = "Workflow Failed or Aborted.";
+            }
+
+            IsExecuting = false;
+        }
+
+        [RelayCommand]
+        private void StopWorkflow()
+        {
+            _cts?.Cancel();
+            StatusMessage = "Cancellation requested...";
+        }
+
+        [RelayCommand]
+        private void AddStep()
+        {
+            WorkflowSteps.Add(new WorkflowStep { Action = WorkflowAction.Delay, Parameter = "500" });
+        }
+
+        [RelayCommand]
+        private void RemoveStep(WorkflowStep? step)
+        {
+            if (step != null) WorkflowSteps.Remove(step);
+        }
+    }
+}

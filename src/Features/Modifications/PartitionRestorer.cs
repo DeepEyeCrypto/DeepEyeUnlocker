@@ -30,11 +30,11 @@ namespace DeepEyeUnlocker.Features.Modifications
             progress.Report(ProgressUpdate.Info(0, "Starting Verification..."));
             
             var manifestText = await File.ReadAllTextAsync(manifestPath, ct);
-            var manifest = JsonConvert.DeserializeObject<DeepEyeUnlocker.Features.PartitionBackup.Models.BackupManifest>(manifestText);
+            var manifest = JsonConvert.DeserializeObject<DeepEyeUnlocker.Features.PartitionBackup.Models.BackupMetadata>(manifestText);
             if (manifest == null) throw new Exception("Invalid manifest");
 
             // 1. MUST verify integrity first
-            bool valid = await _simulator.ValidateBackupAsync(manifestPath, _adb.TargetSerial ?? "", ct);
+            bool valid = await _simulator.SimulateRestoreAsync(manifestPath, _adb.TargetSerial ?? "", ct);
             if (!valid) throw new Exception("Backup integrity validation failed. Restore aborted for safety.");
 
             progress.Report(ProgressUpdate.Info(10, "Verification Passed. Starting Restore..."));
@@ -42,13 +42,14 @@ namespace DeepEyeUnlocker.Features.Modifications
             string dir = Path.GetDirectoryName(manifestPath)!;
             int finished = 0;
 
-            foreach (var entry in manifest.Entries)
+            foreach (var entry in manifest.Partitions)
             {
                 if (ct.IsCancellationRequested) break;
 
-                progress.Report(ProgressUpdate.Info((int)((float)finished / manifest.Entries.Count * 100), $"Restoring {entry.PartitionName}..."));
+                progress.Report(ProgressUpdate.Info((int)((float)finished / manifest.Partitions.Count * 100), $"Restoring {entry.Name}..."));
                 
-                string filePath = Path.Combine(dir, entry.FileName);
+                string fileName = $"{entry.Name}.debk"; // Convention
+                string filePath = Path.Combine(dir, fileName);
                 await RestoreSinglePartitionAsync(entry, filePath, _adb.TargetSerial ?? "", progress, ct);
                 
                 finished++;
@@ -58,14 +59,14 @@ namespace DeepEyeUnlocker.Features.Modifications
         }
 
         private async Task RestoreSinglePartitionAsync(
-            DeepEyeUnlocker.Features.PartitionBackup.Models.PartitionBackupEntry entry, 
+            DeepEyeUnlocker.Features.PartitionBackup.Models.PartitionBackupInfo entry, 
             string localPath, 
             string serial,
             IProgress<ProgressUpdate> progress,
             CancellationToken ct)
         {
             // Command to write to partition
-            string cmd = $"su -c 'dd of=/dev/block/by-name/{entry.PartitionName} bs=1M status=none'";
+            string cmd = $"su -c 'dd of=/dev/block/by-name/{entry.Name} bs=1M status=none'";
             
             using var destStream = await _adb.OpenShellWritableStreamAsync(cmd, ct);
             using var fileStream = File.OpenRead(localPath);

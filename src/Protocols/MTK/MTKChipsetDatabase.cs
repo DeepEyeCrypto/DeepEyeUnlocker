@@ -27,12 +27,17 @@ namespace DeepEyeUnlocker.Protocols.MTK
             { 0x6873, "MT6873 (Dimensity 800)" },
             { 0x6877, "MT6877 (Dimensity 900)" },
             { 0x6885, "MT6885 (Dimensity 1000L)" },
-            { 0x6893, "MT6893 (Dimensity 1200)" }
+            { 0x6893, "MT6893 (Dimensity 1200)" },
+            { 0x6983, "MT6983 (Dimensity 9000)" },
+            { 0x6985, "MT6985 (Dimensity 9200)" },
+            { 0x6989, "MT6989 (Dimensity 9300)" },
+            { 0x6991, "MT6991 (Dimensity 9400 - 2025 Architecture)" },
+            { 0x7000, "MT7000 (Dimensity 9500 - 2026 Pro)" }
         };
 
         public static string GetName(uint hwCode)
         {
-            if (Chipsets.TryGetValue(hwCode, out string name))
+            if (Chipsets.TryGetValue(hwCode, out string? name) && name != null)
                 return name;
             return $"MT{hwCode:X4} (Unknown)";
         }

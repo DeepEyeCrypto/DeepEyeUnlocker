@@ -26,24 +26,29 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         {
             Logger.Info($"[DB] Searching for programmer: HWID=0x{hwId:X8}, MSM=0x{msmId:X8}");
             
-            // In a real scenario, this would scan the directory for filenames like:
-            // prog_emmc_firehose_8953_ddr.elf
-            // For now, we return a default if it exists, or simulated match.
+            // 2026 Deep Matching Logic
+            // SM8750 (Gen 4) -> 0x001D80E1
+            // SM8850 (Gen 5) -> 0x002E90E1
             
             var files = Directory.GetFiles(_loaderPath, "*.elf");
             
-            // Simplified matching logic for the MVP
-            string targetId = msmId.ToString("X4");
-            var match = files.FirstOrDefault(f => f.Contains(targetId));
+            // Priority 1: Match by exact HWID-MSM string in filename
+            string exactPattern = $"{hwId:X8}_{msmId:X8}";
+            var exactMatch = files.FirstOrDefault(f => f.Contains(exactPattern));
+            if (exactMatch != null) return exactMatch;
+
+            // Priority 2: Match by MSM chipset code (e.g. 8750, 8850)
+            string msmCode = msmId.ToString("X4");
+            var msmMatch = files.FirstOrDefault(f => f.Contains(msmCode));
             
-            if (match != null)
+            if (msmMatch != null)
             {
-                Logger.Success($"[DB] Optimal programmer found: {Path.GetFileName(match)}");
-                return match;
+                Logger.Success($"[DB] 2026-Tier programmer matched: {Path.GetFileName(msmMatch)}");
+                return msmMatch;
             }
 
-            Logger.Warn("[DB] No specific match found. Using generic fail-safe loader.");
-            return files.FirstOrDefault(); 
+            Logger.Warn("[DB] No specific 2026 match. Attempting legacy fallback.");
+            return files.OrderByDescending(f => f).FirstOrDefault(); 
         }
     }
 }

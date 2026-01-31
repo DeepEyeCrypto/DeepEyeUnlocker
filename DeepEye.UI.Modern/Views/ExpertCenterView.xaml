@@ -1,0 +1,105 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.ExpertCenterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DeepEye.UI.Modern.Views"
+             xmlns:vm="clr-namespace:DeepEye.UI.Modern.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.Title}"/>
+            <TextBlock Text="Advanced Automation &amp; Sequence Injection" Foreground="{StaticResource DeepEye.Brush.Accent}" FontSize="12"/>
+        </StackPanel>
+
+        <!-- Left: Presets -->
+        <Border Grid.Row="1" Grid.Column="0" Background="#10FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,10,0">
+            <DockPanel>
+                <TextBlock Text="AVAILABLE PRESETS" Foreground="Gray" FontSize="10" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,10"/>
+                <ItemsControl ItemsSource="{Binding Presets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Name}" 
+                                    Command="{Binding DataContext.SelectPresetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource DeepEye.Button.Modern}"
+                                    Margin="0,0,0,8" Height="40" HorizontalContentAlignment="Left" Padding="15,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <!-- Right: Active Workflow Builder -->
+        <Border Grid.Row="1" Grid.Column="1" Background="#0AFFFFFF" CornerRadius="8" Padding="15">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
+                    <TextBlock Text="WORKFLOW SEQUENCE" Foreground="Gray" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Content="+ ADD STEP" Command="{Binding AddStepCommand}" HorizontalAlignment="Right"
+                            Style="{StaticResource DeepEye.Button.Modern}" Height="25" FontSize="9" Padding="10,0"/>
+                </Grid>
+
+                <ListView ItemsSource="{Binding WorkflowSteps}" Background="Transparent" BorderThickness="0">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#15FFFFFF" Margin="0,0,0,8" Padding="10" CornerRadius="4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="8" Height="8" Fill="{StaticResource DeepEye.Brush.Cyan}" Margin="0,0,10,0"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Action}" FontWeight="Bold" Foreground="White" Width="100"/>
+                                        <TextBlock Text="{Binding Target}" Foreground="Gray" Margin="10,0"/>
+                                        <TextBlock Text="{Binding Parameter}" Foreground="{StaticResource DeepEye.Brush.Accent}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="✕" 
+                                            Command="{Binding DataContext.RemoveStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" BorderThickness="0" Foreground="Gray" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </DockPanel>
+        </Border>
+
+        <!-- Footer: Controls -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#151525" Margin="0,15,0,0" Padding="15" CornerRadius="8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="STATUS" Foreground="Gray" FontSize="10"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="White" FontWeight="Bold"/>
+                    <ProgressBar Value="{Binding ProgressValue}" Height="4" Margin="0,10,20,0" Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="STOP" Command="{Binding StopWorkflowCommand}" 
+                            Visibility="{Binding IsExecuting, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Style="{StaticResource DeepEye.Button.Modern}" Width="100" Height="45" Margin="0,0,10,0"/>
+                    <Button Content="INITIALIZE SEQUENCE" Command="{Binding ExecuteWorkflowCommand}" 
+                            IsEnabled="{Binding IsExecuting, Converter={StaticResource InverseBooleanConverter}}"
+                            Style="{StaticResource DeepEye.Button.Modern}" Background="{StaticResource DeepEye.Brush.Cyan}" Width="200" Height="45"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

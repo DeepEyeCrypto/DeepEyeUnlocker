@@ -50,7 +50,7 @@ namespace DeepEyeUnlocker.UI
         private BootloaderUnlockPanel _bootloaderPanel = null!;
         private DeviceHealthPanel _healthPanel = null!;
         private Features.DsuSandbox.UI.RomSandboxPanel _sandboxPanel = null!;
-        private PartitionBackupPanel _backupPanel = null!;
+        // private PartitionBackupPanel _backupPanel;
         private FRPPanel _frpPanel = null!;
         private RestorePanel _restorePanel = null!;
         private DriverProPanel _driverProPanel = null!;
@@ -108,7 +108,7 @@ namespace DeepEyeUnlocker.UI
             this._bootloaderPanel = new BootloaderUnlockPanel();
             this._healthPanel = new DeviceHealthPanel(_adbClient);
             this._sandboxPanel = new Features.DsuSandbox.UI.RomSandboxPanel(_adbClient);
-            this._backupPanel = new PartitionBackupPanel();
+            // this._backupPanel = new PartitionBackupPanel();
             this._frpPanel = new FRPPanel();
             this._restorePanel = new RestorePanel();
             this._driverProPanel = new DriverProPanel();
@@ -225,9 +225,11 @@ namespace DeepEyeUnlocker.UI
             _sandboxPanel.Dock = DockStyle.Fill;
             sandboxTab.Controls.Add(_sandboxPanel);
 
+            /*
             TabPage backupTab = new TabPage("📦 Backup Center") { BackColor = BrandColors.Primary };
             _backupPanel.Dock = DockStyle.Fill;
             backupTab.Controls.Add(_backupPanel);
+            */
 
             TabPage frpTab = new TabPage("🔓 FRP Engine") { BackColor = BrandColors.Primary };
             _frpPanel.Dock = DockStyle.Fill;
@@ -253,7 +255,7 @@ namespace DeepEyeUnlocker.UI
             _analyticsPanel.Dock = DockStyle.Fill;
             analyticsTab.Controls.Add(_analyticsPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, backupTab, frpTab, restoreTab, driverProTab, fleetTab, expertTab, analyticsTab, driverTab, resourceTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, frpTab, restoreTab, driverProTab, fleetTab, expertTab, analyticsTab, driverTab, resourceTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
@@ -505,7 +507,7 @@ namespace DeepEyeUnlocker.UI
             _analyticsPanel.SetDeviceHealth(null); // Will be updated by Health Center
             
             // For backup panel, we need the protocol engine if available
-            _backupPanel.SetDevice(context, null, _adbClient);
+            // _backupPanel.SetDevice(context, null, _adbClient);
             _frpPanel.SetDevice(context, null); 
             _restorePanel.SetDevice(context, null);
         }

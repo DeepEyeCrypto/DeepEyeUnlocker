@@ -16,6 +16,9 @@
                 <ResourceDictionary Source="Themes/DeepEyeTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <viewModels:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <viewModels:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <viewModels:BooleanToStringConverter x:Key="BooleanToStringConverter" />
 
             <DataTemplate DataType="{x:Type viewModels:DeviceInfoViewModel}">
                 <views:DeviceInfoView />
@@ -38,6 +41,24 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModels:HealthCenterViewModel}">
                 <views:HealthCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:FrpCenterViewModel}">
+                <views:FrpCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:PartitionCenterViewModel}">
+                <views:PartitionCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:ExpertCenterViewModel}">
+                <views:ExpertCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:AnalyticsCenterViewModel}">
+                <views:AnalyticsCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:CloudSyncViewModel}">
+                <views:CloudSyncView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:DriverCenterViewModel}">
+                <views:DriverCenterView />
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
@@ -88,11 +109,15 @@
             <StackPanel Grid.Row="2" Grid.Column="0" Width="100" Background="#0AFFFFFF">
                 <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="HEALTH" Command="{Binding NavigateToCenterCommand}" CommandParameter="HEALTH" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="FRP" Command="{Binding NavigateToCenterCommand}" CommandParameter="FRP" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="SECURITY" Command="{Binding NavigateToCenterCommand}" CommandParameter="SECURITY" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="FLASH" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLASH" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
                 <Button Content="CLOAK" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOAK" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
                 <Button Content="EXPERT" Command="{Binding NavigateToCenterCommand}" CommandParameter="EXPERT" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="FLEET" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLEET" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="STATS" Command="{Binding NavigateToCenterCommand}" CommandParameter="ANALYTICS" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="CLOUD" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOUD" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="DRIVER" Command="{Binding NavigateToCenterCommand}" CommandParameter="DRIVER" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
             </StackPanel>
 
             <!-- 4. Main Canvas -->

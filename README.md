@@ -1,8 +1,8 @@
-# DeepEyeUnlocker v1.6.0 "Security Intelligence"
+# DeepEyeUnlocker v3.0.0 "Enterprise Elite"
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v1.6.0](https://img.shields.io/badge/Download-v1.6.0-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.6.0)
+[![Download DeepEyeUnlocker v3.0.0](https://img.shields.io/badge/Download-v3.0.0-cyan.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.0.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,11 +15,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v1.6.0**
+Latest stable release: **v3.0.0**
 
-- ⬇️ [Download DeepEyeUnlocker v1.6.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.6.0)
+- ⬇️ [Download DeepEyeUnlocker v3.0.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.0.0)
 - Platform: Windows (x64)
-- Status: Stable Release (Sentinel Pro) - Operations, Stealth, and Fleet enabled.
+- Status: Stable Release (Enterprise Elite) - Advanced FRP, Cloud Sync, and Driver Center enabled.
 
 ---
 
@@ -32,18 +32,18 @@ Latest stable release: **v1.6.0**
 - **Firmware Backup:** Streaming partition backup (supports 100GB+ devices)
 - **Firmware Flash:** Write firmware via Qualcomm Firehose / MTK DA / Samsung Odin
 - **Factory Reset / Format:** Erase userdata + cache partitions
-- **FRP Bypass:** Factory Reset Protection removal (QC + MTK)
+- **FRP Bypass Cluster:** Specialized 2026 engines for Samsung, Xiaomi, Oppo, Vivo, Motorola.
 - **Pattern/PIN Removal:** Lock clearing without data loss
 
-### v1.6.0 "Security Intelligence" Highlights
+### v3.0.0 "Enterprise Elite" Highlights
 
 - **📊 CVE Intelligence Scanner:** logic-based vulnerability audit identifying critical Android threats based on patch levels.
-- **🛑 Expert Mode & Restore:** Safely write to device block devices with mandatory integrity verification and simulated "dry-runs".
-- **📦 Encrypted Partition Backups:** AES-256-CBC encrypted partition imaging with SHA-256 streaming verification.
-- **🛠️ Technician Toolkit:** Automated Magisk fingerprint spoofing and Frida/LSPosed hook template generation.
-- **🚢 Fleet Analytics:** Dashboard for aggregate health and risk scores across multiple connected device fleet.
-- **🛡️ Cloak Stealth Pro:** Advanced system prop hiding (`resetprop`) and the **2025 Golden Standard Stealth Advisor**.
-- **📋 Health & Security Audit:** Modular diagnostic engine with Luhn-validated IMEI extraction and kernel security probes.
+- **🛡️ Driver Center Pro:** One-click universal auto-installer for ADB, Fastboot, and Brand Drivers.
+- **☁️ Secure Cloud Vault:** AES-256-GCM encrypted partition offloading to private cloud storage.
+- **🛑 Expert Mode & Restore:** Safely write to device block devices with mandatory integrity verification.
+- **🚢 Fleet Analytics:** Dashboard for aggregate health and risk scores across multiple connected devices.
+- **📋 Advanced Diagnostics:** Modular diagnostic engine with Luhn-validated IMEI extraction and kernel security probes.
+- **⚙️ Automated Workflows:** Scriptable multi-step operations (Backup -> Unlock -> Spoof).
 
 ---
 

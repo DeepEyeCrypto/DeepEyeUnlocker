@@ -82,9 +82,13 @@ namespace DeepEye.UI.Modern.ViewModels
                 "SECURITY" => new UnlockCenterViewModel(SelectedDevice),
                 "FLASH" => new FlashCenterViewModel(),
                 "CLOAK" => new CloakCenterViewModel(SelectedDevice),
-                "EXPERT" => new PartitionCenterViewModel(SelectedDevice),
+                "EXPERT" => new ExpertCenterViewModel(SelectedDevice),
                 "FLEET" => new FleetCenterViewModel(),
                 "HEALTH" => new HealthCenterViewModel(SelectedDevice),
+                "FRP" => new FrpCenterViewModel(SelectedDevice),
+                "ANALYTICS" => new AnalyticsCenterViewModel(SelectedDevice),
+                "CLOUD" => new CloudSyncViewModel(SelectedDevice),
+                "DRIVER" => new DriverCenterViewModel(),
                 _ => CurrentCenter
             };
         }
