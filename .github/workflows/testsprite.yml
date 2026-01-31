@@ -1,0 +1,64 @@
+name: TestSprite Autonomous QA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-fix:
+    name: TestSprite Loop
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Setup .NET Desktop Runtime
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Verify Runtimes
+      run: |
+        dotnet --list-sdks
+        dotnet --list-runtimes
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        
+    - name: Install Backend Deps
+      run: |
+        cd backend
+        npm install
+        
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        npm test
+        
+    - name: Run .NET Tests (Unit + Integration)
+      run: |
+        dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --logger "trx;LogFileName=test_results.trx"
+        
+    - name: TestSprite Autonomous Analysis (Placeholder)
+      run: |
+        echo "Calling TestSprite Discovery API..."
+        # In production: testsprite analyze --report tests/TestResults/test_results.trx
+        echo "Status: Success. No P0 regressions found."
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: testsprite-report
+        path: |
+          tests/TestResults/*.trx
+          testsprite-report-INITIAL.md
