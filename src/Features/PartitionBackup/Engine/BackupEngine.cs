@@ -103,17 +103,21 @@ namespace DeepEyeUnlocker.Features.PartitionBackup.Engine
             // OR use a specialized AesGcmStream if we had one.
             // I'll implement a basic AES-CBC for the prototype to avoid complex chunking logic in a single file.
             
-            byte[] key = DeriveKey(serial);
-            byte[] iv = new byte[16];
-            RandomNumberGenerator.Fill(iv);
-            destStream.Write(iv, 0, iv.Length); // Write IV to start of file
+            if (encrypt)
+            {
+                byte[] key = DeriveKey(serial);
+                byte[] iv = new byte[16];
+                RandomNumberGenerator.Fill(iv);
+                destStream.Write(iv, 0, iv.Length); // Write IV to start of file
 
-            using var aes = Aes.Create();
-            aes.Key = key;
-            aes.IV = iv;
+                using var aes = Aes.Create();
+                aes.Key = key;
+                aes.IV = iv;
 
-            using var cryptoStream = new CryptoStream(targetStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
-            targetStream = cryptoStream;
+                // We'll manage the lifetime manually or let the final using handle it
+                var cryptoStream = new CryptoStream(targetStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                targetStream = cryptoStream;
+            }
 
             // 2. Compression Layer
             if (compress)

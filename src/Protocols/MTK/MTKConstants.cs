@@ -14,7 +14,9 @@ namespace DeepEyeUnlocker.Protocols.MTK
         Write32 = 0xD4,
         JumpDA = 0xD5,
         SendDA = 0xD7,
-        Identify = 0xB1
+        Identify = 0xB1,
+        SendPayload = 0xD8,
+        GetME_ID = 0xE1
     }
 
     public enum MTKResponse : byte

@@ -1,0 +1,99 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.CloakCenterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.Title}" Grid.Row="0"/>
+
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,20,0,0">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="Border" Padding="20,10" Margin="0,0,5,0" 
+                                        Background="#0AFFFFFF" BorderBrush="{StaticResource DeepEye.Brush.Cyan}" BorderThickness="0,0,0,1">
+                                    <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentPresenter.Resources>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="White"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                            </Style>
+                                        </ContentPresenter.Resources>
+                                    </ContentPresenter>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#2000F2FF"/>
+                                        <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <TabItem Header="ROOT CLOAK">
+                <Grid Margin="0,20,0,0">
+                    <Border Background="#0AFFFFFF" CornerRadius="8" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="ROOT READINESS STATUS" Style="{StaticResource DeepEye.Text.Label}"/>
+                            <TextBlock Text="{Binding RootStatus}" Foreground="White" FontSize="24" FontWeight="Bold" Margin="0,5,0,20"/>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Magisk: ✓ 27.0" Foreground="#80FFFFFF" Margin="0,5"/>
+                                    <TextBlock Text="Zygisk: ✓ Enabled" Foreground="#80FFFFFF" Margin="0,5"/>
+                                    <TextBlock Text="Shamiko: ✓ Active" Foreground="#80FFFFFF" Margin="0,5"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Play Integrity: ✓ PASS" Foreground="#80FFFFFF" Margin="0,5"/>
+                                    <TextBlock Text="DenyList: ✓ 12 Apps" Foreground="#80FFFFFF" Margin="0,5"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Button Content="RUN DEEP SCAN" Command="{Binding ScanRootCommand}" 
+                                    Style="{StaticResource DeepEye.Button.Modern}" 
+                                    Width="200" HorizontalAlignment="Left" Margin="0,30,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="STEALTH ADVISOR">
+                <Grid Margin="0,20,0,0">
+                    <Border Background="#0AFFFFFF" CornerRadius="8" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="STEALTH TIER" Style="{StaticResource DeepEye.Text.Label}"/>
+                            <ComboBox SelectedIndex="1" Width="200" HorizontalAlignment="Left" Margin="0,10,0,20">
+                                <ComboBoxItem Content="BASIC (Non-Root)"/>
+                                <ComboBoxItem Content="HYBRID (Magisk + DevMode)"/>
+                                <ComboBoxItem Content="MAXIMUM (System Prop Hooks)"/>
+                            </ComboBox>
+                            
+                            <Button Content="APPLY SENTINEL CLOAK" Command="{Binding ApplyStealthCommand}" 
+                                    Style="{StaticResource DeepEye.Button.Hazard}" 
+                                    Padding="40,15" HorizontalAlignment="Left"/>
+                            
+                            <TextBlock Text="Note: This will modify build.prop and system variables. Reboot required." 
+                                       Foreground="{StaticResource DeepEye.Brush.Orange}" Opacity="0.7" Margin="0,15,0,0" FontSize="11" FontStyle="Italic"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

@@ -1,0 +1,75 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.FleetCenterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.Title}" Grid.Row="0"/>
+
+        <!-- Stats Overview -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,20">
+            <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="TOTAL JOBS" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="1,248" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                </StackPanel>
+            </Border>
+            <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="SUCCESS RATE" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="94.2%" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                </StackPanel>
+            </Border>
+            <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="AVERAGE TIME" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="42s" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- History Table -->
+        <ListView Grid.Row="2" ItemsSource="{Binding JobHistory}" 
+                  Background="#05FFFFFF" BorderThickness="0" Margin="0,10,0,0">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="TIME" DisplayMemberBinding="{Binding Timestamp}" Width="80"/>
+                    <GridViewColumn Header="BRAND" DisplayMemberBinding="{Binding Brand}" Width="100"/>
+                    <GridViewColumn Header="OPERATION" DisplayMemberBinding="{Binding Operation}" Width="180"/>
+                    <GridViewColumn Header="STATUS" Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Status}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="SUCCESS">
+                                                    <Setter Property="Foreground" Value="{StaticResource DeepEye.Brush.Cyan}"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="FAILED">
+                                                    <Setter Property="Foreground" Value="{StaticResource DeepEye.Brush.Orange}"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="ERROR/DETAILS" DisplayMemberBinding="{Binding Error}" Width="150"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>

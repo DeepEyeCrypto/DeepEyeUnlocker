@@ -48,9 +48,17 @@ namespace DeepEyeUnlocker.Protocols.MTK
                 if (await preloader.HandshakeAsync())
                 {
                     uint hwCode = await preloader.GetHardwareCodeAsync();
-                    Logger.Info($"Found MTK Hardware Code: 0x{hwCode:X4}");
-                    Context.SoC = $"MT{hwCode:X4}";
+                    Logger.Info($"Found MTK Hardware Code: 0x{hwCode:X4} ({MTKChipsetDatabase.GetName(hwCode)})");
+                    Context.SoC = MTKChipsetDatabase.GetName(hwCode);
                     
+                    // NEW: Run Auth Bypass
+                    var exploit = new MTKExploitEngine(_usbDevice);
+                    bool bypassed = await exploit.RunAuthBypassAsync();
+                    
+                    if (!bypassed) {
+                        Logger.Warn("Auth bypass failed. Operations might be restricted on this device.");
+                    }
+
                     _daProtocol = new MTKDAProtocol(_usbDevice);
                     return true;
                 }

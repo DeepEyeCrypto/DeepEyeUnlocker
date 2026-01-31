@@ -13,6 +13,8 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         private readonly UsbEndpointReader _reader;
         private readonly UsbEndpointWriter _writer;
 
+        public SaharaHelloPacket SelectedHello { get; private set; }
+
         public SaharaProtocol(UsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
@@ -46,8 +48,8 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 return false;
             }
 
-            var hello = MemoryMarshal.Cast<byte, SaharaHelloPacket>(buffer)[0];
-            Logger.Info($"Received Sahara Hello. Version: {hello.Version}, Mode: {hello.Mode}");
+            SelectedHello = MemoryMarshal.Cast<byte, SaharaHelloPacket>(buffer)[0];
+            Logger.Info($"Received Sahara Hello. Version: {SelectedHello.Version}, Mode: {SelectedHello.Mode}");
 
             // Send Hello Response
             SaharaHelloPacket response = new SaharaHelloPacket
@@ -55,7 +57,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 Header = new SaharaPacketHeader { Command = SaharaCommand.HelloResponse, Length = (uint)Marshal.SizeOf<SaharaHelloPacket>() },
                 Version = 2,
                 MinVersion = 1,
-                Mode = hello.Mode,
+                Mode = SelectedHello.Mode,
                 MaxRawDataLength = 4096
             };
 

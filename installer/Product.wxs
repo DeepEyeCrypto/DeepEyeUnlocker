@@ -26,18 +26,16 @@
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<Component Id="DeepEyeExecutable" Guid="d1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d1d1">
-				<File Id="DeepEyeExe" Source="$(var.DeepEyeUnlocker.TargetDir)DeepEyeUnlocker.exe" KeyPath="yes" Checksum="yes" />
-        <File Id="NLogConfig" Source="$(var.DeepEyeUnlocker.TargetDir)nlog.config" />
-        <File Id="UsbDll" Source="$(var.DeepEyeUnlocker.TargetDir)LibUsbDotNet.dll" />
+				<File Id="DeepEyeExe" Source="$(var.DeepEyeUnlocker.TargetDir)DeepEye.UI.Modern.exe" KeyPath="yes" Checksum="yes" />
 			</Component>
 		</ComponentGroup>
 
     <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcut" Guid="e2e2e2e2-e2e2-e2e2-e2e2-e2e2e2e2e2e2">
+      <Component Id="ApplicationShortcut" Guid="e2e2e2e2-e2e2-e2e2-e2e2-e2e2-e2e2-e2e2-e2e2-e2e2">
         <Shortcut Id="ApplicationStartMenuShortcut" 
-                  Name="DeepEyeUnlocker" 
+                  Name="DeepEyeUnlocker Pro" 
                   Description="Professional Mobile Unlock Tool"
-                  Target="[INSTALLFOLDER]DeepEyeUnlocker.exe"
+                  Target="[INSTALLFOLDER]DeepEye.UI.Modern.exe"
                   WorkingDirectory="INSTALLFOLDER"/>
         <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
         <RegistryValue Root="HKCU" Key="Software\DeepEyeUnlocker" Name="installed" Type="integer" Value="1" KeyPath="yes"/>

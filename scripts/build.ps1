@@ -8,16 +8,19 @@ Write-Host "🔨 Building DeepEyeUnlocker v$version ($config)..." -ForegroundCol
 if (Test-Path "artifacts") { Remove-Item -Recurse -Force "artifacts" }
 New-Item -ItemType Directory -Path "artifacts"
 
-# Build Solution
-dotnet build DeepEyeUnlocker.sln -c $config
+# Publish Portable (Legacy Core)
+Write-Host "📦 Publishing legacy core..."
+dotnet publish src/DeepEyeUnlocker.csproj -c $config -r win-x64 --self-contained true /p:PublishSingleFile=true -o "artifacts/legacy"
 
-# Publish Portable
-Write-Host "📦 Publishing portable version..."
-dotnet publish src/DeepEyeUnlocker.csproj -c $config -r win-x64 --self-contained true /p:PublishSingleFile=true -o "artifacts/portable"
+# Publish Modern Pro (WPF)
+Write-Host "📦 Publishing DeepEyeUnlocker Pro (Modern UI)..."
+dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c $config -r win-x64 --self-contained true /p:PublishSingleFile=true -o "artifacts/portable"
 
-# Copy Docs
+# Copy Docs & Resources
+New-Item -ItemType Directory -Path "artifacts/portable/Resources" -Force
 Copy-Item "README.md" "artifacts/portable/"
 Copy-Item "LICENSE" "artifacts/portable/"
+if (Test-Path "src/Resources") { Copy-Item -Recurse "src/Resources/*" "artifacts/portable/Resources/" }
 
 Write-Host "✅ Build complete. Artifacts are in the /artifacts folder." -ForegroundColor Green
 

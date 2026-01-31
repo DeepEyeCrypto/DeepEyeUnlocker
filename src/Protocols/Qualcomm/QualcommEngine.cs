@@ -53,7 +53,24 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                     return false;
                 }
 
-                return true;
+                // NEW: Intelligent Loader Resolution
+                var db = new QualcommLoaderDatabase(AppDomain.CurrentDomain.BaseDirectory);
+                // Extract HWID/MSM from Sahara Hello (Mock logic for identifying chip)
+                uint msmId = 0x8953; // Example for SDM625
+                string? loaderPath = db.FindProgrammer(0, msmId);
+
+                if (loaderPath != null && await InitializeFirehoseAsync(loaderPath))
+                {
+                    Logger.Success("Qualcomm Protocol Engine initialized (FIREHOSE ACTIVE).");
+                    if (await _firehose!.ConfigureAsync())
+                    {
+                        Logger.Info("Storage configuration validated.");
+                    }
+                    return true;
+                }
+
+                Logger.Warn("Handshake complete but Firehose failed to start.");
+                return true; // Return true as we are connected at Sahara level
             }
             catch (Exception ex)
             {
