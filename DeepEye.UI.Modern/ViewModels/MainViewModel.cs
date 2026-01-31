@@ -84,6 +84,7 @@ namespace DeepEye.UI.Modern.ViewModels
                 "CLOAK" => new CloakCenterViewModel(SelectedDevice),
                 "EXPERT" => new PartitionCenterViewModel(SelectedDevice),
                 "FLEET" => new FleetCenterViewModel(),
+                "HEALTH" => new HealthCenterViewModel(SelectedDevice),
                 _ => CurrentCenter
             };
         }

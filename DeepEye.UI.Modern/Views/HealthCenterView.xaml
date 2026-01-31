@@ -1,0 +1,72 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.HealthCenterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.Title}" Grid.Row="0"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,15">
+            <Button Content="RUN HARDWARE AUDIT" Command="{Binding RunAuditCommand}" 
+                    Style="{StaticResource DeepEye.Button.Modern}" Width="200" Height="40"/>
+            <ProgressBar IsIndeterminate="{Binding IsAuditing}" Visibility="{Binding IsAuditing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         Width="150" Height="4" Margin="20,0,0,0" Foreground="{StaticResource DeepEye.Brush.Cyan}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Metrics}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="350" Margin="0,0,15,15" Background="#0AFFFFFF" CornerRadius="8" Padding="15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Status Icon -->
+                                <Ellipse Width="12" Height="12" VerticalAlignment="Top" Margin="0,4,15,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="Gray"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Healthy">
+                                                    <Setter Property="Fill" Value="{StaticResource DeepEye.Brush.Cyan}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Warning">
+                                                    <Setter Property="Fill" Value="{StaticResource DeepEye.Brush.Orange}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Critical">
+                                                    <Setter Property="Fill" Value="Red"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Label}" Foreground="Gray" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Value}" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,2,0,5"/>
+                                    <TextBlock Text="{Binding Details}" Foreground="#AAFFFFFF" FontSize="12" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

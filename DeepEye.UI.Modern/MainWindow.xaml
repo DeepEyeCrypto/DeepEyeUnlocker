@@ -15,6 +15,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/DeepEyeTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <DataTemplate DataType="{x:Type viewModels:DeviceInfoViewModel}">
                 <views:DeviceInfoView />
@@ -34,6 +35,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModels:FleetCenterViewModel}">
                 <views:FleetCenterView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:HealthCenterViewModel}">
+                <views:HealthCenterView />
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
@@ -82,8 +86,9 @@
 
             <!-- 3. Side Navigation -->
             <StackPanel Grid.Row="2" Grid.Column="0" Width="100" Background="#0AFFFFFF">
-                <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
-                <Button Content="SECURITY" Command="{Binding NavigateToCenterCommand}" CommandParameter="SECURITY" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
+                <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="HEALTH" Command="{Binding NavigateToCenterCommand}" CommandParameter="HEALTH" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                <Button Content="SECURITY" Command="{Binding NavigateToCenterCommand}" CommandParameter="SECURITY" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="FLASH" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLASH" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
                 <Button Content="CLOAK" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOAK" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
                 <Button Content="EXPERT" Command="{Binding NavigateToCenterCommand}" CommandParameter="EXPERT" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>

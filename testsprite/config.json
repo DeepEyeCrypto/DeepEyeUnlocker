@@ -1,0 +1,23 @@
+{
+    "project": "DeepEyeUnlocker Pro",
+    "version": "2.0.0",
+    "test_framework": "xUnit",
+    "runners": {
+        "backend": "dotnet test DeepEyeUnlocker.sln",
+        "ui": "dotnet test DeepEye.UI.Modern/DeepEye.UI.Modern.csproj"
+    },
+    "environments": [
+        "local-windows-x64",
+        "sandbox-runtime"
+    ],
+    "dependencies": [
+        "LibUsbDotNet",
+        "WPF-UI",
+        "CommunityToolkit.Mvvm"
+    ],
+    "monitoring": {
+        "auto_fix": true,
+        "max_iterations": 3,
+        "log_level": "verbose"
+    }
+}

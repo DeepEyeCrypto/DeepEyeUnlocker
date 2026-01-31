@@ -60,8 +60,8 @@ This roadmap prevents scope creep, ensures architecture stability, and provides 
 
 *Goal: Read-only health checks. Safe, high-value, no risk of bricking.*
 
-- **Features**: IMEI Reader, MAC Reader, Battery Health, Kernel/Security Audit.
-- **Deliverable**: "Device Health Center" Tab + CSV Export.
+- **Features**: IMEI Reader, MAC Reader, Battery Health, Kernel/Security Audit. [DONE]
+- **Deliverable**: "Device Health Center" Tab + CSV Export. [DONE]
 
 ### Phase 2: Backup & Safety Infrastructure (Weeks 5–10)
 
