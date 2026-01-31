@@ -1,4 +1,4 @@
-# DeepEyeUnlocker Pro v1.1.1 (Modern UI Release)
+# DeepEyeUnlocker Pro v2.0.0 (Modern UI Release)
 
 This release marks the transition from the legacy WinForms interface to the high-performance **WPF Modern UI ("Liquid Glass")**.
 
