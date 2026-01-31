@@ -55,14 +55,14 @@ jobs:
       continue-on-error: true
 
     - name: Zip Portable
-      run: Compress-Archive -Path artifacts/portable/* -DestinationPath DeepEyeUnlocker-Portable.zip
+      run: Compress-Archive -Path artifacts/portable/* -DestinationPath DeepEyeUnlocker-${{ github.ref_name }}-Portable.zip
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          DeepEyeUnlocker-Portable.zip
+          DeepEyeUnlocker-${{ github.ref_name }}-Portable.zip
           artifacts/installer/DeepEyeUnlocker.msi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
