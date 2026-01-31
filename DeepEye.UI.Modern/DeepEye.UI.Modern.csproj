@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Version>3.0.0</Version>
+    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
