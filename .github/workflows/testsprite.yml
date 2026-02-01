@@ -31,13 +31,13 @@ jobs:
       
       - name: Discover Tests
         run: |
-          testsprite discover \
+          npx -y @testsprite/cli discover \
             --source ./src \
             --output tests.json
       
       - name: Execute Tests
         run: |
-          testsprite run \
+          npx -y @testsprite/cli run \
             --tests tests.json \
             --parallel 4 \
             --coverage \
@@ -46,7 +46,7 @@ jobs:
       - name: Self-Healing Validation
         if: failure()
         run: |
-          testsprite heal \
+          npx -y @testsprite/cli heal \
             --results results/ \
             --attempts 3 \
             --confidence-threshold 0.85
