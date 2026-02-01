@@ -22,7 +22,7 @@ jobs:
       
       - name: Execute Standard Tests
         run: |
-          dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --logger "trx;LogFileName=test_results.trx"
+          dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --framework net8.0 --logger "trx;LogFileName=test_results.trx"
       
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
