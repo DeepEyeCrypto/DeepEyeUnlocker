@@ -1,0 +1,50 @@
+{
+    "name": "mtk_brom_handshake_success",
+    "protocol": "mtk",
+    "description": "MTK BROM handshake: Full 4-byte SYNC sequence.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "sync_a0",
+            "data_hex": "a0"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack_a0",
+            "data_hex": "5f"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "sync_0a",
+            "data_hex": "0a"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack_0a",
+            "data_hex": "f5"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "sync_50",
+            "data_hex": "50"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack_50",
+            "data_hex": "af"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "sync_05",
+            "data_hex": "05"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack_05",
+            "data_hex": "fa"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000
+    }
+}

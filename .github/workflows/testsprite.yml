@@ -1,64 +1,55 @@
-name: TestSprite Autonomous QA
+name: TestSprite AI Testing
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
-  test-and-fix:
-    name: TestSprite Loop
-    runs-on: windows-latest
-    
+  testsprite:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-
-    - name: Setup .NET Desktop Runtime
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-
-    - name: Verify Runtimes
-      run: |
-        dotnet --list-sdks
-        dotnet --list-runtimes
-        
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        
-    - name: Install Backend Deps
-      run: |
-        cd backend
-        npm install
-        
-    - name: Run Backend Tests
-      run: |
-        cd backend
-        npm test
-        
-    - name: Run .NET Tests (Unit + Integration)
-      run: |
-        dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --logger "trx;LogFileName=test_results.trx"
-        
-    - name: TestSprite Autonomous Analysis (Placeholder)
-      run: |
-        echo "Calling TestSprite Discovery API..."
-        # In production: testsprite analyze --report tests/TestResults/test_results.trx
-        echo "Status: Success. No P0 regressions found."
-        
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: testsprite-report
-        path: |
-          tests/TestResults/*.trx
-          testsprite-report-INITIAL.md
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Build Project
+        run: dotnet build --configuration Release
+      
+      - name: Start TestSprite Agent
+        run: |
+          npx -y @testsprite/ci-agent \
+            --api-key ${{ secrets.TESTSPRITE_API_KEY }} \
+            --mcp-config .testsprite/mcp.json
+      
+      - name: Discover Tests
+        run: |
+          testsprite discover \
+            --source ./src \
+            --output tests.json
+      
+      - name: Execute Tests
+        run: |
+          testsprite run \
+            --tests tests.json \
+            --parallel 4 \
+            --coverage \
+            --output results/
+      
+      - name: Self-Healing Validation
+        if: failure()
+        run: |
+          testsprite heal \
+            --results results/ \
+            --attempts 3 \
+            --confidence-threshold 0.85
+      
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: testsprite-results
+          path: results/

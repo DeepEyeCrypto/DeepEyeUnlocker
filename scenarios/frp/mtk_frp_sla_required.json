@@ -1,0 +1,29 @@
+{
+    "name": "mtk_frp_sla_required",
+    "protocol": "mtk",
+    "description": "Sensitive operation attempted without authentication; DA returns SLA_REQUIRED.",
+    "frp_context": {
+        "status": "locked",
+        "protected_partitions": [
+            "*"
+        ],
+        "auth_required": true
+    },
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "sensitive_op_req",
+            "data_hex": "d1ff0000"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "status_sla_required",
+            "data_hex": "070002c0"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000,
+        "engine_result": "RequiresAuth",
+        "error_code": "0xC0020007"
+    }
+}

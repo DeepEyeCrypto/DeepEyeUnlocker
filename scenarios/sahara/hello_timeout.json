@@ -1,0 +1,16 @@
+{
+    "name": "sahara_hello_timeout",
+    "protocol": "sahara",
+    "description": "Host waits for HELLO from device, but device remains silent.",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "silent_device",
+            "data_hex": "",
+            "delay_ms": 5000
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 6000
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "name": "firehose_configure_timeout",
+    "protocol": "firehose",
+    "description": "Host sends configure command; device remains silent.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "configure_req",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c636f6e666967757265204d656d6f72794e616d653d22656d6d632220566572626f73653d22302220416c7761797356616c69646174653d223022204d61785061796c6f616453697a65546f546172676574496e42797465733d223130343835373622202f3e3c2f646174613e"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "silent_device",
+            "data_hex": "",
+            "delay_ms": 5000
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 6000
+    }
+}

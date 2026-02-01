@@ -35,6 +35,13 @@ DeepEyeUnlocker v3.0.0 is the largest update in the project's history. It transf
 - **Workflow Engine**: Execute multi-step operations (e.g., Backup -> Unlock -> Restore) sequentially.
 - **Expert Mode Safety Rails**: Mandatory integrity checks before any block-level write.
 
+### 6. Protocol Simulation Engine (Hardware-Independent QA)
+
+- **JSON-based Scenario DSL**: Describe device exchanges in simple JSON files for repeatable testing.
+- **Cross-Platform Verification**: All protocol logic (Qualcomm/MTK) is now verified on Windows, Linux, and macOS via GitHub Actions.
+- **FRP Policy Integration**: Engine is now verified against FRP-enforced states (blocked writes/auth requirements) via hardware-independent tests.
+- **Improved Robustness**: Regressions are caught by the simulation suite before hitting physical devices.
+
 ## 🛠️ Improvements & Fixes
 
 - **Modern UI Refresh**: Full Glassmorphism design system integrated across all panels.

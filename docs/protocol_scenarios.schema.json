@@ -1,0 +1,110 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Protocol Scenario",
+    "type": "object",
+    "required": [
+        "name",
+        "protocol",
+        "description",
+        "steps",
+        "expectations"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Unique identifier for the scenario."
+        },
+        "protocol": {
+            "type": "string",
+            "enum": [
+                "sahara",
+                "firehose",
+                "mtk"
+            ],
+            "description": "Target protocol for this scenario."
+        },
+        "description": {
+            "type": "string",
+            "description": "Human-readable summary of the test case."
+        },
+        "steps": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "direction",
+                    "data_hex"
+                ],
+                "properties": {
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "host_to_device",
+                            "device_to_host"
+                        ],
+                        "description": "Direction of flight relative to the PC/Host."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Short identifier for logging."
+                    },
+                    "data_hex": {
+                        "type": "string",
+                        "pattern": "^([0-9a-fA-F]{2})*$",
+                        "description": "Hex-encoded packet data."
+                    },
+                    "delay_ms": {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Simulated delay before this step occurs."
+                    }
+                }
+            }
+        },
+        "frp_context": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "locked",
+                        "unlocked",
+                        "wiped_but_locked"
+                    ]
+                },
+                "protected_partitions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "auth_required": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "expectations": {
+            "type": "object",
+            "properties": {
+                "final_state": {
+                    "type": "string"
+                },
+                "max_duration_ms": {
+                    "type": "integer",
+                    "default": 5000
+                },
+                "engine_result": {
+                    "type": "string",
+                    "description": "Expected result code from the logic engine (e.g. AccessDenied)."
+                },
+                "error_code": {
+                    "type": "string",
+                    "description": "Expected protocol-specific error code (e.g. 0xC0020007)."
+                },
+                "protected_operation": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

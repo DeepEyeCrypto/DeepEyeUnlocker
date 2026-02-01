@@ -1,5 +1,7 @@
 using System;
+#if WINDOWS
 using System.Management;
+#endif
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core;
 
@@ -7,13 +9,16 @@ namespace DeepEyeUnlocker.Infrastructure.USB
 {
     public class UsbWatcher : IDisposable
     {
+#if WINDOWS
         private ManagementEventWatcher? _insertWatcher;
         private ManagementEventWatcher? _removeWatcher;
+#endif
 
         public event Action? OnDeviceChanged;
 
         public void Start()
         {
+#if WINDOWS
             try
             {
                 // Watch for PnP Device Arrivals
@@ -32,14 +37,19 @@ namespace DeepEyeUnlocker.Infrastructure.USB
             {
                 Logger.Error(ex, "Failed to initialize WMI USB Watcher. Falling back to polling.");
             }
+#else
+            Logger.Warn("USB Monitoring (WMI) is not available on this platform.");
+#endif
         }
 
         public void Dispose()
         {
+#if WINDOWS
             _insertWatcher?.Stop();
             _insertWatcher?.Dispose();
             _removeWatcher?.Stop();
             _removeWatcher?.Dispose();
+#endif
         }
     }
 }

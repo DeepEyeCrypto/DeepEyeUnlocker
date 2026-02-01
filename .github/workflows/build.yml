@@ -46,3 +46,37 @@ jobs:
           src/bin/Release/net8.0-windows/DeepEyeUnlocker.Core.dll
           DeepEye.UI.Modern/bin/Release/net8.0-windows/DeepEyeUnlocker.dll
           artifacts/build_hash.txt
+
+  protocol-verification:
+    name: Protocol Verification
+    needs: build
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        cache: true
+        cache-dependency-path: '**/DeepEyeUnlocker.Tests.csproj'
+
+    - name: Run Schema Validation
+      run: dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --filter "ScenarioSchemaValidationTests" --framework net8.0
+
+    - name: Run Protocol, HIL & FRP Simulations
+      run: dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --filter "Category=Protocol|Category=FrpPolicy|Category=HIL" --framework net8.0 --logger "trx;LogFileName=protocol-sim-${{ matrix.os }}.trx"
+
+    - name: Run Protocol Fuzzing Campaigns (100 iterations)
+      run: dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --filter "Category=Fuzzing" --framework net8.0 --logger "trx;LogFileName=protocol-fuzz-${{ matrix.os }}.trx"
+
+    - name: Upload Protocol Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: protocol-results-${{ matrix.os }}
+        path: tests/TestResults/*.trx

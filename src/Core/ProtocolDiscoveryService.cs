@@ -63,7 +63,7 @@ namespace DeepEyeUnlocker.Core
             // 1. Try MediaTek BROM/Preloader Handshake
             try
             {
-                var mtk = new Protocols.MTK.MTKPreloader(usbDevice);
+                var mtk = new Protocols.MTK.MTKPreloader(new Protocols.Usb.UsbDeviceWrapper(usbDevice));
                 if (await mtk.HandshakeAsync())
                 {
                     ushort hwCode = await mtk.GetHardwareCodeAsync();
@@ -79,7 +79,7 @@ namespace DeepEyeUnlocker.Core
             // 2. Try Qualcomm Sahara
             try
             {
-                var sahara = new Protocols.Qualcomm.SaharaProtocol(usbDevice);
+                var sahara = new Protocols.Qualcomm.SaharaProtocol(new Protocols.Usb.UsbDeviceWrapper(usbDevice));
                 if (await sahara.ProcessHelloAsync())
                 {
                     return new DiscoveryResult { 

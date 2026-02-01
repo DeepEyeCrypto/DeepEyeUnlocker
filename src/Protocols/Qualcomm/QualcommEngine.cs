@@ -14,7 +14,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class QualcommEngine : IProtocol
     {
-        private readonly UsbDevice _usbDevice;
+        private readonly DeepEyeUnlocker.Protocols.Usb.IUsbDevice _usbDevice;
         private SaharaProtocol? _sahara;
         private FirehoseProtocol? _firehose;
 
@@ -23,7 +23,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
         public QualcommEngine(UsbDevice usbDevice)
         {
-            _usbDevice = usbDevice;
+            _usbDevice = new Protocols.Usb.UsbDeviceWrapper(usbDevice);
             // Extract VID/PID from device - LibUsbDotNet 2.x compatible
             int vid = 0, pid = 0;
             if (usbDevice.UsbRegistryInfo != null)
@@ -82,7 +82,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         public async Task<bool> DisconnectAsync()
         {
             Logger.Info("Disconnecting from Qualcomm device.");
-            _usbDevice.Close();
+            _usbDevice.Dispose();
             return await Task.FromResult(true);
         }
 

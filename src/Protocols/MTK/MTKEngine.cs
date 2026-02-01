@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKEngine : IProtocol
     {
-        private readonly UsbDevice _usbDevice;
+        private readonly DeepEyeUnlocker.Protocols.Usb.IUsbDevice _usbDevice;
         private MTKDAProtocol? _daProtocol;
 
         public string Name => "MediaTek Preloader";
@@ -21,7 +21,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
 
         public MTKEngine(UsbDevice usbDevice)
         {
-            _usbDevice = usbDevice;
+            _usbDevice = new Protocols.Usb.UsbDeviceWrapper(usbDevice);
             // Extract VID/PID from device - LibUsbDotNet 2.x compatible
             int vid = 0, pid = 0;
             if (usbDevice.UsbRegistryInfo != null)
@@ -74,7 +74,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
         public async Task<bool> DisconnectAsync()
         {
             Logger.Info("Disconnecting from MediaTek device.");
-            _usbDevice.Close();
+            _usbDevice.Dispose();
             return await Task.FromResult(true);
         }
 

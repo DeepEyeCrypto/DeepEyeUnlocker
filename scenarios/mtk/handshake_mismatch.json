@@ -1,0 +1,20 @@
+{
+    "name": "mtk_handshake_mismatch",
+    "protocol": "mtk",
+    "description": "MTK BROM handshake: Device sends invalid ACK byte.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "sync_a0",
+            "data_hex": "a0"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "bad_ack",
+            "data_hex": "ff"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000
+    }
+}

@@ -72,8 +72,12 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
         public uint MinVersion;
         public uint MaxRawDataLength;
         public uint Mode;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public uint[] Reserved;
+        public uint Reserved1;
+        public uint Reserved2;
+        public uint Reserved3;
+        public uint Reserved4;
+        public uint Reserved5;
+        public uint Reserved6;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

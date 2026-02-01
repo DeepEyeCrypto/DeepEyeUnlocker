@@ -176,9 +176,12 @@
                                  BorderThickness="0"/>
                 </StackPanel>
                 
-                <Button Grid.Column="1" Command="{Binding ToggleExpertModeCommand}" Style="{StaticResource DeepEye.Button.Hazard}" BorderThickness="0" Padding="20,0" Height="45">
-                    <TextBlock Text="{Binding RiskLevel, StringFormat='RISK LEVEL: {0}'}" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black"/>
-                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Command="{Binding ReportIssueCommand}" Style="{StaticResource DeepEye.Button.Modern}" Content="REPORT ISSUE" Margin="0,0,10,0" Padding="15,0" Height="45" Opacity="0.5"/>
+                    <Button Command="{Binding ToggleExpertModeCommand}" Style="{StaticResource DeepEye.Button.Hazard}" BorderThickness="0" Padding="20,0" Height="45">
+                        <TextBlock Text="{Binding RiskLevel, StringFormat='RISK LEVEL: {0}'}" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black"/>
+                    </Button>
+                </StackPanel>
             </Grid>
 
         </Grid>

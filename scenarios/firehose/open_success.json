@@ -1,0 +1,20 @@
+{
+    "name": "firehose_open_success",
+    "protocol": "firehose",
+    "description": "Host sends configure command; target responds with ACK.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "configure_req",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c636f6e666967757265204d656d6f72794e616d653d22656D6D632220566572626F73653D22302220416C7761797356616C69646174653D223022204D61785061796C6F616453697A65546F546172676574496E42797465733D223130343835373622202F3E3C2F646174613E"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "configure_resp",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c726573706F6E73652076616C75653D2241434B22202F3E3C2F646174613E"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000
+    }
+}

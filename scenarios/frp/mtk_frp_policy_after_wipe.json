@@ -1,0 +1,38 @@
+{
+    "name": "mtk_frp_policy_after_wipe",
+    "protocol": "mtk",
+    "description": "Wipe userdata, then verify FRP partition still protected.",
+    "frp_context": {
+        "status": "wiped_but_locked",
+        "protected_partitions": [
+            "protect_f"
+        ],
+        "auth_required": false
+    },
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "format_userdata_req",
+            "data_hex": "d400000001"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "format_ok",
+            "data_hex": "00000000"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "read_partition_req",
+            "data_hex": "d100000000"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "status_protected",
+            "data_hex": "010002c0"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 4000,
+        "engine_result": "ProtectedPartition"
+    }
+}

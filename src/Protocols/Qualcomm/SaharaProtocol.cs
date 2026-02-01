@@ -5,17 +5,20 @@ using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Diagnostics;
+using DeepEyeUnlocker.Protocols.Usb;
+
 namespace DeepEyeUnlocker.Protocols.Qualcomm
 {
     public class SaharaProtocol
     {
-        private readonly UsbDevice _usbDevice;
-        private readonly UsbEndpointReader _reader;
-        private readonly UsbEndpointWriter _writer;
+        private readonly DeepEyeUnlocker.Protocols.Usb.IUsbDevice _usbDevice;
+        private readonly IUsbEndpointReader _reader;
+        private readonly IUsbEndpointWriter _writer;
 
         public SaharaHelloPacket SelectedHello { get; private set; }
 
-        public SaharaProtocol(UsbDevice usbDevice)
+        public SaharaProtocol(DeepEyeUnlocker.Protocols.Usb.IUsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
             _reader = _usbDevice.OpenEndpointReader(ReadEndpointID.Ep01);
@@ -31,6 +34,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             await Task.Yield();
             if (bytesRead < Marshal.SizeOf<SaharaPacketHeader>()) 
             {
+                ProtocolCoverage.Hit("Sahara_ProcessHello_HeaderTooSmall");
                 Logger.Error($"Received insufficient data ({bytesRead} bytes) for Sahara header.");
                 return false;
             }
@@ -38,17 +42,20 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
             if (header.Command != SaharaCommand.Hello)
             {
+                ProtocolCoverage.Hit("Sahara_ProcessHello_WrongCommand");
                 Logger.Error($"Expected Hello packet, got {header.Command}");
                 return false;
             }
 
             if (bytesRead < Marshal.SizeOf<SaharaHelloPacket>())
             {
+                ProtocolCoverage.Hit("Sahara_ProcessHello_BodyTooSmall");
                 Logger.Error($"Received insufficient data for Sahara Hello body.");
                 return false;
             }
 
             SelectedHello = MemoryMarshal.Cast<byte, SaharaHelloPacket>(buffer)[0];
+            ProtocolCoverage.Hit("Sahara_ProcessHello_Success");
             Logger.Info($"Received Sahara Hello. Version: {SelectedHello.Version}, Mode: {SelectedHello.Mode}");
 
             // Send Hello Response
@@ -87,11 +94,13 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 
                 if (header.Command == SaharaCommand.ReadData)
                 {
+                    ProtocolCoverage.Hit("Sahara_Upload_ReadDataReq");
                     if (bytesRead < Marshal.SizeOf<SaharaReadDataPacket>()) continue;
                     var readReq = MemoryMarshal.Cast<byte, SaharaReadDataPacket>(buffer)[0];
                     
                     if (readReq.DataOffset + readReq.DataLength > programmerData.Length)
                     {
+                        ProtocolCoverage.Hit("Sahara_Upload_OutOfBounds");
                         Logger.Error($"Device requested out-of-bounds data. Offset: {readReq.DataOffset}, Length: {readReq.DataLength}, Total: {programmerData.Length}");
                         return false;
                     }
@@ -104,9 +113,11 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 }
                 else if (header.Command == SaharaCommand.EndTransfer)
                 {
+                    ProtocolCoverage.Hit("Sahara_Upload_EndTransferReq");
                     var endTransfer = MemoryMarshal.Cast<byte, SaharaEndTransferPacket>(buffer)[0];
                     if (endTransfer.Status == SaharaStatus.Success)
                     {
+                        ProtocolCoverage.Hit("Sahara_Upload_StatusSuccess");
                         Logger.Info("Programmer upload successful.");
                         return await SendDoneAsync();
                     }
@@ -134,6 +145,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             if (bytesRead > 0)
             {
                 var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
+                if (header.Command == SaharaCommand.DoneResponse) ProtocolCoverage.Hit("Sahara_SendDone_Success");
                 return header.Command == SaharaCommand.DoneResponse;
             }
             return false;

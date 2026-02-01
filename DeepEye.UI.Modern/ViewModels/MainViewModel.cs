@@ -11,6 +11,7 @@ namespace DeepEye.UI.Modern.ViewModels
     {
         public static MainViewModel? Instance { get; private set; }
         private readonly DeviceManager _deviceManager;
+        private readonly Services.DiagnosticService _diagnosticService;
 
         [ObservableProperty]
         private string _logContent = "";
@@ -48,6 +49,7 @@ namespace DeepEye.UI.Modern.ViewModels
             }));
 
             _deviceManager = new DeviceManager();
+            _diagnosticService = new Services.DiagnosticService();
             _deviceManager.OnDevicesChanged += devices =>
             {
                 App.Current.Dispatcher.Invoke(() =>
@@ -73,6 +75,23 @@ namespace DeepEye.UI.Modern.ViewModels
 
             // Default view
             NavigateToCenter("INFO");
+        }
+
+        [RelayCommand]
+        private void ReportIssue()
+        {
+            try
+            {
+                string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DeepEye_Diagnostic.txt");
+                _diagnosticService.ExportReport(path);
+                StatusText = "Diagnostic report exported to application folder.";
+                // In a future update, this could open a web browser to a GitHub Issue page with the text pre-copied
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to export diagnostic report.");
+            }
         }
 
         [RelayCommand]

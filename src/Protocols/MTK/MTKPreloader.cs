@@ -4,15 +4,17 @@ using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Protocols.Usb;
+
 namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKPreloader
     {
-        private readonly UsbDevice _usbDevice;
-        private readonly UsbEndpointReader _reader;
-        private readonly UsbEndpointWriter _writer;
+        private readonly DeepEyeUnlocker.Protocols.Usb.IUsbDevice _usbDevice;
+        private readonly IUsbEndpointReader _reader;
+        private readonly IUsbEndpointWriter _writer;
 
-        public MTKPreloader(UsbDevice usbDevice)
+        public MTKPreloader(DeepEyeUnlocker.Protocols.Usb.IUsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
             _reader = _usbDevice.OpenEndpointReader(ReadEndpointID.Ep01);
@@ -32,10 +34,10 @@ namespace DeepEyeUnlocker.Protocols.MTK
                 int read;
                 _reader.Read(response, 1000, out read);
                 
-                // MTK BROM echoes back inverted bits or ACK
-                if (read == 0)
+                // MTK BROM echoes back inverted bits (~byte)
+                if (read == 0 || response[0] != (byte)~b)
                 {
-                    Logger.Error($"MTK Handshake failed at byte {b:X2}");
+                    Logger.Error($"MTK Handshake failed at byte {b:X2}. Expected {(byte)~b:X2}, Got {response[0]:X2}");
                     return false;
                 }
             }

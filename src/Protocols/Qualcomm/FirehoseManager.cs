@@ -153,7 +153,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 Report(progress, 5, "Initializing Sahara protocol...");
                 _state = FirehoseSessionState.SaharaHandshaking;
                 
-                _sahara = new SaharaProtocol(usbDevice);
+                _sahara = new SaharaProtocol(new Protocols.Usb.UsbDeviceWrapper(usbDevice));
                 
                 if (!await _sahara.ProcessHelloAsync())
                 {
@@ -218,7 +218,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
                 // Small delay for device to switch modes
                 await Task.Delay(1000, ct);
                 
-                _firehose = new FirehoseProtocol(usbDevice);
+                _firehose = new FirehoseProtocol(new Protocols.Usb.UsbDeviceWrapper(usbDevice));
                 
                 if (!await _firehose.ConfigureAsync())
                 {

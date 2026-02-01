@@ -1,0 +1,31 @@
+{
+    "name": "mtk_frp_partition_protected",
+    "protocol": "mtk",
+    "description": "Attempt to read 'protect_f' (FRP) partition; DA returns status PROTECTED.",
+    "frp_context": {
+        "status": "locked",
+        "protected_partitions": [
+            "protect_f",
+            "protect_s",
+            "seccfg"
+        ],
+        "auth_required": false
+    },
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "read_partition_req",
+            "data_hex": "d10000000000000001"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "status_protected",
+            "data_hex": "010002c0"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000,
+        "engine_result": "ProtectedPartition",
+        "error_code": "0xC0020001"
+    }
+}

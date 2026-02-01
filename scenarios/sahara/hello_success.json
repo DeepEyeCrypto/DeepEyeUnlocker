@@ -1,0 +1,20 @@
+{
+    "name": "sahara_hello_success",
+    "protocol": "sahara",
+    "description": "Host sends SAHARA_HELLO_REQ, target responds with SAHARA_HELLO_RESP, then switches to COMMAND mode.",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "device_hello",
+            "data_hex": "010000003000000002000000010000000010000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "host_hello_resp",
+            "data_hex": "020000003000000002000000010000000010000000000000000000000000000000000000000000000000000000000000"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 1000
+    }
+}

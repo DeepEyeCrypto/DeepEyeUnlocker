@@ -2,13 +2,14 @@ using System;
 using System.Threading.Tasks;
 using LibUsbDotNet;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Core.Diagnostics;
 namespace DeepEyeUnlocker.Protocols.MTK
 {
     public class MTKDAProtocol
     {
-        private readonly UsbDevice _usbDevice;
+        private readonly DeepEyeUnlocker.Protocols.Usb.IUsbDevice _usbDevice;
 
-        public MTKDAProtocol(UsbDevice usbDevice)
+        public MTKDAProtocol(DeepEyeUnlocker.Protocols.Usb.IUsbDevice usbDevice)
         {
             _usbDevice = usbDevice;
         }
@@ -22,6 +23,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             // 3. Stream data blocks
             
             await Task.Delay(500); // Simulate transfer
+            ProtocolCoverage.Hit("MTK_UploadDA_Success");
             Logger.Info("MTK: DA uploaded successfully.");
             return true;
         }
@@ -31,6 +33,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             Logger.Info($"MTK: Ordering device to jump to DA at 0x{address:X8}...");
             // Send CMD_JUMP_DA
             await Task.Delay(200);
+            ProtocolCoverage.Hit("MTK_JumpDA_Success");
             return true;
         }
 
@@ -39,6 +42,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
             // Real implementation would send CMD_WRITE_DATA, address, length, then checksum, then data
             Logger.Debug($"MTK DA: Writing {length} bytes to 0x{address:X8}...");
             await Task.Delay(10); // Simulate write time per chunk
+            ProtocolCoverage.Hit("MTK_WriteData_Called");
             return true;
         }
 
@@ -47,6 +51,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
              // Real implementation would send CMD_READ_DATA, etc.
              Logger.Debug($"MTK DA: Reading {length} bytes from 0x{address:X8}...");
              await Task.Delay(10); 
+             ProtocolCoverage.Hit("MTK_ReadData_Called");
              return new byte[length];
         }
     }
