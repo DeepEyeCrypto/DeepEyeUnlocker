@@ -20,36 +20,21 @@ jobs:
       - name: Build Project
         run: dotnet build --configuration Release
       
-      - name: Install TestSprite CLI
-        run: npm install -g @testsprite/cli
-      
-      - name: Start TestSprite Agent
+      - name: Execute Standard Tests
         run: |
-          npx -y @testsprite/ci-agent \
-            --api-key ${{ secrets.TESTSPRITE_API_KEY }} \
-            --mcp-config .testsprite/mcp.json
+          dotnet test tests/DeepEyeUnlocker.Tests.csproj --configuration Release --logger "trx;LogFileName=test_results.trx"
       
-      - name: Discover Tests
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: tests/TestResults/test_results.trx
+
+      - name: TestSprite Autonomous Validation (Skipped)
         run: |
-          npx -y @testsprite/cli discover \
-            --source ./src \
-            --output tests.json
-      
-      - name: Execute Tests
-        run: |
-          npx -y @testsprite/cli run \
-            --tests tests.json \
-            --parallel 4 \
-            --coverage \
-            --output results/
-      
-      - name: Self-Healing Validation
-        if: failure()
-        run: |
-          npx -y @testsprite/cli heal \
-            --results results/ \
-            --attempts 3 \
-            --confidence-threshold 0.85
+          echo "TestSprite CLI (@testsprite/cli) not found in registry. Skipping autonomous steps."
+          echo "Please install the CLI manually or configure a private registry."
       
       - name: Upload Results
         uses: actions/upload-artifact@v4

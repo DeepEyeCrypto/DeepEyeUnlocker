@@ -6,7 +6,7 @@
     <AssemblyName>DeepEyeUnlocker.Core</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>3.1.4</Version>
+    <Version>3.1.5</Version>
     <Authors>DeepEyeUnlocker Community</Authors>
     <Description>Free Open-Source Mobile Device Unlock Tool</Description>
     <NoWarn>$(NoWarn);NETSDK1206</NoWarn>

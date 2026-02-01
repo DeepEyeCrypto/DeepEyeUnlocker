@@ -5,7 +5,7 @@ namespace DeepEyeUnlocker.Core
 {
     public static class VersionManager
     {
-        public static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "3.1.4";
+        public static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "3.1.5";
         
         public static string BuildIdentifier
         {
