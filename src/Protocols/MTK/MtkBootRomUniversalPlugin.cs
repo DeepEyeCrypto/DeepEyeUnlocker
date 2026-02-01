@@ -20,12 +20,12 @@ namespace DeepEyeUnlocker.Protocols.MTK
             "MT65*", "MT67*", "MT68*", "MT81*", "MT87*" 
         };
 
-        public async Task<bool> DetectDeviceAsync(IUsbDevice device)
+        public Task<bool> DetectDeviceAsync(IUsbDevice device)
         {
             // MTK BootROM VID/PID usually 0E8D:0003
             // Preloader usually 0E8D:2000
             // We accept both for universal mode
-            return await Task.FromResult(true); 
+            return Task.FromResult(true); 
         }
 
         public async Task<ConnectionResult> ConnectAsync(ConnectionOptions options)
@@ -90,17 +90,17 @@ namespace DeepEyeUnlocker.Protocols.MTK
             };
         }
 
-        public async Task<OperationResult> ExecuteKeypadOperationAsync(string operation, DeviceProfile device)
+        public Task<OperationResult> ExecuteKeypadOperationAsync(string operation, DeviceProfile device)
         {
-             if (_brom == null) return new OperationResult { Success = false, Message = "Not Connected" };
+             if (_brom == null) return Task.FromResult(new OperationResult { Success = false, Message = "Not Connected" });
 
              // Simplified commands for legacy feature phones (Nokia, Jio, etc.)
-             return operation switch
+             return Task.FromResult(operation switch
              {
                  "ReadCode" => new OperationResult { Success = true, Message = "Unlock Code: 1234 (Simulated)" },
                  "ResetSettings" => new OperationResult { Success = true, Message = "Factory Reset Complete" },
                  _ => new OperationResult { Success = false, Message = "Keypad Operation Not Supported" }
-             };
+             });
         }
     }
 }

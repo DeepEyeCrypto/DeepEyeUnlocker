@@ -21,6 +21,7 @@ namespace DeepEyeUnlocker.Infrastructure.Data
         // Constructor for DI/Services to override path
         public DeviceDbContext(DbContextOptions<DeviceDbContext> options) : base(options)
         {
+            DbPath = string.Empty; // Initialized via options or later override
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

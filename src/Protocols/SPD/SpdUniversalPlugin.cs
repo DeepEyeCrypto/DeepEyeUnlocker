@@ -19,10 +19,10 @@ namespace DeepEyeUnlocker.Protocols.SPD
             "SC9863A", "SC9832E", "SC7731E", "T606", "T610", "T612", "T616" 
         };
 
-        public async Task<bool> DetectDeviceAsync(IUsbDevice device)
+        public Task<bool> DetectDeviceAsync(IUsbDevice device)
         {
             // SPD Diag/Flash Mode PIDs
-            return await Task.FromResult(true);
+            return Task.FromResult(true);
         }
 
         public async Task<ConnectionResult> ConnectAsync(ConnectionOptions options)
@@ -86,10 +86,10 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return new OperationResult { Success = true, Message = $"Erased {partition}" };
         }
 
-        public async Task<OperationResult> ExecuteKeypadOperationAsync(string operation, DeviceProfile device)
+        public Task<OperationResult> ExecuteKeypadOperationAsync(string operation, DeviceProfile device)
         {
             // Feature phones on SPD (SC6531E etc)
-            return await Task.FromResult(new OperationResult 
+            return Task.FromResult(new OperationResult 
             { 
                  Success = true, 
                  Message = "SPD Feature Phone Operation (Simulated)" 

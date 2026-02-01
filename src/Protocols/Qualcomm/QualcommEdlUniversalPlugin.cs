@@ -20,10 +20,10 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             "MSM89*", "SDM4*", "SDM6*", "SM8*" // Vast range
         };
 
-        public async Task<bool> DetectDeviceAsync(IUsbDevice device)
+        public Task<bool> DetectDeviceAsync(IUsbDevice device)
         {
             // 05C6:9008
-            return await Task.FromResult(true); 
+            return Task.FromResult(true); 
         }
 
         public async Task<ConnectionResult> ConnectAsync(ConnectionOptions options)
@@ -91,11 +91,11 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             };
         }
 
-        private async Task<OperationResult> GenericFirehoseErase(string partition)
+        private Task<OperationResult> GenericFirehoseErase(string partition)
         {
-            if (_firehose == null) return new OperationResult { Success = false };
+            if (_firehose == null) return Task.FromResult(new OperationResult { Success = false });
             // await _firehose.EraseAsync(partition);
-            return new OperationResult { Success = true, Message = $"Erased {partition} via Firehose" };
+            return Task.FromResult(new OperationResult { Success = true, Message = $"Erased {partition} via Firehose" });
         }
 
         public Task<OperationResult> ExecuteKeypadOperationAsync(string operation, DeviceProfile device)

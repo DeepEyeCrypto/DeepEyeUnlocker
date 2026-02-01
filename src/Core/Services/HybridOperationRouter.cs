@@ -88,7 +88,7 @@ namespace DeepEyeUnlocker.Core.Services
             DeviceProfile device,
             Dictionary<string, object> parameters)
         {
-            IUniversalPlugin plugin = GetUniversalPluginForChipset(device.Chipset);
+            var plugin = GetUniversalPluginForChipset(device.Chipset);
             
             if (plugin == null)
                 return new OperationResult { Success = false, Message = "No Universal Plugin for this Chipset" };
@@ -103,7 +103,7 @@ namespace DeepEyeUnlocker.Core.Services
             return await plugin.ExecuteOperationAsync(operation, parameters, device);
         }
 
-        private IUniversalPlugin GetUniversalPluginForChipset(ChipsetInfo chipset)
+        private IUniversalPlugin? GetUniversalPluginForChipset(ChipsetInfo chipset)
         {
             var model = chipset.Model.ToUpper();
 
