@@ -15,7 +15,7 @@ namespace DeepEyeUnlocker.Core.Architecture
             _pluginManager = pluginManager;
         }
 
-        public async Task<DeviceContext?> AutoDetectDeviceAsync(IUsbDevice usb)
+        public async Task<PluginDeviceContext?> AutoDetectDeviceAsync(IUsbDevice usb)
         {
             // Iterate through all loaded protocols to see if any recognize the device
             foreach (var protocol in _pluginManager.LoadedProtocols)
@@ -23,7 +23,7 @@ namespace DeepEyeUnlocker.Core.Architecture
                 if (await protocol.DetectDeviceAsync(usb))
                 {
                     var info = await protocol.GetDeviceInfoAsync();
-                    return new DeviceContext
+                    return new PluginDeviceContext
                     {
                         DeviceId = usb.GetTransportId(), // Unique ID for this physical connection
                         ActiveProtocol = protocol,

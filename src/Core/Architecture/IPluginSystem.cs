@@ -24,11 +24,11 @@ namespace DeepEyeUnlocker.Core.Architecture
     {
         string OperationName { get; } // "Flash", "Format", "FrpBypass"
         string TargetProtocol { get; } // The protocol this handler works with
-        Task<bool> ValidatePrerequisitesAsync(DeviceContext ctx);
-        Task<OperationResult> ExecuteAsync(DeviceContext ctx, Dictionary<string, object> parameters);
+        Task<bool> ValidatePrerequisitesAsync(PluginDeviceContext ctx);
+        Task<OperationResult> ExecuteAsync(PluginDeviceContext ctx, Dictionary<string, object> parameters);
     }
 
-    public class DeviceContext
+    public class PluginDeviceContext
     {
         public string DeviceId { get; set; } = string.Empty;
         public IProtocolPlugin ActiveProtocol { get; set; } = null!;

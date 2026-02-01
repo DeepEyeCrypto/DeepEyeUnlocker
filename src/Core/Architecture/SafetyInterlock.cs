@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Core.Architecture
 
     public class SafetyInterlock
     {
-        public static async Task<bool> PreFlightCheckAsync(DeviceContext ctx, IOperationHandler handler)
+        public static async Task<bool> PreFlightCheckAsync(PluginDeviceContext ctx, IOperationHandler handler)
         {
             // 1. Detect FRP State first
             bool frpEnabled = await DetectFrpStateAsync(ctx);
@@ -31,7 +31,7 @@ namespace DeepEyeUnlocker.Core.Architecture
             return true; // Proceed with caution
         }
 
-        private static Task<bool> DetectFrpStateAsync(DeviceContext ctx)
+        private static Task<bool> DetectFrpStateAsync(PluginDeviceContext ctx)
         {
             // Implementation varies by protocol
             // Usually involves reading specific partition flags or persistent properties

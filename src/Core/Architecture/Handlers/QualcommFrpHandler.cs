@@ -9,14 +9,14 @@ namespace DeepEyeUnlocker.Core.Architecture.Handlers
         public string OperationName => "FrpBypass";
         public string TargetProtocol => "QualcommEDL";
 
-        public async Task<bool> ValidatePrerequisitesAsync(DeviceContext ctx)
+        public async Task<bool> ValidatePrerequisitesAsync(PluginDeviceContext ctx)
         {
             // Verify we have a Qualcomm device and Firehose is active
             // In a real scenario, we'd check ctx.Info properties
             return await Task.FromResult(ctx.ActiveProtocol.ProtocolName == TargetProtocol);
         }
 
-        public async Task<OperationResult> ExecuteAsync(DeviceContext ctx, Dictionary<string, object> parameters)
+        public async Task<OperationResult> ExecuteAsync(PluginDeviceContext ctx, Dictionary<string, object> parameters)
         {
             var result = new OperationResult();
             result.Logs.Add("Initializing Service Layer: FRP Bypass...");

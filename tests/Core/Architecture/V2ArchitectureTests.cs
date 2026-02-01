@@ -17,7 +17,7 @@ namespace DeepEyeUnlocker.Tests.Core.Architecture
         {
             // Arrange
             var orchestrator = new OperationOrchestrator();
-            var ctx = new DeviceContext { ActiveProtocol = new QualcommV2Plugin() };
+            var ctx = new PluginDeviceContext { ActiveProtocol = new QualcommV2Plugin() };
             var handler = new QualcommFrpHandler();
             
             // We'll simulate a safety failure by not approving the device (if we had approval logic here)

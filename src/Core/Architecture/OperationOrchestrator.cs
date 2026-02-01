@@ -11,7 +11,7 @@ namespace DeepEyeUnlocker.Core.Architecture
         public event EventHandler<OperationResult>? OperationCompleted;
 
         public async Task<OperationResult> RunOperationAsync(
-            DeviceContext ctx, 
+            PluginDeviceContext ctx, 
             IOperationHandler handler, 
             Dictionary<string, object> parameters,
             CancellationToken ct = default)
