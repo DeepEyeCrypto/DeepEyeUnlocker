@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEye.UI.Modern.Infrastructure;
+using DeepEyeUnlocker.Core.Services;
 
 namespace DeepEye.UI.Modern.ViewModels
 {
@@ -11,7 +12,7 @@ namespace DeepEye.UI.Modern.ViewModels
     {
         public static MainViewModel? Instance { get; private set; }
         private readonly DeviceManager _deviceManager;
-        private readonly Services.DiagnosticService _diagnosticService;
+        private readonly DiagnosticService _diagnosticService;
 
         [ObservableProperty]
         private string _logContent = "";
@@ -49,7 +50,7 @@ namespace DeepEye.UI.Modern.ViewModels
             }));
 
             _deviceManager = new DeviceManager();
-            _diagnosticService = new Services.DiagnosticService();
+            _diagnosticService = new DiagnosticService();
             _deviceManager.OnDevicesChanged += devices =>
             {
                 App.Current.Dispatcher.Invoke(() =>

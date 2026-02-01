@@ -98,7 +98,7 @@ namespace DeepEyeUnlocker.CLI
                     errs => Task.FromResult(1));
         }
 
-        static async Task<int> RunRegister(RegisterOptions opts)
+        static Task<int> RunRegister(RegisterOptions opts)
         {
             var registry = new GoldenDeviceRegistry(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "hil_registry"));
             var info = registry.GetDevice(opts.DeviceId) ?? new GoldenDeviceInfo { DeviceId = opts.DeviceId, Model = opts.Model };
@@ -107,7 +107,7 @@ namespace DeepEyeUnlocker.CLI
             registry.RegisterDevice(info);
             
             Console.WriteLine($"Registered {opts.Protocol} scenario for {opts.DeviceId} ({opts.Model})");
-            return 0;
+            return Task.FromResult(0);
         }
 
         static Task<int> RunList(ListOptions opts)

@@ -10,16 +10,16 @@ namespace DeepEyeUnlocker.Core.AI
     {
         private readonly SimulationValidator _validator = new();
 
-        public async Task<AiValidationResult> ValidateAsync(ProtocolScenario actual, ProtocolScenario expected)
+        public Task<AiValidationResult> ValidateAsync(ProtocolScenario actual, ProtocolScenario expected)
         {
             var result = _validator.ValidateAgainstGolden(actual, expected, new ValidationOptions());
             
-            return new AiValidationResult
+            return Task.FromResult(new AiValidationResult
             {
                 Success = result.IsMatch,
                 Similarity = result.SimilarityScore,
                 ErrorLog = string.Join("\n", result.Differences.Select(d => $"{d.DifferenceType} at step {d.StepIndex}"))
-            };
+            });
         }
     }
 

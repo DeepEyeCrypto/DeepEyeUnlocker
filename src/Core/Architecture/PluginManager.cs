@@ -20,9 +20,10 @@ namespace DeepEyeUnlocker.Core.Architecture
                     try { return Assembly.LoadFrom(file); }
                     catch { return null; }
                 })
-                .Where(a => a != null);
+                .Where(a => a != null)
+                .Cast<Assembly>();
 
-            foreach (var assembly in assemblies!)
+            foreach (var assembly in assemblies)
             {
                 var protocolTypes = assembly.GetTypes()
                     .Where(t => typeof(IProtocolPlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);

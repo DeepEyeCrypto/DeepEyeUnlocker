@@ -66,20 +66,20 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             }
         }
 
-        public async Task<DeviceInfo> GetDeviceInfoAsync()
+        public Task<DeviceInfo> GetDeviceInfoAsync()
         {
             if (_firehose != null)
             {
                 // In production, we'd call firehose info command
-                return new DeviceInfo 
+                return Task.FromResult(new DeviceInfo 
                 { 
                     Chipset = "Qualcomm Snapdragon",
                     SecureBoot = "Enabled",
                     SerialNumber = "QCOM-SIM-0001"
-                };
+                });
             }
             
-            return new DeviceInfo { Chipset = "Qualcomm (Sahara Mode)" };
+            return Task.FromResult(new DeviceInfo { Chipset = "Qualcomm (Sahara Mode)" });
         }
     }
 }

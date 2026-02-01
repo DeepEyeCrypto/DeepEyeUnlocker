@@ -53,15 +53,15 @@ namespace DeepEyeUnlocker.Protocols.MTK
             }
         }
 
-        public async Task<DeviceInfo> GetDeviceInfoAsync()
+        public Task<DeviceInfo> GetDeviceInfoAsync()
         {
             // In a real implementation, we'd query the preloader or DA
-            return new DeviceInfo 
+            return Task.FromResult(new DeviceInfo 
             { 
                 Chipset = "MediaTek Helio/Dimensity",
                 SecureBoot = "Detection Active",
                 SerialNumber = "MTK-SIM-0001"
-            };
+            });
         }
     }
 }

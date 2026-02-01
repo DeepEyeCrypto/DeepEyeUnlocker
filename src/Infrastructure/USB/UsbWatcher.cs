@@ -14,7 +14,9 @@ namespace DeepEyeUnlocker.Infrastructure.USB
         private ManagementEventWatcher? _removeWatcher;
 #endif
 
+#pragma warning disable CS0067
         public event Action? OnDeviceChanged;
+#pragma warning restore CS0067
 
         public void Start()
         {

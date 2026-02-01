@@ -11,20 +11,15 @@ namespace DeepEyeUnlocker.Infrastructure.HIL
 {
     public class UsbCaptureEngine : IUsbCaptureEngine
     {
-        private ICaptureDevice? _captureDevice;
-        private bool _isCapturing;
-
         public Task StartCaptureAsync(int vid, int pid, string outputPcap)
         {
             // Real implementation would find the correct USB interface and start capture
             // For now, we'll focus on the parsing logic which is critical for Stage 2.
-            _isCapturing = true;
             return Task.CompletedTask;
         }
 
         public Task StopCaptureAsync()
         {
-            _isCapturing = false;
             return Task.CompletedTask;
         }
 

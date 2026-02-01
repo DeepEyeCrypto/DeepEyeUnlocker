@@ -1,4 +1,4 @@
-# DeepEyeUnlocker v3.1.1 (AI Edition)
+# DeepEyeUnlocker v3.1.2 (AI Edition)
 
  "Enterprise Elite"
 

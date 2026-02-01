@@ -1,6 +1,6 @@
-# DeepEyeUnlocker v3.1.1 (AI Edition) - Release Notes
+# DeepEyeUnlocker v3.1.2 (AI Edition) - Release Notes
 
-## [3.1.1] - 2026-02-01
+## [3.1.2] - 2026-02-01
 
 This release introduces groundbreaking AI capabilities to DeepEyeUnlocker, transforming it into the world's first autonomous mobile protocol servicing tool.
 
