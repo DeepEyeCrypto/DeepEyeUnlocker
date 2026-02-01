@@ -20,6 +20,9 @@ jobs:
       - name: Build Project
         run: dotnet build --configuration Release
       
+      - name: Install TestSprite CLI
+        run: npm install -g @testsprite/cli
+      
       - name: Start TestSprite Agent
         run: |
           npx -y @testsprite/ci-agent \
