@@ -14,6 +14,14 @@ using DeepEyeUnlocker.Features.Modifications;
 using DeepEyeUnlocker.Features.Analytics.UI;
 using DeepEyeUnlocker.Features.DeviceHealth;
 using DeepEyeUnlocker.Features.PartitionBackup;
+using DeepEyeUnlocker.Core.Services;
+using DeepEyeUnlocker.Core.Architecture;
+using DeepEyeUnlocker.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using DeepEyeUnlocker.Protocols.ModelSpecific;
+using DeepEyeUnlocker.Protocols.MTK;
+using DeepEyeUnlocker.Protocols.SPD;
+using DeepEyeUnlocker.Protocols.Qualcomm;
 
 namespace DeepEyeUnlocker.UI
 {
@@ -62,18 +70,50 @@ namespace DeepEyeUnlocker.UI
 
         private ToolTip _toolTip;
 
+        // Hybrid Engine Services
+        private readonly DeviceDbContext _dbContext;
+        private readonly HybridOperationRouter _hybridRouter;
+        private readonly DeviceClassifier _classifier;
+
         public MainForm()
         {
             _deviceManager = new DeviceManager();
             _usbDevices = new System.Collections.Generic.List<DeviceContext>();
             _adbClient = new AdbClient();
             _toolTip = new ToolTip();
+            
+            // Initialize Database
+            var options = new DbContextOptionsBuilder<DeviceDbContext>()
+                .UseSqlite("Data Source=devices.db")
+                .Options;
+            _dbContext = new DeviceDbContext(options);
+            _dbContext.Database.EnsureCreated();
+
+            // Initialize Hybrid Engine
+            _classifier = new DeviceClassifier();
+            var cloudService = new CloudProfileService(_dbContext);
+            var modelPlugin = new ModelSpecificPlugin(cloudService);
+            
+            // Register default handlers
+            modelPlugin.RegisterHandler(new DeepEyeUnlocker.Protocols.ModelSpecific.Handlers.SamsungS24Handler());
+            modelPlugin.RegisterHandler(new DeepEyeUnlocker.Protocols.ModelSpecific.Handlers.Xiaomi14Handler());
+
+            var universalPlugins = new List<IUniversalPlugin>
+            {
+                new MtkBootRomUniversalPlugin(),
+                new SpdUniversalPlugin(),
+                new QualcommEdlUniversalPlugin()
+            };
+
+            var userInteraction = new DeepEyeUnlocker.UI.Services.WinFormsUserInteraction();
+            _hybridRouter = new HybridOperationRouter(_classifier, modelPlugin, universalPlugins, userInteraction);
+
             InitializeComponent();
             DarkTheme.Apply(this);
             NotificationHelper.Initialize(this);
             RefreshDeviceList();
             _ = CheckForUpdatesAsync();
-            this.FormClosing += (s, e) => NotificationHelper.Dispose();
+            this.FormClosing += (s, e) => { NotificationHelper.Dispose(); _dbContext.Dispose(); };
             this.KeyPreview = true;
             this.KeyDown += MainForm_KeyDown;
         }
@@ -408,66 +448,72 @@ namespace DeepEyeUnlocker.UI
             
             logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] {LocalizationManager.GetString("OperationStarted")} {operationName}");
             progressBar.Value = 0;
+            progressBar.Style = ProgressBarStyle.Marquee;
 
             try 
             {
-                using var usbDevice = _deviceManager.OpenDevice(context);
-                if (usbDevice == null) throw new Exception("Could not open USB device.");
+                // 1. Map Context to Profile
+                var profile = MapContextToProfile(context);
+                statusLabel.Text = $"Analyzing device {profile.ModelNumber}...";
 
-                var engine = OperationFactory.CreateEngine(context, usbDevice);
-                if (engine == null) throw new Exception($"No engine available for {context.Chipset}");
-
-                statusLabel.Text = $"Connecting to {context.Mode}...";
-                if (await engine.ConnectAsync(CancellationToken.None))
+                // 2. Map Operation Name
+                string routerOperation = operationName switch
                 {
-                    // Map UI operation name to Operation class
-                    Operation op = operationName switch
-                    {
-                        "FRP Bypass" => new Operations.FrpBypassOperation(engine),
-                        "Format" => new Operations.FormatOperation(engine),
-                        "Flash" => new Operations.FlashOperation(null, engine),
-                        "Device Info" => new Operations.DeviceInfoOperation(engine),
-                        "Pattern Clear" => new Operations.PatternClearOperation(engine),
-                        "Backup" => new Operations.BackupOperation(engine),
-                        "Bootloader" => new Operations.BootloaderOperation(engine),
-                        "Xiaomi Mi Account Bypass" => new Operations.XiaomiServiceOperation(engine),
-                        "Oppo/Realme Advanced FRP" => new Operations.OppoServiceOperation(engine),
-                        _ => throw new NotSupportedException($"Operation {operationName} not implemented.")
-                    };
+                    "FRP Bypass" => "EraseFrp", // Generic/Standard key
+                    "Format" => "FormatUserdata",
+                    "Flash" => profile.Brand == "Samsung" ? "Odin_Flash" : "WriteFlash",
+                    "Device Info" => "ReadInfo",
+                    "Pattern Clear" => "ResetSettings", // Or ReadCode for keypads
+                    "Backup" => "ReadFlash",
+                    "Bootloader" => "UnlockBootloader",
+                    _ => operationName
+                };
 
-                    var progress = new Progress<ProgressUpdate>(u => {
-                        this.Invoke(new Action(() => {
-                            progressBar.Value = u.Percentage;
-                            statusLabel.Text = u.Status;
-                            if (!string.IsNullOrEmpty(u.Message))
-                            {
-                                logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] {u.Message}");
-                            }
-                        }));
-                    });
+                // 3. Execute via Hybrid Router
+                var parameters = new Dictionary<string, object> 
+                { 
+                    { "DeviceContext", context } // Pass original context if needed by plugins
+                };
 
-                    bool success = await op.ExecuteAsync(context, progress, CancellationToken.None);
-                    
-                    if (success)
-                    {
-                        statusLabel.Text = $"{operationName} {LocalizationManager.GetString("OperationFinished")}";
-                        NotificationHelper.ShowNotification("Success", $"{operationName} completed successfully.");
-                    }
-                    else
-                    {
-                        statusLabel.Text = $"{operationName} Failed!";
-                        NotificationHelper.ShowNotification("Failed", $"{operationName} failed. Check logs.", ToolTipIcon.Error);
-                    }
-                    
-                    await engine.DisconnectAsync();
+                var result = await _hybridRouter.ExecuteSmartAsync(routerOperation, profile, parameters);
+
+                progressBar.Style = ProgressBarStyle.Blocks;
+                progressBar.Value = result.Success ? 100 : 0;
+
+                if (result.Success)
+                {
+                    statusLabel.Text = $"{operationName} {LocalizationManager.GetString("OperationFinished")}";
+                    logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] SUCCESS: {result.Message}");
+                    NotificationHelper.ShowNotification("Success", $"{operationName} completed successfully.");
+                }
+                else
+                {
+                    statusLabel.Text = $"{operationName} Failed!";
+                    logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] FAILED: {result.Message}");
+                    NotificationHelper.ShowNotification("Failed", $"{operationName} failed. Check logs.", ToolTipIcon.Error);
                 }
             }
             catch (Exception ex)
             {
+                progressBar.Style = ProgressBarStyle.Blocks;
                 Logger.Error(ex, $"Failed to execute {operationName}");
                 logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] ERROR: {ex.Message}");
                 MessageBox.Show($"Operation failed: {ex.Message}", "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private DeviceProfile MapContextToProfile(DeviceContext context)
+        {
+            // Lightweight mapper
+            return new DeviceProfile
+            {
+                MarketingName = $"{context.Brand} {context.Model}",
+                ModelNumber = context.Model,
+                Brand = context.Brand,
+                Chipset = new ChipsetInfo { Model = context.Chipset },
+                // Simple heuristics for demo
+                ValidationStatus = TestStatus.VerifiedAlpha 
+            };
         }
 
         private async Task CheckForUpdatesAsync()

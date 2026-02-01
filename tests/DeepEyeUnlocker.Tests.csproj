@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="LibUsbDotNet" Version="2.2.29" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -44,7 +45,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net8.0-windows7.0'">
     <Compile Remove="Features\**\*" />
-    <Compile Remove="Integration\**\*" />
+    <!-- Integration tests are now cross-platform -->
   </ItemGroup>
 
 </Project>

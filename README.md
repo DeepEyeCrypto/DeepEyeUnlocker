@@ -1,10 +1,10 @@
-# DeepEyeUnlocker v3.1.5 (AI Edition)
+# DeepEyeUnlocker v3.2.0 (The Hybrid Engine)
 
- "Enterprise Elite"
+ "Universal Power. Precision Control."
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v3.0.0](https://img.shields.io/badge/Download-v3.0.0-cyan.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.0.0)
+[![Download DeepEyeUnlocker v3.2.0](https://img.shields.io/badge/Download-v3.2.0-cyan.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.2.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Protocol Simulation](https://img.shields.io/badge/Protocol%20Simulation-Passing-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![FRP Policy Verification](https://img.shields.io/badge/FRP%20Policy%20Verification-Passed-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
@@ -20,9 +20,9 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v3.0.0**
+Latest stable release: **v3.2.0**
 
-- ⬇️ [Download DeepEyeUnlocker v3.0.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.0.0)
+- ⬇️ [Download DeepEyeUnlocker v3.2.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.2.0)
 - Platform: Windows (x64)
 - Status: Stable Release (Enterprise Elite) - Advanced FRP, Cloud Sync, and Driver Center enabled.
 
@@ -39,6 +39,13 @@ Latest stable release: **v3.0.0**
 - **Factory Reset / Format:** Erase userdata + cache partitions
 - **FRP Bypass Cluster:** Specialized 2026 engines for Samsung, Xiaomi, Oppo, Vivo, Motorola.
 - **Pattern/PIN Removal:** Lock clearing without data loss
+
+### v3.2.0 "The Hybrid Engine" Highlights
+
+- **🧠 Smart Routing Engine:** AI-driven strategy selector that chooses between "Miracle Mode" (Universal Chipset) and "UnlockTool Mode" (Model-Specific Precision).
+- **🛡️ Miracle Mode (Universal):** BROM/FDL/EDL generic handlers for thousands of legacy and unbranded devices.
+- **🎯 UnlockTool Mode (Precision):** Cloud-synced precision scripts for modern flagships like Samsung S24 and Xiaomi 14.
+- **⚠️ Active Safety Rails:** Real-time risk analysis for destructive operations with mandatory user consent for high-risk universal fallbacks.
 
 ### v3.0.0 "Enterprise Elite" Highlights
 
@@ -66,7 +73,7 @@ Latest stable release: **v3.0.0**
 
 ## 🏗️ Architecture
 
-DeepEyeUnlocker v1.2.0 follows a **Clean Layered Architecture**:
+DeepEyeUnlocker v3.2.0 follows a **Clean Layered Architecture**:
 
 ```text
 ┌─────────────────────────────────────────┐
@@ -173,6 +180,16 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v3.2.0 – The Hybrid Engine Release (2026-02-01)
+
+#### New in v3.2.0
+
+- **Hybrid Operation Router:** Intelligent dispatching between universal and model-specific plugins based on device classification.
+- **Universal Chipset Plugins:** 100% offline-ready Miracle-style plugins for MTK BROM, SPD FDL, and Qualcomm EDL.
+- **Cloud Precision Handlers:** Dynamic loading of UnlockTool-style precision handlers for flagship devices.
+- **Active Safety Rails:** Real-time risk assessment and user confirmation for universal chipset operations on modern security hardware.
+- **Core Stability:** Full suite of router verification tests ensuring 100% logic reliability.
 
 ### v1.6.0 – Security Intelligence Release (2026-01-29)
 

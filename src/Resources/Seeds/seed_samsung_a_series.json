@@ -1,0 +1,51 @@
+[
+    {
+        "ModelNumber": "SM-A546E",
+        "MarketingName": "Galaxy A54 5G",
+        "Codename": "a54x",
+        "Brand": "Samsung",
+        "Series": "Galaxy A",
+        "Region": "Global",
+        "Chipset": {
+            "Manufacturer": "Samsung",
+            "Model": "Exynos 1380",
+            "Platform": "s5e8835",
+            "Architecture": "ARM64",
+            "SupportedUniversalMethods": [
+                "None"
+            ]
+        },
+        "SupportedBootModes": [
+            "Download",
+            "MTP"
+        ],
+        "UsbIds": [
+            {
+                "Vid": 1256,
+                "Pid": 26720
+            }
+        ],
+        "SupportedOperations": [
+            {
+                "OperationName": "FrpRemove",
+                "ProtocolPlugin": "SamsungOdin",
+                "HandlerName": "SamsungFrpHandler",
+                "RequiresAuth": false,
+                "RiskLevel": "Medium"
+            },
+            {
+                "OperationName": "FlashStock",
+                "ProtocolPlugin": "SamsungOdin",
+                "HandlerName": "FlashHandler",
+                "RequiresAuth": false,
+                "RiskLevel": "High"
+            }
+        ],
+        "Security": {
+            "PatchLevel": "2024-01-01",
+            "SecureBoot": true,
+            "EncryptedUserData": true
+        },
+        "ValidationStatus": "VerifiedAlpha"
+    }
+]
