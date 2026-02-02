@@ -12,20 +12,22 @@ namespace DeepEyeUnlocker.UI.Panels
 {
     public class FleetPanel : UserControl
     {
-        private readonly FleetManager _manager;
+        private readonly FleetOrchestrator _manager;
         private DataGridView _deviceList = null!;
         private Button _btnRefresh = null!;
         private Button _btnBatchAdb = null!;
+        private Button _btnBatchInstall = null!;
+        private Button _btnBatchReboot = null!;
         private Label _lblFleetStats = null!;
 
         public FleetPanel(IAdbClient adb)
         {
-            _manager = new FleetManager(adb);
+            _manager = new FleetOrchestrator(adb);
             InitializeComponent();
             _deviceList.SelectionChanged += OnSelectionChanged;
         }
 
-        public FleetManager FleetManager => _manager;
+        public FleetOrchestrator FleetManager => _manager;
 
         private void OnSelectionChanged(object? sender, EventArgs e)
         {
@@ -67,11 +69,16 @@ namespace DeepEyeUnlocker.UI.Panels
             _btnRefresh = new Button { Text = "🚢 Refresh Fleet", Width = 140, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(33, 150, 243) };
             _btnRefresh.Click += async (s, e) => await RefreshFleetAsync();
             
-            _btnBatchAdb = new Button { Text = "⚡ Batch ADB Shell", Width = 150, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(76, 175, 80) };
+            _btnBatchAdb = new Button { Text = "⚡ Batch Shell", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(76, 175, 80) };
             _btnBatchAdb.Click += async (s, e) => await ShowBatchAdbDialogAsync();
 
-            toolbar.Controls.Add(_btnRefresh);
-            toolbar.Controls.Add(_btnBatchAdb);
+            _btnBatchInstall = new Button { Text = "📦 Batch Install", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(255, 152, 0) };
+            _btnBatchInstall.Click += async (s, e) => await ShowBatchInstallDialogAsync();
+
+            _btnBatchReboot = new Button { Text = "🔄 Batch Reboot", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(156, 39, 176) };
+            _btnBatchReboot.Click += ShowBatchRebootMenu;
+
+            toolbar.Controls.AddRange(new Control[] { _btnRefresh, _btnBatchAdb, _btnBatchInstall, _btnBatchReboot });
 
             // 2. Grid
             _deviceList = new DataGridView
@@ -83,12 +90,15 @@ namespace DeepEyeUnlocker.UI.Panels
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
-                ReadOnly = true
+                ReadOnly = true,
+                EnableHeadersVisualStyles = false
             };
+            _deviceList.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
+            _deviceList.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             _deviceList.Columns.Add("Serial", "Serial Number");
-            _deviceList.Columns.Add("Alias", "Alias (Workstation)");
-            _deviceList.Columns.Add("Model", "Device Model");
-            _deviceList.Columns.Add("Status", "Current Status");
+            _deviceList.Columns.Add("Alias", "Alias");
+            _deviceList.Columns.Add("Model", "Model");
+            _deviceList.Columns.Add("Status", "Status");
 
             // 3. Stats
             _lblFleetStats = new Label { Text = "Ships in Fleet: 0", AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
@@ -103,6 +113,7 @@ namespace DeepEyeUnlocker.UI.Panels
         private async Task RefreshFleetAsync()
         {
             _btnRefresh.Enabled = false;
+            _statusLabel_Update("Scanning USB bus...");
             await _manager.RefreshDevicesAsync();
             
             _deviceList.Rows.Clear();
@@ -116,22 +127,69 @@ namespace DeepEyeUnlocker.UI.Panels
             _btnRefresh.Enabled = true;
         }
 
+        private void _statusLabel_Update(string msg) => _lblFleetStats.Text = $"Fleet: {msg}";
+
         private async Task ShowBatchAdbDialogAsync()
         {
             var selectedRows = _deviceList.SelectedRows;
             if (selectedRows.Count == 0)
             {
-                MessageBox.Show("Please select one or more devices to command.", "Fleet Order Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Select devices for command dispatch.", "Fleet Command", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            string command = Microsoft.VisualBasic.Interaction.InputBox("Enter ADB Shell Command to run on selected fleet:", "Batch Command Hub", "reboot recovery");
+            string command = Microsoft.VisualBasic.Interaction.InputBox("ADB Shell Command:", "Batch Command Hub", "getprop ro.product.model");
             if (string.IsNullOrEmpty(command)) return;
 
             var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
             var result = await _manager.BatchExecuteShellAsync(serials, command);
+            ShowBatchResult(result);
+        }
 
-            MessageBox.Show($"Fleet Command Dispatched.\nSuccess: {result.SuccessCount}\nFailed: {result.FailCount}", "Batch Result", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        private async Task ShowBatchInstallDialogAsync()
+        {
+            var selectedRows = _deviceList.SelectedRows;
+            if (selectedRows.Count == 0) return;
+
+            using (var ofd = new OpenFileDialog { Filter = "APK Files|*.apk" })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
+                    var result = await _manager.BatchInstallApkAsync(serials, ofd.FileName);
+                    ShowBatchResult(result);
+                }
+            }
+        }
+
+        private void ShowBatchRebootMenu(object? sender, EventArgs e)
+        {
+            var menu = new ContextMenuStrip();
+            menu.Items.Add("Normal Reboot", null, async (s, ev) => await ExecuteBatchReboot("normal"));
+            menu.Items.Add("Recovery Mode", null, async (s, ev) => await ExecuteBatchReboot("recovery"));
+            menu.Items.Add("Bootloader (Fastboot)", null, async (s, ev) => await ExecuteBatchReboot("bootloader"));
+            menu.Items.Add("EDL (Emergency Download)", null, async (s, ev) => await ExecuteBatchReboot("edl"));
+            
+            if (sender is Control c) menu.Show(c, new Point(0, c.Height));
+        }
+
+        private async Task ExecuteBatchReboot(string mode)
+        {
+            var selectedRows = _deviceList.SelectedRows;
+            if (selectedRows.Count == 0) return;
+
+            var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
+            var result = await _manager.BatchRebootAsync(serials, mode);
+            ShowBatchResult(result);
+        }
+
+        private void ShowBatchResult(BatchResult res)
+        {
+            string msg = $"{res.Label} operation complete.\n\nSuccess: {res.SuccessCount}\nFailed: {res.FailCount}";
+            if (res.Errors.Any()) msg += "\n\nErrors:\n" + string.Join("\n", res.Errors.Take(5));
+            
+            MessageBox.Show(msg, "Fleet Operation Result", MessageBoxButtons.OK, 
+                res.FailCount > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
         }
     }
 }

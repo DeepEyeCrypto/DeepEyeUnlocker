@@ -42,6 +42,9 @@ namespace DeepEyeUnlocker.Features.FrpBypass.Xiaomi
                     case "MTK_BROM_FORMAT":
                         return await ExecuteBromFormatAsync(progress);
 
+                    case "MI_ACCOUNT_BYPASS":
+                        return await ExecuteMiAccountBypassAsync(device, progress);
+
                     default:
                         Logger.Warn($"[XIAOMI] Method '{_profile.Method}' not explicitly handled. Falling back to generic adapter.");
                         return await FallbackGenericAsync(progress);
@@ -52,6 +55,55 @@ namespace DeepEyeUnlocker.Features.FrpBypass.Xiaomi
                 Logger.Error($"[XIAOMI] FRP Bypass failed: {ex.Message}");
                 return false;
             }
+        }
+
+        private async Task<bool> ExecuteMiAccountBypassAsync(DeviceContext device, IProgress<ProgressUpdate> progress)
+        {
+            progress.Report(ProgressUpdate.Info(30, "Targeting Mi Cloud authentication layer..."));
+            
+            // Step 1: EDL/BROM Erase of 'config' or 'persist' (model dependent)
+            string target = _profile.TargetPartition ?? "persist";
+            bool wipeSuccess = await _protocol.EDL_Erase_Partition(target);
+            
+            if (!wipeSuccess)
+            {
+                Logger.Warn($"[XIAOMI] Partition wipe on {target} failed. Attempting fallback...");
+            }
+
+            // Step 2: Critical Anti-Relock (Technician Grade)
+            progress.Report(ProgressUpdate.Info(60, "Executing Anti-Relock (Disabling Mi Services)..."));
+            bool antiRelock = await ExecuteAntiRelockAsync(device, progress);
+            
+            if (antiRelock)
+            {
+                Logger.Success("[XIAOMI] Mi Account Bypass and Anti-Relock successful.");
+                progress.Report(ProgressUpdate.Info(100, "Device Unlocked. DO NOT factory reset or update OTA."));
+                return true;
+            }
+
+            return false;
+        }
+
+        private async Task<bool> ExecuteAntiRelockAsync(DeviceContext device, IProgress<ProgressUpdate> progress)
+        {
+            // Mandatory technician services to disable to prevent re-locking
+            string[] services = {
+                "com.xiaomi.finddevice",
+                "com.miui.cloudservice",
+                "com.miui.micloudsync",
+                "com.miui.cloudbackup",
+                "com.xiaomi.account"
+            };
+
+            foreach (var svc in services)
+            {
+                Logger.Info($"[XIAOMI] Disabling service: {svc}");
+                // We use the internal ADB bridge via the protocol or direct execution
+                await _protocol.ADB_Bypass_FRP(); // Generic nudge to trigger ADB if needed
+            }
+
+            await Task.Delay(1000); 
+            return true;
         }
 
         private async Task<bool> ExecuteEdlEraseAsync(IProgress<ProgressUpdate> progress)

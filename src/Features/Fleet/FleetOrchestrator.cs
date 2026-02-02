@@ -21,7 +21,7 @@ namespace DeepEyeUnlocker.Features.Fleet
     /// <summary>
     /// Manages multiple connected devices and orchestrates batch operations (Epic E).
     /// </summary>
-    public class FleetManager
+    public class FleetOrchestrator
     {
         private readonly IAdbClient _adb;
         private readonly ConcurrentDictionary<string, FleetDevice> _devices = new();
@@ -42,7 +42,7 @@ namespace DeepEyeUnlocker.Features.Fleet
             }
         }
 
-        public FleetManager(IAdbClient adb)
+        public FleetOrchestrator(IAdbClient adb)
         {
             _adb = adb ?? throw new ArgumentNullException(nameof(adb));
         }
@@ -120,12 +120,14 @@ namespace DeepEyeUnlocker.Features.Fleet
             return result;
         }
 
-        public async Task BatchInstallApkAsync(IEnumerable<string> serials, string apkPath)
+        public async Task<BatchResult> BatchInstallApkAsync(IEnumerable<string> serials, string apkPath)
         {
+            var result = new BatchResult { TotalDevices = serials.Count(), Label = "Install APK" };
             if (!File.Exists(apkPath))
             {
                 Logger.Error($"Fleet: APK not found at {apkPath}");
-                return;
+                result.FailCount = serials.Count();
+                return result;
             }
 
             foreach (var serial in serials)
@@ -135,23 +137,67 @@ namespace DeepEyeUnlocker.Features.Fleet
                     _adb.TargetSerial = serial;
                     Logger.Info($"Fleet: Installing APK on {serial}...");
                     bool success = await _adb.InstallPackageAsync(apkPath);
-                    if (success) Logger.Info($"Fleet: Install success on {serial}");
-                    else Logger.Error($"Fleet: Install failed on {serial}");
+                    if (success)
+                    {
+                        result.SuccessCount++;
+                        Logger.Info($"Fleet: Install success on {serial}");
+                    }
+                    else
+                    {
+                        result.FailCount++;
+                        result.Errors.Add($"{serial}: Installation failed.");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Fleet: Batch install error on {serial}: {ex.Message}");
+                    result.FailCount++;
+                    result.Errors.Add($"{serial}: {ex.Message}");
                 }
                 finally
                 {
                     _adb.TargetSerial = null;
                 }
             }
+            return result;
+        }
+
+        public async Task<BatchResult> BatchRebootAsync(IEnumerable<string> serials, string mode = "normal")
+        {
+            var result = new BatchResult { TotalDevices = serials.Count(), Label = $"Reboot ({mode})" };
+            string command = mode switch
+            {
+                "recovery" => "reboot recovery",
+                "bootloader" => "reboot bootloader",
+                "edl" => "reboot edl",
+                _ => "reboot"
+            };
+
+            foreach (var serial in serials)
+            {
+                try
+                {
+                    _adb.TargetSerial = serial;
+                    await _adb.ExecuteShellAsync(command);
+                    result.SuccessCount++;
+                    Logger.Info($"Fleet: Reboot command ({mode}) sent to {serial}");
+                }
+                catch (Exception ex)
+                {
+                    result.FailCount++;
+                    result.Errors.Add($"{serial}: {ex.Message}");
+                }
+                finally
+                {
+                    _adb.TargetSerial = null;
+                }
+            }
+            return result;
         }
     }
 
     public class BatchResult
     {
+        public string Label { get; set; } = string.Empty;
         public int TotalDevices { get; set; }
         public int SuccessCount { get; set; }
         public int FailCount { get; set; }

@@ -22,11 +22,17 @@ namespace DeepEyeUnlocker.Features.Modifications
         private Label _statusLabel = null!;
         private ProgressBar _progressBar = null!;
         private Button _btnRestore = null!;
+        private Button _btnKernelCheck = null!;
+        private Button _btnSpoof = null!;
+        private Button _btnCalibrate = null!;
+        
+        private KernelBridge _kernelBridge = null!;
 
         public ExpertPanel(IAdbClient adb)
         {
             _adb = adb;
             _restorer = new PartitionRestorer(adb);
+            _kernelBridge = new KernelBridge(adb);
             InitializeComponents();
         }
 
@@ -102,35 +108,77 @@ namespace DeepEyeUnlocker.Features.Modifications
                 AutoSize = true
             };
 
-            _btnRestore = new Button
-            {
-                Text = "♻️ Safety Restore (from .debk)",
-                Location = new Point(20, 80),
-                Size = new Size(220, 50),
-                BackColor = Color.FromArgb(0, 122, 204),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
+            // Section: Safety & Recovery
+            var lblSafety = new Label { Text = "1. Safety & Recovery", ForeColor = Color.Gray, Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 70), AutoSize = true };
+            _btnRestore = new Button { Text = "♻️ Restore Backup (.debk)", Location = new Point(20, 95), Size = new Size(220, 40), BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             _btnRestore.Click += OnRestoreClicked;
+
+            // Section: Kernel Bridge (v4.0)
+            var lblKernel = new Label { Text = "2. DeepEye Kernel Bridge (v4.0)", ForeColor = Color.Gray, Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 155), AutoSize = true };
+            _btnKernelCheck = new Button { Text = "🔍 Check LKM Integrity", Location = new Point(20, 180), Size = new Size(220, 40), BackColor = Color.FromArgb(45, 45, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            _btnKernelCheck.Click += OnKernelCheckClicked;
+
+            var btnHideRoot = new Button { Text = "🛡️ Cloak Module (Stealth)", Location = new Point(250, 180), Size = new Size(220, 40), BackColor = Color.FromArgb(45, 45, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnHideRoot.Click += async (s, e) => {
+                if (await _kernelBridge.ExecuteKernelCommand(KernelCommand.HideRoot, 0))
+                    MessageBox.Show("Stealth Cloaking Successful. Module is now hidden from lsmod.", "Kernel Success");
+            };
+
+            // Section: Advanced Tweaks
+            var lblTweaks = new Label { Text = "3. Identity & Spoofing", ForeColor = Color.Gray, Font = new Font("Segoe UI", 10, FontStyle.Bold), Location = new Point(20, 240), AutoSize = true };
+            _btnSpoof = new Button { Text = "🎭 Fingerprint Spoofer", Location = new Point(20, 265), Size = new Size(220, 40), BackColor = Color.FromArgb(45, 45, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            _btnSpoof.Click += OnSpoofClicked;
+
+            _btnCalibrate = new Button { Text = "📡 Calibration Repair (IMEI)", Location = new Point(250, 265), Size = new Size(220, 40), BackColor = Color.FromArgb(45, 45, 50), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            _btnCalibrate.Click += OnCalibrateClicked;
 
             _statusLabel = new Label
             {
-                Text = "Standby",
+                Text = "Status: Expert Mode Active",
                 ForeColor = Color.Gray,
-                Location = new Point(20, 140),
+                Location = new Point(20, 330),
                 AutoSize = true
             };
 
             _progressBar = new ProgressBar
             {
-                Location = new Point(20, 165),
-                Size = new Size(520, 20),
+                Location = new Point(20, 355),
+                Size = new Size(520, 15),
                 Visible = false
             };
 
-            _contentPanel.Controls.AddRange(new Control[] { lblHeader, _btnRestore, _statusLabel, _progressBar });
+            _contentPanel.Controls.AddRange(new Control[] { 
+                lblHeader, lblSafety, _btnRestore, 
+                lblKernel, _btnKernelCheck, btnHideRoot,
+                lblTweaks, _btnSpoof, _btnCalibrate,
+                _statusLabel, _progressBar 
+            });
             this.Controls.Add(_contentPanel);
+        }
+
+        private async void OnKernelCheckClicked(object? sender, EventArgs e)
+        {
+            _statusLabel.Text = "Running Kernel Integrity Audit...";
+            bool intact = await _kernelBridge.VerifyKernelModule();
+            _statusLabel.Text = intact ? "Status: Kernel Module ACTIVE & VERIFIED" : "Status: Kernel Module NOT FOUND (Upload required)";
+            _statusLabel.ForeColor = intact ? Color.LimeGreen : Color.Orange;
+        }
+
+        private async void OnSpoofClicked(object? sender, EventArgs e)
+        {
+            var spoofer = new Features.Modifications.Magisk.FingerprintSpoofer();
+            var target = Features.Modifications.Magisk.FingerprintSpoofer.CertifiedDatabase[0]; // Pixel 7 Pro
+            
+            _statusLabel.Text = $"Generating Magisk Spoofer for {target.Model}...";
+            spoofer.ExportModuleZip(target, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp_mod"));
+            
+            await Task.Delay(1000);
+            MessageBox.Show($"Generated Magisk module for {target.Model}.\nYou can find it in the temp_mod folder.", "Spoof Module Ready");
+        }
+
+        private void OnCalibrateClicked(object? sender, EventArgs e)
+        {
+            MessageBox.Show("This will launch the Calibration Fixer interface.\nRequires /persist partition backup.", "Advanced Tool");
         }
 
         private async void OnRestoreClicked(object? sender, EventArgs e)

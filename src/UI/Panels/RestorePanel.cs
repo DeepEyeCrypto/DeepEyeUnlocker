@@ -59,13 +59,22 @@ namespace DeepEyeUnlocker.UI.Panels
                 RowCount = 3,
                 Padding = new Padding(10)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
-            // 1. Header
-            _lblStatus = new Label { Text = "Connect a device in EDL/BROM mode to begin restoration", AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Italic) };
-            mainLayout.Controls.Add(_lblStatus, 0, 0);
+            // 1. Header & Risk Legend
+            var headerFlow = new FlowLayoutPanel { Dock = DockStyle.Fill, Orientation = Orientation.Vertical };
+            _lblStatus = new Label { Text = "Connect device in Service Mode (EDL/BROM) to begin.", AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+            
+            var legendFlow = new FlowLayoutPanel { AutoSize = true, Padding = new Padding(0, 5, 0, 0) };
+            legendFlow.Controls.Add(CreateLegendItem("Safe Zone", Color.LightGreen));
+            legendFlow.Controls.Add(CreateLegendItem("Critical System", Color.Gold));
+            legendFlow.Controls.Add(CreateLegendItem("IMEI / Calibration (HIGH RISK)", Color.Salmon));
+            
+            headerFlow.Controls.Add(_lblStatus);
+            headerFlow.Controls.Add(legendFlow);
+            mainLayout.Controls.Add(headerFlow, 0, 0);
 
             // 2. Grid
             _partitionGrid = new DataGridView
@@ -77,11 +86,14 @@ namespace DeepEyeUnlocker.UI.Panels
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
-                ReadOnly = true
+                ReadOnly = true,
+                EnableHeadersVisualStyles = false
             };
-            _partitionGrid.Columns.Add("Name", "Partition Name");
+            _partitionGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(45, 45, 50);
+            _partitionGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            _partitionGrid.Columns.Add("Name", "Partition");
             _partitionGrid.Columns.Add("Size", "Capacity");
-            _partitionGrid.Columns.Add("Risk", "Safety Zone");
+            _partitionGrid.Columns.Add("Risk", "Risk Level");
             
             mainLayout.Controls.Add(_partitionGrid, 0, 1);
 
@@ -89,12 +101,14 @@ namespace DeepEyeUnlocker.UI.Panels
             var footerFlow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
             _btnRestore = new Button 
             { 
-                Text = "♻️ Restore Partition", 
+                Text = "⚡ Start Restore", 
                 Width = 180, 
                 Height = 40, 
                 Enabled = false, 
                 FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(33, 150, 243)
+                BackColor = Color.FromArgb(211, 47, 47), // Strong red for dangerous action
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             _btnRestore.Click += async (s, e) => await StartRestoreFlowAsync();
             
@@ -107,23 +121,33 @@ namespace DeepEyeUnlocker.UI.Panels
             this.Controls.Add(mainLayout);
         }
 
+        private Control CreateLegendItem(string text, Color color)
+        {
+            var p = new Panel { AutoSize = true, Padding = new Padding(0, 0, 15, 0) };
+            var box = new Panel { Size = new Size(12, 12), BackColor = color, Location = new Point(0, 4) };
+            var lbl = new Label { Text = text, AutoSize = true, Location = new Point(16, 2), Font = new Font("Segoe UI", 8), ForeColor = Color.Gray };
+            p.Controls.Add(box);
+            p.Controls.Add(lbl);
+            return p;
+        }
+
         private async Task RefreshPartitionListAsync()
         {
             if (_engine == null) return;
             try
             {
-                _lblStatus.Text = "Retrieving GPT structure...";
+                _lblStatus.Text = "Reading GPT structure via protocol...";
                 var parts = await _engine.GetPartitionTableAsync();
                 this.Invoke(new Action(() => 
                 {
                     _partitionGrid.Rows.Clear();
                     foreach (var p in parts)
                     {
-                        string risk = p.IsHighRisk ? "CALIBRATION" : (p.IsCritical ? "CRITICAL" : "STANDARD");
+                        string risk = p.IsHighRisk ? "HIGH (Calibration)" : (p.IsCritical ? "CRITICAL (System)" : "STANDARD");
                         int idx = _partitionGrid.Rows.Add(p.Name, p.SizeFormatted, risk);
                         ApplyRiskColoring(_partitionGrid.Rows[idx], p);
                     }
-                    _lblStatus.Text = $"{parts.Count()} partitions detected.";
+                    _lblStatus.Text = $"Device Ready: {parts.Count()} partitions detected.";
                     _btnRestore.Enabled = true;
                 }));
             }
