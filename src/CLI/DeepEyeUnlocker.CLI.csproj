@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\DeepEyeUnlocker.csproj" />
+    <ProjectReference Include="..\DeepEyeUnlocker.csproj" />
   </ItemGroup>
 
   <ItemGroup>

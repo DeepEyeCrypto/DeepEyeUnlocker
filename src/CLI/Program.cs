@@ -8,6 +8,8 @@ using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core.Simulation;
 using DeepEyeUnlocker.Infrastructure.HIL;
 using DeepEyeUnlocker.Operations.HIL;
+using DeepEyeUnlocker.Features.ModelDiscovery.Database;
+using DeepEyeUnlocker.Features.ModelDiscovery.Services;
 using Newtonsoft.Json;
 
 namespace DeepEyeUnlocker.CLI
@@ -83,11 +85,30 @@ namespace DeepEyeUnlocker.CLI
         public bool UseMock { get; set; }
     }
 
+    [Verb("models", HelpText = "Access the Global Supported Models Database.")]
+    class ModelsOptions
+    {
+        [Value(0, MetaName = "action", Required = true, HelpText = "Action: brands, list, export")]
+        public string Action { get; set; } = string.Empty;
+
+        [Option('b', "brand", HelpText = "Filter by brand.")]
+        public string? Brand { get; set; }
+
+        [Option('s', "search", HelpText = "Search term.")]
+        public string? Search { get; set; }
+
+        [Option('l', "limit", Default = 50, HelpText = "Limit results.")]
+        public int Limit { get; set; }
+
+        [Option('o', "output", HelpText = "Output file path.")]
+        public string? Output { get; set; }
+    }
+
     class Program
     {
         static async Task<int> Main(string[] args)
         {
-            return await Parser.Default.ParseArguments<CaptureOptions, ConvertOptions, ValidateOptions, RegisterOptions, ListOptions, AnalyzeOptions>(args)
+            return await Parser.Default.ParseArguments<CaptureOptions, ConvertOptions, ValidateOptions, RegisterOptions, ListOptions, AnalyzeOptions, ModelsOptions>(args)
                 .MapResult(
                     (CaptureOptions opts) => RunCapture(opts),
                     (ConvertOptions opts) => RunConvert(opts),
@@ -95,6 +116,7 @@ namespace DeepEyeUnlocker.CLI
                     (RegisterOptions opts) => RunRegister(opts),
                     (ListOptions opts) => RunList(opts),
                     (AnalyzeOptions opts) => RunAnalyze(opts),
+                    (ModelsOptions opts) => RunModels(opts),
                     errs => Task.FromResult(1));
         }
 
@@ -215,6 +237,48 @@ namespace DeepEyeUnlocker.CLI
 
             Console.Error.WriteLine("AI Analysis failed to produce a valid protocol model.");
             return 1;
+        }
+
+        static async Task<int> RunModels(ModelsOptions opts)
+        {
+            using var db = new DiscoveryDbContext();
+            var service = new DiscoveryService(db);
+
+            switch (opts.Action.ToLower())
+            {
+                case "brands":
+                    var brands = await service.GetBrandsAsync();
+                    Console.WriteLine("--- Supported Brands ---");
+                    foreach (var b in brands) Console.WriteLine(b);
+                    break;
+
+                case "list":
+                    var models = await service.GetModelsAsync(opts.Brand, opts.Search, opts.Limit);
+                    Console.WriteLine($"--- Models (Limit {opts.Limit}) ---");
+                    Console.WriteLine($"{"Brand",-15} | {"Model Name",-30} | {"Model #",-15} | {"Tool"}");
+                    Console.WriteLine(new string('-', 80));
+                    foreach (var m in models)
+                    {
+                        Console.WriteLine($"{m.Brand,-15} | {m.MarketingName,-30} | {m.ModelNumber,-15} | {m.Tool}");
+                    }
+                    break;
+
+                case "export":
+                    if (string.IsNullOrEmpty(opts.Output))
+                    {
+                        Console.Error.WriteLine("Error: Output path required for export.");
+                        return 1;
+                    }
+                    await service.ExportToCsvAsync(opts.Output, opts.Brand);
+                    Console.WriteLine($"Exported DB to {opts.Output}");
+                    break;
+
+                default:
+                    Console.Error.WriteLine($"Unknown action: {opts.Action}");
+                    return 1;
+            }
+
+            return 0;
         }
     }
 }

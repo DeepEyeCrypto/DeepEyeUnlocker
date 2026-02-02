@@ -14,6 +14,7 @@ using DeepEyeUnlocker.Features.Modifications;
 using DeepEyeUnlocker.Features.Analytics.UI;
 using DeepEyeUnlocker.Features.DeviceHealth;
 using DeepEyeUnlocker.Features.PartitionBackup;
+using DeepEyeUnlocker.Features.ModelDiscovery.UI;
 using DeepEyeUnlocker.Core.Services;
 using DeepEyeUnlocker.Core.Architecture;
 using DeepEyeUnlocker.Infrastructure.Data;
@@ -65,6 +66,7 @@ namespace DeepEyeUnlocker.UI
         private FleetPanel _fleetPanel = null!;
         private ExpertPanel _expertPanel = null!;
         private AnalyticsPanel _analyticsPanel = null!;
+        private DiscoveryPanel _discoveryPanel = null!;
 
         private ComboBox langSelector = null!;
 
@@ -155,6 +157,7 @@ namespace DeepEyeUnlocker.UI
             this._fleetPanel = new FleetPanel(_adbClient);
             this._expertPanel = new ExpertPanel(_adbClient);
             this._analyticsPanel = new AnalyticsPanel();
+            this._discoveryPanel = new DiscoveryPanel();
 
             _fleetPanel.FleetManager.SelectedDeviceChanged += (s, device) => 
             {
@@ -294,8 +297,12 @@ namespace DeepEyeUnlocker.UI
             TabPage analyticsTab = new TabPage("📊 Analytics") { BackColor = BrandColors.Primary };
             _analyticsPanel.Dock = DockStyle.Fill;
             analyticsTab.Controls.Add(_analyticsPanel);
+
+            TabPage discoveryTab = new TabPage("🌐 Global DB") { BackColor = BrandColors.Primary };
+            _discoveryPanel.Dock = DockStyle.Fill;
+            discoveryTab.Controls.Add(_discoveryPanel);
             
-            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, frpTab, restoreTab, driverProTab, fleetTab, expertTab, analyticsTab, driverTab, resourceTab });
+            mainTabs.TabPages.AddRange(new TabPage[] { operationsTab, deviceInfoTab, adbToolsTab, lockFrpTab, cloakTab, flashTab, bootloaderTab, healthTab, sandboxTab, frpTab, restoreTab, driverProTab, fleetTab, expertTab, analyticsTab, discoveryTab, driverTab, resourceTab });
 
             // Progress Panel
             progressPanel.Dock = DockStyle.Bottom;
