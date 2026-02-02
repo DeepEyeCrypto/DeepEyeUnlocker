@@ -27,9 +27,9 @@ Both projects are currently set to version `3.0.0` in their respective `.csproj`
 
 ## Applied Fixes
 
-- [ ] **Updated Release Pipeline**: Modified `.github/workflows/release.yml` to target `DeepEye.UI.Modern/DeepEye.UI.Modern.csproj`.
-- [ ] **Artifact Naming**: Standardized output names to ensure the WPF executable is the one being zipped and uploaded.
-- [ ] **Build Stamping**: (Proposed) Integrating Git SHA into the build to ensure 100% traceability.
+- [x] **Updated Release Pipeline**: Modified `.github/workflows/release.yml` to target `DeepEye.UI.Modern/DeepEye.UI.Modern.csproj`.
+- [x] **Artifact Naming**: Standardized output names to ensure the WPF executable is the one being zipped and uploaded.
+- [x] **Build Stamping**: Integrating Git SHA into the build to ensure 100% traceability.
 
 ## Verification Steps
 

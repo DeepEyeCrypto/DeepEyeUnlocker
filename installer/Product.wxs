@@ -28,6 +28,11 @@
 			<Component Id="DeepEyeExecutable" Guid="d1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d1d1">
 				<File Id="DeepEyeExe" Source="$(var.DeepEyeUnlocker.TargetDir)DeepEyeUnlocker.exe" KeyPath="yes" Checksum="yes" />
 			</Component>
+      <!-- Driver Assets -->
+      <Component Id="DriverAssets" Guid="f3f3f3f3-f3f3-f3f3-f3f3-f3f3f3f3f3f3">
+        <File Id="MtkInf" Source="drivers/x64/mtk/mtk_usb.inf" />
+        <File Id="QcomInf" Source="drivers/x64/qualcomm/qcser.inf" />
+      </Component>
 		</ComponentGroup>
 
     <DirectoryRef Id="ApplicationProgramsFolder">

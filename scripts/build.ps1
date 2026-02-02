@@ -1,6 +1,6 @@
 # DeepEyeUnlocker Build & Package Script
 $config = "Release"
-$version = "2.0.0"
+$version = "3.0.0"
 
 Write-Host "🔨 Building DeepEyeUnlocker v$version ($config)..." -ForegroundColor Cyan
 
@@ -20,6 +20,7 @@ dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c $config -r win-x64 
 New-Item -ItemType Directory -Path "artifacts/portable/Resources" -Force
 Copy-Item "README.md" "artifacts/portable/"
 Copy-Item "LICENSE" "artifacts/portable/"
+if (Test-Path "drivers") { Copy-Item -Recurse "drivers" "artifacts/portable/" }
 if (Test-Path "src/Resources") { Copy-Item -Recurse "src/Resources/*" "artifacts/portable/Resources/" }
 
 Write-Host "✅ Build complete. Artifacts are in the /artifacts folder." -ForegroundColor Green

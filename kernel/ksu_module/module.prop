@@ -1,0 +1,8 @@
+id=deepeye_kernel
+name=DeepEyeUnlocker Kernel Bridge
+version=v4.0.0
+versionCode=4000
+author=DeepEyeUnlocker
+description=A high-performance kernel-level bridge for root hiding, boot image patching, and advanced Android diagnostics. (GPL v3)
+minMagisk=24000
+minKsu=10000

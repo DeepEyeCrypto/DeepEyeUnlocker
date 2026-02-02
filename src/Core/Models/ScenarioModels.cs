@@ -3,6 +3,14 @@ using System.Collections.Generic;
 
 namespace DeepEyeUnlocker.Core.Models
 {
+    public enum StepAction
+    {
+        Continue,
+        Disconnect,
+        Timeout,
+        HardError
+    }
+
     public enum StepDirection
     {
         HostToDevice,
@@ -15,8 +23,9 @@ namespace DeepEyeUnlocker.Core.Models
         public string Label { get; set; } = string.Empty;
         public string DataHex { get; set; } = string.Empty;
         public int DelayMs { get; set; }
+        public StepAction Action { get; set; } = StepAction.Continue;
         
-        public byte[] GetData() => Convert.FromHexString(DataHex);
+        public byte[] GetData() => string.IsNullOrEmpty(DataHex) ? Array.Empty<byte>() : Convert.FromHexString(DataHex);
     }
 
     public class FrpContext

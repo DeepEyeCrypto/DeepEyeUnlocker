@@ -156,5 +156,55 @@ namespace DeepEyeUnlocker.Tests.Protocols
 
             Assert.True(replayResult.IsSuccessful, replayResult.ErrorMessage);
         }
+        [Fact]
+        public async Task Firehose_MidTransfer_Disconnect_Scenario()
+        {
+            var scenarioPath = Path.Combine(_scenarioDir, "firehose", "mid_transfer_disconnect.json");
+            var scenario = ScenarioLoader.Load(scenarioPath);
+            ScenarioReplayResult replayResult;
+
+            using (var usb = new ScenarioUsbDevice(scenario))
+            {
+                var protocol = new FirehoseProtocol(usb);
+                
+                // We mock the partition read which should fail
+                try 
+                {
+                    // FirehoseProtocol.ReadPartitionAsync might catch exceptions or return false
+                    // depending on its implementation. Let's assume it handles ErrorCode.DeviceNotFound
+                    bool success = await protocol.ReadPartitionToFileAsync("boot", "temp.bin", 4096);
+                    replayResult = usb.Result;
+                    PrintLogs(replayResult);
+                    Assert.False(success, "Read should have failed due to disconnect");
+                }
+                catch (Exception ex)
+                {
+                    replayResult = usb.Result;
+                    PrintLogs(replayResult);
+                    _output.WriteLine($"Caught expected exception: {ex.Message}");
+                }
+                
+                Assert.True(usb.Result.IsError, "Scenario should have recorded an error");
+                Assert.Equal("Disconnected", usb.Result.FailureReason);
+            }
+        }
+        [Fact]
+        public async Task SaharaHandshake_MalformedHello_Scenario()
+        {
+            var scenarioPath = Path.Combine(_scenarioDir, "sahara", "malformed_hello.json");
+            var scenario = ScenarioLoader.Load(scenarioPath);
+            ScenarioReplayResult replayResult;
+
+            using (var usb = new ScenarioUsbDevice(scenario))
+            {
+                var protocol = new SaharaProtocol(usb);
+                bool success = await protocol.ProcessHelloAsync();
+                replayResult = usb.Result;
+                PrintLogs(replayResult);
+                Assert.False(success, "Sahara handshake should have failed due to malformed data");
+            }
+
+            Assert.True(replayResult.IsSuccessful, "Scenario replay engine itself should not fail");
+        }
     }
 }

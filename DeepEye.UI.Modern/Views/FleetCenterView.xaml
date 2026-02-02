@@ -15,23 +15,29 @@
         <TextBlock Text="{Binding Title}" Style="{StaticResource DeepEye.Text.Title}" Grid.Row="0"/>
 
         <!-- Stats Overview -->
-        <UniformGrid Grid.Row="1" Columns="3" Margin="0,20">
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,20">
             <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
                 <StackPanel>
-                    <TextBlock Text="TOTAL JOBS" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="1,248" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                    <TextBlock Text="MANAGED DEVICES" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding ManagedDevices}" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
                 </StackPanel>
             </Border>
             <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
                 <StackPanel>
-                    <TextBlock Text="SUCCESS RATE" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="94.2%" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                    <TextBlock Text="HEALTH ALERTS" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding HealthAlerts}" Foreground="{StaticResource DeepEye.Brush.Orange}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
                 </StackPanel>
             </Border>
             <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
                 <StackPanel>
-                    <TextBlock Text="AVERAGE TIME" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="42s" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                    <TextBlock Text="CRITICAL THREATS" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding CriticalThreats}" Foreground="Red" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
+                </StackPanel>
+            </Border>
+            <Border Background="#0AFFFFFF" Padding="15" Margin="5" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="AVG RISK SCORE" Style="{StaticResource DeepEye.Text.Label}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding AvgRisk, StringFormat={}{0:F1}}" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5"/>
                 </StackPanel>
             </Border>
         </UniformGrid>

@@ -66,12 +66,19 @@ namespace DeepEyeUnlocker.Protocols.Samsung
 
         public async Task<IEnumerable<PartitionInfo>> GetPartitionTableAsync()
         {
-            Logger.Info("Samsung: Retrieving partition table...");
-            return await Task.FromResult(new List<PartitionInfo>
-            {
-                new PartitionInfo { Name = "SYSTEM", SizeInBytes = 4096, StartLba = 0x0 },
-                new PartitionInfo { Name = "USERDATA", SizeInBytes = 8192, StartLba = 0x1000 }
-            });
+            await Task.Yield();
+            if (_odin == null) return Enumerable.Empty<PartitionInfo>();
+
+            Logger.Info("Samsung: Requesting PIT (Partition Information Table)...");
+            
+            // In a real device, we send a CMD_GET_PIT (0x11)
+            // For now, we simulate the byte array
+            byte[] pitData = PitParser.CreateMockPit();
+            
+            var partitions = PitParser.Parse(pitData);
+            Logger.Info($"Samsung: Successfully parsed {partitions.Count()} partitions from PIT.");
+            
+            return partitions;
         }
 
         public async Task<bool> RebootAsync(string mode = "normal")

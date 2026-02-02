@@ -84,6 +84,9 @@ namespace DeepEye.UI.Modern.ViewModels
 
             IsAuditing = false;
             Logger.Success("Hardware audit cycle complete.");
+
+            // Register with Fleet Analytics
+            DeepEyeUnlocker.Features.Analytics.Services.FleetManager.Instance.RegisterHealthReport(report);
         }
     }
 }

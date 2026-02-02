@@ -47,30 +47,47 @@
             <DockPanel>
                 <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
                     <TextBlock Text="WORKFLOW SEQUENCE" Foreground="Gray" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Content="+ ADD STEP" Command="{Binding AddStepCommand}" HorizontalAlignment="Right"
-                            Style="{StaticResource DeepEye.Button.Modern}" Height="25" FontSize="9" Padding="10,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="NEW STEP:" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="10"/>
+                        <ComboBox ItemsSource="{Binding AvailableActions}" x:Name="ActionPicker" Width="100" Margin="0,0,5,0" SelectedIndex="0"/>
+                        <Button Content="+ ADD" 
+                                Command="{Binding AddStepCommand}" 
+                                CommandParameter="{Binding SelectedItem, ElementName=ActionPicker}"
+                                Style="{StaticResource DeepEye.Button.Modern}" Height="25" FontSize="9" Padding="10,0"/>
+                    </StackPanel>
                 </Grid>
 
-                <ListView ItemsSource="{Binding WorkflowSteps}" Background="Transparent" BorderThickness="0">
+                <ListView ItemsSource="{Binding WorkflowSteps}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#15FFFFFF" Margin="0,0,0,8" Padding="10" CornerRadius="4">
+                            <Border Background="#15FFFFFF" Margin="0,0,0,8" Padding="12" CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <Ellipse Width="8" Height="8" Fill="{StaticResource DeepEye.Brush.Cyan}" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Action}" FontWeight="Bold" Foreground="White" Width="100"/>
-                                        <TextBlock Text="{Binding Target}" Foreground="Gray" Margin="10,0"/>
-                                        <TextBlock Text="{Binding Parameter}" Foreground="{StaticResource DeepEye.Brush.Accent}"/>
+                                    
+                                    <!-- Controls -->
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,10,0">
+                                        <Button Content="▲" FontSize="8" Padding="2" Command="{Binding DataContext.MoveStepUpCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Background="Transparent" Foreground="Gray"/>
+                                        <Button Content="▼" FontSize="8" Padding="2" Command="{Binding DataContext.MoveStepDownCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Background="Transparent" Foreground="Gray"/>
                                     </StackPanel>
-                                    <Button Grid.Column="2" Content="✕" 
+
+                                    <TextBlock Grid.Column="1" Text="{Binding Action}" FontWeight="Bold" Foreground="{StaticResource DeepEye.Brush.Cyan}" VerticalAlignment="Center" Width="100"/>
+                                    
+                                    <TextBox Grid.Column="2" Text="{Binding Target, UpdateSourceTrigger=PropertyChanged}" 
+                                             Tag="Target/Partition" Margin="5,0" Background="#10FFFFFF" Foreground="White" BorderThickness="0" Padding="5"/>
+                                    
+                                    <TextBox Grid.Column="3" Text="{Binding Parameter, UpdateSourceTrigger=PropertyChanged}" 
+                                             Tag="Parameters" Margin="5,0" Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Accent}" BorderThickness="0" Padding="5"/>
+
+                                    <Button Grid.Column="4" Content="✕" 
                                             Command="{Binding DataContext.RemoveStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
-                                            Background="Transparent" BorderThickness="0" Foreground="Gray" Cursor="Hand"/>
+                                            Style="{StaticResource DeepEye.Button.Modern}" Width="30" Height="25" Margin="5,0,0,0"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -85,13 +102,23 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="STATUS" Foreground="Gray" FontSize="10"/>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="White" FontWeight="Bold"/>
                     <ProgressBar Value="{Binding ProgressValue}" Height="4" Margin="0,10,20,0" Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBox x:Name="WorkflowName" Width="150" Height="35" VerticalContentAlignment="Center" Margin="0,0,10,0" Tag="Workflow Name" Padding="10,0"/>
+                    <Button Content="💾 SAVE PRESET" 
+                            Command="{Binding SaveWorkflowCommand}" 
+                            CommandParameter="{Binding Text, ElementName=WorkflowName}"
+                            Style="{StaticResource DeepEye.Button.Modern}" Height="45"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button Content="STOP" Command="{Binding StopWorkflowCommand}" 
                             Visibility="{Binding IsExecuting, Converter={StaticResource BooleanToVisibilityConverter}}"
                             Style="{StaticResource DeepEye.Button.Modern}" Width="100" Height="45" Margin="0,0,10,0"/>

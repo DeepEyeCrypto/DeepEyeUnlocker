@@ -1,0 +1,31 @@
+{
+    "name": "firehose_mid_transfer_disconnect",
+    "protocol": "firehose",
+    "description": "Host requests partition read; device disconnects during data transfer.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "read_req",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c7265616420534543544f525f53495a455f494e5f42595445533d2235313222206e756d5f706172746974696f6e5f736563746f72733d22343039362220706879736963616c5f706172746974696f6e5f6e756d6265723d2230222073746172745f736563746f723d223022202f3e3c2f646174613e"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack_resp",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c726573706F6E73652076616C75653D2241434B22202F3E3C2F646174613E"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "data_chunk_1",
+            "data_hex": "4142434445464748"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "disconnect_event",
+            "action": "Disconnect"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 5000,
+        "error_code": "Disconnected"
+    }
+}

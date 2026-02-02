@@ -40,11 +40,13 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net8.0-windows'">
     <Compile Remove="Cloak\**\*" />
-    <Compile Remove="Features\**\*" />
     <Compile Remove="Imaging\**\*" />
     <Compile Remove="Resources\**\*" />
     <Compile Remove="UI\**\*" />
     <Compile Remove="Drivers\**\*" />
+    <Compile Remove="Features\DriverCenter\**\*" />
+    <Compile Remove="Features\Drivers\**\*" />
+    <Compile Remove="Infrastructure\Drivers\**\*" />
     <Compile Remove="Helpers\**\*" />
     <Compile Remove="CLI\**\*" />
     <Compile Remove="**\UI\**\*" />

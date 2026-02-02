@@ -1,0 +1,23 @@
+; Placeholder MTK Driver INF
+[Version]
+Signature="$Windows NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%MTK%
+DriverVer=01/01/2026,1.0.0.0
+
+[Manufacturer]
+%MTK%=Standard,NTamd64
+
+[Standard.NTamd64]
+%MTK_VCOM%=MTK_VCOM_Inst,USB\VID_0E8D&PID_2000
+
+[MTK_VCOM_Inst]
+AddReg=MTK_VCOM_AddReg
+
+[MTK_VCOM_AddReg]
+HKR,,PortSubClass,1,01
+
+[Strings]
+MTK="MediaTek Inc."
+MTK_VCOM="MediaTek USB VCOM (Android)"

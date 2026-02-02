@@ -1,0 +1,16 @@
+{
+    "name": "sahara_malformed_hello",
+    "protocol": "sahara",
+    "description": "Target device sends a Hello packet with an unsupported version (e.g., version 0xFF).",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "malformed_hello",
+            "data_hex": "0100000030000000FF0000000000000000040000000000000000000000000000000000000000000000000000"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 2000,
+        "engine_result": "ProtocolError"
+    }
+}

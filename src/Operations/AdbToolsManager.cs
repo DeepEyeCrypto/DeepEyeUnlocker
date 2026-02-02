@@ -32,6 +32,11 @@ namespace DeepEyeUnlocker.Operations
             return !result.Contains("error");
         }
 
+        public async Task<string> ExecuteCommandAsync(string args, CancellationToken ct = default)
+        {
+            return await RunAdb(args, ct);
+        }
+
         public async Task<bool> ShutdownDevice(CancellationToken ct = default)
         {
             await RunAdb("shell reboot -p", ct);

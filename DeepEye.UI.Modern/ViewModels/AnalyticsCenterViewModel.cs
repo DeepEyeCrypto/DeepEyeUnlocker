@@ -35,31 +35,15 @@ namespace DeepEye.UI.Modern.ViewModels
             _cveScanner = new CveScanner();
             _fleetAnalytics = new FleetAnalytics();
             
-            LoadMockFleetData();
+            FleetManager.Instance.OnDataUpdated += RefreshFleetData;
+            RefreshFleetData();
         }
 
-        private void LoadMockFleetData()
+        private void RefreshFleetData()
         {
-            // Simulate a fleet of 50 devices with various reports
-            var mockReports = new List<DeviceHealthReport>();
-            var mockCveReports = new List<CveReport>();
-
-            for (int i = 0; i < 50; i++)
-            {
-                var h = new DeviceHealthReport 
-                { 
-                    SerialNumber = $"SN{i:D4}", 
-                    IsRooted = i % 10 == 0,
-                    AndroidVersion = "14",
-                    SecurityPatchLevel = i % 5 == 0 ? "2023-01-01" : "2024-05-01"
-                };
-                if (!h.IsRooted) h.AuditFindings.Add("Root Check");
-                
-                mockReports.Add(h);
-                mockCveReports.Add(_cveScanner.Scan(h));
-            }
-
-            FleetSummary = _fleetAnalytics.GenerateSummary(mockReports, mockCveReports);
+            App.Current.Dispatcher.Invoke(() => {
+                FleetSummary = FleetManager.Instance.GetSummary();
+            });
         }
 
         [RelayCommand]
@@ -71,18 +55,21 @@ namespace DeepEye.UI.Modern.ViewModels
             ScanStatus = "Scanning firmware security attributes...";
             Vulnerabilities.Clear();
 
-            await Task.Delay(1500); // Simulate processing
-
-            // Since we don't have a real health report for the current device context here easily, 
-            // we simulate one based on device info or use a placeholder
-            var dummyHealth = new DeviceHealthReport
+            // Try to find an existing health report for this device
+            var health = FleetManager.Instance.GetReports().FirstOrDefault(r => r.SerialNumber == _device.Serial);
+            
+            if (health == null)
             {
-                SerialNumber = _device.Serial ?? "UNKNOWN",
-                AndroidVersion = "14",
-                SecurityPatchLevel = "2023-01-01" // Intentionally old for demonstration
-            };
+                // Fallback to dummy if no health check was run yet
+                health = new DeviceHealthReport
+                {
+                    SerialNumber = _device.Serial ?? "UNKNOWN",
+                    AndroidVersion = "14",
+                    SecurityPatchLevel = "2023-01-01" 
+                };
+            }
 
-            CurrentReport = _cveScanner.Scan(dummyHealth);
+            CurrentReport = _cveScanner.Scan(health);
             foreach (var v in CurrentReport.Vulnerabilities)
             {
                 Vulnerabilities.Add(v);
@@ -95,9 +82,23 @@ namespace DeepEye.UI.Modern.ViewModels
         [RelayCommand]
         private async Task ExportReport()
         {
-            ScanStatus = "Generating encrypted PDF security audit...";
-            await Task.Delay(2000);
-            ScanStatus = "Report exported to Documents/DeepEye/Reports/.";
+            if (CurrentReport == null || _device == null) return;
+
+            ScanStatus = "Generating enterprise security audit...";
+            
+            // Find corresponding health report
+            var health = FleetManager.Instance.GetReports().FirstOrDefault(r => r.SerialNumber == _device.Serial)
+                        ?? new DeviceHealthReport { SerialNumber = _device.Serial ?? "UNK" };
+
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string reportsDir = System.IO.Path.Combine(desktopPath, "DeepEye_Reports");
+            if (!System.IO.Directory.Exists(reportsDir)) System.IO.Directory.CreateDirectory(reportsDir);
+            
+            string filePath = System.IO.Path.Combine(reportsDir, $"SecurityReport_{_device.Serial}_{DateTime.Now:yyyyMMdd}.md");
+            
+            await ReportGenerator.ExportPdfReportAsync(health, CurrentReport, filePath);
+            
+            ScanStatus = $"Report exported to: {filePath}";
         }
     }
 }

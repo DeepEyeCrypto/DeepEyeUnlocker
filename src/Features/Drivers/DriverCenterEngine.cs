@@ -68,13 +68,20 @@ namespace DeepEyeUnlocker.Features.Drivers
         {
             Logger.Info($"Applying driver repair preset: {presetName}");
             
-            // Logic would involve:
-            // 1. Uninstalling existing inf if conflicting
-            // 2. Executing DPInst.exe or PnPUtil /add-driver
-            // 3. Restarting USB stack (if needed)
+            try
+            {
+                var smartInstaller = new DeepEyeUnlocker.Drivers.SmartDriverInstaller();
+                var progress = new Progress<string>(p => {
+                    Logger.Info($"[SmartInstall] {p}");
+                });
 
-            await Task.Delay(1000); 
-            return true;
+                return await smartInstaller.InstallUniversalDriversAsync(progress);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to execute repair via SmartDriverInstaller.");
+                return false;
+            }
         }
     }
 }

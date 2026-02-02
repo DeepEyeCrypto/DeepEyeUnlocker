@@ -23,11 +23,16 @@ namespace DeepEyeUnlocker.Operations
 
             if (device.Mode == ConnectionMode.EDL || device.Mode == ConnectionMode.BROM || device.Mode == ConnectionMode.Preloader)
             {
-                return await BypassGenericFrp(device, progress, ct);
+                bool success = await BypassGenericFrp(device, progress, ct);
+                DeepEyeUnlocker.Features.Analytics.Services.FleetManager.Instance.RegisterOperation(
+                    device.Brand ?? "UNKNOWN", "FRP Bypass", success);
+                return success;
             }
 
             Logger.Error($"FRP Bypass not supported for mode: {device.Mode}");
             Report(progress, 0, "Unsupported device mode", LogLevel.Error);
+            DeepEyeUnlocker.Features.Analytics.Services.FleetManager.Instance.RegisterOperation(
+                device.Brand ?? "UNKNOWN", "FRP Bypass", false, "Unsupported Mode");
             return false;
         }
 

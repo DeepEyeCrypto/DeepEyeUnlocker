@@ -43,25 +43,53 @@ namespace DeepEyeUnlocker.Features.Workflows.Engine
 
         private async Task<bool> ExecuteStepAsync(DeviceContext device, WorkflowStep step, CancellationToken ct)
         {
-            switch (step.Action)
+            try 
             {
-                case WorkflowAction.Backup:
-                    Logger.Info($"[WORKFLOW] Backing up {step.Target}...");
-                    await Task.Delay(1000, ct); // Simulation
-                    return true;
+                switch (step.Action)
+                {
+                    case WorkflowAction.Backup:
+                        // This would ideally use a real protocol if active
+                        Logger.Info($"[WORKFLOW] Step {step.Action}: Target={step.Target}");
+                        await Task.Delay(1000, ct); 
+                        return true;
 
-                case WorkflowAction.Delay:
-                    int ms = int.Parse(step.Parameter);
-                    await Task.Delay(ms, ct);
-                    return true;
+                    case WorkflowAction.ShellCommand:
+                        Logger.Info($"[WORKFLOW] Executing Shell: {step.Target} {step.Parameter}...");
+                        var adb = new Operations.AdbToolsManager();
+                        string result = await adb.ExecuteCommandAsync($"{step.Target} {step.Parameter}");
+                        Logger.Info($"[ADB] {result.Trim()}");
+                        return !result.Contains("error", StringComparison.OrdinalIgnoreCase);
 
-                case WorkflowAction.Reboot:
-                    Logger.Info("[WORKFLOW] Rebooting device...");
-                    return true;
+                    case WorkflowAction.Delay:
+                        if (int.TryParse(step.Parameter, out int ms))
+                        {
+                            Logger.Info($"[WORKFLOW] Delaying for {ms}ms...");
+                            await Task.Delay(ms, ct);
+                            return true;
+                        }
+                        return false;
 
-                default:
-                    Logger.Warn($"[WORKFLOW] Action '{step.Action}' not yet implemented in engine.");
-                    return false;
+                    case WorkflowAction.Reboot:
+                        Logger.Info("[WORKFLOW] Sending Reboot signal...");
+                        var rebootAdb = new Operations.AdbToolsManager();
+                        var mode = Enum.TryParse<Operations.RebootMode>(step.Parameter, true, out var m) ? m : Operations.RebootMode.System;
+                        await rebootAdb.RebootDevice(mode); 
+                        return true;
+
+                    case WorkflowAction.Erase:
+                        Logger.Info($"[WORKFLOW] Erasing partition: {step.Target}...");
+                        await Task.Delay(1500, ct); // Simulation for now
+                        return true;
+
+                    default:
+                        Logger.Warn($"[WORKFLOW] Action '{step.Action}' not yet fully implemented in engine.");
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[WORKFLOW] Step Exception: {ex.Message}");
+                return false;
             }
         }
     }

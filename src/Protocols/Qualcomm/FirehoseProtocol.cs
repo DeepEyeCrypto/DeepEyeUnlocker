@@ -90,6 +90,12 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             return Array.Empty<byte>();
         }
 
+        public async Task<bool> ReadPartitionToFileAsync(string partitionName, string filePath, int sectorCount, long sectorOffset = 0)
+        {
+            using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            return await ReadToStreamAsync(fs, sectorOffset, sectorCount);
+        }
+
         public async Task<bool> WriteFromStreamAsync(Stream input, long sectorOffset, int sectorCount, IProgress<ProgressUpdate>? progress = null, CancellationToken ct = default)
         {
             Logger.Info($"Streaming sectors to EDL: Offset {sectorOffset}, Count {sectorCount}");

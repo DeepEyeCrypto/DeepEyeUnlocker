@@ -24,6 +24,7 @@ namespace DeepEye.UI.Modern.ViewModels
 
         public ObservableCollection<WorkflowStep> WorkflowSteps { get; } = new();
         public ObservableCollection<DeviceWorkflow> Presets { get; } = new();
+        public WorkflowAction[] AvailableActions => (WorkflowAction[])Enum.GetValues(typeof(WorkflowAction));
 
         public ExpertCenterViewModel(DeviceContext? device)
         {
@@ -58,7 +59,16 @@ namespace DeepEye.UI.Modern.ViewModels
         {
             if (workflow == null) return;
             WorkflowSteps.Clear();
-            foreach (var step in workflow.Steps) WorkflowSteps.Add(step);
+            foreach (var step in workflow.Steps) 
+            {
+                // Deep copy the steps to allow editing without modifying the preset
+                WorkflowSteps.Add(new WorkflowStep { 
+                    Action = step.Action, 
+                    Target = step.Target, 
+                    Parameter = step.Parameter, 
+                    StopOnError = step.StopOnError 
+                });
+            }
             StatusMessage = $"Preset Loaded: {workflow.Name}";
         }
 
@@ -68,6 +78,7 @@ namespace DeepEye.UI.Modern.ViewModels
             if (_device == null || WorkflowSteps.Count == 0) return;
 
             IsExecuting = true;
+            ProgressValue = 0;
             _cts = new CancellationTokenSource();
 
             var workflow = new DeviceWorkflow { Name = "Custom Active Stream", Steps = new(WorkflowSteps) };
@@ -77,15 +88,15 @@ namespace DeepEye.UI.Modern.ViewModels
                 StatusMessage = p.Message;
             });
 
-            bool success = await _workflowEngine.ExecuteWorkflowAsync(_device, workflow, progress, _cts.Token);
-
-            if (success)
+            try 
             {
-                StatusMessage = "Workflow Completed Successfully.";
+                bool success = await _workflowEngine.ExecuteWorkflowAsync(_device, workflow, progress, _cts.Token);
+                StatusMessage = success ? "Workflow Completed Successfully." : "Workflow Failed or Aborted.";
             }
-            else
+            catch (Exception ex)
             {
-                StatusMessage = "Workflow Failed or Aborted.";
+                StatusMessage = $"Critical Engine Error: {ex.Message}";
+                Logger.Error(ex, "Expert Workflow Engine crashed.");
             }
 
             IsExecuting = false;
@@ -99,15 +110,48 @@ namespace DeepEye.UI.Modern.ViewModels
         }
 
         [RelayCommand]
-        private void AddStep()
+        private void AddStep(WorkflowAction action)
         {
-            WorkflowSteps.Add(new WorkflowStep { Action = WorkflowAction.Delay, Parameter = "500" });
+            WorkflowSteps.Add(new WorkflowStep { Action = action, Parameter = action == WorkflowAction.Delay ? "500" : "" });
         }
 
         [RelayCommand]
         private void RemoveStep(WorkflowStep? step)
         {
             if (step != null) WorkflowSteps.Remove(step);
+        }
+
+        [RelayCommand]
+        private void MoveStepUp(WorkflowStep? step)
+        {
+            if (step == null) return;
+            int idx = WorkflowSteps.IndexOf(step);
+            if (idx > 0)
+            {
+                WorkflowSteps.RemoveAt(idx);
+                WorkflowSteps.Insert(idx - 1, step);
+            }
+        }
+
+        [RelayCommand]
+        private void MoveStepDown(WorkflowStep? step)
+        {
+            if (step == null) return;
+            int idx = WorkflowSteps.IndexOf(step);
+            if (idx < WorkflowSteps.Count - 1)
+            {
+                WorkflowSteps.RemoveAt(idx);
+                WorkflowSteps.Insert(idx + 1, step);
+            }
+        }
+
+        [RelayCommand]
+        private void SaveWorkflow(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) name = $"Custom_{DateTime.Now:HHmm}";
+            var newWorkflow = new DeviceWorkflow { Name = name, Steps = new(WorkflowSteps) };
+            Presets.Add(newWorkflow);
+            StatusMessage = $"Workflow saved as preset: {name}";
         }
     }
 }

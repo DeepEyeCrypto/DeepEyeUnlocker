@@ -103,6 +103,18 @@ namespace DeepEyeUnlocker.Core.Simulation
 
                 if (step.DelayMs > 0) System.Threading.Thread.Sleep(step.DelayMs);
 
+                if (step.Action == StepAction.Disconnect)
+                {
+                    _parent.Log("Simulated Disconnect in Reader", true, "Disconnected");
+                    return ErrorCode.DeviceNotFound;
+                }
+
+                if (step.Action == StepAction.Timeout)
+                {
+                    _parent.Log("Simulated Timeout in Reader");
+                    return ErrorCode.IoTimedOut;
+                }
+
                 var data = step.GetData();
                 if (_parent.MutationHook != null)
                 {
@@ -147,6 +159,12 @@ namespace DeepEyeUnlocker.Core.Simulation
                 {
                     _parent.Log($"Unexpected Write: current step expectation is {step.Direction}", true);
                     return ErrorCode.None;
+                }
+
+                if (step.Action == StepAction.Disconnect)
+                {
+                    _parent.Log("Simulated Disconnect in Writer", true, "Disconnected");
+                    return ErrorCode.DeviceNotFound;
                 }
 
                 var expectedData = step.GetData();

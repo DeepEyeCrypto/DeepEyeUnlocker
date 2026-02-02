@@ -51,12 +51,15 @@ namespace DeepEyeUnlocker.Core
             }
         }
 
-        public static IEnumerable<Operation> GetAvailableOperations(DeviceContext context)
+        public static IEnumerable<Operation> GetAvailableOperations(DeviceContext context, IProtocol? protocol = null)
         {
-            var ops = new List<Operation>
+            var ops = new List<Operation>();
+
+            // Basic Info operation if protocol is available
+            if (protocol != null)
             {
-                // DeviceInfoOperation added when protocol is available
-            };
+                ops.Add(new Operations.DeviceInfoOperation(protocol));
+            }
 
             // EDL Operations - Add for Qualcomm devices not already in EDL
             if (IsQualcommDevice(context) && context.Mode != ConnectionMode.EDL)
@@ -67,30 +70,23 @@ namespace DeepEyeUnlocker.Core
             // EDL Check - Always available
             ops.Add(new Operations.CheckEdlModeOperation(_edlManager));
 
-            // EDL-specific operations (Firehose-based)
-            if (context.Mode == ConnectionMode.EDL && IsQualcommDevice(context))
-            {
-                // Firehose operations require initialized session
-                if (_firehoseManager?.IsReady == true)
-                {
-                    // Partition operations
-                    ops.Add(new Operations.FirehoseReadOperation(_firehoseManager, "boot", "boot.img"));
-                    ops.Add(new Operations.FirehoseReadOperation(_firehoseManager, "recovery", "recovery.img"));
-                    
-                    // FRP specific
-                    ops.Add(new Operations.FirehoseEraseOperation(_firehoseManager, "frp"));
-                }
-            }
-
-            // Flash operations - Available in low-level modes
+            // Low-level Mode operations (EDL/BROM)
             if (context.Mode == ConnectionMode.EDL || context.Mode == ConnectionMode.BROM)
             {
-                ops.Add(new Operations.BackupOperation(null!)); 
-                ops.Add(new Operations.FormatOperation(null!));
-                ops.Add(new Operations.FlashOperation(null, null!));
-                ops.Add(new Operations.FrpBypassOperation(null!));
-                ops.Add(new Operations.PatternClearOperation(null!));
-                ops.Add(new Operations.BootloaderOperation(null!));
+                if (protocol != null)
+                {
+                    ops.Add(new Operations.BackupOperation(protocol)); 
+                    ops.Add(new Operations.FormatOperation(protocol));
+                    ops.Add(new Operations.FlashOperation("", protocol)); // Source path empty by default
+                    ops.Add(new Operations.FrpBypassOperation(protocol));
+                    ops.Add(new Operations.PatternClearOperation(protocol));
+                    ops.Add(new Operations.BootloaderOperation(protocol));
+                }
+                else
+                {
+                    // If no protocol is active yet, we can't add data-path operations
+                    Logger.Warning("Operations requested for low-level mode without active protocol engine.", "FACTORY");
+                }
             }
 
             // Brand-specific operations

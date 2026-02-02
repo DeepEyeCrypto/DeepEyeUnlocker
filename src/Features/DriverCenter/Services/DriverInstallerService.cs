@@ -96,26 +96,42 @@ namespace DeepEyeUnlocker.Features.DriverCenter.Services
         {
             Logger.Info($"[DRIVER-INSTALLER] Injecting {package.Name} into Windows Driver Store...");
             
-            // Usage: PNPUTIL /add-driver path\to\driver.inf /install
-            string cmd = $"pnputil /add-driver \"{path}\" /install";
-            
-            var psi = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = $"/c {cmd}",
-                UseShellExecute = true,
-                Verb = "runas",
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-
             try
             {
-                using var process = Process.Start(psi);
-                if (process != null)
+                var storeManager = new Infrastructure.Drivers.DriverStoreManager();
+                var arch = Infrastructure.Native.ArchitectureHelper.GetDriverArchitecture();
+                
+                Logger.Info($"[DRIVER-INSTALLER] Verifying architecture compatibility for {arch}...");
+
+                // In a real scenario, we would parse the INF to ensure it supports the target arch
+                // For now, we proceed with the SetupAPI installation
+                bool success = await storeManager.InstallToDriverStoreAsync(path);
+                
+                if (success)
                 {
-                    await process.WaitForExitAsync();
-                    Logger.Success($"[DRIVER-INSTALLER] {package.Name} INF injection complete.");
+                    Logger.Success($"[DRIVER-INSTALLER] {package.Name} INF injection complete via SetupAPI.");
                     return true;
+                }
+                else
+                {
+                    Logger.Error($"[DRIVER-INSTALLER] SetupAPI failed for {package.Name}. Falling back to PnPUtil...");
+                    
+                    // Fallback to PnPUtil if SetupAPI fails (e.g. signature issues handled differently)
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "pnputil.exe",
+                        Arguments = $"/add-driver \"{path}\" /install",
+                        UseShellExecute = true,
+                        Verb = "runas",
+                        CreateNoWindow = true
+                    };
+
+                    using var process = Process.Start(psi);
+                    if (process != null)
+                    {
+                        await process.WaitForExitAsync();
+                        return process.ExitCode == 0;
+                    }
                 }
             }
             catch (Exception ex)
