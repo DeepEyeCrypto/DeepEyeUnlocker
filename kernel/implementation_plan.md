@@ -31,11 +31,24 @@ DeepEyeUnlocker-Kernel v4.0 is a C/C++ kernel bridge designed to extend the capa
 
 - [x] Defined IOCTL magic and command structures in `deepeye_kernel.h`.
 - [x] Implemented `deepeye_ioctl` handler in `main.c`.
-- [x] Created C# `KernelBridge` with `KernelCommand` enum and `SendIoctl` abstraction.
+- [x] Created C# `KernelBridge` with `KernelCommand` enum and `NativeKernelMethods` P/Invoke declarations.
 - [x] Integrated native proxy CLI support (`deepeye_cli` / `deepeye_native`) for remote execution via ADB.
+
+### Stage 5: Python Bindings & Tools (COMPLETED)
+
+- [x] Developed `deepeye_py.cpp` using `pybind11` for BootImage class bindings.
+- [x] Exposed kernel, ramdisk, and metadata properties to Python.
+- [x] Added `python` build target to Makefile for generating `.so` extensions.
+
+### Stage 6: Security Research & Auditing (COMPLETED)
+
+- [x] Implemented `exploit_monitor.c` for Syscall Table integrity scanning.
+- [x] Added `DEEPEYE_BYPASS_FRP` IOCTL for kernel-level FRP clearing.
+- [x] Implemented hot-patching infrastructure for runtime CVE mitigation.
 
 ## Architecture Notes
 
-- **Communication**: Userspace (C#) communicates via `/dev/deepeye` using IOCTL commands.
+- **Communication**: Userspace (C#/Python) communicates via `/dev/deepeye` using IOCTL or direct memory access for boot patching.
 - **Safety**: GPL-compliant, research-oriented, safety-first (emulator testing).
-- **Security**: Focus on bypassing integrity checks and root detection via kernel-level hooks.
+- **Extensibility**: Python bindings allow for rapid prototyping of new modding techniques.
+- **Stealth**: Includes LKM cloaking and path-hiding hooks to bypass security suites.

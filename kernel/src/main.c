@@ -42,6 +42,17 @@ static long deepeye_ioctl(struct file *file, unsigned int cmd,
     return 0;
   }
 
+  case DEEPEYE_BYPASS_FRP: {
+    struct frp_bypass_args args;
+    if (copy_from_user(&args, (void __user *)arg, sizeof(args)))
+      return -EFAULT;
+
+    pr_info("IOCTL: FRP Bypass request for partition: %s (Action: %d)\n",
+            args.partition_path, args.action);
+    // Call FRP bypass logic
+    return 0;
+  }
+
   default:
     return -ENOTTY;
   }

@@ -21,7 +21,8 @@
         {
             "direction": "device_to_host",
             "label": "disconnect_event",
-            "action": "Disconnect"
+            "action": "Disconnect",
+            "data_hex": ""
         }
     ],
     "expectations": {

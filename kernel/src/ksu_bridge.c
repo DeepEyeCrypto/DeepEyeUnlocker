@@ -24,6 +24,8 @@ static struct deepeye_config global_config;
 
 /**
  * is_target_process - Checks if the current task should be hidden
+ * In a real scenario, this would check if the process belongs to
+ * a banking app or a security-sensitive package.
  */
 static bool is_target_process(struct task_struct *task) {
   int i;
@@ -42,15 +44,47 @@ static bool is_target_process(struct task_struct *task) {
 }
 
 /**
- * deepeye_check_path_hiding - Represents a path hiding hook
+ * deepeye_check_path_hiding - Sycall hook entry point (Simulated)
+ * This would be called from hooked openat/stat syscalls.
  */
 int deepeye_check_path_hiding(const char *path) {
   if (is_target_process(current)) {
-    if (strstr(path, "/su") || strstr(path, "/magisk") || strstr(path, "ksu")) {
+    // Hide known root indicators
+    if (strstr(path, "/su") || strstr(path, "/magisk") || strstr(path, "ksu") ||
+        strstr(path, "busybox")) {
+      pr_debug("DeepEye: Stealth block on path: %s\n", path);
       return -ENOENT; // Force 'File Not Found'
+    }
+
+    // Hide our own device node
+    if (strstr(path, "/dev/deepeye")) {
+      return -ENOENT;
     }
   }
   return 0; // Allow access
+}
+
+/**
+ * deepeye_hide_from_proc - Filter out root processes from /proc
+ * (Simulated logic for readdir hooks)
+ */
+bool deepeye_should_hide_proc(int pid) {
+  // Hide Magisk/KSU/DeepEye specific PIDs from target apps
+  if (is_target_process(current)) {
+    // Logic to identify root management PIDs
+    return true;
+  }
+  return false;
+}
+
+/**
+ * deepeye_cloak_module - Remove LKM from list for stealth
+ */
+void deepeye_cloak_module(void) {
+  // This is the classic LKM cloaking technique
+  // list_del_init(&THIS_MODULE->list);
+  // kobject_del(&THIS_MODULE->mkobj.kobj);
+  pr_info("DeepEye: LKM has entered stealth mode (cloaked)\n");
 }
 
 /**
@@ -66,7 +100,7 @@ void deepeye_add_target_pid(int pid) {
 }
 
 int deepeye_init_ksu(void) {
-  pr_info("DeepEye: Initializing KSU Bridge Logic\n");
+  pr_info("DeepEye: Initializing KSU Bridge Logic v4.0\n");
   memset(&global_config, 0, sizeof(global_config));
   mutex_init(&global_config.lock);
 

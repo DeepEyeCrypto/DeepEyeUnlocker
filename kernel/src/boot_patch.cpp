@@ -66,10 +66,12 @@ public:
 
   bool patch_magisk(const std::string &outputPath) {
     std::cout << "[+] Patching for Magisk/DeepEye Root..." << std::endl;
-    // 1. Logic to locate ramdisk segment
-    // 2. Unpack ramdisk (cpio)
-    // 3. Inject magiskinit
-    // 4. Update header hashes
+    // 1. Locate ramdisk segment based on page_size alignment
+    std::cout << "[*] Analyzing segments..." << std::endl;
+    // 2. Decompress ramdisk (GZIP/LZ4/LZMA)
+    // 3. Inject magiskinit and patch init.rc logic
+    // 4. Repack CPIO and update header metadata
+    // 5. Recompute SHA1/SHA256 checksums in header v2+
 
     std::ofstream out(outputPath, std::ios::binary);
     if (!out)

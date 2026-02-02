@@ -17,6 +17,23 @@ namespace DeepEyeUnlocker.Infrastructure
     }
 
     /// <summary>
+    /// Direct P/Invoke bridge for when the tool runs natively on the device.
+    /// </summary>
+    internal static class NativeKernelMethods
+    {
+        private const string KernelLib = "libdeepeye_kernel.so";
+
+        [DllImport(KernelLib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int deepeye_init();
+
+        [DllImport(KernelLib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int deepeye_load_module(string module_path);
+
+        [DllImport(KernelLib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int deepeye_hide_root(int pid);
+    }
+
+    /// <summary>
     /// Bridge between the C# tool and Android Kernel space via IOCTL simulation.
     /// </summary>
     public class KernelBridge : IDisposable
