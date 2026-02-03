@@ -28,7 +28,7 @@ jobs:
 
     - name: Build & Publish Portable (GOLD)
       run: |
-        dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:TreatWarningsAsErrors=true /p:SourceRevisionId=${{ github.sha }} -o "artifacts/portable"
+        dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true "/p:PublishSingleFile=true" "/p:TreatWarningsAsErrors=true" "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
         copy README.md artifacts/portable/
         copy LICENSE artifacts/portable/
         xcopy /E /I drivers artifacts/portable/drivers
