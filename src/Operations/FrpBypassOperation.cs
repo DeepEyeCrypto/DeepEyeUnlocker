@@ -71,13 +71,19 @@ namespace DeepEyeUnlocker.Operations
                     Report(progress, 30 + (int)((float)completed / toErase.Count * 60), $"Erasing {part.Name}...");
                     Logger.Info($"Erasing {part.Name} ({part.SizeInBytes} bytes) for FRP bypass.");
                     
-                    // Most protocols support simple erasure or writing zeros
-                    byte[] zeros = new byte[512]; // Just write first sector or use Erase if supported
-                    bool success = await _protocol.WritePartitionAsync(part.Name, zeros);
+                    // Try hardware-level erase first, fallback to writing zeros
+                    bool success = await _protocol.ErasePartitionAsync(part.Name, null, ct);
                     
                     if (!success)
                     {
-                        Logger.Error($"Failed to clear {part.Name}");
+                        Logger.Warn($"Hardware erase failed for {part.Name}, falling back to zero write.");
+                        byte[] zeros = new byte[512]; 
+                        success = await _protocol.WritePartitionAsync(part.Name, zeros);
+                    }
+                    
+                    if (!success)
+                    {
+                        Logger.Error($"Failed to clear {part.Name} using any method.");
                     }
                     completed++;
                     await Task.Delay(100, ct);

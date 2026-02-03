@@ -17,6 +17,7 @@ namespace DeepEyeUnlocker.Operations
     public class FrpBypassManager
     {
         private readonly FirehoseManager? _firehose;
+        private readonly Protocols.IProtocol? _protocol;
         private readonly PartitionTableParser _partitionParser;
 
         // FRP partition names by brand
@@ -42,11 +43,10 @@ namespace DeepEyeUnlocker.Operations
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
 
-        public FrpBypassManager() : this(null) { }
-
-        public FrpBypassManager(FirehoseManager? firehose)
+        public FrpBypassManager(FirehoseManager? firehose = null, Protocols.IProtocol? protocol = null)
         {
             _firehose = firehose;
+            _protocol = protocol;
             _partitionParser = new PartitionTableParser();
         }
 
@@ -70,7 +70,7 @@ namespace DeepEyeUnlocker.Operations
                 var frpPartitions = GetFrpPartitionNames(device.Brand);
                 info.FrpPartitionName = frpPartitions.FirstOrDefault();
 
-                if (_firehose != null && _firehose.IsReady)
+                if ((_firehose != null && _firehose.IsReady) || _protocol != null)
                 {
                     // Read FRP partition data
                     foreach (var partName in frpPartitions)
@@ -79,8 +79,17 @@ namespace DeepEyeUnlocker.Operations
                         
                         try
                         {
-                            var data = await _firehose.ReadPartitionAsync(partName, null, ct);
-                            if (data.Length > 0)
+                            byte[] data = Array.Empty<byte>();
+                            if (_firehose != null && _firehose.IsReady)
+                            {
+                                data = await _firehose.ReadPartitionAsync(partName, null, ct);
+                            }
+                            else if (_protocol != null)
+                            {
+                                data = await _protocol.ReadPartitionAsync(partName);
+                            }
+
+                            if (data != null && data.Length > 0)
                             {
                                 info.FrpPartitionName = partName;
                                 info.FrpPartitionSize = (ulong)data.Length;
@@ -336,12 +345,12 @@ namespace DeepEyeUnlocker.Operations
             IProgress<ProgressUpdate>? progress,
             CancellationToken ct)
         {
-            if (_firehose == null || !_firehose.IsReady)
+            if ((_firehose == null || !_firehose.IsReady) && _protocol == null)
             {
                 return new FrpBypassResult
                 {
                     Success = false,
-                    Message = "Firehose session required for partition erase",
+                    Message = "Active protocol session required for partition erase",
                     MethodUsed = FrpBypassMethod.PartitionErase
                 };
             }
@@ -354,7 +363,17 @@ namespace DeepEyeUnlocker.Operations
                 
                 try
                 {
-                    if (await _firehose.ErasePartitionAsync(partName, null, ct))
+                    bool success = false;
+                    if (_firehose != null && _firehose.IsReady)
+                    {
+                        success = await _firehose.ErasePartitionAsync(partName, null, ct);
+                    }
+                    else if (_protocol != null)
+                    {
+                        success = await _protocol.ErasePartitionAsync(partName, null, ct);
+                    }
+
+                    if (success)
                     {
                         return new FrpBypassResult
                         {
@@ -388,12 +407,12 @@ namespace DeepEyeUnlocker.Operations
             IProgress<ProgressUpdate>? progress,
             CancellationToken ct)
         {
-            if (_firehose == null || !_firehose.IsReady)
+            if ((_firehose == null || !_firehose.IsReady) && _protocol == null)
             {
                 return new FrpBypassResult
                 {
                     Success = false,
-                    Message = "Firehose session required for partition overwrite",
+                    Message = "Active protocol session required for partition overwrite",
                     MethodUsed = FrpBypassMethod.PartitionOverwrite
                 };
             }
@@ -406,8 +425,21 @@ namespace DeepEyeUnlocker.Operations
                 
                 try
                 {
-                    // Read current partition to get size
-                    var existingData = await _firehose.ReadPartitionAsync(partName, null, ct);
+                    // Read current partition to get size (or assume common size if read fails)
+                    byte[] existingData;
+                    if (_firehose != null && _firehose.IsReady)
+                    {
+                        existingData = await _firehose.ReadPartitionAsync(partName, null, ct);
+                    }
+                    else if (_protocol != null)
+                    {
+                        existingData = await _protocol.ReadPartitionAsync(partName);
+                    }
+                    else
+                    {
+                        existingData = Array.Empty<byte>();
+                    }
+
                     if (existingData.Length == 0) continue;
 
                     // Create clean data (all zeros)
@@ -415,7 +447,17 @@ namespace DeepEyeUnlocker.Operations
                     
                     Report(progress, 60, $"Writing clean {partName}...");
                     
-                    if (await _firehose.WritePartitionAsync(partName, cleanData, null, ct))
+                    bool success = false;
+                    if (_firehose != null && _firehose.IsReady)
+                    {
+                        success = await _firehose.WritePartitionAsync(partName, cleanData, null, ct);
+                    }
+                    else if (_protocol != null)
+                    {
+                        success = await _protocol.WritePartitionAsync(partName, cleanData);
+                    }
+
+                    if (success)
                     {
                         return new FrpBypassResult
                         {
@@ -449,12 +491,12 @@ namespace DeepEyeUnlocker.Operations
             IProgress<ProgressUpdate>? progress,
             CancellationToken ct)
         {
-            if (_firehose == null || !_firehose.IsReady)
+            if ((_firehose == null || !_firehose.IsReady) && _protocol == null)
             {
                 return new FrpBypassResult
                 {
                     Success = false,
-                    Message = "Firehose session required",
+                    Message = "Active protocol session required",
                     MethodUsed = FrpBypassMethod.PersistClear
                 };
             }
@@ -462,8 +504,17 @@ namespace DeepEyeUnlocker.Operations
             Report(progress, 50, "Erasing persist partition...");
 
             // ⚠️ Warning: This erases calibration data too!
-            if (await _firehose.ErasePartitionAsync("persist", null, ct))
+            bool success = false;
+            if (_firehose != null && _firehose.IsReady)
             {
+                success = await _firehose.ErasePartitionAsync("persist", null, ct);
+            }
+            else if (_protocol != null)
+            {
+                success = await _protocol.ErasePartitionAsync("persist", null, ct);
+            }
+
+            if (success)
                 return new FrpBypassResult
                 {
                     Success = true,
@@ -595,8 +646,9 @@ namespace DeepEyeUnlocker.Operations
 
         private FrpBypassMethod DetermineBestMethod(DeviceContext device)
         {
-            // If in EDL mode with Firehose, use partition erase
-            if (device.Mode == ConnectionMode.EDL && _firehose?.IsReady == true)
+            // If in EDL or BROM mode with a valid protocol, use partition erase
+            if ((device.Mode == ConnectionMode.EDL || device.Mode == ConnectionMode.BROM || device.Mode == ConnectionMode.Preloader) && 
+                ((_firehose?.IsReady == true) || _protocol != null))
             {
                 return FrpBypassMethod.PartitionErase;
             }

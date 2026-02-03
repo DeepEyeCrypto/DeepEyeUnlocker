@@ -12,13 +12,15 @@ namespace DeepEyeUnlocker.UI.Panels
 {
     public class FleetPanel : UserControl
     {
-        private readonly FleetOrchestrator _manager;
+        private TableLayoutPanel _mainLayout = null!;
         private DataGridView _deviceList = null!;
+        private RichTextBox _fleetConsole = null!;
         private Button _btnRefresh = null!;
         private Button _btnBatchAdb = null!;
         private Button _btnBatchInstall = null!;
         private Button _btnBatchReboot = null!;
         private Label _lblFleetStats = null!;
+        private ProgressBar _batchProgress = null!;
 
         public FleetPanel(IAdbClient adb)
         {
@@ -50,100 +52,164 @@ namespace DeepEyeUnlocker.UI.Panels
         private void InitializeComponent()
         {
             this.Dock = DockStyle.Fill;
-            this.BackColor = Color.FromArgb(18, 18, 18);
+            this.BackColor = Color.FromArgb(20, 20, 25);
             this.ForeColor = Color.White;
 
-            var mainLayout = new TableLayoutPanel
+            _mainLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 3,
-                Padding = new Padding(15)
+                RowCount = 5,
+                Padding = new Padding(20)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));  // Title & Stats
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));  // Toolbar
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 60));   // Device Grid
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 40));   // Fleet Console
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));  // Progress
 
-            // 1. Toolbar
-            var toolbar = new FlowLayoutPanel { Dock = DockStyle.Fill };
-            _btnRefresh = new Button { Text = "🚢 Refresh Fleet", Width = 140, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(33, 150, 243) };
+            // 1. Header
+            var header = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2 };
+            var titleLabel = new Label
+            {
+                Text = "🚢 Sentinel Pro: Fleet HQ",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 150, 136),
+                AutoSize = true
+            };
+            _lblFleetStats = new Label { Text = "Ships in Fleet: 0", ForeColor = Color.Gray, Anchor = AnchorStyles.Right, AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+            header.Controls.Add(titleLabel, 0, 0);
+            header.Controls.Add(_lblFleetStats, 1, 0);
+
+            // 2. Toolbar
+            var toolbar = new FlowLayoutPanel { Dock = DockStyle.Fill, Margin = new Padding(0) };
+            _btnRefresh = CreateStyledButton("🔄 Refresh Fleet", Color.FromArgb(50, 50, 55));
             _btnRefresh.Click += async (s, e) => await RefreshFleetAsync();
             
-            _btnBatchAdb = new Button { Text = "⚡ Batch Shell", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(76, 175, 80) };
+            _btnBatchAdb = CreateStyledButton("⚡ Batch Shell", Color.FromArgb(0, 150, 136));
             _btnBatchAdb.Click += async (s, e) => await ShowBatchAdbDialogAsync();
 
-            _btnBatchInstall = new Button { Text = "📦 Batch Install", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(255, 152, 0) };
+            _btnBatchInstall = CreateStyledButton("📦 Batch Install", Color.FromArgb(255, 160, 0));
             _btnBatchInstall.Click += async (s, e) => await ShowBatchInstallDialogAsync();
 
-            _btnBatchReboot = new Button { Text = "🔄 Batch Reboot", Width = 130, Height = 35, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(156, 39, 176) };
+            _btnBatchReboot = CreateStyledButton("🔄 Batch Reboot", Color.FromArgb(211, 47, 47));
             _btnBatchReboot.Click += ShowBatchRebootMenu;
 
             toolbar.Controls.AddRange(new Control[] { _btnRefresh, _btnBatchAdb, _btnBatchInstall, _btnBatchReboot });
 
-            // 2. Grid
+            // 3. Grid
             _deviceList = new DataGridView
             {
                 Dock = DockStyle.Fill,
-                BackgroundColor = Color.FromArgb(24, 24, 24),
+                BackgroundColor = Color.FromArgb(25, 25, 30),
                 ForeColor = Color.White,
                 BorderStyle = BorderStyle.None,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                GridColor = Color.FromArgb(40, 40, 45),
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
                 ReadOnly = true,
-                EnableHeadersVisualStyles = false
+                RowHeadersVisible = false,
+                EnableHeadersVisualStyles = false,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
-            _deviceList.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(40, 40, 40);
-            _deviceList.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            _deviceList.Columns.Add("Serial", "Serial Number");
-            _deviceList.Columns.Add("Alias", "Alias");
-            _deviceList.Columns.Add("Model", "Model");
-            _deviceList.Columns.Add("Status", "Status");
+            _deviceList.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(35, 35, 40), ForeColor = Color.Gray, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            _deviceList.Columns.Add("Serial", "Vessel ID (Serial)");
+            _deviceList.Columns.Add("Alias", "Bench Alias");
+            _deviceList.Columns.Add("Model", "Hardware Profile");
+            _deviceList.Columns.Add("Status", "Comm Status");
 
-            // 3. Stats
-            _lblFleetStats = new Label { Text = "Ships in Fleet: 0", AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            // 4. Console
+            _fleetConsole = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(15, 15, 20),
+                ForeColor = Color.FromArgb(150, 150, 160),
+                BorderStyle = BorderStyle.None,
+                ReadOnly = true,
+                Font = new Font("Consolas", 8),
+                Margin = new Padding(0, 10, 0, 0)
+            };
 
-            mainLayout.Controls.Add(toolbar, 0, 0);
-            mainLayout.Controls.Add(_deviceList, 0, 1);
-            mainLayout.Controls.Add(_lblFleetStats, 0, 2);
+            // 5. Progress
+            _batchProgress = new ProgressBar { Dock = DockStyle.Fill, Visible = false, Style = ProgressBarStyle.Marquee, Height = 10 };
 
-            this.Controls.Add(mainLayout);
+            _mainLayout.Controls.Add(header, 0, 0);
+            _mainLayout.Controls.Add(toolbar, 0, 1);
+            _mainLayout.Controls.Add(_deviceList, 0, 2);
+            _mainLayout.Controls.Add(_fleetConsole, 0, 3);
+            _mainLayout.Controls.Add(_batchProgress, 0, 4);
+
+            this.Controls.Add(_mainLayout);
+            LogFleet("Fleet Command Center Initialized. Ready for dispatch.", Color.FromArgb(0, 150, 136));
+        }
+
+        private Button CreateStyledButton(string text, Color backColor)
+        {
+            var btn = new Button
+            {
+                Text = text,
+                Width = 140,
+                Height = 35,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = backColor,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btn.FlatAppearance.BorderSize = 0;
+            return btn;
+        }
+
+        private void LogFleet(string message, Color? color = null)
+        {
+            _fleetConsole.SelectionStart = _fleetConsole.TextLength;
+            _fleetConsole.SelectionColor = color ?? Color.Gray;
+            _fleetConsole.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\n");
+            _fleetConsole.ScrollToCaret();
+        }
         }
 
         private async Task RefreshFleetAsync()
         {
             _btnRefresh.Enabled = false;
-            _statusLabel_Update("Scanning USB bus...");
+            LogFleet("Scanning USB interfaces for ADB vessels...", Color.Cyan);
+            
             await _manager.RefreshDevicesAsync();
             
             _deviceList.Rows.Clear();
             var devices = _manager.GetDevices();
             foreach (var dev in devices)
             {
-                _deviceList.Rows.Add(dev.Context.Serial, dev.Alias, dev.Context.Model, dev.LastStatus);
+                int idx = _deviceList.Rows.Add(dev.Context.Serial, dev.Alias, dev.Context.Model, dev.LastStatus);
+                _deviceList.Rows[idx].DefaultCellStyle.ForeColor = Color.LightGreen;
             }
 
             _lblFleetStats.Text = $"Ships in Fleet: {devices.Count()}";
             _btnRefresh.Enabled = true;
+            LogFleet($"Reconnaissance complete. {devices.Count()} vessels online.", Color.LightGreen);
         }
-
-        private void _statusLabel_Update(string msg) => _lblFleetStats.Text = $"Fleet: {msg}";
 
         private async Task ShowBatchAdbDialogAsync()
         {
             var selectedRows = _deviceList.SelectedRows;
             if (selectedRows.Count == 0)
             {
-                MessageBox.Show("Select devices for command dispatch.", "Fleet Command", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Select vessels for command dispatch.", "Fleet HQ", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            string command = Microsoft.VisualBasic.Interaction.InputBox("ADB Shell Command:", "Batch Command Hub", "getprop ro.product.model");
+            string command = Microsoft.VisualBasic.Interaction.InputBox("Enter ADB Shell Command:", "Fleet Command Hub", "getprop ro.product.model");
             if (string.IsNullOrEmpty(command)) return;
+
+            LogFleet($"Dispatching command to {selectedRows.Count} vessels: [{command}]", Color.Gold);
+            _batchProgress.Visible = true;
 
             var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
             var result = await _manager.BatchExecuteShellAsync(serials, command);
+            
+            _batchProgress.Visible = false;
             ShowBatchResult(result);
+            LogFleet($"Batch execution finalized. {result.SuccessCount} successful, {result.FailCount} failed.", result.FailCount > 0 ? Color.Salmon : Color.LightGreen);
         }
 
         private async Task ShowBatchInstallDialogAsync()
@@ -155,9 +221,15 @@ namespace DeepEyeUnlocker.UI.Panels
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
+                    LogFleet($"Dispatching APK deployment: {Path.GetFileName(ofd.FileName)} to {selectedRows.Count} vessels.", Color.Gold);
+                    _batchProgress.Visible = true;
+
                     var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
                     var result = await _manager.BatchInstallApkAsync(serials, ofd.FileName);
+                    
+                    _batchProgress.Visible = false;
                     ShowBatchResult(result);
+                    LogFleet($"Deployment finalized. Success: {result.SuccessCount}, Fail: {result.FailCount}", result.FailCount > 0 ? Color.Salmon : Color.LightGreen);
                 }
             }
         }
@@ -178,9 +250,15 @@ namespace DeepEyeUnlocker.UI.Panels
             var selectedRows = _deviceList.SelectedRows;
             if (selectedRows.Count == 0) return;
 
+            LogFleet($"Dispatching batch REBOOT ({mode}) to {selectedRows.Count} vessels...", Color.Salmon);
+            _batchProgress.Visible = true;
+
             var serials = selectedRows.Cast<DataGridViewRow>().Select(r => r.Cells[0].Value.ToString()!).ToList();
             var result = await _manager.BatchRebootAsync(serials, mode);
+            
+            _batchProgress.Visible = false;
             ShowBatchResult(result);
+            LogFleet($"Batch reboot sequence complete.", Color.LightGreen);
         }
 
         private void ShowBatchResult(BatchResult res)

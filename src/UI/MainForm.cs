@@ -60,7 +60,7 @@ namespace DeepEyeUnlocker.UI
         private DeviceHealthPanel _healthPanel = null!;
         private Features.DsuSandbox.UI.RomSandboxPanel _sandboxPanel = null!;
         // private PartitionBackupPanel _backupPanel;
-        private FRPPanel _frpPanel = null!;
+        private FrpBypassPanel _frpPanel = null!;
         private RestorePanel _restorePanel = null!;
         private DriverProPanel _driverProPanel = null!;
         private FleetPanel _fleetPanel = null!;
@@ -151,7 +151,7 @@ namespace DeepEyeUnlocker.UI
             this._healthPanel = new DeviceHealthPanel(_adbClient);
             this._sandboxPanel = new Features.DsuSandbox.UI.RomSandboxPanel(_adbClient);
             // this._backupPanel = new PartitionBackupPanel();
-            this._frpPanel = new FRPPanel();
+            this._frpPanel = new FrpBypassPanel();
             this._restorePanel = new RestorePanel();
             this._driverProPanel = new DriverProPanel();
             this._fleetPanel = new FleetPanel(_adbClient);
@@ -274,7 +274,7 @@ namespace DeepEyeUnlocker.UI
             backupTab.Controls.Add(_backupPanel);
             */
 
-            TabPage frpTab = new TabPage("🔓 FRP Engine") { BackColor = BrandColors.Primary };
+            TabPage frpTab = new TabPage("🛡️ Sentinel Pro") { BackColor = BrandColors.Primary };
             _frpPanel.Dock = DockStyle.Fill;
             frpTab.Controls.Add(_frpPanel);
 
@@ -547,11 +547,19 @@ namespace DeepEyeUnlocker.UI
 
         private void UpdateDeviceOnPanels(DeviceContext? context)
         {
+            Protocols.IProtocol? protocol = null;
+            if (context != null && (context.Mode == ConnectionMode.EDL || context.Mode == ConnectionMode.BROM || context.Mode == ConnectionMode.Preloader))
+            {
+                // Initialize Portable Engine for hardware-level access if in low-level mode
+                protocol = new PortableEngine(context);
+                logConsole.Items.Add($"[{DateTime.Now:HH:mm:ss}] Native Protocol Initialized: {context.Mode}");
+            }
+
             _deviceInfoPanel.SetDevice(context);
             _adbToolsPanel.SetDevice(context);
-            _lockFrpPanel.SetDevice(context, null);
+            _lockFrpPanel.SetDevice(context, protocol);
             _cloakPanel.SetDevice(context);
-            _flashPanel.SetDevice(context, null);
+            _flashPanel.SetDevice(context, protocol as FirehoseManager); // Legacy cast or update panel to IProtocol
             _bootloaderPanel.SetDevice(context);
             _healthPanel.SetDevice(context);
             _sandboxPanel.SetDevice(context);
@@ -559,10 +567,9 @@ namespace DeepEyeUnlocker.UI
             _expertPanel.SetDevice(context);
             _analyticsPanel.SetDeviceHealth(null); // Will be updated by Health Center
             
-            // For backup panel, we need the protocol engine if available
-            // _backupPanel.SetDevice(context, null, _adbClient);
-            _frpPanel.SetDevice(context, null); 
-            _restorePanel.SetDevice(context, null);
+            // Update specialists
+            _frpPanel.SetDevice(context, protocol as FirehoseManager, protocol); 
+            _restorePanel.SetDevice(context, protocol);
         }
     }
 }

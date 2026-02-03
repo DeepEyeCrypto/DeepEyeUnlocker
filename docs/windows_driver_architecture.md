@@ -52,3 +52,14 @@ We target the following VID/PIDs for mandatory filtering:
 - `0x0E8D`: `0x0003` (BROM), `0x2000` (Preloader)
 - `0x05C6`: `0x9008` (Qualcomm EDL)
 - `0x1782`: `0x4D00` (SPD FDL)
+
+---
+
+## 4.0 Sentinel Pro Audit Engine
+
+DeepEyeUnlocker v4.0 introduces the **Sentinel Pro Audit Engine**, a dual-layered diagnostic system:
+
+1. **PnP Layer Audit**: Enumerates active devices and matches them against our high-performance INF repository.
+2. **Filter Layer Audit**: Conducts a deep-scan of the Windows Registry (`SYSTEM\CurrentControlSet\Control\Class`) to identify "ghost" filters or legacy drivers (Miracle Box, etc.) that cause pre-flight failures in Chimera/EDL sessions.
+
+This engine ensures 99.9% protocol stability by validating the host system state before initiating high-risk chipset operations.

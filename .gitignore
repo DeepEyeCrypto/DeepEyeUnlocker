@@ -29,3 +29,24 @@ venv/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aar
+capture/
+
+# C++ / CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+cmake-build-*/
+.cmake/
+testing/
+*.a
+*.so
+*.dylib
+*.lib
+*.exp

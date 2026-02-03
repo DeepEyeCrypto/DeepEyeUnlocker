@@ -18,6 +18,7 @@ namespace DeepEyeUnlocker.UI.Panels
         private FrpBypassManager? _manager;
         private DeviceContext? _currentDevice;
         private FrpStatus? _currentFrpInfo;
+        private Protocols.IProtocol? _currentProtocol;
         
         // UI Components
         private Label _titleLabel = null!;
@@ -47,10 +48,11 @@ namespace DeepEyeUnlocker.UI.Panels
             InitializeComponents();
         }
 
-        public void SetDevice(DeviceContext? device, FirehoseManager? firehose)
+        public void SetDevice(DeviceContext? device, FirehoseManager? firehose, Protocols.IProtocol? protocol = null)
         {
             _currentDevice = device;
-            _manager = new FrpBypassManager(firehose);
+            _currentProtocol = protocol;
+            _manager = new FrpBypassManager(firehose, protocol);
             _currentFrpInfo = null;
             UpdateUI();
         }
@@ -66,9 +68,9 @@ namespace DeepEyeUnlocker.UI.Panels
             // Title
             _titleLabel = new Label
             {
-                Text = "🔓 FRP Bypass",
+                Text = "⚡ Sentinel Pro: FRP Bypass",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                ForeColor = Color.White,
+                ForeColor = Color.FromArgb(0, 150, 136),
                 Location = new Point(15, y),
                 AutoSize = true
             };
@@ -159,7 +161,7 @@ namespace DeepEyeUnlocker.UI.Panels
             _bypassGroup.Controls.Add(_autoMethodRadio);
             by += 25;
 
-            _eraseMethodRadio = CreateRadioButton("🗑️ Partition Erase (requires EDL)", 15, by);
+            _eraseMethodRadio = CreateRadioButton("🗑️ Partition Erase (EDL/BROM)", 15, by);
             _bypassGroup.Controls.Add(_eraseMethodRadio);
             by += 25;
 
@@ -259,8 +261,8 @@ namespace DeepEyeUnlocker.UI.Panels
             _detectButton.Enabled = true;
             
             // Update method availability based on device mode
-            _eraseMethodRadio.Enabled = _currentDevice.Mode == ConnectionMode.EDL;
-            _overwriteMethodRadio.Enabled = _currentDevice.Mode == ConnectionMode.EDL;
+            _eraseMethodRadio.Enabled = _currentDevice.Mode == ConnectionMode.EDL || _currentDevice.Mode == ConnectionMode.BROM || _currentDevice.Mode == ConnectionMode.Preloader;
+            _overwriteMethodRadio.Enabled = _currentDevice.Mode == ConnectionMode.EDL || _currentDevice.Mode == ConnectionMode.BROM;
             _adbMethodRadio.Enabled = _currentDevice.Mode == ConnectionMode.ADB;
 
             if (_currentFrpInfo != null)
@@ -358,7 +360,7 @@ namespace DeepEyeUnlocker.UI.Panels
             _progressBar.Visible = true;
             _progressBar.Style = ProgressBarStyle.Marquee;
 
-            LogMessage($"\n--- Starting FRP Bypass ({method?.ToString() ?? "Auto"}) ---", Color.Cyan);
+            LogMessage($"\n--- Starting Sentinel Pro FRP Bypass ({method?.ToString() ?? "Auto"}) ---", Color.FromArgb(0, 150, 136));
 
             try
             {

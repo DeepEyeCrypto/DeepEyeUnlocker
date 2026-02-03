@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MediaTek Preloader/BROM -->
+    <usb-device vendor-id="3725" product-id="3" /> <!-- 0x0E8D:0x0003 -->
+    
+    <!-- Qualcomm EDL (9008) -->
+    <usb-device vendor-id="1478" product-id="36872" /> <!-- 0x05C6:0x9008 -->
+    
+    <!-- Samsung Download Mode -->
+    <usb-device vendor-id="1256" product-id="26720" /> <!-- 0x04E8:0x685D -->
+</resources>

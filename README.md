@@ -1,15 +1,15 @@
-# DeepEyeUnlocker v3.2.0 (The Hybrid Engine)
+# DeepEyeUnlocker v4.0.0 (The Sentinel Pro Release)
 
  "Universal Power. Precision Control."
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v3.2.0](https://img.shields.io/badge/Download-v3.2.0-cyan.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.2.0)
+[![Download DeepEyeUnlocker v4.0.0](https://img.shields.io/badge/Download-v4.0.0-emerald.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.0.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Protocol Simulation](https://img.shields.io/badge/Protocol%20Simulation-Passing-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![FRP Policy Verification](https://img.shields.io/badge/FRP%20Policy%20Verification-Passed-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Protocol Fuzzing](https://img.shields.io/badge/Protocol%20Fuzzing-1000%2B%20it-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=cyan)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
+[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?color=emerald)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🔷 Professional Mobile Repair. For Free. Forever
@@ -20,11 +20,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v3.2.0**
+Latest stable release: **v4.0.0**
 
-- ⬇️ [Download DeepEyeUnlocker v3.2.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v3.2.0)
+- ⬇️ [Download DeepEyeUnlocker v4.0.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.0.0)
 - Platform: Windows (x64)
-- Status: Stable Release (Enterprise Elite) - Advanced FRP, Cloud Sync, and Driver Center enabled.
+- Status: Stable Release (Sentinel Pro) - Advanced Driver Auditing, Fleet HQ, and Partition Restore enabled.
 
 ---
 
@@ -180,6 +180,16 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v4.0.0 – Sentinel Pro Release (2026-02-03)
+
+#### New in v4.0.0
+
+- **🛡️ Driver Center Pro:** Advanced WMI-based hardware auditing and registry filter conflict resolution.
+- **⚡ FRP Bypass HQ:** Unified, protocol-agnostic bypass workflow supporting BROM, EDL, Fastboot, and ADB.
+- **🛰️ Partition Restore Center:** Risk-aware GPT synchronization and granular partition recovery with safety rails.
+- **🚢 Fleet HQ:** Centralized "Command & Control" dashboard for batch operations across large device farms.
+- **🧠 Portable Engine (BETA):** Cross-platform C++ native core integration for high-performance OTG operations.
 
 ### v3.2.0 – The Hybrid Engine Release (2026-02-01)
 

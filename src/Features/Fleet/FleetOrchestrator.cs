@@ -53,8 +53,8 @@ namespace DeepEyeUnlocker.Features.Fleet
         {
             Logger.Info("Refreshing fleet device list...");
             
-            // Execute 'adb devices' via the shell bridge
-            var rawDevices = await _adb.ExecuteShellAsync("devices"); 
+            // Execute 'adb devices' via the adb bridge
+            var rawDevices = await _adb.RunAdbCommandAsync("devices"); 
             
             var lines = rawDevices.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             var activeSerials = new List<string>();

@@ -42,9 +42,44 @@ namespace DeepEyeUnlocker.Infrastructure.Drivers
                         IsCritical = false
                     });
                 }
+
+                // 3. LibUsb-Win32 Filter Global Audit
+                if (IsFilterPresent("libusb0"))
+                {
+                    conflicts.Add(new DriverConflict
+                    {
+                        Name = "LibUsb-Win32 Filter (libusb0)",
+                        Reason = "Active filter detected on USB/Ports class. Prevents protocol handshakes.",
+                        IsCritical = true
+                    });
+                }
             });
 
             return conflicts;
+        }
+
+        private bool IsFilterPresent(string filterName)
+        {
+            // Check Class Upper/Lower Filters for USB and Ports
+            string[] classes = { 
+                "{36FC9E60-C465-11CF-8056-444553540000}", // USB
+                "{4D36E978-E325-11CE-BFC1-08002BE10318}"  // Ports
+            };
+
+            foreach (var clsid in classes)
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Control\Class\{clsid}"))
+                {
+                    if (key == null) continue;
+                    
+                    var upper = key.GetValue("UpperFilters") as string[];
+                    var lower = key.GetValue("LowerFilters") as string[];
+
+                    if (upper != null && upper.Any(f => f.Contains(filterName, StringComparison.OrdinalIgnoreCase))) return true;
+                    if (lower != null && lower.Any(f => f.Contains(filterName, StringComparison.OrdinalIgnoreCase))) return true;
+                }
+            }
+            return false;
         }
 
         private bool CheckRegistryForPattern(string keyPath, string pattern)
@@ -60,20 +95,21 @@ namespace DeepEyeUnlocker.Infrastructure.Drivers
 
         public async Task<bool> PurgeConflictAsync(DriverConflict conflict)
         {
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
                 try
                 {
                     Core.Logger.Info($"Purging conflicting driver: {conflict.Name}");
                     
-                    // In a production environment, we'd find the specific oemXX.inf 
-                    // by parsing pnputil /enum-drivers or SetupAPI.
-                    // For this architecture demo, we target the "miracle" vcom if detected.
-                    
+                    if (conflict.Name.Contains("Filter"))
+                    {
+                        return await ResolveFilterConflictAsync(conflict);
+                    }
+
                     var psi = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = "pnputil.exe",
-                        Arguments = "/delete-driver oem*.inf /force", // Dangerous in production, but shows the intent
+                        Arguments = "/delete-driver oem*.inf /force",
                         Verb = "runas",
                         UseShellExecute = true,
                         CreateNoWindow = true
@@ -94,6 +130,55 @@ namespace DeepEyeUnlocker.Infrastructure.Drivers
                     return false;
                 }
             });
+        }
+
+        private async Task<bool> ResolveFilterConflictAsync(DriverConflict conflict)
+        {
+            string filterToRemove = conflict.Name.Contains("libusb0") ? "libusb0" : "";
+            if (string.IsNullOrEmpty(filterToRemove)) return false;
+
+            string[] classes = { 
+                "{36FC9E60-C465-11CF-8056-444553540000}", 
+                "{4D36E978-E325-11CE-BFC1-08002BE10318}" 
+            };
+
+            bool anyChanges = false;
+            foreach (var clsid in classes)
+            {
+                if (RemoveFilterFromClass(clsid, filterToRemove, true)) anyChanges = true;
+                if (RemoveFilterFromClass(clsid, filterToRemove, false)) anyChanges = true;
+            }
+
+            return anyChanges;
+        }
+
+        private bool RemoveFilterFromClass(string clsid, string filter, bool isUpper)
+        {
+            string valueName = isUpper ? "UpperFilters" : "LowerFilters";
+            try
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Control\Class\{clsid}", true))
+                {
+                    if (key == null) return false;
+                    
+                    var existing = key.GetValue(valueName) as string[];
+                    if (existing == null) return false;
+
+                    var filtered = existing.Where(f => !f.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    if (filtered.Length < existing.Length)
+                    {
+                        if (filtered.Length > 0)
+                            key.SetValue(valueName, filtered, RegistryValueKind.MultiString);
+                        else
+                            key.DeleteValue(valueName);
+                        
+                        Core.Logger.Info($"Removed {filter} from {clsid} ({valueName})");
+                        return true;
+                    }
+                }
+            }
+            catch { }
+            return false;
         }
     }
 }

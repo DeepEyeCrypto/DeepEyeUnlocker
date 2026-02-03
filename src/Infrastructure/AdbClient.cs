@@ -19,7 +19,7 @@ namespace DeepEyeUnlocker.Infrastructure
 
         public async Task<string> ExecuteShellAsync(string command, CancellationToken ct = default)
         {
-            return await RunCommandAsync($"shell \"{command}\"", ct);
+            return await RunAdbCommandAsync($"shell \"{command}\"", ct);
         }
 
         public Task<System.IO.Stream> OpenShellStreamAsync(string command, CancellationToken ct = default)
@@ -66,25 +66,25 @@ namespace DeepEyeUnlocker.Infrastructure
 
         public async Task<bool> PushFileAsync(string localPath, string remotePath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"push \"{localPath}\" \"{remotePath}\"", ct);
+            var result = await RunAdbCommandAsync($"push \"{localPath}\" \"{remotePath}\"", ct);
             return !result.ToLower().Contains("failed") && !result.ToLower().Contains("error");
         }
 
         public async Task<bool> PullFileAsync(string remotePath, string localPath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"pull \"{remotePath}\" \"{localPath}\"", ct);
+            var result = await RunAdbCommandAsync($"pull \"{remotePath}\" \"{localPath}\"", ct);
             return !result.ToLower().Contains("failed") && !result.ToLower().Contains("error");
         }
 
         public async Task<bool> InstallPackageAsync(string apkPath, CancellationToken ct = default)
         {
-            var result = await RunCommandAsync($"install -r \"{apkPath}\"", ct);
+            var result = await RunAdbCommandAsync($"install -r \"{apkPath}\"", ct);
             return result.ToLower().Contains("success");
         }
 
         public async Task RebootAsync(CancellationToken ct = default)
         {
-            await RunCommandAsync("reboot", ct);
+            await RunAdbCommandAsync("reboot", ct);
         }
 
         public async Task<bool> HasRootAsync(CancellationToken ct = default)
@@ -95,11 +95,11 @@ namespace DeepEyeUnlocker.Infrastructure
 
         public bool IsConnected()
         {
-            var result = RunCommandAsync("get-state").GetAwaiter().GetResult();
+            var result = RunAdbCommandAsync("get-state").GetAwaiter().GetResult();
             return result.Trim().ToLower() == "device";
         }
 
-        private async Task<string> RunCommandAsync(string args, CancellationToken ct = default)
+        public async Task<string> RunAdbCommandAsync(string args, CancellationToken ct = default)
         {
             string finalArgs = string.IsNullOrEmpty(TargetSerial) ? args : $"-s {TargetSerial} {args}";
             try
