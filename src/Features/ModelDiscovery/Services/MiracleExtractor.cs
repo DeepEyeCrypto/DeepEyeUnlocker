@@ -19,7 +19,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
         public override async Task<IEnumerable<SupportedModel>> ExtractAsync(string url)
         {
             var html = await FetchHtmlAsync(url);
-            var doc = new HtmlDocument();
+            var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
 
             var models = new List<SupportedModel>();

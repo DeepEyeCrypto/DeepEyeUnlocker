@@ -19,7 +19,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
         public override async Task<IEnumerable<SupportedModel>> ExtractAsync(string url)
         {
             var html = await FetchHtmlAsync(url);
-            var doc = new HtmlDocument();
+            var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
 
             if (url.Contains("forum.gsmhosting.com"))
@@ -32,7 +32,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
             }
         }
 
-        private IEnumerable<SupportedModel> ParseForumList(HtmlDocument doc, string url)
+        private IEnumerable<SupportedModel> ParseForumList(HtmlAgilityPack.HtmlDocument doc, string url)
         {
             var models = new List<SupportedModel>();
             var postBody = doc.DocumentNode.SelectSingleNode("//div[contains(@id, 'post_message_')]");
@@ -71,7 +71,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
             return models;
         }
 
-        private IEnumerable<SupportedModel> ParseOfficialSite(HtmlDocument doc, string url)
+        private IEnumerable<SupportedModel> ParseOfficialSite(HtmlAgilityPack.HtmlDocument doc, string url)
         {
             var models = new List<SupportedModel>();
             // Chimera official site uses dynamic loading often, but we parse the static table if present

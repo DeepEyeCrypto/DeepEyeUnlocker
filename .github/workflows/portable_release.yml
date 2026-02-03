@@ -10,7 +10,7 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: set up JDK 17
         uses: actions/setup-java@v3
@@ -35,7 +35,7 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deepeye-portable-apk
           path: portable/android/app/build/outputs/apk/release/*.apk
@@ -43,7 +43,7 @@ jobs:
   build-desktop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -68,7 +68,7 @@ jobs:
           zip -r deepeye_portable_desktop.zip release_zip/
 
       - name: Upload Desktop Zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deepeye-portable-zip
           path: deepeye_portable_desktop.zip

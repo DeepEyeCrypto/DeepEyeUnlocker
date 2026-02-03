@@ -19,7 +19,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
         public override async Task<IEnumerable<SupportedModel>> ExtractAsync(string url)
         {
             var html = await FetchHtmlAsync(url);
-            var doc = new HtmlDocument();
+            var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
 
             if (url.Contains("edl.unlocktool.net"))
@@ -29,7 +29,7 @@ namespace DeepEyeUnlocker.Features.ModelDiscovery.Services
             return Enumerable.Empty<SupportedModel>();
         }
 
-        private IEnumerable<SupportedModel> ParseEdlSite(HtmlDocument doc, string url)
+        private IEnumerable<SupportedModel> ParseEdlSite(HtmlAgilityPack.HtmlDocument doc, string url)
         {
             var models = new List<SupportedModel>();
             // UnlockTool EDL site lists models in grid items or lists
