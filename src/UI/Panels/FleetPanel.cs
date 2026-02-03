@@ -21,6 +21,7 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _btnBatchReboot = null!;
         private Label _lblFleetStats = null!;
         private ProgressBar _batchProgress = null!;
+        private readonly FleetOrchestrator _manager;
 
         public FleetPanel(IAdbClient adb)
         {
@@ -166,7 +167,6 @@ namespace DeepEyeUnlocker.UI.Panels
             _fleetConsole.SelectionColor = color ?? Color.Gray;
             _fleetConsole.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\n");
             _fleetConsole.ScrollToCaret();
-        }
         }
 
         private async Task RefreshFleetAsync()
