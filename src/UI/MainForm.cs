@@ -559,7 +559,7 @@ namespace DeepEyeUnlocker.UI
             _adbToolsPanel.SetDevice(context);
             _lockFrpPanel.SetDevice(context, protocol);
             _cloakPanel.SetDevice(context);
-            _flashPanel.SetDevice(context, protocol as FirehoseManager); // Legacy cast or update panel to IProtocol
+            _flashPanel.SetDevice(context, protocol); 
             _bootloaderPanel.SetDevice(context);
             _healthPanel.SetDevice(context);
             _sandboxPanel.SetDevice(context);
@@ -568,7 +568,7 @@ namespace DeepEyeUnlocker.UI
             _analyticsPanel.SetDeviceHealth(null); // Will be updated by Health Center
             
             // Update specialists
-            _frpPanel.SetDevice(context, protocol as FirehoseManager, protocol); 
+            _frpPanel.SetDevice(context, protocol as DeepEyeUnlocker.Protocols.Qualcomm.FirehoseManager, protocol); 
             _restorePanel.SetDevice(context, protocol);
         }
     }

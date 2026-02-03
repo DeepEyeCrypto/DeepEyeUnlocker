@@ -135,7 +135,7 @@ namespace DeepEyeUnlocker.Infrastructure.Drivers
         private async Task<bool> ResolveFilterConflictAsync(DriverConflict conflict)
         {
             string filterToRemove = conflict.Name.Contains("libusb0") ? "libusb0" : "";
-            if (string.IsNullOrEmpty(filterToRemove)) return false;
+            if (string.IsNullOrEmpty(filterToRemove)) return await Task.FromResult(false);
 
             string[] classes = { 
                 "{36FC9E60-C465-11CF-8056-444553540000}", 

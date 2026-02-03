@@ -25,7 +25,6 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _btnRestore = null!;
         private Button _btnRefresh = null!;
         private Label _lblStatus = null!;
-        private Label _lblSummary = null!;
         private ProgressBar _progressBar = null!;
         private string _selectedImagePath = string.Empty;
 

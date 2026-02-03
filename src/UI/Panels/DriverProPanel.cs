@@ -21,7 +21,6 @@ namespace DeepEyeUnlocker.UI.Panels
         private Button _btnRepair = null!;
         private ProgressBar _progressBar = null!;
         private Label _lblStatus = null!;
-        private Label _lblSummary = null!;
 
         public DriverProPanel()
         {
@@ -220,6 +219,7 @@ namespace DeepEyeUnlocker.UI.Panels
             if (res != DialogResult.Yes) return;
 
             _btnRepair.Enabled = false;
+
             _btnScan.Enabled = false;
             _progressBar.Visible = true;
             _progressBar.Value = 20;

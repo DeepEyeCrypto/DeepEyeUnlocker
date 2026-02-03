@@ -10,10 +10,10 @@ namespace DeepEyeUnlocker.Infrastructure
     /// </summary>
     public enum KernelCommand : uint
     {
-        DEEPEYE_HIDE_ROOT = 0x4001,
-        DEEPEYE_UNHIDE_ROOT = 0x4002,
-        DEEPEYE_PATCH_BOOT = 0x4003,
-        DEEPEYE_CHECK_SAFETY = 0x4004
+        HideRoot = 0x4001,
+        UnhideRoot = 0x4002,
+        PatchBoot = 0x4003,
+        CheckSafety = 0x4004
     }
 
     /// <summary>
@@ -54,11 +54,19 @@ namespace DeepEyeUnlocker.Infrastructure
             _adbClient = adbClient ?? throw new ArgumentNullException(nameof(adbClient));
         }
 
-        /// <summary>
-        /// Sends an IOCTL command to the /dev/deepeye device node.
-        /// This is abstracted through an ADB proxy binary on the device.
-        /// </summary>
-        public bool SendIoctl(KernelCommand cmd, object? args = null)
+
+        public async Task<bool> HideRoot(int pid, string packageName)
+        {
+            var args = new HideRootArgs 
+            { 
+                Pid = pid, 
+                PackageName = packageName, 
+                Flags = 1 // Stealth Mode 
+            };
+            return await ExecuteKernelCommand(KernelCommand.HideRoot, args);
+        }
+
+        public async Task<bool> ExecuteKernelCommand(KernelCommand cmd, object? args = null)
         {
             string cmdName = cmd.ToString();
             Console.WriteLine($"[KernelBridge] Executing {cmdName}...");
@@ -71,20 +79,15 @@ namespace DeepEyeUnlocker.Infrastructure
 
             // High-level abstraction: deepeye_cli is our native proxy on Android
             var fullCmd = $"deepeye_cli --ioctl {(uint)cmd} {extraArgs}";
-            var result = _adbClient.ExecuteShellAsync(fullCmd).GetAwaiter().GetResult();
+            var result = await _adbClient.ExecuteShellAsync(fullCmd);
 
             return result.Contains("IOCTL_SUCCESS");
         }
 
-        public bool HideRoot(int pid, string packageName)
+        public async Task<bool> VerifyKernelModule()
         {
-            var args = new HideRootArgs 
-            { 
-                Pid = pid, 
-                PackageName = packageName, 
-                Flags = 1 // Stealth Mode 
-            };
-            return SendIoctl(KernelCommand.DEEPEYE_HIDE_ROOT, args);
+            var result = await _adbClient.ExecuteShellAsync("lsmod | grep deepeye");
+            return result.Contains("deepeye");
         }
 
         public bool PatchBootImage(string inputPath, string outputPath)

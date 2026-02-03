@@ -1,6 +1,7 @@
 #ifndef DEEPEYE_FIREHOSE_H
 #define DEEPEYE_FIREHOSE_H
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>

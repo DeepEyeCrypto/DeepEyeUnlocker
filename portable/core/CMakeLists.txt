@@ -4,7 +4,7 @@ project(DeepEyeCore)
 set(CMAKE_CXX_STANDARD 17)
 
 # Include Directories
-include_directories(include)
+include_directories(include /usr/include/libusb-1.0)
 
 # Source Files
 set(CORE_SOURCES
