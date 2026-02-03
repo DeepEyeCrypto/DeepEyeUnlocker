@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DeepEyeUnlocker.Infrastructure.Logging;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEye.UI.Modern.ViewModels
 {
