@@ -152,7 +152,6 @@ namespace DeepEyeUnlocker.UI.Panels
             _logBox.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}\n");
             _logBox.ScrollToCaret();
         }
-        }
 
         private async Task PerformScanAsync()
         {

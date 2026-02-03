@@ -515,6 +515,7 @@ namespace DeepEyeUnlocker.Operations
             }
 
             if (success)
+            {
                 return new FrpBypassResult
                 {
                     Success = true,
