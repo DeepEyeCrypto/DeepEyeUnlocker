@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
-# Specify the shared core directory
-# From portable/android/app/src/main/cpp -> portable/core = 5 levels up
-set(CORE_DIR "../../../../../core")
+# Specify the shared core directory using absolute path for safety
+set(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core")
+message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
 
 # Include headers from the shared core
 include_directories(${CORE_DIR}/include)
