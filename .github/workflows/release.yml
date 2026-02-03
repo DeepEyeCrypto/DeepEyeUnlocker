@@ -27,35 +27,35 @@ jobs:
       run: dotnet tool install --global wix
 
     - name: Build & Publish Portable (GOLD)
+      shell: pwsh
       run: |
-        dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true "/p:PublishSingleFile=true" "/p:TreatWarningsAsErrors=true" "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
-        copy README.md artifacts/portable/
-        copy LICENSE artifacts/portable/
-        xcopy /E /I drivers artifacts/portable/drivers
+        dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:TreatWarningsAsErrors=true "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
+        Copy-Item README.md artifacts/portable/ -Force
+        Copy-Item LICENSE artifacts/portable/ -Force
+        if (Test-Path drivers) { Copy-Item drivers artifacts/portable/ -Recurse -Force }
 
     - name: Sign Production Artifacts (Placeholder)
+      shell: pwsh
       run: |
-        echo "Sentinal Pro Signing Layer: Simulation..."
-        echo "In production, use signtool.exe /f pfx_file /p password artifacts/portable/DeepEyeUnlocker.exe"
+        Write-Host "Sentinal Pro Signing Layer: Simulation..."
+        Write-Host "In production, use signtool.exe /f pfx_file /p password artifacts/portable/DeepEyeUnlocker.exe"
 
     - name: Generate Release Checksums
       shell: pwsh
       run: |
         $dll = "artifacts/portable/DeepEyeUnlocker.dll"
         $exe = "artifacts/portable/DeepEyeUnlocker.exe"
-        if (Test-Path $dll) { (Get-FileHash $dll -Algo SHA256).Hash > artifacts/portable/DeepEyeUnlocker.dll.sha256 }
-        if (Test-Path $exe) { (Get-FileHash $exe -Algo SHA256).Hash > artifacts/portable/DeepEyeUnlocker.exe.sha256 }
+        if (Test-Path $dll) { (Get-FileHash $dll -Algo SHA256).Hash | Out-File artifacts/portable/DeepEyeUnlocker.dll.sha256 }
+        if (Test-Path $exe) { (Get-FileHash $exe -Algo SHA256).Hash | Out-File artifacts/portable/DeepEyeUnlocker.exe.sha256 }
 
     - name: Build MSI Installer
+      shell: pwsh
       run: |
-        # Use WiX 3.11+ via MSBuild or command line
-        # Note: This step is prone to env issues on default GitHub runners without proper WiX setup
-        echo "Building Installer Package..."
-        # candle.exe ... 
-        # light.exe ...
+        Write-Host "Building Installer Package..."
       continue-on-error: true
 
     - name: Zip Portable
+      shell: pwsh
       run: Compress-Archive -Path artifacts/portable/* -DestinationPath DeepEyeUnlocker-${{ github.ref_name }}-Portable.zip
 
     - name: Create Release
