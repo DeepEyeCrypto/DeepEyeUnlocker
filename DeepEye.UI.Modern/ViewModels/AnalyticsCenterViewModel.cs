@@ -50,6 +50,7 @@ namespace DeepEye.UI.Modern.ViewModels
         private async Task RunCveScan()
         {
             if (_device == null) return;
+            await Task.Yield();
 
             IsScanning = true;
             ScanStatus = "Scanning firmware security attributes...";

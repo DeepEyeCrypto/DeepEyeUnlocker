@@ -25,7 +25,8 @@ add_library(deepeye_core SHARED
     ${CORE_DIR}/src/transport/usb_transport.cpp
 )
 
+find_library(USB_LIB usb1.0)
 target_link_libraries(deepeye_core
     ${log-lib}
-    usb1.0
+    ${USB_LIB}
 )

@@ -8,6 +8,8 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DeepEyeUnlocker.Infrastructure.Logging;
+
 namespace DeepEye.UI.Modern.ViewModels
 {
     public partial class ExpertCenterViewModel : CenterViewModelBase
