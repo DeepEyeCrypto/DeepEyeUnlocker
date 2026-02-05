@@ -1,4 +1,4 @@
-# DeepEyeUnlocker v1.0 User Manual
+# DeepEyeUnlocker v4.0.0 User Manual
 
 ## 📘 Introduction
 
