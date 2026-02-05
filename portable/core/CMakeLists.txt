@@ -47,7 +47,7 @@ if(ANDROID)
         message(WARNING "libusb NOT found for Android - USB Transport will be stubbed")
         message(WARNING "This is OK for initial builds - USB support can be added later")
         target_link_libraries(deepeye_core log)
-        target_compile_definitions(deepeye_core PRIVATE HAS_LIBUSB=0)
+        # Do NOT define HAS_LIBUSB at all - let #ifdef guards work correctly
     endif()
 else()
     find_package(PkgConfig QUIET)
