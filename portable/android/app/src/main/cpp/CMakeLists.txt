@@ -27,7 +27,21 @@ add_library(deepeye_core SHARED
 )
 
 find_library(USB_LIB usb1.0)
-target_link_libraries(deepeye_core
-    ${log-lib}
-    ${USB_LIB}
-)
+
+# Conditional linking based on library availability
+if(USB_LIB)
+    message(STATUS "Found libusb for Android JNI: ${USB_LIB}")
+    target_link_libraries(deepeye_core
+        ${log-lib}
+        ${USB_LIB}
+    )
+    target_compile_definitions(deepeye_core PRIVATE HAS_LIBUSB=1)
+else()
+    message(WARNING "libusb NOT found - building without USB support")
+    message(WARNING "USB transport will be stubbed (this is OK for initial builds)")
+    target_link_libraries(deepeye_core
+        ${log-lib}
+    )
+    # Do NOT define HAS_LIBUSB - let #ifdef guards work correctly
+endif()
+
