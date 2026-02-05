@@ -1,10 +1,7 @@
 #include "../../core/include/deepeye_core.h"
-#include "../../core/src/protocols/brom_manager.cpp"
-#include "../../core/src/protocols/edl_manager.cpp"
-#include "../../core/src/protocols/firehose.cpp"
-#include "../../core/src/protocols/gpt_parser.cpp"
-#include "../../core/src/protocols/protocol_engine.cpp"
-#include "../../core/src/transport/usb_transport.cpp"
+// Include only HEADERS, not .cpp files!
+// The .cpp files are already compiled separately by CMakeLists.txt
+// Including them here would cause duplicate symbol errors
 #include <jni.h>
 #include <string>
 #include <vector>
