@@ -148,6 +148,20 @@ namespace DeepEye.UI.Modern.ViewModels
         }
 
         [RelayCommand]
+        private async Task SyncToNexus()
+        {
+            if (WorkflowSteps.Count == 0) return;
+
+            var nexus = new DeepEyeUnlocker.Services.Nexus.NexusClient();
+            StatusMessage = "Connecting to Neural Nexus...";
+            
+            await nexus.AuthenticateAsync("DeepEye-Session", "internal-token");
+            await nexus.PushCustomWorkflowAsync("EXPERT_FLOW", "{}");
+            
+            StatusMessage = "Neural Nexus Sync: SUCCESS";
+        }
+
+        [RelayCommand]
         private void SaveWorkflow(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) name = $"Custom_{DateTime.Now:HHmm}";

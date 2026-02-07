@@ -24,6 +24,9 @@ namespace DeepEye.UI.Modern.ViewModels
         private CenterViewModelBase? _currentCenter;
 
         [ObservableProperty]
+        private GlobalHudViewModel _globalHud = new();
+
+        [ObservableProperty]
         private bool _isExpertMode = false;
 
         [ObservableProperty]

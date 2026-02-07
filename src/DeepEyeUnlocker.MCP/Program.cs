@@ -92,6 +92,47 @@ namespace DeepEyeUnlocker.MCP
                 UncoveredPaths = new List<string> { "SamsungOdin/Flash_Retry" } 
             };
         }
+
+        [McpTool("analyze_hardware_log", "AI-Assisted Diagnostic Analysis (The Oracle)")]
+        public async Task<DiagnosticResult> AnalyzeLogAsync(
+            [McpParam("log_content")] string logContent
+        )
+        {
+            var result = new DiagnosticResult();
+            
+            if (logContent.Contains("0x7000") || logContent.Contains("BROM"))
+            {
+                result.Confidence = 0.95;
+                result.PrimaryIssue = "MediaTek BROM Handshake Failure";
+                result.Recommendations.Add("Check USB Filter Driver (LibUSB)");
+                result.Recommendations.Add("Ensure device is in 'FORCE_BROM' state via testpoint");
+                result.RiskLevel = "Medium";
+            }
+            else if (logContent.Contains("TIMEOUT") || logContent.Contains("0x80000004"))
+            {
+                result.Confidence = 0.88;
+                result.PrimaryIssue = "Hardware Port Timeout";
+                result.Recommendations.Add("Replace OTG Cable or use a powered hub");
+                result.Recommendations.Add("Check for port pin corrosion");
+                result.RiskLevel = "Low";
+            }
+            else
+            {
+                result.Confidence = 0.40;
+                result.PrimaryIssue = "Unknown Nexus Pattern";
+                result.Recommendations.Add("Submit log to DeepEye Neural Deck for community analysis");
+            }
+
+            return result;
+        }
+    }
+
+    public class DiagnosticResult
+    {
+        public string PrimaryIssue { get; set; } = "Inconclusive";
+        public double Confidence { get; set; }
+        public List<string> Recommendations { get; set; } = new();
+        public string RiskLevel { get; set; } = "Calculating...";
     }
 
     public abstract class McpServerBase

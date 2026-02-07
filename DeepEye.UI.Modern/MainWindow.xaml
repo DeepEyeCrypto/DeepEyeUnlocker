@@ -67,40 +67,65 @@
 
     <Border BorderBrush="{StaticResource DeepEye.Brush.Cyan}" BorderThickness="1">
         <Grid>
-            <!-- Background Layering for Glassmorphism -->
-            <Rectangle Fill="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}" Grid.RowSpan="4" Grid.ColumnSpan="3"/>
-            <Rectangle Fill="{StaticResource DeepEye.Brush.NoiseOverlay}" Grid.RowSpan="4" Grid.ColumnSpan="3"/>
+            <!-- Layer 0: Neural Nexus Holographic Background -->
+            <controls:ParticleCanvas Opacity="0.4" IsHitTestVisible="False"/>
+            
+            <!-- Layer 1: Content Grid -->
+            <Grid x:Name="RootGrid" Margin="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>   <!-- Title Bar -->
+                    <RowDefinition Height="30"/>   <!-- Global HUD Ticker -->
+                    <RowDefinition Height="60"/>   <!-- OEM Ribbon -->
+                    <RowDefinition Height="*"/>    <!-- Main Content -->
+                    <RowDefinition Height="Auto"/> <!-- Hazard Bar -->
+                </Grid.RowDefinitions>
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Title Bar -->
-                <RowDefinition Height="Auto"/> <!-- OEM Ribbon -->
-                <RowDefinition Height="*"/>    <!-- Main Content -->
-                <RowDefinition Height="Auto"/> <!-- Hazard Bar -->
-            </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/> <!-- SideNav -->
+                    <ColumnDefinition Width="*"/>    <!-- Center Canvas -->
+                    <ColumnDefinition Width="350"/>  <!-- Log Terminal -->
+                </Grid.ColumnDefinitions>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/> <!-- SideNav -->
-                <ColumnDefinition Width="*"/>    <!-- Center Canvas -->
-                <ColumnDefinition Width="350"/>  <!-- Log Terminal -->
-            </Grid.ColumnDefinitions>
+                <!-- Background Layering for Glassmorphism (Shared) -->
+                <Rectangle Fill="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}" Grid.RowSpan="4" Grid.ColumnSpan="3" Opacity="0.8"/>
+                <Rectangle Fill="{StaticResource DeepEye.Brush.NoiseOverlay}" Grid.RowSpan="4" Grid.ColumnSpan="3" Opacity="0.2"/>
 
-            <!-- 1. Title Bar -->
-            <Grid Grid.Row="0" Grid.ColumnSpan="3" Height="40" Background="#05FFFFFF">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0">
-                    <TextBlock Text="DeepEye" Style="{StaticResource DeepEye.Text.GlowingTitle}" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" FontSize="16"/>
-                    <TextBlock Text="Unlocker" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="Light" FontSize="16" Margin="5,0"/>
-                    <TextBlock Text="Pro" Foreground="{StaticResource DeepEye.Brush.Orange}" FontWeight="Bold" FontSize="10" VerticalAlignment="Top" Margin="2,4,0,0"/>
-                    <TextBlock Text="{Binding VersionDisplay}" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.4" FontSize="9" VerticalAlignment="Bottom" Margin="10,0,0,5"/>
-                </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0">
-                    <Button Content="—" Style="{StaticResource DeepEye.Button.Modern}" Width="30" Height="25" BorderThickness="0" Background="Transparent"/>
-                    <Button Content="✕" Style="{StaticResource DeepEye.Button.Modern}" Width="30" Height="25" BorderThickness="0" Background="Transparent" Foreground="Red"/>
-                </StackPanel>
-            </Grid>
+                <!-- 1. Title Bar -->
+                <Grid Grid.Row="0" Grid.ColumnSpan="3" Background="#05FFFFFF">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0">
+                        <TextBlock Text="DeepEye" Style="{StaticResource DeepEye.Text.GlowingTitle}" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" FontSize="16"/>
+                        <TextBlock Text="Unlocker" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="Light" FontSize="16" Margin="5,0"/>
+                        <TextBlock Text="Pro" Foreground="{StaticResource DeepEye.Brush.Orange}" FontWeight="Bold" FontSize="10" VerticalAlignment="Top" Margin="2,4,0,0"/>
+                        <TextBlock Text="{Binding VersionDisplay}" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.4" FontSize="9" VerticalAlignment="Bottom" Margin="10,0,0,5"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0">
+                        <Button Content="—" Style="{StaticResource DeepEye.Button.Modern}" Width="30" Height="25" BorderThickness="0" Background="Transparent"/>
+                        <Button Content="✕" Style="{StaticResource DeepEye.Button.Modern}" Width="30" Height="25" BorderThickness="0" Background="Transparent" Foreground="Red"/>
+                    </StackPanel>
+                </Grid>
 
-            <!-- 2. OEM Ribbon -->
-            <Grid Grid.Row="1" Grid.ColumnSpan="3" Height="60" Background="{StaticResource DeepEye.Brush.Grey.Deep}">
+                <!-- 2. Global HUD Ticker (Nexus v5.0) -->
+                <Border Grid.Row="1" Grid.ColumnSpan="3" Background="#1A00FFFF" VerticalAlignment="Stretch">
+                    <ItemsControl ItemsSource="{Binding GlobalHud.ActivityLog}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="20,0">
+                                    <TextBlock Text="{Binding Timestamp}" Foreground="Cyan" FontSize="10" VerticalAlignment="Center" Opacity="0.6"/>
+                                    <TextBlock Text="{Binding Message}" Foreground="White" FontSize="10" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <!-- 3. OEM Ribbon -->
+                <Grid Grid.Row="2" Grid.ColumnSpan="3" Background="{StaticResource DeepEye.Brush.Grey.Deep}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button Content="SAMSUNG" Command="{Binding SelectOEMCommand}" CommandParameter="SAMSUNG" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
                     <Button Content="XIAOMI" Command="{Binding SelectOEMCommand}" CommandParameter="XIAOMI" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
@@ -113,7 +138,7 @@
             </Grid>
 
             <!-- 3. Side Navigation -->
-            <StackPanel Grid.Row="2" Grid.Column="0" Width="100" Background="#0AFFFFFF">
+            <StackPanel Grid.Row="3" Grid.Column="0" Width="100" Background="#0AFFFFFF">
                 <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="HEALTH" Command="{Binding NavigateToCenterCommand}" CommandParameter="HEALTH" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 <Button Content="FRP" Command="{Binding NavigateToCenterCommand}" CommandParameter="FRP" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
@@ -128,10 +153,10 @@
             </StackPanel>
 
             <!-- 4. Main Canvas -->
-            <ContentControl Grid.Row="2" Grid.Column="1" Content="{Binding CurrentCenter}" />
+            <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding CurrentCenter}" />
 
             <!-- 5. Log Terminal -->
-            <Border Grid.Row="2" Grid.Column="2" Background="#10000000" BorderBrush="#20FFFFFF" BorderThickness="1,0,0,0">
+            <Border Grid.Row="3" Grid.Column="2" Background="#10000000" BorderBrush="#20FFFFFF" BorderThickness="1,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -151,7 +176,7 @@
             </Border>
 
             <!-- 6. Hazard Bar -->
-            <Grid Grid.Row="3" Grid.ColumnSpan="3" Height="45" Background="#15FFFFFF">
+            <Grid Grid.Row="4" Grid.ColumnSpan="3" Height="70" Background="#1A000000">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>

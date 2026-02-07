@@ -14,9 +14,10 @@ namespace DeepEyeUnlocker.Protocols.SPD
         public const ushort BSL_CMD_START_DATA = 0x01;
         public const ushort BSL_CMD_MID_DATA = 0x02;
         public const ushort BSL_CMD_END_DATA = 0x03;
-        public const ushort BSL_CMD_EXEC_DATA = 0x04;
-        public const ushort BSL_CMD_READ_FLASH = 0x05;
-        public const ushort BSL_CMD_CHANGE_BAUD = 0x09;
+        public const ushort BSL_CMD_CHECK_BAUD = 0x05;
+        public const ushort BSL_CMD_READ_FLASH = 0x10;
+        public const ushort BSL_CMD_WRITE_FLASH = 0x11;
+        public const ushort BSL_CMD_ERASE_FLASH = 0x12;
         public const ushort BSL_CMD_READ_CHIPID = 0x0B;
         public const ushort BSL_CMD_RESET = 0x0F;
 
@@ -42,5 +43,8 @@ namespace DeepEyeUnlocker.Protocols.SPD
         // Chip IDs
         public const uint CHIP_SC9863A = 0x98630000;
         public const uint CHIP_SC7731E = 0x77310000;
+        public const uint CHIP_UMS512_T610 = 0x51200000;
+        public const uint CHIP_UMS512_T618 = 0x51210000;
+        public const uint CHIP_UMS9230_T606 = 0x92300000;
     }
 }

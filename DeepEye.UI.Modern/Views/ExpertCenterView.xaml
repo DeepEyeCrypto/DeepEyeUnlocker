@@ -111,6 +111,12 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0">
+                    <Button Content="☁️ NEXUS SYNC" 
+                            Command="{Binding SyncToNexusCommand}" 
+                            Style="{StaticResource DeepEye.Button.Modern}" 
+                            Background="#1AFFFFFF" 
+                            Height="45" Margin="0,0,10,0"
+                            ToolTip="Sync workflow to the global Neural Nexus"/>
                     <TextBox x:Name="WorkflowName" Width="150" Height="35" VerticalContentAlignment="Center" Margin="0,0,10,0" Tag="Workflow Name" Padding="10,0"/>
                     <Button Content="💾 SAVE PRESET" 
                             Command="{Binding SaveWorkflowCommand}" 
