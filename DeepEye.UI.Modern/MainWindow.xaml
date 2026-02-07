@@ -47,9 +47,6 @@
             <DataTemplate DataType="{x:Type viewModels:FrpCenterViewModel}">
                 <views:FrpCenterView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type viewModels:PartitionCenterViewModel}">
-                <views:PartitionCenterView />
-            </DataTemplate>
             <DataTemplate DataType="{x:Type viewModels:ExpertCenterViewModel}">
                 <views:ExpertCenterView />
             </DataTemplate>
@@ -87,8 +84,8 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Background Layering for Glassmorphism (Shared) -->
-                <Rectangle Fill="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}" Grid.RowSpan="4" Grid.ColumnSpan="3" Opacity="0.8"/>
-                <Rectangle Fill="{StaticResource DeepEye.Brush.NoiseOverlay}" Grid.RowSpan="4" Grid.ColumnSpan="3" Opacity="0.2"/>
+                <Rectangle Fill="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}" Grid.RowSpan="5" Grid.ColumnSpan="3" Opacity="0.8"/>
+                <Rectangle Fill="{StaticResource DeepEye.Brush.NoiseOverlay}" Grid.RowSpan="5" Grid.ColumnSpan="3" Opacity="0.2"/>
 
                 <!-- 1. Title Bar -->
                 <Grid Grid.Row="0" Grid.ColumnSpan="3" Background="#05FFFFFF">
@@ -126,100 +123,107 @@
 
                 <!-- 3. OEM Ribbon -->
                 <Grid Grid.Row="2" Grid.ColumnSpan="3" Background="{StaticResource DeepEye.Brush.Grey.Deep}">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="SAMSUNG" Command="{Binding SelectOEMCommand}" CommandParameter="SAMSUNG" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="XIAOMI" Command="{Binding SelectOEMCommand}" CommandParameter="XIAOMI" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="HUAWEI" Command="{Binding SelectOEMCommand}" CommandParameter="HUAWEI" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="OPPO" Command="{Binding SelectOEMCommand}" CommandParameter="OPPO" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="VIVO" Command="{Binding SelectOEMCommand}" CommandParameter="VIVO" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="QUALCOMM" Command="{Binding SelectOEMCommand}" CommandParameter="QUALCOMM" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                    <Button Content="MTK" Command="{Binding SelectOEMCommand}" CommandParameter="MTK" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- 3. Side Navigation -->
-            <StackPanel Grid.Row="3" Grid.Column="0" Width="100" Background="#0AFFFFFF">
-                <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="HEALTH" Command="{Binding NavigateToCenterCommand}" CommandParameter="HEALTH" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="FRP" Command="{Binding NavigateToCenterCommand}" CommandParameter="FRP" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="SECURITY" Command="{Binding NavigateToCenterCommand}" CommandParameter="SECURITY" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="FLASH" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLASH" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
-                <Button Content="CLOAK" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOAK" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
-                <Button Content="EXPERT" Command="{Binding NavigateToCenterCommand}" CommandParameter="EXPERT" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="FLEET" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLEET" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="STATS" Command="{Binding NavigateToCenterCommand}" CommandParameter="ANALYTICS" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="CLOUD" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOUD" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-                <Button Content="DRIVER" Command="{Binding NavigateToCenterCommand}" CommandParameter="DRIVER" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
-            </StackPanel>
-
-            <!-- 4. Main Canvas -->
-            <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding CurrentCenter}" />
-
-            <!-- 5. Log Terminal -->
-            <Border Grid.Row="3" Grid.Column="2" Background="#10000000" BorderBrush="#20FFFFFF" BorderThickness="1,0,0,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Label Content="LOG INTELLIGENCE" Background="#15FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" Padding="10,5"/>
-                    <ScrollViewer Grid.Row="1" Background="#0A000000" x:Name="LogScroller">
-                        <TextBlock x:Name="LogOutput" 
-                                   Text="{Binding LogContent}"
-                                   FontFamily="{StaticResource DeepEye.Font.Mono}" 
-                                   Foreground="#A0F0F6FC" 
-                                   FontSize="11" 
-                                   Margin="10" 
-                                   TextWrapping="Wrap"/>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
-
-            <!-- 6. Hazard Bar -->
-            <Grid Grid.Row="4" Grid.ColumnSpan="3" Height="70" Background="#1A000000">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="12" Height="12" CornerRadius="6" Background="{StaticResource DeepEye.Brush.Cyan}" Margin="20,0,10,0">
-                        <Border.Effect>
-                            <DropShadowEffect Color="{StaticResource DeepEye.Color.Cyan}" BlurRadius="10" ShadowDepth="0"/>
-                        </Border.Effect>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ConnectedDevices.Count}" Value="0">
-                                        <Setter Property="Background" Value="Grey"/>
-                                        <Setter Property="Effect" Value="{x:Null}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                    
-                    <StackPanel Margin="0,0,30,0">
-                        <TextBlock Text="SYSTEM STATUS" Foreground="{StaticResource DeepEye.Brush.White}" FontSize="8" Opacity="0.5"/>
-                        <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="SAMSUNG" Command="{Binding SelectOEMCommand}" CommandParameter="SAMSUNG" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="XIAOMI" Command="{Binding SelectOEMCommand}" CommandParameter="XIAOMI" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="HUAWEI" Command="{Binding SelectOEMCommand}" CommandParameter="HUAWEI" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="OPPO" Command="{Binding SelectOEMCommand}" CommandParameter="OPPO" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="VIVO" Command="{Binding SelectOEMCommand}" CommandParameter="VIVO" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="QUALCOMM" Command="{Binding SelectOEMCommand}" CommandParameter="QUALCOMM" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
+                        <Button Content="MTK" Command="{Binding SelectOEMCommand}" CommandParameter="MTK" Style="{StaticResource DeepEye.Button.Modern}" Margin="10,0"/>
                     </StackPanel>
+                </Grid>
 
-                    <controls:CircularProgressBar Value="{Binding ProgressValue}" Width="35" Height="35" Margin="0,0,15,0"
-                                                Visibility="{Binding ProgressValue, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"/>
+                <!-- 4. Side Navigation -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Width="100" Background="#0AFFFFFF">
+                    <Button Content="INFO" Command="{Binding NavigateToCenterCommand}" CommandParameter="INFO" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="HEALTH" Command="{Binding NavigateToCenterCommand}" CommandParameter="HEALTH" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="FRP" Command="{Binding NavigateToCenterCommand}" CommandParameter="FRP" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="SECURITY" Command="{Binding NavigateToCenterCommand}" CommandParameter="SECURITY" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="FLASH" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLASH" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
+                    <Button Content="CLOAK" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOAK" Style="{StaticResource DeepEye.Button.Modern}" Height="60" Margin="10" BorderThickness="0,0,0,1"/>
+                    <Button Content="EXPERT" Command="{Binding NavigateToCenterCommand}" CommandParameter="EXPERT" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="FLEET" Command="{Binding NavigateToCenterCommand}" CommandParameter="FLEET" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="STATS" Command="{Binding NavigateToCenterCommand}" CommandParameter="ANALYTICS" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="CLOUD" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOUD" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="DRIVER" Command="{Binding NavigateToCenterCommand}" CommandParameter="DRIVER" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                </StackPanel>
+
+                <!-- 5. Main Canvas -->
+                <ContentControl Grid.Row="3" Grid.Column="1" Content="{Binding CurrentCenter}" />
+
+                <!-- 6. Log Terminal -->
+                <Border Grid.Row="3" Grid.Column="2" Background="#10000000" BorderBrush="#20FFFFFF" BorderThickness="1,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="LOG INTELLIGENCE" Background="#15FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}" FontWeight="Bold" Padding="10,5"/>
+                        <ScrollViewer Grid.Row="1" Background="#0A000000" x:Name="LogScroller">
+                            <TextBlock x:Name="LogOutput" 
+                                       Text="{Binding LogContent}"
+                                       FontFamily="{StaticResource DeepEye.Font.Mono}" 
+                                       Foreground="#A0F0F6FC" 
+                                       FontSize="11" 
+                                       Margin="10" 
+                                       TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- 7. Hazard Bar -->
+                <Grid Grid.Row="4" Grid.ColumnSpan="3" Height="70" Background="#1A000000">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     
-                    <ProgressBar Height="4" Width="200" IsIndeterminate="False" Value="{Binding ProgressValue}" 
-                                 Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}"
-                                 BorderThickness="0" VerticalAlignment="Center"/>
-                </StackPanel>
-                
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Command="{Binding ReportIssueCommand}" Style="{StaticResource DeepEye.Button.Modern}" Content="REPORT ISSUE" Margin="0,0,10,0" Padding="15,0" Height="45" Opacity="0.5"/>
-                    <Button Command="{Binding ToggleExpertModeCommand}" Style="{StaticResource DeepEye.Button.Hazard}" BorderThickness="0" Padding="20,0" Height="45">
-                        <TextBlock Text="{Binding RiskLevel, StringFormat='RISK LEVEL: {0}'}" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{StaticResource DeepEye.Brush.Cyan}" Margin="20,0,10,0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="{StaticResource DeepEye.Color.Cyan}" BlurRadius="10" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ConnectedDevices.Count}" Value="0">
+                                            <Setter Property="Background" Value="Grey"/>
+                                            <Setter Property="Effect" Value="{x:Null}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        
+                        <StackPanel Margin="0,0,30,0">
+                            <TextBlock Text="SYSTEM STATUS" Foreground="{StaticResource DeepEye.Brush.White}" FontSize="8" Opacity="0.5"/>
+                            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="SemiBold"/>
+                        </StackPanel>
 
+                        <controls:CircularProgressBar Value="{Binding ProgressValue}" Width="35" Height="35" Margin="0,0,15,0"
+                                                    Visibility="{Binding ProgressValue, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"/>
+                        
+                        <ProgressBar Height="4" Width="200" IsIndeterminate="False" Value="{Binding ProgressValue}" 
+                                     Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}"
+                                     BorderThickness="0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Command="{Binding ReportIssueCommand}" Style="{StaticResource DeepEye.Button.Modern}" Content="REPORT ISSUE" Margin="0,0,10,0" Padding="15,0" Height="45" Opacity="0.5"/>
+                        <Button Command="{Binding ToggleExpertModeCommand}" Style="{StaticResource DeepEye.Button.Hazard}" BorderThickness="0" Padding="20,0" Height="45
+
+">
+                            <TextBlock VerticalAlignment="Center" FontWeight="Bold" Foreground="Black">
+                                <TextBlock.Text>
+                                    <Binding Path="RiskLevel" StringFormat="RISK LEVEL: {0}"/>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+            </Grid>
         </Grid>
     </Border>
 </Window>
