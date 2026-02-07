@@ -21,18 +21,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Make gradlew executable
+        run: chmod +x portable/android/gradlew
 
       - name: Build Android APK
         run: |
           cd portable/android
-          chmod +x gradlew 2>/dev/null || true
-          ./gradlew assembleRelease --no-daemon || gradle assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --warning-mode all
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
 
       - name: List APK outputs
+        if: always()
         run: |
           find portable/android -name "*.apk" -type f 2>/dev/null || echo "No APK found"
           ls -la portable/android/app/build/outputs/apk/release/ 2>/dev/null || echo "Release dir not found"
@@ -45,33 +45,6 @@ jobs:
             portable/android/app/build/outputs/apk/release/*.apk
             portable/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
-
-  build-windows-zip:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Build Windows Portable
-        run: |
-          dotnet restore
-          dotnet publish src/DeepEyeUnlocker.UI/DeepEyeUnlocker.UI.csproj -c Release -r win-x64 --self-contained -o artifacts/release
-        shell: pwsh
-
-      - name: Package ZIP
-        run: |
-          Compress-Archive -Path artifacts/release/* -DestinationPath DeepEyeUnlocker-Portable.zip
-        shell: pwsh
-
-      - name: Upload Windows ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: deepeye-windows-portable
-          path: DeepEyeUnlocker-Portable.zip
 
   build-desktop-linux:
     runs-on: ubuntu-latest

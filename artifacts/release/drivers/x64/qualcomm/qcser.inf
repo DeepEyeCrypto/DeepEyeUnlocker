@@ -1,0 +1,23 @@
+; Placeholder Qualcomm Driver INF
+[Version]
+Signature="$Windows NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%QCOM%
+DriverVer=01/01/2026,2.1.3.5
+
+[Manufacturer]
+%QCOM%=Standard,NTamd64
+
+[Standard.NTamd64]
+%QCOM_9008%=QCOM_9008_Inst,USB\VID_05C6&PID_9008
+
+[QCOM_9008_Inst]
+AddReg=QCOM_9008_AddReg
+
+[QCOM_9008_AddReg]
+HKR,,PortSubClass,1,01
+
+[Strings]
+QCOM="Qualcomm Incorporated"
+QCOM_9008="Qualcomm HS-USB QDLoader 9008"
