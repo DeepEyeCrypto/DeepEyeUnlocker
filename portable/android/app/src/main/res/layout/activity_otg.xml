@@ -288,15 +288,13 @@
                 </LinearLayout>
 
                 <!-- Partition List -->
-                <ListView
+                <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/partitionList"
                     android:layout_width="match_parent"
                     android:layout_height="300dp"
                     android:background="@drawable/glass_card"
                     android:padding="8dp"
                     android:clipToPadding="false"
-                    android:divider="#1A00F2FF"
-                    android:dividerHeight="0.5dp"
                     android:layout_marginBottom="24dp" />
 
                 <!-- Operation Buttons -->
