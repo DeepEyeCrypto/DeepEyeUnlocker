@@ -1,0 +1,370 @@
+================================================================================
+                    DEEPEYEUNLOCKER - GOD PROMPT v4.2.0
+                    Builder-Friendly AI Analysis Guide
+================================================================================
+
+PROJECT: DeepEyeUnlocker - Universal Mobile Repair Tool
+TARGETS: Windows (.zip portable) + Android (.apk OTG)
+REPO: https://github.com/DeepEyeCrypto/DeepEyeUnlocker
+
+================================================================================
+                              STAGE 1: PROJECT OVERVIEW
+================================================================================
+
+DeepEyeUnlocker is a FREE, open-source alternative to expensive mobile repair 
+boxes (like Miracle Box, UnlockTool). It provides:
+
+- Device Detection (USB/OTG)
+- Firmware Backup/Flash
+- FRP Bypass (Factory Reset Protection removal)
+- Pattern/PIN Removal
+- Partition Management
+
+SUPPORTED PROTOCOLS:
+├── Qualcomm EDL (Emergency Download Mode) - Sahara + Firehose
+├── MediaTek BROM (Boot ROM) - Download Agent
+├── Samsung Download Mode - Odin/Loke protocol
+└── Generic ADB/Fastboot
+
+================================================================================
+                              STAGE 2: ARCHITECTURE
+================================================================================
+
+DeepEyeUnlocker/
+├── src/                          # Windows WinForms App (.NET 8.0)
+│   ├── Core/                     # Domain models, managers
+│   ├── Operations/               # Business logic (Backup, Flash, FRP)
+│   ├── Protocols/                # Chipset engines (QC, MTK, Samsung)
+│   ├── Infrastructure/           # USB, Logging, Cloud
+│   └── UI/                       # WinForms components
+│
+├── portable/                     # Cross-platform native core (C++)
+│   ├── core/                     # Shared C++ library
+│   │   ├── include/              # Headers
+│   │   │   ├── deepeye_core.h    # Main interfaces
+│   │   │   ├── usb_transport.h   # USB transport class
+│   │   │   ├── brom_proto.h      # MTK BROM protocol
+│   │   │   ├── edl_proto.h       # Qualcomm EDL protocol
+│   │   │   ├── gpt_parser.h      # GPT partition parser
+│   │   │   └── firehose.h        # Qualcomm Firehose XML
+│   │   ├── src/
+│   │   │   ├── protocols/        # Protocol implementations
+│   │   │   ├── transport/        # USB transport (libusb)
+│   │   │   └── deepeye_exports.cpp
+│   │   └── CMakeLists.txt
+│   │
+│   ├── android/                  # Android App (Kotlin + JNI)
+│   │   ├── app/
+│   │   │   ├── src/main/
+│   │   │   │   ├── java/com/deepeye/otg/
+│   │   │   │   │   ├── OtgActivity.kt      # Main UI
+│   │   │   │   │   ├── NativeBridge.kt     # JNI bindings
+│   │   │   │   │   ├── UsbHostManager.kt   # USB OTG handling
+│   │   │   │   │   └── DaManager.kt        # Download Agent manager
+│   │   │   │   ├── cpp/
+│   │   │   │   │   ├── CMakeLists.txt      # Android NDK build
+│   │   │   │   │   └── native-lib.cpp      # JNI implementation
+│   │   │   │   └── res/                    # Android resources
+│   │   │   └── build.gradle
+│   │   ├── build.gradle
+│   │   ├── gradlew                         # Gradle wrapper
+│   │   └── gradle/wrapper/
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   │
+│   └── desktop/                  # Linux CLI (future)
+│
+├── .github/workflows/
+│   ├── build.yml                 # Windows .NET build
+│   ├── portable_release.yml      # Android APK + Linux builds
+│   └── release.yml               # Release automation
+│
+└── docs/                         # Documentation
+
+================================================================================
+                         STAGE 3: WINDOWS BUILD (.ZIP)
+================================================================================
+
+TECH STACK:
+- Language: C# (.NET 8.0)
+- UI: Windows Forms
+- USB: LibUsbDotNet + WMI
+- Database: SQLite (history), JSON (profiles)
+
+BUILD COMMANDS:
+```powershell
+# Restore dependencies
+dotnet restore
+
+# Build release
+dotnet publish src/DeepEyeUnlocker.UI/DeepEyeUnlocker.UI.csproj \
+    -c Release -r win-x64 --self-contained -o artifacts/release
+
+# Package
+Compress-Archive -Path artifacts/release/* -DestinationPath DeepEyeUnlocker-Portable.zip
+```
+
+REQUIRED OUTPUT FILES:
+├── DeepEyeUnlocker.exe           # Main executable
+├── *.dll                         # Runtime dependencies
+├── drivers/                      # USB drivers (QC, MTK)
+├── README.md
+├── LICENSE
+└── docs/
+
+================================================================================
+                         STAGE 4: ANDROID BUILD (.APK)
+================================================================================
+
+TECH STACK:
+- Language: Kotlin + C++ (JNI)
+- UI: Android XML Layouts + Material Design
+- USB: Android USB Host API + libusb (optional)
+- Build: Gradle 8.5 + AGP 8.2.2
+
+GRADLE CONFIGURATION:
+
+build.gradle (root):
+```groovy
+buildscript {
+    ext.kotlin_version = '1.9.22'
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+```
+
+app/build.gradle:
+```groovy
+android {
+    namespace 'com.deepeye.otg'
+    compileSdk 34
+    
+    defaultConfig {
+        minSdk 26
+        targetSdk 34
+        
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+        
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+    
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+```
+
+gradle-wrapper.properties:
+```properties
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
+```
+
+BUILD COMMANDS:
+```bash
+cd portable/android
+chmod +x gradlew
+./gradlew assembleDebug --no-daemon
+# APK at: app/build/outputs/apk/debug/app-debug.apk
+```
+
+================================================================================
+                      STAGE 5: REQUIRED ANDROID RESOURCES
+================================================================================
+
+res/values/colors.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="deepeye_obsidian">#0D0D0F</color>
+    <color name="deepeye_grey_deep">#1A1A1E</color>
+    <color name="deepeye_cyan">#00F2FF</color>
+    <color name="deepeye_orange">#FF6B35</color>
+    <color name="deepeye_white">#F5F5F7</color>
+    <color name="deepeye_success">#00E676</color>
+    <color name="deepeye_warning">#FFB300</color>
+    <color name="deepeye_error">#FF5252</color>
+    <color name="ic_launcher_background">#0D0D0F</color>
+    <color name="ic_launcher_foreground">#00F2FF</color>
+</resources>
+```
+
+res/drawable/glass_card.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#1A1A1E" />
+    <corners android:radius="16dp" />
+    <stroke android:width="1dp" android:color="#2000F2FF" />
+</shape>
+```
+
+res/drawable/glow_indicator.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#00E676" />
+    <size android:width="12dp" android:height="12dp" />
+</shape>
+```
+
+res/drawable/ic_launcher_foreground.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#00F2FF"
+        android:pathData="M54,34C37.4,34 23.2,43.6 17,58c6.2,14.4 20.4,24 37,24s30.8,-9.6 37,-24C84.8,43.6 70.6,34 54,34zM54,76c-9.9,0 -18,-8.1 -18,-18s8.1,-18 18,-18s18,8.1 18,18S63.9,76 54,76z"/>
+</vector>
+```
+
+res/mipmap-anydpi-v26/ic_launcher.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+ALSO NEED: PNG icons in mipmap-mdpi through mipmap-xxxhdpi folders
+
+================================================================================
+                         STAGE 6: JNI BRIDGE STRUCTURE
+================================================================================
+
+NativeBridge.kt:
+```kotlin
+package com.deepeye.otg
+
+object NativeBridge {
+    init { System.loadLibrary("deepeye_core") }
+    
+    external fun initCore(fd: Int, vid: Int, pid: Int): Long
+    external fun identifyDevice(handle: Long): Boolean
+    external fun getPartitions(handle: Long): Array<String>
+    external fun injectDa(handle: Long, daData: ByteArray): Boolean
+    external fun closeCore(handle: Long)
+}
+```
+
+native-lib.cpp must implement these JNI functions:
+- Java_com_deepeye_otg_NativeBridge_initCore
+- Java_com_deepeye_otg_NativeBridge_identifyDevice
+- Java_com_deepeye_otg_NativeBridge_getPartitions
+- Java_com_deepeye_otg_NativeBridge_injectDa
+- Java_com_deepeye_otg_NativeBridge_closeCore
+
+================================================================================
+                      STAGE 7: GITHUB ACTIONS WORKFLOW
+================================================================================
+
+.github/workflows/portable_release.yml:
+```yaml
+name: DeepEye Portable - Cross-Platform Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Build APK
+        working-directory: portable/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeepEyeUnlocker-APK
+          path: portable/android/app/build/outputs/apk/**/*.apk
+```
+
+================================================================================
+                         STAGE 8: COMMON BUILD ISSUES
+================================================================================
+
+ISSUE: "resource mipmap/ic_launcher not found"
+FIX: Ensure PNG icons exist in mipmap-* folders AND adaptive icon XMLs 
+     reference existing drawables
+
+ISSUE: "Gradle 9.x incompatible"
+FIX: Use gradle-wrapper.properties with Gradle 8.5, AGP 8.2.2
+
+ISSUE: "Could not find class -Xmx64m"
+FIX: Use official gradlew script from Gradle repo, not custom one
+
+ISSUE: "package attribute deprecated in AndroidManifest"
+FIX: Remove package="..." from manifest, use namespace in build.gradle
+
+ISSUE: "LibUsbTransport class not found"
+FIX: Create usb_transport.h header with class declaration
+
+================================================================================
+                              STAGE 9: AI INSTRUCTIONS
+================================================================================
+
+When reanalyzing this project:
+
+1. CHECK all resource files exist (colors.xml, drawables, mipmaps)
+2. VERIFY Gradle versions match (8.5 wrapper, 8.2.2 AGP, 1.9.22 Kotlin)
+3. ENSURE JNI function signatures match between Kotlin and C++
+4. VALIDATE CMakeLists.txt paths are correct (use get_filename_component)
+5. TEST build locally with: ./gradlew assembleDebug --stacktrace
+6. CONFIRM AndroidManifest.xml has no deprecated package attribute
+
+For Windows build:
+1. CHECK .NET 8.0 SDK available
+2. VERIFY all NuGet packages restore
+3. ENSURE UI projects reference correct dependencies
+4. TEST with: dotnet build -c Release
+
+================================================================================
+                              STAGE 10: SUCCESS CRITERIA
+================================================================================
+
+✅ Android APK builds without errors
+✅ APK size ~5-15 MB
+✅ APK installs on Android 8+ device
+✅ UI renders with cyberpunk theme
+✅ USB OTG permission dialog works
+
+✅ Windows ZIP builds without errors
+✅ ZIP contains DeepEyeUnlocker.exe
+✅ App launches on Windows 10/11
+✅ USB device detection works
+
+================================================================================
+                               END OF GOD PROMPT
+================================================================================
