@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core;
+using DeepEyeUnlocker.Protocols.Usb;
 
 namespace DeepEyeUnlocker.Protocols.SPD
 {
@@ -10,9 +11,9 @@ namespace DeepEyeUnlocker.Protocols.SPD
     /// </summary>
     public class UnisocTigerProtocol : SpdFdlProtocol
     {
-        public UnisocTigerProtocol(IUsbTransport transport) : base(transport) { }
+        public UnisocTigerProtocol(IUsbDevice usb) : base(usb) { }
 
-        public async Task<bool> SecureHandshakeAsync(byte[] authKey = null)
+        public async Task<bool> SecureHandshakeAsync(byte[]? authKey = null)
         {
             Logger.Info("[TIGER] Initializing Secure Handshake for Next-Gen Unisoc...");
             

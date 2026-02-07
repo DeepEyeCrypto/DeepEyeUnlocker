@@ -43,7 +43,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return false;
         }
 
-        public async Task<(ushort Command, byte[] Data)> ReadPacketAsync(int timeoutMs = 2000)
+        public async Task<(ushort Command, byte[]? Data)> ReadPacketAsync(int timeoutMs = 2000)
         {
             var buffer = new List<byte>();
             bool started = false;
@@ -77,7 +77,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return (cmd, packet);
         }
 
-        public async Task<bool> SendCommandAsync(ushort command, byte[] data = null)
+        public async Task<bool> SendCommandAsync(ushort command, byte[]? data = null)
         {
             var packet = SpdPacketizer.Wrap(command, data);
             await _usb.WriteAsync(packet);

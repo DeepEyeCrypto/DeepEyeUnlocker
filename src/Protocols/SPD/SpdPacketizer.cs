@@ -6,7 +6,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
 {
     public static class SpdPacketizer
     {
-        public static byte[] Wrap(ushort command, byte[] data = null)
+        public static byte[] Wrap(ushort command, byte[]? data = null)
         {
             var payload = new List<byte>();
             
@@ -47,7 +47,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return escaped.ToArray();
         }
 
-        public static byte[] Unwrap(byte[] framedData, out ushort command)
+        public static byte[]? Unwrap(byte[] framedData, out ushort command)
         {
             command = 0;
             if (framedData == null || framedData.Length < 6) return null;

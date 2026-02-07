@@ -14,7 +14,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
             _usb = usb;
         }
 
-        public async Task<bool> SendDiagCommandAsync(ushort command, byte[] data = null)
+        public async Task<bool> SendDiagCommandAsync(ushort command, byte[]? data = null)
         {
             var packet = SpdPacketizer.Wrap(command, data);
             await _usb.WriteAsync(packet);
