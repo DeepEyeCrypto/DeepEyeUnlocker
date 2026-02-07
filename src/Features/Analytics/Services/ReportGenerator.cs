@@ -28,7 +28,7 @@ namespace DeepEyeUnlocker.Features.Analytics.Services
             sb.AppendLine($"  %-15s: {(health.IsBootloaderUnlocked ? "UNLOCKED" : "LOCKED")}".Replace("%-15s", "BOOTLOADER"));
             
             sb.AppendLine("\n### [ 🛡️ VULNERABILITY ANALYSIS ]");
-            int filled = (int)Math.Round(cve.RiskScore);
+            int filled = (int)Math.Round((double)cve.RiskScore);
             string scoreBar = "[" + new string('█', filled) + new string('░', 10 - filled) + "]";
             sb.AppendLine($"  THREAT_LVL : {scoreBar} {cve.RiskScore}/10");
             
@@ -62,7 +62,7 @@ namespace DeepEyeUnlocker.Features.Analytics.Services
             sb.AppendLine("-------------------------------------------------");
 
             sb.AppendLine("\n## GLOBAL RISK PROFILE");
-            int filled = (int)Math.Round(fleet.AverageRiskScore);
+            int filled = (int)Math.Round((double)fleet.AverageRiskScore);
             string scoreBar = "[" + new string('█', filled) + new string('░', 10 - filled) + "]";
             sb.AppendLine($"AVG RISK SCORE: {scoreBar} {fleet.AverageRiskScore:F1}/10");
 

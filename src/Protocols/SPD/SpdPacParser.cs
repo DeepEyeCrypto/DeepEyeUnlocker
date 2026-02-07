@@ -7,8 +7,8 @@ namespace DeepEyeUnlocker.Protocols.SPD
 {
     public class SpdPacFileEntry
     {
-        public string Id { get; set; }
-        public string FileName { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
         public long Offset { get; set; }
         public long Size { get; set; }
         public bool IsActive { get; set; }

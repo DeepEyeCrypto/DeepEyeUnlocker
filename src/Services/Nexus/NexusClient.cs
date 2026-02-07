@@ -16,7 +16,7 @@ namespace DeepEyeUnlocker.Services.Nexus
 
     public class NexusClient
     {
-        public event Action<NexusSyncStatus> SyncStatusChanged;
+        public event Action<NexusSyncStatus>? SyncStatusChanged;
         private NexusSyncStatus _status = NexusSyncStatus.Idle;
 
         public NexusSyncStatus Status 

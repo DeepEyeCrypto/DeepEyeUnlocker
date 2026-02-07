@@ -1,6 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.IO;
 using DeepEyeUnlocker.Protocols.Usb;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Protocols.SPD
 {
@@ -86,6 +89,17 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return resp.Command == SpdConstants.BSL_REP_ACK;
         }
 
+        public async Task<bool> LoadLoaderAsync(string loaderPath, uint targetAddress = 0x5000)
+        {
+            if (!File.Exists(loaderPath))
+            {
+                Logger.Error($"[SPD] Loader file not found: {loaderPath}");
+                return false;
+            }
+            byte[] data = await File.ReadAllBytesAsync(loaderPath);
+            return await LoadLoaderAsync(data, targetAddress);
+        }
+
         public async Task<bool> LoadLoaderAsync(byte[] loaderData, uint targetAddress)
         {
             Logger.Info($"[SPD] Uploading loader to 0x{targetAddress:X8} ({loaderData.Length} bytes)...");
@@ -144,6 +158,16 @@ namespace DeepEyeUnlocker.Protocols.SPD
                 return $"SPD_CHIP_0x{chipId:X8}";
             }
             return "SPD_UNKNOWN_DEVICE";
+        }
+        public async Task<bool> ErasePartitionAsync(string partition)
+        {
+            Logger.Info($"[SPD] Erasing partition: {partition}");
+            
+            // Format for erase is usually just the partition name
+            byte[] cmdData = new byte[32];
+            System.Text.Encoding.ASCII.GetBytes(partition).CopyTo(cmdData, 0);
+            
+            return await SendCommandAsync(SpdConstants.BSL_CMD_ERASE_FLASH, cmdData);
         }
     }
 }
