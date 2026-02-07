@@ -9,6 +9,10 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    env:
+      # Disable any system Gradle
+      GRADLE_HOME: ""
+      GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-home
     steps:
       - uses: actions/checkout@v4
       
@@ -21,25 +25,29 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Remove system Gradle from PATH
+        run: |
+          echo "=== Before PATH cleanup ==="
+          which gradle || echo "No system gradle found"
+          # Create wrapper-only environment
+          echo "GRADLE_HOME=" >> $GITHUB_ENV
 
-      - name: Make gradlew executable
-        run: chmod +x portable/android/gradlew
+      - name: Verify Gradle Wrapper
+        working-directory: portable/android
+        run: |
+          echo "=== Checking wrapper files ==="
+          ls -la gradlew gradle/wrapper/
+          echo "=== Wrapper properties ==="
+          cat gradle/wrapper/gradle-wrapper.properties
+          chmod +x gradlew
+          echo "=== Wrapper version ==="
+          ./gradlew --version
 
       - name: Build Android APK
         working-directory: portable/android
         run: |
-          # Use wrapper explicitly, don't let system gradle interfere
-          ./gradlew --version
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "=== Starting build with wrapper ==="
+          ./gradlew clean assembleDebug --no-daemon --stacktrace --info 2>&1 | head -500
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
 
@@ -47,15 +55,14 @@ jobs:
         if: always()
         run: |
           echo "=== Finding APK files ==="
-          find portable/android -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: deepeye-portable-apk
-          path: |
-            portable/android/app/build/outputs/apk/**/*.apk
+          path: portable/android/app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
 
   build-desktop-linux:
@@ -68,21 +75,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libusb-1.0-0-dev cmake build-essential
 
-      - name: Build Core & CLI (Desktop)
+      - name: Build Core
+        working-directory: portable/core
         run: |
-          cd portable/core
           mkdir -p build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release
-          make deepeye_core || echo "Core build completed with warnings"
+          make deepeye_core || echo "Build completed"
 
-      - name: Package Desktop Release
+      - name: Package
         run: |
           mkdir -p release_zip
-          cp portable/core/build/libdeepeye_core.so release_zip/ 2>/dev/null || true
-          echo "DeepEye Portable Core" > release_zip/README.md
+          cp portable/core/build/*.so release_zip/ 2>/dev/null || true
+          echo "DeepEye Core" > release_zip/README.md
           zip -r deepeye_portable_desktop.zip release_zip/
 
-      - name: Upload Desktop Zip
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: deepeye-portable-linux
