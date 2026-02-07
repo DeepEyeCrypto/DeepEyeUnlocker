@@ -1,0 +1,51 @@
+{
+    "name": "sahara_memory_read_loop",
+    "protocol": "sahara",
+    "description": "Simulates a multiple-chunk memory debug read loop via command 0x0A.",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "hello_debug_mode",
+            "data_hex": "01000000300000000200000000000000080000000200000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "hello_resp",
+            "data_hex": "02000000300000000200000000000000080000000200000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "mem_read_req_1",
+            "data_hex": "0A000000100000000000000808000000"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "mem_data_1",
+            "data_hex": "DEADC0DEBEEFBABE"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "mem_read_req_2",
+            "data_hex": "0A000000100000000800000808000000"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "mem_data_2",
+            "data_hex": "CAFEBABE12345678"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "done_cmd",
+            "data_hex": "0500000008000000"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "done_resp",
+            "data_hex": "060000000C00000000000000"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 5000,
+        "engine_result": "Success"
+    }
+}

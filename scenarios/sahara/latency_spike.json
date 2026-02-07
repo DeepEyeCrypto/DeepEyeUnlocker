@@ -1,0 +1,17 @@
+{
+    "name": "sahara_latency_spike",
+    "protocol": "sahara",
+    "description": "Sahara handshake with a 1500ms delay to test host timeout resilience.",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "hello_delayed",
+            "data_hex": "01000000300000000200000000000000080000000100000000000000000000000000000000000000000000000000000000000000",
+            "delay_ms": 1500
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 5000,
+        "engine_result": "Success"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "name": "firehose_crc_mismatch",
+    "protocol": "firehose",
+    "description": "Device returns a NAK with reason 'CRC Error' after a partition write command.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "write_req",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c70726f6772616d20534543544f525f53495a455f494e5f42595445533d2235313222206e756d5f706172746974696f6e5f736563746f72733d22312220706879736963616c5f706172746974696f6e5f6e756d6265723d2230222073746172745f736563746f723d223022202f3e3c2f646174613e"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "nak_crc_error",
+            "data_hex": "3c3f786d6c2076657273696f6e3d22312e3022203f3e3c646174613e3c726573706F6E73652076616C75653D224E414B2220726561736F6E3D22435243204572726F7222202F3E3C2F646174613E"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 3000,
+        "engine_result": "CrcError"
+    }
+}

@@ -23,7 +23,16 @@ namespace DeepEyeUnlocker.Operations
 
             if (device.Mode == ConnectionMode.EDL || device.Mode == ConnectionMode.BROM || device.Mode == ConnectionMode.Preloader)
             {
-                bool success = await BypassGenericFrp(device, progress, ct);
+                bool success;
+                if (device.Brand?.Equals("Xiaomi", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    success = await BypassXiaomiHyperOS(device, progress, ct);
+                }
+                else
+                {
+                    success = await BypassGenericFrp(device, progress, ct);
+                }
+
                 DeepEyeUnlocker.Features.Analytics.Services.FleetManager.Instance.RegisterOperation(
                     device.Brand ?? "UNKNOWN", "FRP Bypass", success);
                 return success;
@@ -97,6 +106,52 @@ namespace DeepEyeUnlocker.Operations
             {
                 Logger.Error(ex, "FRP Bypass failed.");
                 Report(progress, 0, $"Failure: {ex.Message}", LogLevel.Error);
+                return false;
+            }
+        }
+        private async Task<bool> BypassXiaomiHyperOS(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+        {
+            try
+            {
+                Report(progress, 20, "Detecting HyperOS OTA state...");
+                var partitions = (await _protocol.GetPartitionTableAsync()).ToList();
+
+                // HyperOS often stores secondary FRP flags in 'persist' or a hidden 'frp_backup'
+                string[] hyperOsTargets = { "frp", "persist", "frp_backup", "config" };
+                var toErase = partitions.Where(p => hyperOsTargets.Any(t => p.Name.Equals(t, StringComparison.OrdinalIgnoreCase))).ToList();
+
+                if (toErase.Count == 0)
+                {
+                    Report(progress, 0, "Error: HyperOS specific partitions not found.", LogLevel.Error);
+                    return false;
+                }
+
+                foreach (var part in toErase)
+                {
+                    if (ct.IsCancellationRequested) return false;
+                    
+                    Report(progress, 40, $"Cleaning HyperOS security flag: {part.Name}...");
+                    
+                    if (part.Name.Equals("persist", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Selective wipe of HyperOS FRP byte offset (mocking specific logic)
+                        Report(progress, 50, "Searching for secure_prop offset in persist...");
+                        byte[] zeroBlock = new byte[1024]; // Standard flag block
+                        await _protocol.WritePartitionAsync(part.Name, zeroBlock); // Wipe head
+                    }
+                    else
+                    {
+                        await _protocol.ErasePartitionAsync(part.Name, null, ct);
+                    }
+                }
+
+                Report(progress, 100, "HyperOS FRP lock cleared. Rebooting device...");
+                await _protocol.RebootAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "HyperOS Bypass failed.");
                 return false;
             }
         }

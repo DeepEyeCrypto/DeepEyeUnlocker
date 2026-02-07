@@ -1,0 +1,58 @@
+{
+    "name": "mtk_preloader_to_da",
+    "protocol": "mtk",
+    "description": "Simulates MTK Preloader handshake, DA download, jump, and transition to DA mode.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "handshake_a0",
+            "data_hex": "A0"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "echo_5F",
+            "data_hex": "5F"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "cmd_get_hw_code",
+            "data_hex": "FD"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "hw_code",
+            "data_hex": "62610000"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "cmd_send_da",
+            "data_hex": "D7"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack",
+            "data_hex": "5A"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "da_data_chunk",
+            "data_hex": "4D544B2044412042494E"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "cmd_jump_da",
+            "data_hex": "D5"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "reboot_to_da",
+            "action": "Disconnect",
+            "data_hex": ""
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 10000,
+        "engine_result": "Success",
+        "final_state": "WaitingForDA"
+    }
+}

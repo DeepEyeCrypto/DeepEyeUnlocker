@@ -3,7 +3,7 @@
 ## 💎 Project Identity
 
 - **Name:** DeepEyeUnlocker
-- **Version:** 1.3.0 "Sentinel"
+- **Version:** 4.1.6-android "Sentinel Pro"
 - **Mission:** Democratizing mobile repair tools by providing a free, professional-grade open-source alternative to paid repair boxes.
 
 ## 🛠 Technical Stack

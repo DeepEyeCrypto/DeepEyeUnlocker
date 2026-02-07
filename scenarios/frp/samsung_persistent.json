@@ -1,0 +1,36 @@
+{
+    "name": "frp_samsung_persistent",
+    "protocol": "odin",
+    "description": "Samsung device with FRP lock; persistent partition is accessible but requires specific offset clear.",
+    "steps": [
+        {
+            "direction": "device_to_host",
+            "label": "pit_data",
+            "data_hex": "78563412050000008400000000000000000000000000000000000000... (truncated PIT data)"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "read_persistent",
+            "data_hex": "4C4F4B45000000... (Read persistent cmd)"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "persistent_data",
+            "data_hex": "0000000001000000... (FRP active flag at offset 4)"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "write_persistent_clear",
+            "data_hex": "4C4F4B45000100... (Write persistent clear cmd)"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "ack",
+            "data_hex": "06"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 5000,
+        "policy_detected": "SamsungPersistent"
+    }
+}

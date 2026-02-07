@@ -1,0 +1,61 @@
+{
+    "name": "mtk_auth_required",
+    "protocol": "mtk",
+    "description": "MTK device requires SLA (Secure Lock Authentication); handshake succeeds but DA upload fails with 0xC0020007.",
+    "steps": [
+        {
+            "direction": "host_to_device",
+            "label": "handshake_a0",
+            "data_hex": "A0"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "echo_5F",
+            "data_hex": "5F"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "handshake_0a",
+            "data_hex": "0A"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "echo_f5",
+            "data_hex": "F5"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "handshake_50",
+            "data_hex": "50"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "echo_af",
+            "data_hex": "AF"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "handshake_05",
+            "data_hex": "05"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "echo_fa",
+            "data_hex": "FA"
+        },
+        {
+            "direction": "host_to_device",
+            "label": "cmd_get_hw_code",
+            "data_hex": "FD"
+        },
+        {
+            "direction": "device_to_host",
+            "label": "hw_code_err",
+            "data_hex": "070002C0"
+        }
+    ],
+    "expectations": {
+        "max_duration_ms": 3000,
+        "error_code": "SlaRequired"
+    }
+}
