@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.DeepEye.Portable" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Main colors -->
+        <item name="colorPrimary">@color/deepeye_cyan</item>
+        <item name="colorOnPrimary">@color/deepeye_obsidian</item>
+        <item name="colorSecondary">@color/deepeye_orange</item>
+        <item name="android:windowBackground">@color/deepeye_obsidian</item>
+        <item name="android:statusBarColor">@color/deepeye_grey_deep</item>
+        <item name="android:navigationBarColor">@color/deepeye_obsidian</item>
+        
+        <!-- Premium UI elements -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>

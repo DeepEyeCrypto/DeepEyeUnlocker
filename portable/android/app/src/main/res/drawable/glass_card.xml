@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Border -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="@color/deepeye_cyan" />
+        </shape>
+    </item>
+    <!-- Background (Inner Card) -->
+    <item android:top="1dp" android:bottom="1dp" android:left="1dp" android:right="1dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="15dp" />
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#20FFFFFF"
+                android:centerColor="#0DFFFFFF"
+                android:endColor="#151B22" />
+        </shape>
+    </item>
+</layer-list>

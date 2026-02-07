@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1E88E5</color>
-    <color name="ic_launcher_foreground">#FFFFFF</color>
+    <color name="deepeye_obsidian">#0D1117</color>
+    <color name="deepeye_grey_deep">#161B22</color>
+    <color name="deepeye_cyan">#00F2FF</color>
+    <color name="deepeye_cyan_dim">#3300F2FF</color>
+    <color name="deepeye_orange">#FF8C00</color>
+    <color name="deepeye_white">#F0F6FC</color>
+    <color name="deepeye_glass">#15FFFFFF</color>
 </resources>

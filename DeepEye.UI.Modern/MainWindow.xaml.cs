@@ -8,6 +8,10 @@ namespace DeepEye.UI.Modern
         {
             InitializeComponent();
             DataContext = new ViewModels.MainViewModel();
+            
+            this.Loaded += (s, e) => {
+                Infrastructure.WindowCompositionHelper.EnableBlur(this);
+            };
         }
 
         // Add logic for window dragging if needed since WindowStyle="None"

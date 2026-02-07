@@ -18,10 +18,10 @@ namespace DeepEye.UI.Modern.ViewModels
         private readonly WorkflowEngine _workflowEngine;
         private CancellationTokenSource? _cts;
 
-        public override string Title => "EXPERT WORKFLOW ENGINE";
+        public override string Title => LocalizationProvider.T("EXPERT WORKFLOW ENGINE");
 
         [ObservableProperty] private bool _isExecuting = false;
-        [ObservableProperty] private string _statusMessage = "Locked - Expert Mode Required";
+        [ObservableProperty] private string _statusMessage = LocalizationProvider.T("Locked - Expert Mode Required");
         [ObservableProperty] private double _progressValue = 0;
 
         public ObservableCollection<WorkflowStep> WorkflowSteps { get; } = new();
@@ -36,7 +36,7 @@ namespace DeepEye.UI.Modern.ViewModels
             
             if (_device != null)
             {
-                StatusMessage = "Ready - Proceed with caution";
+                StatusMessage = LocalizationProvider.T("Ready - Proceed with caution");
             }
         }
 

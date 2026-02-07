@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="DeepEyeUnlocker Pro" Language="1033" Version="3.0.0.0" Manufacturer="DeepEyeUnlocker Community" UpgradeCode="c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3">
+	<Product Id="*" Name="DeepEyeUnlocker Sentinel Pro" Language="1033" Version="4.2.0.0" Manufacturer="DeepEye Labs" UpgradeCode="c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<!-- Professional UI -->
+		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+		<UIRef Id="WixUI_Minimal" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate EmbedCab="yes" />

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:DeepEye.UI.Modern.ViewModels"
         xmlns:views="clr-namespace:DeepEye.UI.Modern.Views"
+        xmlns:controls="clr-namespace:DeepEye.UI.Modern.Infrastructure.Controls"
         mc:Ignorable="d"
         Title="DeepEyeUnlocker Pro" Height="720" Width="1280"
         Background="{StaticResource DeepEye.Brush.Obsidian}"
@@ -19,6 +20,7 @@
             <viewModels:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
             <viewModels:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <viewModels:BooleanToStringConverter x:Key="BooleanToStringConverter" />
+            <viewModels:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter" />
 
             <DataTemplate DataType="{x:Type viewModels:DeviceInfoViewModel}">
                 <views:DeviceInfoView />
@@ -65,6 +67,10 @@
 
     <Border BorderBrush="{StaticResource DeepEye.Brush.Cyan}" BorderThickness="1">
         <Grid>
+            <!-- Background Layering for Glassmorphism -->
+            <Rectangle Fill="{Binding Background, RelativeSource={RelativeSource AncestorType=Window}}" Grid.RowSpan="4" Grid.ColumnSpan="3"/>
+            <Rectangle Fill="{StaticResource DeepEye.Brush.NoiseOverlay}" Grid.RowSpan="4" Grid.ColumnSpan="3"/>
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <!-- Title Bar -->
                 <RowDefinition Height="Auto"/> <!-- OEM Ribbon -->
@@ -152,28 +158,33 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource DeepEye.Brush.Cyan}" Margin="20,0,10,0">
+                    <Border Width="12" Height="12" CornerRadius="6" Background="{StaticResource DeepEye.Brush.Cyan}" Margin="20,0,10,0">
+                        <Border.Effect>
+                            <DropShadowEffect Color="{StaticResource DeepEye.Color.Cyan}" BlurRadius="10" ShadowDepth="0"/>
+                        </Border.Effect>
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ConnectedDevices.Count}" Value="0">
                                         <Setter Property="Background" Value="Grey"/>
+                                        <Setter Property="Effect" Value="{x:Null}"/>
                                     </DataTrigger>
-                                    <EventTrigger RoutedEvent="Loaded">
-                                        <BeginStoryboard>
-                                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                                <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.2" Duration="0:0:0.8"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </EventTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
                     </Border>
-                    <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource DeepEye.Brush.White}" Margin="0,0,10,0" Opacity="0.7"/>
-                    <ProgressBar Height="10" Width="400" IsIndeterminate="False" Value="{Binding ProgressValue}" 
+                    
+                    <StackPanel Margin="0,0,30,0">
+                        <TextBlock Text="SYSTEM STATUS" Foreground="{StaticResource DeepEye.Brush.White}" FontSize="8" Opacity="0.5"/>
+                        <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <controls:CircularProgressBar Value="{Binding ProgressValue}" Width="35" Height="35" Margin="0,0,15,0"
+                                                Visibility="{Binding ProgressValue, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"/>
+                    
+                    <ProgressBar Height="4" Width="200" IsIndeterminate="False" Value="{Binding ProgressValue}" 
                                  Background="#10FFFFFF" Foreground="{StaticResource DeepEye.Brush.Cyan}"
-                                 BorderThickness="0"/>
+                                 BorderThickness="0" VerticalAlignment="Center"/>
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
