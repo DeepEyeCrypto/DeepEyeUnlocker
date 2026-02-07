@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.json.JSONObject
 
 import android.os.Vibrator
 import android.os.VibrationEffect
@@ -30,109 +31,9 @@ class OtgActivity : AppCompatActivity() {
     private var selectedMode = "BROM"
     private var nativeHandle: Long = 0
     
-    // Device database
-    private val deviceDatabase = mapOf(
-        "Xiaomi" to listOf(
-            DeviceModel("Redmi Note 9", "MT6765", "Xiaomi"),
-            DeviceModel("Redmi Note 9 Pro", "SM7125", "Xiaomi"),
-            DeviceModel("Redmi Note 10", "SM6115", "Xiaomi"),
-            DeviceModel("Redmi Note 10 Pro", "SM7150", "Xiaomi"),
-            DeviceModel("Redmi Note 11", "SM6225", "Xiaomi"),
-            DeviceModel("Redmi Note 11 Pro", "MT6785", "Xiaomi"),
-            DeviceModel("Redmi Note 12", "SM4375", "Xiaomi"),
-            DeviceModel("Redmi 9", "MT6762G", "Xiaomi"),
-            DeviceModel("Redmi 9A", "MT6762G", "Xiaomi"),
-            DeviceModel("Redmi 9C", "MT6765", "Xiaomi"),
-            DeviceModel("Redmi 10", "MT6769", "Xiaomi"),
-            DeviceModel("Redmi 10C", "SM6225", "Xiaomi"),
-            DeviceModel("POCO X3", "SM7125", "Xiaomi"),
-            DeviceModel("POCO X3 Pro", "SM8150", "Xiaomi"),
-            DeviceModel("POCO F3", "SM8250", "Xiaomi"),
-            DeviceModel("POCO M3", "SM6115", "Xiaomi"),
-            DeviceModel("Mi 11", "SM8350", "Xiaomi"),
-            DeviceModel("Mi 11 Lite", "SM7150", "Xiaomi"),
-            DeviceModel("Mi 10T", "SM8250", "Xiaomi"),
-        ),
-        "Samsung" to listOf(
-            DeviceModel("Galaxy A12", "MT6765", "Samsung"),
-            DeviceModel("Galaxy A13", "Exynos 850", "Samsung"),
-            DeviceModel("Galaxy A14", "Exynos 1330", "Samsung"),
-            DeviceModel("Galaxy A32", "MT6769V", "Samsung"),
-            DeviceModel("Galaxy A52", "SM7125", "Samsung"),
-            DeviceModel("Galaxy A53", "Exynos 1280", "Samsung"),
-            DeviceModel("Galaxy M12", "Exynos 850", "Samsung"),
-            DeviceModel("Galaxy M32", "MT6769V", "Samsung"),
-            DeviceModel("Galaxy S21", "Exynos 2100", "Samsung"),
-            DeviceModel("Galaxy S22", "Exynos 2200", "Samsung"),
-            DeviceModel("Galaxy S23", "SM8550", "Samsung"),
-        ),
-        "OPPO" to listOf(
-            DeviceModel("OPPO A15", "MT6765", "OPPO"),
-            DeviceModel("OPPO A16", "MT6765", "OPPO"),
-            DeviceModel("OPPO A53", "SM4250", "OPPO"),
-            DeviceModel("OPPO A74", "SM6115", "OPPO"),
-            DeviceModel("OPPO F19", "SM6115", "OPPO"),
-            DeviceModel("OPPO Reno 5", "SM7125", "OPPO"),
-            DeviceModel("OPPO Reno 6", "MT6877", "OPPO"),
-            DeviceModel("OPPO Reno 7", "SM7325", "OPPO"),
-        ),
-        "Vivo" to listOf(
-            DeviceModel("Vivo Y12", "MT6762", "Vivo"),
-            DeviceModel("Vivo Y15", "MT6762", "Vivo"),
-            DeviceModel("Vivo Y20", "SM4250", "Vivo"),
-            DeviceModel("Vivo Y21", "MT6765", "Vivo"),
-            DeviceModel("Vivo Y33s", "MT6769", "Vivo"),
-            DeviceModel("Vivo V21", "MT6853", "Vivo"),
-            DeviceModel("Vivo V23", "MT6877", "Vivo"),
-        ),
-        "Realme" to listOf(
-            DeviceModel("Realme C11", "MT6765", "Realme"),
-            DeviceModel("Realme C12", "MT6765", "Realme"),
-            DeviceModel("Realme C21", "MT6765", "Realme"),
-            DeviceModel("Realme C25", "MT6765", "Realme"),
-            DeviceModel("Realme 8", "MT6785", "Realme"),
-            DeviceModel("Realme 8 Pro", "SM7125", "Realme"),
-            DeviceModel("Realme 9", "SM6225", "Realme"),
-            DeviceModel("Realme Narzo 30", "MT6785", "Realme"),
-            DeviceModel("Realme Narzo 50", "MT6769", "Realme"),
-        ),
-        "Huawei" to listOf(
-            DeviceModel("Huawei Y6p", "MT6762R", "Huawei"),
-            DeviceModel("Huawei Y7a", "Kirin 710A", "Huawei"),
-            DeviceModel("Huawei Y9a", "MT6765", "Huawei"),
-            DeviceModel("Huawei Nova 7i", "Kirin 810", "Huawei"),
-            DeviceModel("Huawei P30 Lite", "Kirin 710", "Huawei"),
-            DeviceModel("Huawei P40 Lite", "Kirin 810", "Huawei"),
-        ),
-        "OnePlus" to listOf(
-            DeviceModel("OnePlus Nord", "SM7250", "OnePlus"),
-            DeviceModel("OnePlus Nord CE", "SM7225", "OnePlus"),
-            DeviceModel("OnePlus Nord N10", "SM6350", "OnePlus"),
-            DeviceModel("OnePlus 9", "SM8350", "OnePlus"),
-            DeviceModel("OnePlus 9 Pro", "SM8350", "OnePlus"),
-        ),
-        "Motorola" to listOf(
-            DeviceModel("Moto G30", "SM6115", "Motorola"),
-            DeviceModel("Moto G50", "SM4350", "Motorola"),
-            DeviceModel("Moto G60", "SM6150", "Motorola"),
-            DeviceModel("Moto E7", "MT6762", "Motorola"),
-            DeviceModel("Moto E20", "Unisoc T606", "Motorola"),
-        ),
-        "Tecno" to listOf(
-            DeviceModel("Tecno Spark 7", "MT6761", "Tecno"),
-            DeviceModel("Tecno Spark 8", "MT6762", "Tecno"),
-            DeviceModel("Tecno Camon 17", "MT6769", "Tecno"),
-            DeviceModel("Tecno Camon 18", "MT6769", "Tecno"),
-            DeviceModel("Tecno Pova 2", "MT6765", "Tecno"),
-        ),
-        "Infinix" to listOf(
-            DeviceModel("Infinix Hot 10", "MT6762", "Infinix"),
-            DeviceModel("Infinix Hot 11", "MT6762", "Infinix"),
-            DeviceModel("Infinix Note 10", "MT6769", "Infinix"),
-            DeviceModel("Infinix Note 11", "MT6769", "Infinix"),
-            DeviceModel("Infinix Zero X", "MT6785", "Infinix"),
-        ),
-    )
+    // Device database loaded from JSON
+    private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
+    private var allModels: List<DeviceModel> = emptyList()
 
     private fun hapticFeedback() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -160,6 +61,39 @@ class OtgActivity : AppCompatActivity() {
         statusLog.text = "$prefix$message"
         statusLog.setTextColor(ContextCompat.getColor(this, color))
     }
+    
+    private fun loadDeviceDatabase() {
+        try {
+            val jsonString = assets.open("device_database.json").bufferedReader().use { it.readText() }
+            val json = JSONObject(jsonString)
+            val brands = json.getJSONObject("brands")
+            
+            var totalCount = 0
+            brands.keys().forEach { brandName ->
+                val brandObj = brands.getJSONObject(brandName)
+                val modelsArray = brandObj.getJSONArray("models")
+                val modelsList = mutableListOf<DeviceModel>()
+                
+                for (i in 0 until modelsArray.length()) {
+                    val model = modelsArray.getJSONObject(i)
+                    modelsList.add(DeviceModel(
+                        name = model.getString("name"),
+                        chipset = model.getString("chipset"),
+                        brand = brandName
+                    ))
+                }
+                deviceDatabase[brandName] = modelsList
+                totalCount += modelsList.size
+            }
+            
+            // Build all models list for search
+            allModels = deviceDatabase.values.flatten()
+            
+            log("Loaded $totalCount models from ${deviceDatabase.size} brands", "SUCCESS")
+        } catch (e: Exception) {
+            log("Failed to load device database: ${e.message}", "ERROR")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -172,6 +106,9 @@ class OtgActivity : AppCompatActivity() {
         connectionIndicator = findViewById(R.id.connectionIndicator)
         usbStatus = findViewById(R.id.usbStatus)
         modelCount = findViewById(R.id.modelCount)
+        
+        // Load device database from JSON
+        loadDeviceDatabase()
         
         // Setup model list
         modelAdapter = ModelAdapter { model ->
@@ -216,7 +153,7 @@ class OtgActivity : AppCompatActivity() {
             }
         })
         
-        log("DeepEye Unlocker v4.3.0 Ready", "SUCCESS")
+        log("DeepEye Unlocker v4.4.0 Ready - ${allModels.size} models", "SUCCESS")
     }
     
     private fun loadModelsForBrand(brand: String) {
@@ -299,16 +236,24 @@ class OtgActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                val query = s.toString()
-                val allModels = deviceDatabase[selectedBrand] ?: emptyList()
+                val query = s.toString().trim()
+                
                 val filtered = if (query.isEmpty()) {
-                    allModels
-                } else {
+                    deviceDatabase[selectedBrand] ?: emptyList()
+                } else if (query.length >= 2) {
+                    // Search across all brands if query is 2+ chars
                     allModels.filter { 
                         it.name.contains(query, ignoreCase = true) || 
-                        it.chipset.contains(query, ignoreCase = true) 
+                        it.chipset.contains(query, ignoreCase = true) ||
+                        it.brand.contains(query, ignoreCase = true)
                     }
+                } else {
+                    deviceDatabase[selectedBrand]?.filter { 
+                        it.name.contains(query, ignoreCase = true) || 
+                        it.chipset.contains(query, ignoreCase = true) 
+                    } ?: emptyList()
                 }
+                
                 modelAdapter.updateModels(filtered)
                 modelCount.text = "${filtered.size} models"
             }
