@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.util.Log
 
 class UsbHostManager(private val context: Context, private val listener: HotplugListener? = null) {
@@ -22,13 +23,23 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
         override fun onReceive(context: Context, intent: Intent) {
             if (ACTION_USB_PERMISSION == intent.action) {
                 synchronized(this) {
-                    val device: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                    val device: UsbDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                    }
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         device?.apply { openAndPassFd(this) }
                     }
                 }
             } else if (UsbManager.ACTION_USB_DEVICE_ATTACHED == intent.action) {
-                val device: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                val device: UsbDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                }
                 device?.apply { 
                     Log.i("DeepEye-OTG", "Proactive Hotplug: Device Attached. Requesting link...")
                     listener?.onDeviceAttached(this)
@@ -43,7 +54,12 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
             addAction(ACTION_USB_PERMISSION)
             addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
         }
-        context.registerReceiver(usbReceiver, filter)
+        // Android 14+ requires RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED flag
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(usbReceiver, filter)
+        }
     }
 
     fun findAndConnect(vid: Int, pid: Int) {
@@ -54,7 +70,12 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
                 openAndPassFd(targetDevice)
             } else {
                 Log.d("DeepEye-OTG", "Proactive: Requesting permissions for $vid:$pid")
-                val permissionIntent = PendingIntent.getBroadcast(context, 0, Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE)
+                val permissionIntent = PendingIntent.getBroadcast(
+                    context, 
+                    0, 
+                    Intent(ACTION_USB_PERMISSION), 
+                    PendingIntent.FLAG_IMMUTABLE
+                )
                 usbManager.requestPermission(targetDevice, permissionIntent)
             }
         }
@@ -69,6 +90,10 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
     }
 
     fun unregister() {
-        context.unregisterReceiver(usbReceiver)
+        try {
+            context.unregisterReceiver(usbReceiver)
+        } catch (e: Exception) {
+            Log.w("DeepEye-OTG", "Receiver already unregistered: ${e.message}")
+        }
     }
 }
