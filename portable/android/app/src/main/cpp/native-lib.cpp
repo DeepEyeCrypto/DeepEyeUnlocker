@@ -1,13 +1,17 @@
-#include "../../core/include/deepeye_core.h"
-// Include only HEADERS, not .cpp files!
-// The .cpp files are already compiled separately by CMakeLists.txt
-// Including them here would cause duplicate symbol errors
+#include "deepeye_core.h"
+#include "usb_transport.h"
+#include "brom_proto.h"
 #include <jni.h>
 #include <string>
 #include <vector>
 
 extern "C" JNIEXPORT jlong JNICALL Java_com_deepeye_otg_NativeBridge_initCore(
     JNIEnv *env, jobject thiz, jint fd, jint vid, jint pid) {
+  (void)env;
+  (void)thiz;
+  (void)vid;
+  (void)pid;
+  
   auto transport = new DeepEye::Core::LibUsbTransport();
   if (transport->Open(fd)) {
     return reinterpret_cast<jlong>(transport);
@@ -19,6 +23,9 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_deepeye_otg_NativeBridge_initCore(
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_deepeye_otg_NativeBridge_identifyDevice(JNIEnv *env, jobject thiz,
                                                  jlong transportPtr) {
+  (void)env;
+  (void)thiz;
+  
   auto transport = reinterpret_cast<DeepEye::Core::ITransport *>(transportPtr);
   if (!transport)
     return false;
@@ -30,6 +37,8 @@ Java_com_deepeye_otg_NativeBridge_identifyDevice(JNIEnv *env, jobject thiz,
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_deepeye_otg_NativeBridge_getPartitions(JNIEnv *env, jobject thiz,
                                                 jlong handle) {
+  (void)thiz;
+  
   auto transport = reinterpret_cast<DeepEye::Core::ITransport *>(handle);
   if (!transport)
     return nullptr;
@@ -54,6 +63,8 @@ Java_com_deepeye_otg_NativeBridge_getPartitions(JNIEnv *env, jobject thiz,
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_deepeye_otg_NativeBridge_injectDa(JNIEnv *env, jobject thiz,
                                            jlong handle, jbyteArray da_data) {
+  (void)thiz;
+  
   auto transport = reinterpret_cast<DeepEye::Core::ITransport *>(handle);
   if (!transport)
     return JNI_FALSE;
@@ -73,6 +84,9 @@ Java_com_deepeye_otg_NativeBridge_injectDa(JNIEnv *env, jobject thiz,
 
 extern "C" JNIEXPORT void JNICALL Java_com_deepeye_otg_NativeBridge_closeCore(
     JNIEnv *env, jobject thiz, jlong transportPtr) {
+  (void)env;
+  (void)thiz;
+  
   auto transport =
       reinterpret_cast<DeepEye::Core::LibUsbTransport *>(transportPtr);
   if (transport) {

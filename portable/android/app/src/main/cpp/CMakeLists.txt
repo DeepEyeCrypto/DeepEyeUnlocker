@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
 # Specify the shared core directory using absolute path for safety
-set(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core")
+get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
 message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
+
+# Verify core directory exists
+if(NOT EXISTS "${CORE_DIR}/include")
+    message(FATAL_ERROR "Core include directory not found: ${CORE_DIR}/include")
+endif()
 
 # Include headers from the shared core
 include_directories(${CORE_DIR}/include)
