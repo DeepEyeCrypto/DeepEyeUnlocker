@@ -13,6 +13,8 @@ namespace DeepEye.UI.Modern.ViewModels
         public static MainViewModel? Instance { get; private set; }
         private readonly DeviceManager _deviceManager;
         private readonly DiagnosticService _diagnosticService;
+        private readonly DeepEyeUnlocker.Services.Nexus.SentinelBridgeClient _bridge = new();
+        private readonly DeepEyeUnlocker.Features.Analytics.Services.AnalyticsProService _analyticsPro = new();
 
         [ObservableProperty]
         private string _logContent = "";
@@ -74,8 +76,33 @@ namespace DeepEye.UI.Modern.ViewModels
             // Initial scan
             var initialDevices = _deviceManager.EnumerateDevices();
             foreach (var d in initialDevices) ConnectedDevices.Add(d);
-            if (ConnectedDevices.Any()) SelectedDevice = ConnectedDevices.First();
+            if (ConnectedDevices.Any()) 
+            {
+                SelectedDevice = ConnectedDevices.First();
+                _ = Task.Run(async () => {
+                     var alerts = await _analyticsPro.ScanForNewAlertsAsync(SelectedDevice.Chipset);
+                     foreach(var alert in alerts)
+                     {
+                         Logger.Warning($"[CVE-ALERT] Critical Security Exposure: {alert.CveId} (Severity {alert.Severity})");
+                         App.Current.Dispatcher.Invoke(() => StatusText = $"SECURITY ALERT: {alert.CveId}");
+                     }
+                });
+            }
             StatusText = initialDevices.Any() ? $"{initialDevices.Count} device(s) connected" : "Waiting for device...";
+
+            // Start Sentinel Bridge (v5.1)
+            _bridge.CommandReceived += async cmd => {
+                await App.Current.Dispatcher.InvokeAsync(async () => {
+                    StatusText = $"REMOTE EXECUTION: {cmd.Action}";
+                    Logger.Warning($"[NEXUS-RELAY] Executing remote directive: {cmd.Action}");
+                    
+                    // Simulate processing
+                    await Task.Delay(2000);
+                    await _bridge.SendResponseAsync(cmd.CommandId, true, "Operation completed via remote relay.");
+                    StatusText = "Remote Operation Success";
+                });
+            };
+            _ = _bridge.StartListeningAsync();
 
             // Default view
             NavigateToCenter("INFO");

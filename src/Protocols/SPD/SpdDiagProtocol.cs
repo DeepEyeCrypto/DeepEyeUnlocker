@@ -40,7 +40,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
             return cmd == SpdConstants.BSL_REP_ACK || cmd == command; // Some diag cmds echo cmd ID on success
         }
 
-        public async Task<byte[]> ReadNVItemAsync(ushort itemId)
+        public async Task<byte[]?> ReadNVItemAsync(ushort itemId)
         {
             Logger.Info($"[SPD-DIAG] Reading NV Item: 0x{itemId:X4}");
             

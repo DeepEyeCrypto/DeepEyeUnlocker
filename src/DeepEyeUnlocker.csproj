@@ -29,6 +29,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="IronPython" Version="3.4.1" />
     <PackageReference Include="SharpPcap" Version="6.2.5" />
   </ItemGroup>
 

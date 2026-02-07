@@ -162,6 +162,15 @@ namespace DeepEye.UI.Modern.ViewModels
         }
 
         [RelayCommand]
+        private void RunFoundryScript(string script)
+        {
+            if (string.IsNullOrWhiteSpace(script)) return;
+            var engine = new DeepEyeUnlocker.Services.Foundry.FoundryEngine();
+            engine.ExecuteScript(script);
+            StatusMessage = "Foundry Script Cycle: COMPLETED";
+        }
+
+        [RelayCommand]
         private void SaveWorkflow(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) name = $"Custom_{DateTime.Now:HHmm}";

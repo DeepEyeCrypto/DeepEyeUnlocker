@@ -27,8 +27,9 @@ namespace DeepEyeUnlocker.Protocols.SPD
 
         public async Task<ConnectionResult> ConnectAsync(ConnectionOptions options)
         {
+            if (options.Device == null) return new ConnectionResult { Success = false, Message = "No USB Device Provided" };
             _usb = options.Device;
-            _fdl = new SpdFdlProtocol(_usb);
+            _fdl = new SpdFdlProtocol(options.Device);
 
             try
             {
