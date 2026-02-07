@@ -6,9 +6,14 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    outputs:
+      apk_path: ${{ steps.find-apk.outputs.apk_path }}
     env:
       GRADLE_HOME: ""
       GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-home
@@ -32,32 +37,26 @@ jobs:
           ./gradlew --version
           echo "=== Building APK ==="
           ./gradlew assembleDebug --no-daemon --stacktrace
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
 
-      - name: Find and list APK
+      - name: Find and rename APK
         id: find-apk
         run: |
-          echo "=== All APK files ==="
-          find . -name "*.apk" -type f
           APK_PATH=$(find . -name "*.apk" -type f | head -1)
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
           if [ -n "$APK_PATH" ]; then
             echo "Found APK: $APK_PATH"
-            ls -la "$APK_PATH"
+            mkdir -p release_apk
+            cp "$APK_PATH" "release_apk/DeepEyeUnlocker-${{ github.ref_name }}.apk"
+            echo "apk_path=release_apk/DeepEyeUnlocker-${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
           else
             echo "No APK found!"
             exit 1
           fi
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: DeepEyeUnlocker-APK
-          path: |
-            ./portable/android/app/build/outputs/apk/debug/*.apk
-            ./portable/android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
+          path: release_apk/*.apk
 
   build-desktop-linux:
     runs-on: ubuntu-latest
@@ -88,3 +87,40 @@ jobs:
         with:
           name: deepeye-portable-linux
           path: deepeye_portable_desktop.zip
+
+  create-release:
+    needs: [build-android, build-desktop-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DeepEyeUnlocker-APK
+          path: ./release-files
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deepeye-portable-linux
+          path: ./release-files
+        continue-on-error: true
+
+      - name: List release files
+        run: |
+          echo "=== Release files ==="
+          ls -la ./release-files/
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./release-files/*.apk
+            ./release-files/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
