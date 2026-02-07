@@ -20,7 +20,7 @@ namespace DeepEyeUnlocker.Core.Security
         {
             Logger.Info("[VAULT] Initiating military-grade encryption for partition dump...");
             
-            using var aes = new AesGcm(DeriveKey(masterPass));
+            using var aes = new AesGcm(DeriveKey(masterPass), TagSize);
             var nonce = new byte[NonceSize];
             RandomNumberGenerator.Fill(nonce);
 
@@ -43,7 +43,7 @@ namespace DeepEyeUnlocker.Core.Security
         {
             Logger.Info("[VAULT] Breaking seal on encrypted partition...");
             
-            using var aes = new AesGcm(DeriveKey(masterPass));
+            using var aes = new AesGcm(DeriveKey(masterPass), TagSize);
             
             var nonce = new byte[NonceSize];
             var tag = new byte[TagSize];

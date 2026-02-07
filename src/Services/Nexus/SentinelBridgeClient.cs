@@ -8,9 +8,9 @@ namespace DeepEyeUnlocker.Services.Nexus
     public class RemoteCommand
     {
         public string CommandId { get; set; } = Guid.NewGuid().ToString();
-        public string Action { get; set; } // e.g., "UNLOCK", "FLASH", "REBOOT"
-        public string TargetDeviceId { get; set; }
-        public string Parameters { get; set; }
+        public string Action { get; set; } = string.Empty;
+        public string TargetDeviceId { get; set; } = string.Empty;
+        public string Parameters { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -19,12 +19,12 @@ namespace DeepEyeUnlocker.Services.Nexus
     /// </summary>
     public class SentinelBridgeClient
     {
-        public event Action<RemoteCommand> CommandReceived;
+        public event Action<RemoteCommand>? CommandReceived;
         private bool _isListening = false;
 
-        public async Task StartListeningAsync()
+        public Task StartListeningAsync()
         {
-            if (_isListening) return;
+            if (_isListening) return Task.CompletedTask;
             _isListening = true;
 
             Logger.Info("[BRIDGE] Sentinel Bridge Active. Listening for Nexus Command Relay...");
@@ -48,6 +48,8 @@ namespace DeepEyeUnlocker.Services.Nexus
                     CommandReceived?.Invoke(mockCmd);
                 }
             });
+            
+            return Task.CompletedTask;
         }
 
         public void StopListening()

@@ -14,6 +14,7 @@ namespace DeepEyeUnlocker.Protocols.SPD
         public const ushort BSL_CMD_START_DATA = 0x01;
         public const ushort BSL_CMD_MID_DATA = 0x02;
         public const ushort BSL_CMD_END_DATA = 0x03;
+        public const ushort BSL_CMD_EXEC_DATA = 0x04;
         public const ushort BSL_CMD_CHECK_BAUD = 0x05;
         public const ushort BSL_CMD_READ_FLASH = 0x10;
         public const ushort BSL_CMD_WRITE_FLASH = 0x11;
