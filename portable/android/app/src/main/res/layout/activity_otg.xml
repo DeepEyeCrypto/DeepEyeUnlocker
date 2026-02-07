@@ -4,186 +4,373 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/deepeye_obsidian">
+    android:background="@color/deepeye_obsidian"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- 1. Header Bar -->
+        <!-- Header Bar with Gradient -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="72dp"
             android:background="@color/deepeye_grey_deep"
-            android:paddingHorizontal="20dp">
+            android:paddingHorizontal="20dp"
+            android:elevation="8dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="DEEPEYE"
-                    android:textColor="@color/deepeye_cyan"
-                    android:textSize="22sp"
+                    android:text="DEEP"
+                    android:textColor="@color/deepeye_white"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.1" />
+                    android:letterSpacing="0.05" />
+                    
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PRO"
-                    android:textColor="@color/deepeye_orange"
-                    android:textSize="10sp"
-                    android:layout_marginStart="4dp"
-                    android:textStyle="bold" />
+                    android:text="EYE"
+                    android:textColor="@color/deepeye_cyan"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+                    
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/glass_card"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PRO"
+                        android:textColor="@color/deepeye_orange"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
             </LinearLayout>
 
-            <View
-                android:id="@+id/connectionGlow"
-                android:layout_width="12dp"
-                android:layout_height="12dp"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/glow_indicator" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
+                <TextView
+                    android:id="@+id/connectionStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OFFLINE"
+                    android:textColor="@color/deepeye_error"
+                    android:textSize="10sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginEnd="8dp" />
+                    
+                <View
+                    android:id="@+id/connectionGlow"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/glow_indicator" />
+            </LinearLayout>
         </RelativeLayout>
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:padding="16dp">
+            android:fillViewport="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <!-- 2. Status Dashboard -->
-                <FrameLayout
+                <!-- Status Dashboard Card -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp">
-                    
+                    android:background="@drawable/glass_card"
+                    android:padding="24dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="20dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/glass_card"
-                        android:padding="20dp"
-                        android:orientation="vertical">
-
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="20dp"
+                            android:background="@color/deepeye_cyan" />
+                            
                         <TextView
                             android:id="@+id/statusLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SYSTEM STATUS"
                             android:textColor="@color/deepeye_cyan"
-                            android:textSize="10sp"
-                            android:letterSpacing="0.2"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/statusText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="WAITING FOR HARDWARE..."
-                            android:textColor="@color/deepeye_white"
-                            android:textSize="18sp"
-                            android:layout_marginTop="4dp"
-                            android:textStyle="bold" />
-
-                        <ProgressBar
-                            android:id="@+id/globalProgress"
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:layout_marginTop="16dp"
-                            android:progress="0"
-                            android:progressTint="@color/deepeye_cyan"
-                            android:backgroundTint="#20FFFFFF" />
+                            android:textSize="11sp"
+                            android:letterSpacing="0.15"
+                            android:textStyle="bold"
+                            android:layout_marginStart="12dp" />
                     </LinearLayout>
-                </FrameLayout>
 
-                <!-- 3. Primary Action -->
+                    <TextView
+                        android:id="@+id/statusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AWAITING DEVICE CONNECTION"
+                        android:textColor="@color/deepeye_white"
+                        android:textSize="18sp"
+                        android:layout_marginTop="12dp"
+                        android:textStyle="bold" />
+                        
+                    <TextView
+                        android:id="@+id/statusSubtext"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Connect your device via OTG cable"
+                        android:textColor="@color/deepeye_white"
+                        android:alpha="0.5"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp" />
+
+                    <ProgressBar
+                        android:id="@+id/globalProgress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="20dp"
+                        android:progress="0"
+                        android:progressTint="@color/deepeye_cyan"
+                        android:backgroundTint="#20FFFFFF"
+                        android:max="100" />
+                </LinearLayout>
+
+                <!-- Primary Action Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/connectButton"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
-                    android:text="INITIALIZE OTG LINK"
+                    android:text="⚡ INITIALIZE OTG LINK"
                     android:textColor="@color/deepeye_obsidian"
                     app:backgroundTint="@color/deepeye_cyan"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="16dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="32dp" />
+                    android:letterSpacing="0.05"
+                    android:layout_marginBottom="24dp"
+                    app:elevation="4dp" />
 
-                <!-- 4. Partition Manager Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PARTITION ORCHESTRATOR"
-                    android:textColor="@color/deepeye_cyan"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginBottom="12dp" />
-
-                <ListView
-                    android:id="@+id/partitionList"
+                <!-- Device Info Card -->
+                <LinearLayout
+                    android:id="@+id/deviceInfoCard"
                     android:layout_width="match_parent"
-                    android:layout_height="280dp"
+                    android:layout_height="wrap_content"
                     android:background="@drawable/glass_card"
-                    android:padding="2dp"
-                    android:divider="#1A00F2FF"
-                    android:dividerHeight="0.5dp"
-                    android:layout_marginBottom="24dp" />
+                    android:padding="20dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginBottom="20dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DEVICE INFORMATION"
+                        android:textColor="@color/deepeye_orange"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.15"
+                        android:textStyle="bold" />
+                        
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp">
+                        
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Protocol"
+                                android:textColor="@color/deepeye_white"
+                                android:alpha="0.5"
+                                android:textSize="10sp" />
+                            <TextView
+                                android:id="@+id/deviceProtocol"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/deepeye_white"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                        
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Chipset"
+                                android:textColor="@color/deepeye_white"
+                                android:alpha="0.5"
+                                android:textSize="10sp" />
+                            <TextView
+                                android:id="@+id/deviceChipset"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/deepeye_white"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
 
-                <!-- 5. Operation Cluster -->
+                <!-- Partition Section Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="16dp"
+                        android:background="@color/deepeye_cyan" />
+                        
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="PARTITION ORCHESTRATOR"
+                        android:textColor="@color/deepeye_cyan"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.1"
+                        android:layout_marginStart="12dp" />
+                        
+                    <TextView
+                        android:id="@+id/partitionCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 partitions"
+                        android:textColor="@color/deepeye_white"
+                        android:alpha="0.5"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <!-- Partition List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/partitionList"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:background="@drawable/glass_card"
+                    android:padding="8dp"
+                    android:clipToPadding="false"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Operation Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/dumpButton"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_height="56dp"
                         android:layout_weight="1"
-                        android:text="BACKUP"
-                        android:textColor="@color/deepeye_white"
-                        app:backgroundTint="@color/deepeye_grey_deep"
-                        app:cornerRadius="8dp"
+                        android:text="📦 BACKUP"
+                        android:textColor="@color/deepeye_cyan"
+                        app:strokeColor="@color/deepeye_cyan"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="12dp"
                         android:enabled="false"
-                        android:layout_marginEnd="6dp" />
+                        android:layout_marginEnd="8dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/flashButton"
                         android:layout_width="0dp"
                         android:layout_height="56dp"
                         android:layout_weight="1"
-                        android:text="FLASH GSI"
+                        android:text="🔥 FLASH"
                         android:textColor="@color/deepeye_obsidian"
                         app:backgroundTint="@color/deepeye_orange"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="12dp"
                         android:enabled="false"
-                        android:layout_marginStart="6dp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginStart="8dp" />
                 </LinearLayout>
+                
+                <!-- FRP Bypass Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/frpButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="🔓 FRP BYPASS ENGINE"
+                    android:textColor="@color/deepeye_warning"
+                    app:strokeColor="@color/deepeye_warning"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="12dp"
+                    android:enabled="false"
+                    android:layout_marginBottom="32dp" />
 
-                <TextView
+                <!-- Footer -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SENTINEL PRO ENGINE v4.2.0"
-                    android:textColor="@color/deepeye_white"
-                    android:gravity="center"
-                    android:textSize="9sp"
-                    android:alpha="0.3"
-                    android:layout_marginTop="32dp" />
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SENTINEL PRO ENGINE v4.2.0"
+                        android:textColor="@color/deepeye_white"
+                        android:textSize="10sp"
+                        android:alpha="0.3"
+                        android:letterSpacing="0.1" />
+                        
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DeepEyeCrypto © 2026"
+                        android:textColor="@color/deepeye_white"
+                        android:textSize="9sp"
+                        android:alpha="0.2"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
 
             </LinearLayout>
         </ScrollView>

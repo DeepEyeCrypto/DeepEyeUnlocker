@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- DeepEye Logo - Eye Icon -->
+    <path
+        android:fillColor="#00F2FF"
+        android:pathData="M54,34C37.4,34 23.2,43.6 17,58c6.2,14.4 20.4,24 37,24s30.8,-9.6 37,-24C84.8,43.6 70.6,34 54,34zM54,76c-9.9,0 -18,-8.1 -18,-18s8.1,-18 18,-18s18,8.1 18,18S63.9,76 54,76z"/>
+    <path
+        android:fillColor="#00F2FF"
+        android:pathData="M54,46c-6.6,0 -12,5.4 -12,12s5.4,12 12,12s12,-5.4 12,-12S60.6,46 54,46zM54,64c-3.3,0 -6,-2.7 -6,-6s2.7,-6 6,-6s6,2.7 6,6S57.3,64 54,64z"/>
+</vector>

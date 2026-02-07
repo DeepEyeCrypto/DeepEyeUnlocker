@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="deepeye_obsidian">#0D1117</color>
-    <color name="deepeye_grey_deep">#161B22</color>
+    <!-- DeepEye Pro Theme Colors -->
+    <color name="deepeye_obsidian">#0D0D0F</color>
+    <color name="deepeye_grey_deep">#1A1A1E</color>
+    <color name="deepeye_grey_medium">#2A2A30</color>
     <color name="deepeye_cyan">#00F2FF</color>
-    <color name="deepeye_cyan_dim">#3300F2FF</color>
-    <color name="deepeye_orange">#FF8C00</color>
-    <color name="deepeye_white">#F0F6FC</color>
-    <color name="deepeye_glass">#15FFFFFF</color>
+    <color name="deepeye_cyan_dark">#00C4CC</color>
+    <color name="deepeye_orange">#FF6B35</color>
+    <color name="deepeye_orange_dark">#E55A2B</color>
+    <color name="deepeye_white">#F5F5F7</color>
+    <color name="deepeye_success">#00E676</color>
+    <color name="deepeye_warning">#FFB300</color>
+    <color name="deepeye_error">#FF5252</color>
+    
+    <!-- Launcher Icon Colors -->
+    <color name="ic_launcher_background">#0D0D0F</color>
+    <color name="ic_launcher_foreground">#00F2FF</color>
 </resources>
