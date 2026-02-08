@@ -49,6 +49,8 @@ namespace DeepEye.UI.Modern.ViewModels
         {
             throw new NotImplementedException();
         }
+    }
+
     public class GreaterThanZeroToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
