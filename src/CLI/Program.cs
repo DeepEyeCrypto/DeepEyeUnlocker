@@ -88,13 +88,13 @@ namespace DeepEyeUnlocker.CLI
     [Verb("models", HelpText = "Access the Global Supported Models Database.")]
     class ModelsOptions
     {
-        [Value(0, MetaName = "action", Required = true, HelpText = "Action: brands, list, export")]
+        [Value(0, MetaName = "action", Required = true, HelpText = "Action: brands, list, export, import")]
         public string Action { get; set; } = string.Empty;
 
         [Option('b', "brand", HelpText = "Filter by brand.")]
         public string? Brand { get; set; }
 
-        [Option('s', "search", HelpText = "Search term.")]
+        [Option('s', "search", HelpText = "Search term (or input file for import).")]
         public string? Search { get; set; }
 
         [Option('l', "limit", Default = 50, HelpText = "Limit results.")]
@@ -242,10 +242,21 @@ namespace DeepEyeUnlocker.CLI
         static async Task<int> RunModels(ModelsOptions opts)
         {
             using var db = new DiscoveryDbContext();
+            db.Database.EnsureCreated(); // Ensure DB exists
             var service = new DiscoveryService(db);
 
             switch (opts.Action.ToLower())
             {
+                case "import":
+                    if (string.IsNullOrEmpty(opts.Search))
+                    {
+                        Console.Error.WriteLine("Error: Search parameter (-s) must be the input CSV file path.");
+                        return 1;
+                    }
+                    var importer = new CsvImporter(db);
+                    await importer.ImportFromCsvAsync(opts.Search);
+                    break;
+
                 case "brands":
                     var brands = await service.GetBrandsAsync();
                     Console.WriteLine("--- Supported Brands ---");
