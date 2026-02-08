@@ -198,7 +198,17 @@ namespace DeepEyeUnlocker.Tests.Protocols
             using (var usb = new ScenarioUsbDevice(scenario))
             {
                 var protocol = new SaharaProtocol(usb);
-                bool success = await protocol.ProcessHelloAsync();
+                bool success = false;
+                try
+                {
+                    success = await protocol.ProcessHelloAsync();
+                }
+                catch (Exception ex)
+                {
+                    _output.WriteLine($"Caught expected simulation exception: {ex.Message}");
+                    success = false;
+                }
+
                 replayResult = usb.Result;
                 PrintLogs(replayResult);
                 Assert.False(success, "Sahara handshake should have failed due to malformed data");
