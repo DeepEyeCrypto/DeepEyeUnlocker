@@ -57,3 +57,13 @@ DEEPEYE_API int DeepEye_EngineGetPartitions(void *engine, char *outBuffer,
   }
   return -1;
 }
+
+DEEPEYE_API bool DeepEye_MtkAuthBypass(void* engine) {
+    // In a real implementation, this would call engine->ExecuteMtkExploit()
+    return true;
+}
+
+DEEPEYE_API bool DeepEye_SamsungLaunchBrowser(void* engine, const char* url) {
+    // In a real implementation, this would call engine->SendMtpCommand(url)
+    return true;
+}
