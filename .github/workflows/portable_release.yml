@@ -29,26 +29,33 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > portable/android/app/release.jks
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+
       - name: Build Android APK
         working-directory: portable/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          echo "=== Gradle Version ==="
-          ./gradlew --version
-          echo "=== Building APK ==="
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "=== Building Release APK ==="
+          ./gradlew assembleRelease --no-daemon
 
       - name: Find and rename APK
         id: find-apk
         run: |
-          APK_PATH=$(find . -name "*.apk" -type f | head -1)
+          APK_PATH=$(find . -name "*-release.apk" -type f | head -1)
           if [ -n "$APK_PATH" ]; then
             echo "Found APK: $APK_PATH"
             mkdir -p release_apk
             cp "$APK_PATH" "release_apk/DeepEyeUnlocker-${{ github.ref_name }}.apk"
             echo "apk_path=release_apk/DeepEyeUnlocker-${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
           else
-            echo "No APK found!"
+            echo "No Release APK found!"
             exit 1
           fi
 
