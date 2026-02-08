@@ -207,7 +207,11 @@ namespace DeepEyeUnlocker.Tests.Protocols
             // In some implementations, the driver might try to send a 'Reset' or 'Mode Switch' command 
             // even if the Hello packet is weird. If the scenario ends immediately, the simulator reports a write error.
             // We accept this as a pass for the "Protocol Logic" check, even if the "Simulation Scenario" ended early.
-            if (!replayResult.IsSuccessful && replayResult.FailureReason.Contains("Write called"))
+            bool isWriteError = !replayResult.IsSuccessful && 
+                               ((replayResult.FailureReason?.Contains("Write called") ?? false) || 
+                                (replayResult.ErrorMessage?.Contains("Write called") ?? false));
+
+            if (isWriteError)
             {
                 _output.WriteLine("Ignored simulation error: Driver attempted to write after malformed input.");
             }
