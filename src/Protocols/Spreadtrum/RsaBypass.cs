@@ -21,6 +21,7 @@ namespace DeepEyeUnlocker.Protocols.Spreadtrum
             Console.WriteLine($"[SPD] Attempting RSA Signature Bypass for {chipset}...");
 
             // 1. Send Handshake
+            await Task.Yield(); // Simulate async work
             int written;
             _writer.Write(new byte[] { 0x7E }, 1000, out written);
             
