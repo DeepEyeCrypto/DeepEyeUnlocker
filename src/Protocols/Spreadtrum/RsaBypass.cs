@@ -1,16 +1,19 @@
 using System;
 using System.Threading.Tasks;
-using DeepEyeUnlocker.Core.HIL;
+using DeepEyeUnlocker.Protocols.Usb;
+using LibUsbDotNet.Main;
 
 namespace DeepEyeUnlocker.Protocols.Spreadtrum
 {
     public class RsaBypass
     {
         private readonly IUsbDevice _device;
+        private readonly IUsbEndpointWriter _writer;
 
         public RsaBypass(IUsbDevice device)
         {
             _device = device;
+            _writer = device.OpenEndpointWriter(WriteEndpointID.Ep01);
         }
 
         public async Task<bool> ExecuteExploitAsync(string chipset = "T606")
@@ -18,19 +21,17 @@ namespace DeepEyeUnlocker.Protocols.Spreadtrum
             Console.WriteLine($"[SPD] Attempting RSA Signature Bypass for {chipset}...");
 
             // 1. Send Handshake
-            await _device.WriteAsync(new byte[] { 0x7E });
+            int written;
+            _writer.Write(new byte[] { 0x7E }, 1000, out written);
             
             // 2. Exploit: Buffer Overflow in FDL1 Header Parsing
-            // This requires a precise payload that overwrites the RSA check return address.
-            
             byte[] payload = GeneratePayload(chipset);
             
             Console.WriteLine("[SPD] Sending Overflow Payload...");
-            await _device.WriteAsync(payload);
+            _writer.Write(payload, 2000, out written);
             
-            // 3. Verify
-            // Read response. If we get "0x79" (ACK) after sending garbage signature, we are in.
-            return true; // Simulation
+            // 3. Verify (Simulated)
+            return true; 
         }
 
         private byte[] GeneratePayload(string chipset)
