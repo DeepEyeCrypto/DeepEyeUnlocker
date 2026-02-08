@@ -268,6 +268,7 @@
                     <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="[BROM] UNLOCK BOOTLOADER"/>
                     <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="[BROM] RELOCK BOOTLOADER"/>
                     <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonOrange" android:text="[BROM] ERASE FRP"/>
+                    <Button android:id="@+id/btnSamsungQr" style="@style/OperationButton" android:text="[MTP] SAMSUNG QR BYPASS" android:visibility="gone"/>
                     <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="[BROM] FACTORY RESET"/>
 
                     <!-- Section: Security -->

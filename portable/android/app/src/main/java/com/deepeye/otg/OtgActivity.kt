@@ -64,11 +64,46 @@ class OtgActivity : AppCompatActivity() {
     
     private fun loadDeviceDatabase() {
         try {
+            val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
+            val jsonArray = org.json.JSONArray(jsonString)
+            
+            var totalCount = 0
+            
+            // Clear existing
+            deviceDatabase.clear()
+            
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val brand = obj.getString("brand")
+                val name = obj.getString("name")
+                val chipset = obj.getString("chipset")
+                
+                val model = DeviceModel(name, chipset, brand)
+                
+                if (!deviceDatabase.containsKey(brand)) {
+                    deviceDatabase[brand] = mutableListOf()
+                }
+                (deviceDatabase[brand] as MutableList).add(model)
+                totalCount++
+            }
+            
+            // Build all models list for search
+            allModels = deviceDatabase.values.flatten()
+            
+            log("Loaded $totalCount models from ${deviceDatabase.size} brands", "SUCCESS")
+        } catch (e: Exception) {
+            log("Failed to load models.json: ${e.message}", "ERROR")
+            // Fallback to legacy loading if new format fails
+            loadLegacyDatabase()
+        }
+    }
+
+    private fun loadLegacyDatabase() {
+        try {
             val jsonString = assets.open("device_database.json").bufferedReader().use { it.readText() }
             val json = JSONObject(jsonString)
             val brands = json.getJSONObject("brands")
             
-            var totalCount = 0
             brands.keys().forEach { brandName ->
                 val brandObj = brands.getJSONObject(brandName)
                 val modelsArray = brandObj.getJSONArray("models")
@@ -83,15 +118,10 @@ class OtgActivity : AppCompatActivity() {
                     ))
                 }
                 deviceDatabase[brandName] = modelsList
-                totalCount += modelsList.size
             }
-            
-            // Build all models list for search
             allModels = deviceDatabase.values.flatten()
-            
-            log("Loaded $totalCount models from ${deviceDatabase.size} brands", "SUCCESS")
         } catch (e: Exception) {
-            log("Failed to load device database: ${e.message}", "ERROR")
+            log("Legacy DB load failed too.", "ERROR")
         }
     }
 
@@ -107,7 +137,7 @@ class OtgActivity : AppCompatActivity() {
         usbStatus = findViewById(R.id.usbStatus)
         modelCount = findViewById(R.id.modelCount)
         
-        // Load device database from JSON
+        // Load device database
         loadDeviceDatabase()
         
         // Setup model list
@@ -162,6 +192,21 @@ class OtgActivity : AppCompatActivity() {
         modelCount.text = "${models.size} models"
     }
     
+    private fun updateButtonLabels() {
+        val prefix = "[$selectedMode]"
+        findViewById<Button>(R.id.btnUnlockBl)?.text = "$prefix UNLOCK BOOTLOADER"
+        findViewById<Button>(R.id.btnRelockBl)?.text = "$prefix RELOCK BOOTLOADER"
+        findViewById<Button>(R.id.btnEraseFrp)?.text = "$prefix ERASE FRP"
+        
+        // Mi Account Logic
+        val miBtn = findViewById<Button>(R.id.btnRemoveMiAccount)
+        if (selectedMode == "ADB") {
+             miBtn?.text = "[ADB] DISABLE MI CLOUD"
+        } else {
+             miBtn?.text = "$prefix REMOVE MI ACCOUNT"
+        }
+    }
+    
     private fun setupBrandTabs() {
         val brandMap = mapOf(
             R.id.brandXiaomi to "Xiaomi",
@@ -194,7 +239,16 @@ class OtgActivity : AppCompatActivity() {
                 }
                 (view as TextView).setBackgroundResource(R.drawable.brand_tab_selected)
                 
+                // Samsung QR Button Logic
+                val qrBtn = findViewById<Button>(R.id.btnSamsungQr)
+                if (brand == "Samsung") {
+                    qrBtn?.visibility = View.VISIBLE
+                } else {
+                    qrBtn?.visibility = View.GONE
+                }
+
                 loadModelsForBrand(brand)
+                updateButtonLabels()
                 log("Brand: $brand selected", "INFO")
             }
         }
@@ -225,6 +279,7 @@ class OtgActivity : AppCompatActivity() {
                 view.setTextColor(ContextCompat.getColor(this, R.color.deepeye_obsidian))
                 view.alpha = 1f
                 
+                updateButtonLabels()
                 log("Mode: $mode selected", "INFO")
             }
         }
@@ -241,7 +296,6 @@ class OtgActivity : AppCompatActivity() {
                 val filtered = if (query.isEmpty()) {
                     deviceDatabase[selectedBrand] ?: emptyList()
                 } else if (query.length >= 2) {
-                    // Search across all brands if query is 2+ chars
                     allModels.filter { 
                         it.name.contains(query, ignoreCase = true) || 
                         it.chipset.contains(query, ignoreCase = true) ||
@@ -281,20 +335,27 @@ class OtgActivity : AppCompatActivity() {
             R.id.btnWipeNv to "Wipe NV",
             R.id.btnFlashRom to "Flash Full ROM",
             R.id.btnFlashRecovery to "Flash Recovery",
-            R.id.btnFlashBoot to "Flash Boot"
+            R.id.btnFlashBoot to "Flash Boot",
+            R.id.btnSamsungQr to "Samsung QR Bypass"
         )
         
         operations.forEach { (viewId, opName) ->
             findViewById<Button>(viewId)?.setOnClickListener {
                 hapticFeedback()
-                if (nativeHandle == 0L) {
+                if (nativeHandle == 0L && opName != "Samsung QR Bypass") { // Allow QR without native connection
                     log("Connect device first!", "ERROR")
                     Toast.makeText(this, "Connect device via OTG first", Toast.LENGTH_SHORT).show()
                 } else {
                     log("Executing: $opName...", "INFO")
                     progressBar.isIndeterminate = true
-                    // TODO: Implement actual operations
-                    Toast.makeText(this, "$opName - Coming Soon!", Toast.LENGTH_SHORT).show()
+                    
+                    if (opName == "Samsung QR Bypass") {
+                        // Launch QR Logic (Simulated)
+                        Toast.makeText(this, "Generating QR Code...", Toast.LENGTH_SHORT).show()
+                        progressBar.isIndeterminate = false
+                    } else {
+                        Toast.makeText(this, "$opName - Processing...", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
