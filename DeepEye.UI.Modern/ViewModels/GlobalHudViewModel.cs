@@ -10,8 +10,8 @@ namespace DeepEye.UI.Modern.ViewModels
         public class HudEvent
         {
             public string Timestamp { get; set; } = DateTime.Now.ToString("HH:mm:ss");
-            public string Message { get; set; }
-            public string Type { get; set; } // INFO, SECURITY, NEXUS
+            public string Message { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty; // INFO, SECURITY, NEXUS
         }
 
         public ObservableCollection<HudEvent> ActivityLog { get; } = new();

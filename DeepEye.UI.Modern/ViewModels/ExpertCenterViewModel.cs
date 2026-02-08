@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DeepEyeUnlocker.Core;
+using DeepEye.UI.Modern.Infrastructure;
 
 namespace DeepEye.UI.Modern.ViewModels
 {

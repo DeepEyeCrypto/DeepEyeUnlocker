@@ -68,7 +68,7 @@ namespace DeepEye.UI.Modern.Infrastructure.Controls
             };
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private void OnTick(object? sender, EventArgs e)
         {
             double elapsed = (DateTime.Now - _lastUpdate).TotalSeconds;
             _lastUpdate = DateTime.Now;
