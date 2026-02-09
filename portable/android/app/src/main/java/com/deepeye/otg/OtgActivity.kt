@@ -26,6 +26,7 @@ class OtgActivity : AppCompatActivity() {
     private lateinit var usbStatus: TextView
     private lateinit var modelCount: TextView
     private lateinit var usbHostManager: UsbHostManager
+    private lateinit var btnRemote: Button
     
     private var selectedBrand = "Xiaomi"
     private var selectedMode = "BROM"
@@ -136,6 +137,13 @@ class OtgActivity : AppCompatActivity() {
         connectionIndicator = findViewById(R.id.connectionIndicator)
         usbStatus = findViewById(R.id.usbStatus)
         modelCount = findViewById(R.id.modelCount)
+        btnRemote = findViewById(R.id.btnRemoteUnlock)
+
+        btnRemote.setOnClickListener {
+            hapticFeedback()
+            val intent = android.content.Intent(this, RemoteShareActivity::class.java)
+            startActivity(intent)
+        }
         
         // Load device database
         loadDeviceDatabase()

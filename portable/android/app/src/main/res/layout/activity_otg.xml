@@ -38,6 +38,19 @@
 
         <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
 
+        <!-- Remote Unlock Button -->
+        <Button
+            android:id="@+id/btnRemoteUnlock"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="📡 REMOTE UNLOCK"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_remote_bg"
+            android:layout_marginEnd="12dp"
+            android:paddingHorizontal="12dp"/>
+
         <TextView
             android:id="@+id/connectionIndicator"
             android:layout_width="wrap_content"
