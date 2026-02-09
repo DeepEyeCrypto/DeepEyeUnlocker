@@ -30,11 +30,19 @@ android {
 
     signingConfigs {
         release {
+            // Priority 1: Env Vars (CI)
             if (System.getenv("ANDROID_KEYSTORE_PASSWORD") != null) {
                 storeFile file("release.jks")
                 storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
                 keyAlias System.getenv("ANDROID_KEY_ALIAS")
                 keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            } 
+            // Priority 2: Local properties or hardcoded fallback for local builds (since we just made it)
+            else if (file("release.jks").exists()) {
+                storeFile file("release.jks")
+                storePassword "android"
+                keyAlias "key0"
+                keyPassword "android"
             }
         }
     }
@@ -43,10 +51,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Only use release signing if the keystore exists
-            if (file("release.jks").exists()) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
         }
     }
     
