@@ -38,19 +38,6 @@
 
         <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
 
-        <!-- Remote Unlock Button -->
-        <Button
-            android:id="@+id/btnRemoteUnlock"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:text="📡 REMOTE UNLOCK"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_remote_bg"
-            android:layout_marginEnd="12dp"
-            android:paddingHorizontal="12dp"/>
-
         <TextView
             android:id="@+id/connectionIndicator"
             android:layout_width="wrap_content"
@@ -269,14 +256,33 @@
                     android:padding="8dp">
 
                     <!-- Section: Unlock Operations -->
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="🔓 UNLOCK OPERATIONS"
-                        android:textColor="#00F2FF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="6dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🔓 UNLOCK OPERATIONS"
+                            android:textColor="#00F2FF"
+                            android:textSize="10sp"
+                            android:textStyle="bold"/>
+
+                        <Button
+                            android:id="@+id/btnRemoteUnlock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:text="📡 REMOTE"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_remote_bg"
+                            android:paddingHorizontal="8dp"/>
+                    </LinearLayout>
 
                     <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="[BROM] UNLOCK BOOTLOADER"/>
                     <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="[BROM] RELOCK BOOTLOADER"/>

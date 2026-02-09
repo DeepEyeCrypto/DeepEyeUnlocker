@@ -11,15 +11,15 @@ namespace DeepEyeUnlocker.Features.RemoteService
 {
     public class UsbSharer : IDisposable
     {
-        private TcpListener _server;
+        private TcpListener? _server;
         private bool _isRunning;
-        private UsbDevice _usbDevice;
-        private UsbEndpointReader _reader;
-        private UsbEndpointWriter _writer;
+        private UsbDevice? _usbDevice;
+        private UsbEndpointReader? _reader;
+        private UsbEndpointWriter? _writer;
 
         // Events for UI Updates
-        public event Action<string> LogEvent;
-        public event Action<bool> StatusChanged;
+        public event Action<string>? LogEvent;
+        public event Action<bool>? StatusChanged;
 
         /// <summary>
         /// Starts sharing a specific USB device over TCP.
@@ -28,11 +28,13 @@ namespace DeepEyeUnlocker.Features.RemoteService
         /// <param name="vid">Vendor ID of the device to share</param>
         /// <param name="pid">Product ID of the device to share</param>
         /// <returns>Session Code for the remote technician</returns>
-        public async Task<string> StartSharingAsync(int vid, int pid, int localPort = 33000)
+        public async Task<string?> StartSharingAsync(int vid, int pid, int localPort = 33000)
         {
             try
             {
                 LogEvent?.Invoke($"[Remote] Scanning for USB Device (VID: {vid:X4} PID: {pid:X4})...");
+
+                await Task.Yield(); // Fix CS1998: Make async method real
 
                 // 1. Find USB Device
                 var finder = new UsbDeviceFinder(vid, pid);
@@ -45,7 +47,7 @@ namespace DeepEyeUnlocker.Features.RemoteService
                 }
 
                 // 2. Open Interface & Endpoints
-                IUsbDevice wholeUsbDevice = _usbDevice as IUsbDevice;
+                IUsbDevice? wholeUsbDevice = _usbDevice as IUsbDevice;
                 if (!ReferenceEquals(wholeUsbDevice, null))
                 {
                     // Select config #1
@@ -84,6 +86,8 @@ namespace DeepEyeUnlocker.Features.RemoteService
 
         private async Task ListenForClientAsync()
         {
+            if (_server == null) return;
+
             while (_isRunning)
             {
                 try
@@ -94,11 +98,14 @@ namespace DeepEyeUnlocker.Features.RemoteService
                     {
                         LogEvent?.Invoke($"[Remote] Technician Connected from {client.Client.RemoteEndPoint}!");
 
-                        // Start bi-directional forwarding
-                        var usbToNet = ForwardUsbToNetwork(_reader, stream);
-                        var netToUsb = ForwardNetworkToUsb(stream, _writer);
+                        if (_reader != null && _writer != null)
+                        {
+                            // Start bi-directional forwarding
+                            var usbToNet = ForwardUsbToNetwork(_reader, stream);
+                            var netToUsb = ForwardNetworkToUsb(stream, _writer);
 
-                        await Task.WhenAny(usbToNet, netToUsb);
+                            await Task.WhenAny(usbToNet, netToUsb);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -125,6 +132,7 @@ namespace DeepEyeUnlocker.Features.RemoteService
                     LogEvent?.Invoke($"[USB Read Error] {ec}");
                     break;
                 }
+                await Task.Yield(); // Ensure loop is async
             }
         }
 
@@ -154,7 +162,7 @@ namespace DeepEyeUnlocker.Features.RemoteService
             
             if (_usbDevice != null && _usbDevice.IsOpen)
             {
-                IUsbDevice wholeUsbDevice = _usbDevice as IUsbDevice;
+                IUsbDevice? wholeUsbDevice = _usbDevice as IUsbDevice;
                 if (!ReferenceEquals(wholeUsbDevice, null))
                 {
                     wholeUsbDevice.ReleaseInterface(0);
@@ -168,14 +176,18 @@ namespace DeepEyeUnlocker.Features.RemoteService
 
         private string GetLocalIPAddress()
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
+            try
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
                 {
-                    return ip.ToString();
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
                 }
             }
+            catch {}
             return "127.0.0.1";
         }
 
