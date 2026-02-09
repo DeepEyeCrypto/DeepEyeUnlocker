@@ -64,12 +64,14 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Decoding Keystore from Secrets..."
             echo "$KEYSTORE_BASE64" | base64 --decode > portable/android/app/release.jks
-          else
+          elif [ ! -f "portable/android/app/release.jks" ]; then
             echo "Generating Temporary Release Keystore..."
             keytool -genkeypair -v -keystore portable/android/app/release.jks \
               -keyalg RSA -keysize 2048 -validity 10000 \
               -alias key0 -dname "CN=DeepEye, OU=Mobile, O=DeepEyeCrypto, L=Cyber, S=Net, C=US" \
               -storepass android -keypass android
+          else
+            echo "Keystore already exists in repo. Using it."
           fi
 
       - name: Build APK
