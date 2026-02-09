@@ -31,8 +31,11 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > portable/android/app/release.jks
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > portable/android/app/release.jks
+          else
+            echo "No Keystore Secret found, skipping signing."
+          fi
 
       - name: Build Android APK
         working-directory: portable/android
