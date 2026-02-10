@@ -1,0 +1,87 @@
+<UserControl x:Class="DeepEye.UI.Modern.Views.RemoteServerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:controls="clr-namespace:DeepEye.UI.Modern.Infrastructure.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Main Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border BorderBrush="{StaticResource DeepEye.Brush.Cyan}" BorderThickness="0,0,0,1" Padding="20">
+            <StackPanel>
+                <TextBlock Text="REMOTE UNLOCK SERVER" Style="{StaticResource DeepEye.Text.SectionHeader}" FontSize="24"/>
+                <TextBlock Text="Connect to remote Android OTG devices securely via Relay Protocol" 
+                           Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.6" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/> <!-- Connection Panel -->
+                <ColumnDefinition Width="*"/> <!-- Device Status -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel: Connection -->
+            <Border Grid.Column="0" Background="{StaticResource DeepEye.Brush.PanelBackground}" CornerRadius="8" Padding="20" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="ESTABLISH UPLINK" Style="{StaticResource DeepEye.Text.SubHeader}" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="SESSION CODE" Foreground="{StaticResource DeepEye.Brush.White}" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding SessionCode, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource DeepEye.Input.Text}" 
+                             Height="40" FontSize="16" FontFamily="{StaticResource DeepEye.Font.Mono}"
+                             controls:TextBoxHelper.Watermark="XXX-XXX-XXX"/>
+
+                    <Button Command="{Binding ConnectCommand}" Content="CONNECT TO DEVICE" 
+                            Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="0,20,0,0"/>
+
+                    <TextBlock Text="{Binding ConnectionStatus}" 
+                               Foreground="{Binding StatusColor}" 
+                               HorizontalAlignment="Center" Margin="0,15,0,0" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Right Panel: Virtual Device -->
+            <Border Grid.Column="1" Background="{StaticResource DeepEye.Brush.PanelBackground}" CornerRadius="8" Padding="20" Margin="10,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="VIRTUAL DEVICE STATUS" Style="{StaticResource DeepEye.Text.SubHeader}" Margin="0,0,0,20"/>
+
+                    <!-- Device Info Card -->
+                    <Border BorderBrush="{StaticResource DeepEye.Brush.Cyan}" BorderThickness="1" CornerRadius="4" Padding="15" Background="#1000FFFF">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <TextBlock Text="DEVICE MODEL" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.5"/>
+                                <TextBlock Text="{Binding RemoteDeviceModel}" Foreground="{StaticResource DeepEye.Brush.Cyan}" HorizontalAlignment="Right" FontWeight="Bold"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <TextBlock Text="USB ID" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.5"/>
+                                <TextBlock Text="{Binding RemoteVidPid}" Foreground="{StaticResource DeepEye.Brush.Cyan}" HorizontalAlignment="Right" FontFamily="{StaticResource DeepEye.Font.Mono}"/>
+                            </Grid>
+                            <Grid>
+                                <TextBlock Text="LATENCY" Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.5"/>
+                                <TextBlock Text="{Binding LatencyMs}" Foreground="{StaticResource DeepEye.Brush.Orange}" HorizontalAlignment="Right" FontFamily="{StaticResource DeepEye.Font.Mono}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Command="{Binding MountDriverCommand}" Content="MOUNT DRIVER" 
+                            IsEnabled="{Binding IsConnected}"
+                            Style="{StaticResource DeepEye.Button.Hazard}" Height="50" Margin="0,20,0,0"/>
+                    
+                    <TextBlock Text="Mounts remote USB as local device for UnlockTool/Miracle" 
+                               Foreground="{StaticResource DeepEye.Brush.White}" Opacity="0.4" FontSize="10" 
+                               HorizontalAlignment="Center" Margin="0,5,0,0" TextWrapping="Wrap"/>
+
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

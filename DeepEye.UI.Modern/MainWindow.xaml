@@ -59,6 +59,9 @@
             <DataTemplate DataType="{x:Type viewModels:DriverCenterViewModel}">
                 <views:DriverCenterView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModels:RemoteServerViewModel}">
+                <views:RemoteServerView />
+            </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -147,6 +150,7 @@
                     <Button Content="STATS" Command="{Binding NavigateToCenterCommand}" CommandParameter="ANALYTICS" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                     <Button Content="CLOUD" Command="{Binding NavigateToCenterCommand}" CommandParameter="CLOUD" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                     <Button Content="DRIVER" Command="{Binding NavigateToCenterCommand}" CommandParameter="DRIVER" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
+                    <Button Content="REMOTE" Command="{Binding NavigateToCenterCommand}" CommandParameter="REMOTE" Style="{StaticResource DeepEye.Button.Modern}" Height="50" Margin="10,5" BorderThickness="0,0,0,1"/>
                 </StackPanel>
 
                 <!-- 5. Main Canvas -->

@@ -1,4 +1,4 @@
-# DeepEyeUnlocker v4.6.3 (The Sentinel Pro Release)
+# DeepEyeUnlocker v4.7.0 (The Iron Clad Build)
 
  "Universal Power. Precision Control."
 
@@ -20,11 +20,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v4.0.0**
+Latest stable release: **v4.7.0**
 
-- ⬇️ [Download DeepEyeUnlocker v4.0.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.0.0)
+- ⬇️ [Download DeepEyeUnlocker v4.7.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.7.0)
 - Platform: Windows (x64)
-- Status: Stable Release (Sentinel Pro) - Advanced Driver Auditing, Fleet HQ, and Partition Restore enabled.
+- Status: Stable Release (Iron Clad) - BROM Scenario Stability & Android Build Failsafes.
 
 ---
 
@@ -180,6 +180,15 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v4.7.0 – The Iron Clad Build (2026-02-10)
+
+#### New in v4.7.0
+
+- **🧪 MTK BROM Scenario Fuzzing:** Integrated advanced scenario-based fuzzing for MediaTek BROM handshakes, ensuring protocol stability across diverse chipsets.
+- **🛡️ Android CI Failsafe:** Implemented a robust "Failsafe" Android APK build pipeline with secure signing fallbacks and keystore protection.
+- **⚡ Protocol Precision:** Refined MTK engine logic for faster auth-bypass and more reliable device detection in preloader/BROM transitions.
+- **📦 Build Hardening:** Improved CI workflows to prevent artifact pollution and ensure "Clean Room" builds.
 
 ### v4.0.0 – Sentinel Pro Release (2026-02-03)
 
