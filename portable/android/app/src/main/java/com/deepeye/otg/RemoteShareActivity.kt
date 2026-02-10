@@ -19,6 +19,8 @@ import java.util.UUID
 class RemoteShareActivity : AppCompatActivity() {
 
     private lateinit var btnStart: Button
+    private lateinit var btnConnect: Button
+    private lateinit var inputSessionId: android.widget.EditText
     private lateinit var txtStatus: TextView
     private lateinit var txtSubStatus: TextView
     private lateinit var txtSessionCode: TextView
@@ -34,6 +36,8 @@ class RemoteShareActivity : AppCompatActivity() {
         setContentView(R.layout.activity_remote_share)
 
         btnStart = findViewById(R.id.btnStartShare)
+        btnConnect = findViewById(R.id.btnConnect)
+        inputSessionId = findViewById(R.id.inputSessionId)
         txtStatus = findViewById(R.id.txtStatus)
         txtSubStatus = findViewById(R.id.txtSubStatus)
         txtSessionCode = findViewById(R.id.txtSessionCode)
@@ -53,10 +57,34 @@ class RemoteShareActivity : AppCompatActivity() {
                     requestUsbPermission()
                 }
             } else {
-                Toast.makeText(this, "No USB Device Connected!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No USB Device Connected to Share!", Toast.LENGTH_SHORT).show()
                 checkConnectedDevices()
             }
         }
+
+        btnConnect.setOnClickListener {
+            val sessionId = inputSessionId.text.toString()
+            if (sessionId.isNotEmpty()) {
+                connectToRemote(sessionId)
+            } else {
+                Toast.makeText(this, "Enter Session ID", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun connectToRemote(sessionId: String) {
+        // Logic to connect to remote device acting as server
+        // This makes THIS phone the technician console
+        
+        Toast.makeText(this, "Connecting to $sessionId...", Toast.LENGTH_SHORT).show()
+        
+        // TODO: Implement TCP Client that tunnels traffic to Local Virtual USB Driver
+        // For now, launch dummy technician mode
+        
+        val intent = Intent(this, OtgActivity::class.java)
+        intent.putExtra("REMOTE_SESSION", sessionId)
+        startActivity(intent)
+        finish()
     }
 
     private fun checkConnectedDevices() {
