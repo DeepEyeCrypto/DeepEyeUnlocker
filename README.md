@@ -1,4 +1,4 @@
-# DeepEyeUnlocker v4.7.0 (The Iron Clad Build)
+# DeepEyeUnlocker v4.7.2 (The Cyber Sentinel Build)
 
  "Universal Power. Precision Control."
 
@@ -20,11 +20,11 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v4.7.0**
+Latest stable release: **v4.7.2**
 
-- ⬇️ [Download DeepEyeUnlocker v4.7.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.7.0)
+- ⬇️ [Download DeepEyeUnlocker v4.7.2](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v4.7.2)
 - Platform: Windows (x64)
-- Status: Stable Release (Iron Clad) - BROM Scenario Stability & Android Build Failsafes.
+- Status: Stable Release (Cyber Sentinel) - Premium UI Overhaul & CI Stability.
 
 ---
 
@@ -180,6 +180,15 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 ---
 
 ## 📦 Changelog
+
+### v4.7.2 – The Cyber Sentinel Build (2026-02-10)
+
+#### New in v4.7.2
+
+- **🎨 Premium Cyberpunk UI (Android):** Upgraded Android application icons and theme resources with a sleek "Cyberpunk" aesthetic.
+- **🛠️ Desktop Build Repair:** Fixed a critical issue where missing watermark helpers caused Windows builds to fail.
+- **📱 Android Dual Mode:** Finalized the integration of the Dual Remote mode for Android high-performance OTG operations.
+- **🛰️ Remote Server Hub:** Integrated the Desktop Remote Server for seamless device interaction across different network segments.
 
 ### v4.7.0 – The Iron Clad Build (2026-02-10)
 

@@ -3,7 +3,7 @@
 ## 💎 Project Identity
 
 - **Name:** DeepEyeUnlocker
-- **Version:** 4.7.0 "Iron Clad"
+- **Version:** 4.7.2 "Cyber Sentinel"
 - **Mission:** Democratizing mobile repair tools by providing a free, professional-grade open-source alternative to paid repair boxes.
 
 ## 🛠 Technical Stack
