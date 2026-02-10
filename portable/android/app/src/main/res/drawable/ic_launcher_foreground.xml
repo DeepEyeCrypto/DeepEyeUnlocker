@@ -1,14 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- DeepEye Logo - Eye Icon -->
+    
+    <!-- Outer Glow Ring -->
     <path
-        android:fillColor="#00F2FF"
-        android:pathData="M54,34C37.4,34 23.2,43.6 17,58c6.2,14.4 20.4,24 37,24s30.8,-9.6 37,-24C84.8,43.6 70.6,34 54,34zM54,76c-9.9,0 -18,-8.1 -18,-18s8.1,-18 18,-18s18,8.1 18,18S63.9,76 54,76z"/>
+        android:pathData="M54,14c-22.1,0 -40,17.9 -40,40s17.9,40 40,40s40,-17.9 40,-40S76.1,14 54,14zM54,88c-18.8,0 -34,-15.2 -34,-34s15.2,-34 34,-34s34,15.2 34,34S72.8,88 54,88z"
+        android:fillColor="#003344"/>
+        
+    <!-- Tech Iris Segments -->
     <path
-        android:fillColor="#00F2FF"
-        android:pathData="M54,46c-6.6,0 -12,5.4 -12,12s5.4,12 12,12s12,-5.4 12,-12S60.6,46 54,46zM54,64c-3.3,0 -6,-2.7 -6,-6s2.7,-6 6,-6s6,2.7 6,6S57.3,64 54,64z"/>
+        android:pathData="M54,20c-18.8,0 -34,15.2 -34,34s15.2,34 34,34s34,-15.2 34,-34S72.8,20 54,20zM54,82c-15.5,0 -28,-12.5 -28,-28s12.5,-28 28,-28s28,12.5 28,28S69.5,82 54,82z"
+        android:fillColor="#00F2FF"/>
+        
+    <!-- Inner Eye Pupil (Sharp) -->
+    <path
+        android:pathData="M54,34c-11,0 -20,9 -20,20s9,20 20,20s20,-9 20,-20S65,34 54,34zM54,66c-6.6,0 -12,-5.4 -12,-12s5.4,-12 12,-12s12,5.4 12,12S60.6,66 54,66z"
+        android:fillColor="#FFFFFF"/>
+        
+    <!-- Central Core -->
+    <path
+        android:pathData="M54,46c-4.4,0 -8,3.6 -8,8s3.6,8 8,8s8,-3.6 8,-8S58.4,46 54,46z">
+        <aapt:attr name="android:fillColor">
+            <gradient 
+                android:startX="54" android:startY="46"
+                android:endX="54" android:endY="62"
+                android:type="linear">
+                <item android:offset="0" android:color="#00F2FF"/>
+                <item android:offset="1" android:color="#005577"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Scan Line Effect -->
+    <path
+        android:pathData="M24,53h60v2h-60z"
+        android:fillAlpha="0.5"
+        android:fillColor="#FFFFFF"/>
 </vector>
