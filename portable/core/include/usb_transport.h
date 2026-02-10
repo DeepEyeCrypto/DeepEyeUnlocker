@@ -20,6 +20,8 @@ private:
   void *_ctx;
   void *_handle;
   int _fd;
+  unsigned char _ep_in;
+  unsigned char _ep_out;
 };
 
 } // namespace Core

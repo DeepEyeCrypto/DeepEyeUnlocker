@@ -7,7 +7,7 @@
 namespace DeepEye {
 namespace Core {
 
-LibUsbTransport::LibUsbTransport() : _ctx(nullptr), _handle(nullptr), _fd(-1) {
+LibUsbTransport::LibUsbTransport() : _ctx(nullptr), _handle(nullptr), _fd(-1), _ep_in(0), _ep_out(0) {
 #ifdef HAS_LIBUSB
   libusb_init(reinterpret_cast<libusb_context **>(&_ctx));
 #endif
@@ -33,7 +33,35 @@ bool LibUsbTransport::Open(int fd) {
     return false;
   }
 
-  libusb_claim_interface(reinterpret_cast<libusb_device_handle *>(_handle), 0);
+  libusb_device_handle *handle = reinterpret_cast<libusb_device_handle *>(_handle);
+  libusb_claim_interface(handle, 0);
+
+  // Dynamic Endpoint Discovery
+  libusb_device *dev = libusb_get_device(handle);
+  libusb_config_descriptor *config;
+  if (libusb_get_active_config_descriptor(dev, &config) == 0) {
+      for (int i = 0; i < config->bNumInterfaces; i++) {
+          const libusb_interface *inter = &config->interface[i];
+          const libusb_interface_descriptor *interdesc = &inter->altsetting[0];
+          
+          for (int j = 0; j < interdesc->bNumEndpoints; j++) {
+              const libusb_endpoint_descriptor *epdesc = &interdesc->endpoint[j];
+              if ((epdesc->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
+                  if ((epdesc->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
+                      if (_ep_in == 0) _ep_in = epdesc->bEndpointAddress;
+                  } else {
+                      if (_ep_out == 0) _ep_out = epdesc->bEndpointAddress;
+                  }
+              }
+          }
+      }
+      libusb_free_config_descriptor(config);
+  }
+
+  if (_ep_in == 0) _ep_in = 0x81; // Fallback
+  if (_ep_out == 0) _ep_out = 0x01; // Fallback
+
+  std::cout << "Endpoints Found: IN=" << std::hex << (int)_ep_in << " OUT=" << (int)_ep_out << std::dec << std::endl;
   return true;
 #else
   (void)fd;
@@ -65,7 +93,7 @@ int LibUsbTransport::Send(const uint8_t *data, size_t length,
     int transferred = 0;
     int rc =
         libusb_bulk_transfer(reinterpret_cast<libusb_device_handle *>(_handle),
-                             0x01, (unsigned char *)(data + totalTransferred),
+                             _ep_out, (unsigned char *)(data + totalTransferred),
                              toTransfer, &transferred, timeout_ms);
 
     if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT)
@@ -94,7 +122,7 @@ int LibUsbTransport::Receive(uint8_t *data, size_t length,
         std::min((int)(length - totalTransferred), (int)CHUNK_SIZE);
     int transferred = 0;
     int rc = libusb_bulk_transfer(
-        reinterpret_cast<libusb_device_handle *>(_handle), 0x81,
+        reinterpret_cast<libusb_device_handle *>(_handle), _ep_in,
         (data + totalTransferred), toTransfer, &transferred, timeout_ms);
 
     if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT)
