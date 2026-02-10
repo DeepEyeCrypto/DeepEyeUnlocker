@@ -1,27 +1,27 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
-# Core Paths (Updated for v4.7.7)
+# Core Paths (Updated for v4.7.9)
 get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
-get_filename_component(LIBUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb-source" ABSOLUTE)
+get_filename_component(LIBUSB_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb-source" ABSOLUTE)
 
 message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
-message(STATUS "LibUSB Source Dir: ${LIBUSB_DIR}")
+message(STATUS "LibUSB Source Dir: ${LIBUSB_ROOT_PATH}")
 
 include_directories(${CORE_DIR}/include)
-include_directories(${LIBUSB_DIR}/libusb)
+include_directories(${LIBUSB_ROOT_PATH}/libusb)
 
 # --- LIBUSB BUILD (Static) ---
 set(LIBUSB_SRC
-    ${LIBUSB_DIR}/libusb/core.c
-    ${LIBUSB_DIR}/libusb/descriptor.c
-    ${LIBUSB_DIR}/libusb/io.c
-    ${LIBUSB_DIR}/libusb/sync.c
-    ${LIBUSB_DIR}/libusb/strerror.c
-    ${LIBUSB_DIR}/libusb/os/linux_usbfs.c
-    ${LIBUSB_DIR}/libusb/os/poll_posix.c
-    ${LIBUSB_DIR}/libusb/os/threads_posix.c
-    ${LIBUSB_DIR}/libusb/os/linux_netlink.c
+    ${LIBUSB_ROOT_PATH}/libusb/core.c
+    ${LIBUSB_ROOT_PATH}/libusb/descriptor.c
+    ${LIBUSB_ROOT_PATH}/libusb/io.c
+    ${LIBUSB_ROOT_PATH}/libusb/sync.c
+    ${LIBUSB_ROOT_PATH}/libusb/strerror.c
+    ${LIBUSB_ROOT_PATH}/libusb/os/linux_usbfs.c
+    ${LIBUSB_ROOT_PATH}/libusb/os/poll_posix.c
+    ${LIBUSB_ROOT_PATH}/libusb/os/threads_posix.c
+    ${LIBUSB_ROOT_PATH}/libusb/os/linux_netlink.c
 )
 
 add_library(usb_static STATIC ${LIBUSB_SRC})
@@ -31,7 +31,7 @@ target_compile_definitions(usb_static PRIVATE
     HAVE_NFDS_T
     LINUX
 )
-target_include_directories(usb_static PUBLIC ${LIBUSB_DIR}/libusb)
+target_include_directories(usb_static PUBLIC ${LIBUSB_ROOT_PATH}/libusb)
 
 # --- DEEPEYE JNI CORE ---
 add_library(deepeye_core SHARED

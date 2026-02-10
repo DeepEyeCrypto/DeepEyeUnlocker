@@ -63,7 +63,15 @@ jobs:
           ./scripts/setup-native-deps.sh
           echo "=== Debugging Native Directories ==="
           ls -F portable/core/
-          if [ -d "portable/core/libusb-source" ]; then echo "libusb-source exists"; else echo "libusb-source MISSING"; fi
+          if [ -d "portable/core/libusb-source" ]; then 
+             echo "libusb-source exists. Listing content:"
+             ls -F portable/core/libusb-source/
+          else 
+             echo "libusb-source MISSING"
+          fi
+          
+          echo "=== Debugging CMakeLists.txt Content ==="
+          cat portable/android/app/src/main/cpp/CMakeLists.txt
 
       - name: Setup Keystore
         env:
