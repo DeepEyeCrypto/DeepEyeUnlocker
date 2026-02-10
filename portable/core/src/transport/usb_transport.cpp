@@ -9,7 +9,15 @@ namespace Core {
 
 LibUsbTransport::LibUsbTransport() : _ctx(nullptr), _handle(nullptr), _fd(-1), _ep_in(0), _ep_out(0) {
 #ifdef HAS_LIBUSB
-  libusb_init(reinterpret_cast<libusb_context **>(&_ctx));
+  // CRITICAL ANDROID OPTIMIZATION:
+  // Prevent libusb from enumerating devices (requires root/permissions we don't have).
+  // We only work with the FD passed from Java.
+  libusb_set_option(nullptr, LIBUSB_OPTION_NO_DEVICE_DISCOVERY);
+  
+  int rc = libusb_init(reinterpret_cast<libusb_context **>(&_ctx));
+  if (rc != 0) {
+      std::cerr << "LibUSB Init Failed: " << libusb_error_name(rc) << std::endl;
+  }
 #endif
 }
 

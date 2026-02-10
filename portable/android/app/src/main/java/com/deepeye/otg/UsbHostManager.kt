@@ -12,6 +12,8 @@ import android.util.Log
 
 class UsbHostManager(private val context: Context, private val listener: HotplugListener? = null) {
     private val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+    private val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+    private val wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "DeepEye:OTG")
     private val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION"
 
     interface HotplugListener {
@@ -85,12 +87,19 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
         val connection = usbManager.openDevice(device)
         if (connection != null) {
             Log.i("DeepEye-OTG", "Direct Link Established. Handing FD to Core.")
+            
+            // Acquire WakeLock (10 mins safety timeout) to prevent CPU sleep during flash
+            if (!wakeLock.isHeld) {
+                wakeLock.acquire(10 * 60 * 1000L)
+            }
+            
             listener?.onDeviceReady(connection.fileDescriptor)
         }
     }
 
     fun unregister() {
         try {
+            if (wakeLock.isHeld) wakeLock.release()
             context.unregisterReceiver(usbReceiver)
         } catch (e: Exception) {
             Log.w("DeepEye-OTG", "Receiver already unregistered: ${e.message}")
