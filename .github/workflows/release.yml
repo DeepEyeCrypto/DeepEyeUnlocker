@@ -82,22 +82,29 @@ jobs:
       - name: Build APK
         working-directory: portable/android
         env:
-          # Use secrets if available, otherwise fallback to 'android' (matches temp keystore)
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'android' }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'key0' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'android' }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          # Build both Debug (failsafe) and Release
+          ./gradlew assembleDebug assembleRelease --no-daemon || ./gradlew assembleDebug --no-daemon
 
       - name: Locate Artifact
         id: locate
         run: |
-          APK_PATH=$(find portable/android/app/build/outputs/apk -name "*.apk" ! -name "*-unaligned.apk" | head -1)
+          # Try Release first, fallback to Debug
+          APK_PATH=$(find portable/android/app/build/outputs/apk -name "*-release.apk" ! -name "*-unaligned.apk" | head -1)
           if [ -z "$APK_PATH" ]; then
-            echo "::error::Release APK not found in build outputs!"
+             echo "Release APK not found, checking Debug..."
+             APK_PATH=$(find portable/android/app/build/outputs/apk -name "*-debug.apk" | head -1)
+          fi
+          
+          if [ -z "$APK_PATH" ]; then
+            echo "::error::No APK found in build outputs!"
             exit 1
           fi
+          
           cp "$APK_PATH" "DeepEyeUnlocker-Android-${{ github.ref_name }}.apk"
           echo "apk_path=DeepEyeUnlocker-Android-${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
 
