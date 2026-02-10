@@ -46,6 +46,7 @@ cat > "$CONFIG_H" <<EOF
 #define OS_LINUX 1
 #define THREADS_POSIX 1
 #define DEFAULT_VISIBILITY __attribute__((visibility("default")))
+#define PRINTF_FORMAT(a, b) __attribute__ ((__format__ (__printf__, a, b)))
 #define ENABLE_LOGGING 1
 #define USE_SYSTEM_LOGGING_FACILITY 1
 
