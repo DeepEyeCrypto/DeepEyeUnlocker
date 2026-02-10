@@ -61,6 +61,7 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
+          echo "Checking Keystore configuration..."
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Decoding Keystore from Secrets..."
             echo "$KEYSTORE_BASE64" | base64 --decode > portable/android/app/release.jks
@@ -73,6 +74,10 @@ jobs:
           else
             echo "Keystore already exists in repo. Using it."
           fi
+          
+          # Verify Keystore
+          ls -l portable/android/app/release.jks
+          keytool -list -v -keystore portable/android/app/release.jks -storepass android || echo "Keystore verification failed (password mismatch?)"
 
       - name: Build APK
         working-directory: portable/android
