@@ -61,6 +61,9 @@ jobs:
         run: |
           chmod +x scripts/setup-native-deps.sh
           ./scripts/setup-native-deps.sh
+          echo "=== Debugging Native Directories ==="
+          ls -F portable/core/
+          if [ -d "portable/core/libusb-source" ]; then echo "libusb-source exists"; else echo "libusb-source MISSING"; fi
 
       - name: Setup Keystore
         env:
@@ -93,7 +96,7 @@ jobs:
         run: |
           chmod +x gradlew
           # Build both Debug (failsafe) and Release
-          ./gradlew assembleDebug assembleRelease --no-daemon || ./gradlew assembleDebug --no-daemon
+          ./gradlew clean assembleDebug assembleRelease --no-daemon || ./gradlew assembleDebug --no-daemon
 
       - name: Locate Artifact
         id: locate
