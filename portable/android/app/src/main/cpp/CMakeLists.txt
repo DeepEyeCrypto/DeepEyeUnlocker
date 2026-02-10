@@ -1,23 +1,39 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
-# Specify the shared core directory using absolute path for safety
+# Core Paths
 get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
+get_filename_component(LIBUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb" ABSOLUTE)
+
 message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
+message(STATUS "LibUSB Source Dir: ${LIBUSB_DIR}")
 
-# Verify core directory exists
-if(NOT EXISTS "${CORE_DIR}/include")
-    message(FATAL_ERROR "Core include directory not found: ${CORE_DIR}/include")
-endif()
-
-# Include headers from the shared core
 include_directories(${CORE_DIR}/include)
+include_directories(${LIBUSB_DIR}/libusb)
 
-# Libusb is usually provided by the system or as a prebuilt for Android
-# Here we assume it's available as 'usb1.0' via standard NDK search or bundled
-find_library(log-lib log)
+# --- LIBUSB BUILD (Static) ---
+set(LIBUSB_SRC
+    ${LIBUSB_DIR}/libusb/core.c
+    ${LIBUSB_DIR}/libusb/descriptor.c
+    ${LIBUSB_DIR}/libusb/io.c
+    ${LIBUSB_DIR}/libusb/sync.c
+    ${LIBUSB_DIR}/libusb/strerror.c
+    ${LIBUSB_DIR}/libusb/os/linux_usbfs.c
+    ${LIBUSB_DIR}/libusb/os/poll_posix.c
+    ${LIBUSB_DIR}/libusb/os/threads_posix.c
+    ${LIBUSB_DIR}/libusb/os/linux_netlink.c
+)
 
-# The JNI bridge sources
+add_library(usb_static STATIC ${LIBUSB_SRC})
+target_compile_definitions(usb_static PRIVATE 
+    __ANDROID__ 
+    PLATFORM_POSIX 
+    HAVE_NFDS_T
+    LINUX
+)
+target_include_directories(usb_static PUBLIC ${LIBUSB_DIR}/libusb)
+
+# --- DEEPEYE JNI CORE ---
 add_library(deepeye_core SHARED
     native-lib.cpp
     ${CORE_DIR}/src/protocols/protocol_engine.cpp
@@ -31,22 +47,14 @@ add_library(deepeye_core SHARED
     ${CORE_DIR}/src/transport/usb_transport.cpp
 )
 
-find_library(USB_LIB usb1.0)
+find_library(log-lib log)
 
-# Conditional linking based on library availability
-if(USB_LIB)
-    message(STATUS "Found libusb for Android JNI: ${USB_LIB}")
-    target_link_libraries(deepeye_core
-        ${log-lib}
-        ${USB_LIB}
-    )
-    target_compile_definitions(deepeye_core PRIVATE HAS_LIBUSB=1)
-else()
-    message(WARNING "libusb NOT found - building without USB support")
-    message(WARNING "USB transport will be stubbed (this is OK for initial builds)")
-    target_link_libraries(deepeye_core
-        ${log-lib}
-    )
-    # Do NOT define HAS_LIBUSB - let #ifdef guards work correctly
-endif()
+# Link LibUSB Static
+target_link_libraries(deepeye_core
+    ${log-lib}
+    usb_static
+)
 
+# Enable USB Support Flag
+target_compile_definitions(deepeye_core PRIVATE HAS_LIBUSB=1)
+message(STATUS "LibUSB configured successfully (Static Build).")
