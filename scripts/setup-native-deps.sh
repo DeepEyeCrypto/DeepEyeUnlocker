@@ -1,12 +1,15 @@
 #!/bin/bash
 set -e
 
-# Define paths
-LIBUSB_DIR="portable/core/libusb"
+# Define paths (New Directory to avoid submodule conflicts)
+LIBUSB_DIR="portable/core/libusb-source"
 LIBUSB_REPO="https://github.com/libusb/libusb.git"
 LIBUSB_TAG="v1.0.27"
 
 echo "=== DeepEye Native Dependency Injection ==="
+
+# Clean old dir if exists
+rm -rf "portable/core/libusb"
 
 # Check if libusb exists
 if [ -d "$LIBUSB_DIR" ]; then
@@ -20,9 +23,7 @@ else
     git clone --depth 1 --branch "$LIBUSB_TAG" "$LIBUSB_REPO" "$LIBUSB_DIR"
 fi
 
-# Create Android.mk adapter for CMake if needed, or just point CMake to sources
-echo "Injecting Android config..."
+# NUCLEAR: Remove .git to prevent submodule issues forever
+rm -rf "$LIBUSB_DIR/.git"
 
-# We need to ensure config.h is generated or mocked for Android
-# LibUSB has an android/ directory but CMake build is better
 echo "Dependency setup complete."

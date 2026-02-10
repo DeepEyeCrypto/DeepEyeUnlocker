@@ -3,7 +3,7 @@ project("deepeye_otg_jni")
 
 # Core Paths
 get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
-get_filename_component(LIBUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb" ABSOLUTE)
+get_filename_component(LIBUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb-source" ABSOLUTE)
 
 message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
 message(STATUS "LibUSB Source Dir: ${LIBUSB_DIR}")
