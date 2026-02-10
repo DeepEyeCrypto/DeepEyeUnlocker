@@ -19,9 +19,8 @@ namespace DeepEyeUnlocker.Protocols.MTK
         public string Name => "MediaTek Preloader";
         public DeviceContext Context { get; }
 
-        public MTKEngine(UsbDevice usbDevice)
+        public MTKEngine(UsbDevice usbDevice) : this(new Protocols.Usb.UsbDeviceWrapper(usbDevice))
         {
-            _usbDevice = new Protocols.Usb.UsbDeviceWrapper(usbDevice);
             // Extract VID/PID from device - LibUsbDotNet 2.x compatible
             int vid = 0, pid = 0;
             if (usbDevice.UsbRegistryInfo != null)
@@ -29,10 +28,18 @@ namespace DeepEyeUnlocker.Protocols.MTK
                 vid = usbDevice.UsbRegistryInfo.Vid;
                 pid = usbDevice.UsbRegistryInfo.Pid;
             }
+            Context.Vid = vid;
+            Context.Pid = pid;
+        }
+
+        // Test Constructor
+        public MTKEngine(DeepEyeUnlocker.Protocols.Usb.IUsbDevice usbDevice)
+        {
+            _usbDevice = usbDevice;
             Context = new DeviceContext
             {
-                Vid = vid, 
-                Pid = pid,
+                Vid = 0x0E8D, // Default MTK VID
+                Pid = 0x0003, // Default MTK PID
                 Mode = ConnectionMode.BROM,
                 Chipset = "MediaTek"
             };
