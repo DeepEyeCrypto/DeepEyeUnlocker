@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
-# Core Paths
+# Core Paths (Updated for v4.7.7)
 get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
 get_filename_component(LIBUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb-source" ABSOLUTE)
 
