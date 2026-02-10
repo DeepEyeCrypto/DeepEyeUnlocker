@@ -19,7 +19,7 @@ set(LIBUSB_SRC
     ${LIBUSB_ROOT_PATH}/libusb/sync.c
     ${LIBUSB_ROOT_PATH}/libusb/strerror.c
     ${LIBUSB_ROOT_PATH}/libusb/os/linux_usbfs.c
-    ${LIBUSB_ROOT_PATH}/libusb/os/poll_posix.c
+    ${LIBUSB_ROOT_PATH}/libusb/os/events_posix.c
     ${LIBUSB_ROOT_PATH}/libusb/os/threads_posix.c
     ${LIBUSB_ROOT_PATH}/libusb/os/linux_netlink.c
 )
