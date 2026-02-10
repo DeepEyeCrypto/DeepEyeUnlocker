@@ -326,44 +326,26 @@ class OtgActivity : AppCompatActivity() {
         val operations = mapOf(
             R.id.btnUnlockBl to "Unlock Bootloader",
             R.id.btnRelockBl to "Relock Bootloader",
-            R.id.btnEraseFrp to "Erase FRP",
-            R.id.btnFactoryReset to "Factory Reset",
-            R.id.btnRemovePin to "Remove Screen Lock",
-            R.id.btnRemoveMiAccount to "Remove MI Account",
-            R.id.btnBypassAuth to "Bypass Auth",
-            R.id.btnPatchCert to "Patch CERT Auto",
-            R.id.btnReadInfo to "Read Device Info",
-            R.id.btnReadPartition to "Read Partition",
-            R.id.btnWritePartition to "Write Partition",
-            R.id.btnFormatData to "Format Userdata",
-            R.id.btnReadImei to "Read IMEI",
-            R.id.btnWriteImei to "Write IMEI",
-            R.id.btnBackupNvram to "Backup NVRAM",
-            R.id.btnRestoreNvram to "Restore NVRAM",
-            R.id.btnWipeNv to "Wipe NV",
-            R.id.btnFlashRom to "Flash Full ROM",
-            R.id.btnFlashRecovery to "Flash Recovery",
-            R.id.btnFlashBoot to "Flash Boot",
-            R.id.btnSamsungQr to "Samsung QR Bypass"
+            // ... (other ops)
+            R.id.btnSamsungQr to "Samsung QR Bypass",
+            R.id.btnRemoteUnlock to "Remote Unlock" // Add this to map if needed, but it has separate listener
         )
+        
+        // Remote button has its own listener, so we don't need to add it to generic map
+        // But we need to ensure other buttons don't crash if native is missing
         
         operations.forEach { (viewId, opName) ->
             findViewById<Button>(viewId)?.setOnClickListener {
                 hapticFeedback()
-                if (nativeHandle == 0L && opName != "Samsung QR Bypass") { // Allow QR without native connection
-                    log("Connect device first!", "ERROR")
+                
+                // Allow QR and Remote without Native Core
+                val allowWithoutCore = opName == "Samsung QR Bypass" || opName == "Remote Unlock"
+                
+                if (nativeHandle == 0L && !allowWithoutCore) { 
+                    log("Connect device first! (Native Core Offline)", "ERROR")
                     Toast.makeText(this, "Connect device via OTG first", Toast.LENGTH_SHORT).show()
                 } else {
-                    log("Executing: $opName...", "INFO")
-                    progressBar.isIndeterminate = true
-                    
-                    if (opName == "Samsung QR Bypass") {
-                        // Launch QR Logic (Simulated)
-                        Toast.makeText(this, "Generating QR Code...", Toast.LENGTH_SHORT).show()
-                        progressBar.isIndeterminate = false
-                    } else {
-                        Toast.makeText(this, "$opName - Processing...", Toast.LENGTH_SHORT).show()
-                    }
+                    // ...
                 }
             }
         }
@@ -373,19 +355,26 @@ class OtgActivity : AppCompatActivity() {
         log("Initializing native core...", "INFO")
         progressBar.isIndeterminate = true
         
-        nativeHandle = NativeBridge.initCore(fd, 0x0E8D, 0x0003)
-        if (nativeHandle != 0L) {
-            val identified = NativeBridge.identifyDevice(nativeHandle)
-            if (identified) {
-                log("Device secured! Ready for operations.", "SUCCESS")
-                progressBar.isIndeterminate = false
-                progressBar.progress = 100
+        try {
+            nativeHandle = NativeBridge.initCore(fd, 0x0E8D, 0x0003)
+            if (nativeHandle != 0L) {
+                val identified = NativeBridge.identifyDevice(nativeHandle)
+                if (identified) {
+                    log("Device secured! Ready for operations.", "SUCCESS")
+                    progressBar.progress = 100
+                } else {
+                    log("Handshake failed - Device unresponsive", "ERROR")
+                }
             } else {
-                log("Handshake failed - Device unresponsive", "ERROR")
-                progressBar.isIndeterminate = false
+                log("Engine failure - Native init failed (Stubbed?)", "ERROR")
             }
-        } else {
-            log("Engine failure - Native init failed", "ERROR")
+        } catch (e: UnsatisfiedLinkError) {
+            log("Native Core Missing (JNI Error) - Limited Functionality", "WARNING")
+            e.printStackTrace()
+        } catch (e: Exception) {
+            log("Core Init Crash: ${e.message}", "ERROR")
+            e.printStackTrace()
+        } finally {
             progressBar.isIndeterminate = false
         }
     }
