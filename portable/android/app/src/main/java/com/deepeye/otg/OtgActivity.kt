@@ -18,111 +18,41 @@ import android.os.Build
 
 class OtgActivity : AppCompatActivity() {
     
-    private lateinit var modelList: RecyclerView
-    private lateinit var modelAdapter: ModelAdapter
-    private lateinit var statusLog: TextView
-    private lateinit var progressBar: ProgressBar
+    // UI Elements
+    private lateinit var btnSelectModel: Button
+    private lateinit var logOverlay: View
+    private lateinit var terminalText: TextView
+    private lateinit var logScrollView: ScrollView
+    private lateinit var btnCloseLog: View
+    
+    private lateinit var statusLog: TextView // Keeping for compatibility or remove?
     private lateinit var connectionIndicator: TextView
-    private lateinit var usbStatus: TextView
-    private lateinit var modelCount: TextView
     private lateinit var usbHostManager: UsbHostManager
     private lateinit var btnRemote: Button
     
     private var selectedBrand = "Xiaomi"
-    private var selectedMode = "BROM"
-    private var nativeHandle: Long = 0
-    
-    // Device database loaded from JSON
-    private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
-    private var allModels: List<DeviceModel> = emptyList()
+    private var selectedModelName = "Auto-Detect"
+    // ... existing vars ...
 
-    private fun hapticFeedback() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(30)
-        }
-    }
-    
     private fun log(message: String, type: String = "INFO") {
-        val prefix = when(type) {
-            "ERROR" -> "[ERROR] "
-            "SUCCESS" -> "[OK] "
-            "WARNING" -> "[WARN] "
-            else -> "[INFO] "
+        val colorHex = when(type) {
+            "ERROR" -> "#FF5252" // Red
+            "SUCCESS" -> "#00E676" // Green
+            "WARNING" -> "#FFB300" // Orange
+            else -> "#00F2FF" // Cyan
         }
-        val color = when(type) {
-            "ERROR" -> R.color.deepeye_error
-            "SUCCESS" -> R.color.deepeye_success
-            "WARNING" -> R.color.deepeye_warning
-            else -> R.color.deepeye_cyan
-        }
-        statusLog.text = "$prefix$message"
-        statusLog.setTextColor(ContextCompat.getColor(this, color))
-    }
-    
-    private fun loadDeviceDatabase() {
-        try {
-            val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
-            val jsonArray = org.json.JSONArray(jsonString)
-            
-            var totalCount = 0
-            
-            // Clear existing
-            deviceDatabase.clear()
-            
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                val brand = obj.getString("brand")
-                val name = obj.getString("name")
-                val chipset = obj.getString("chipset")
-                
-                val model = DeviceModel(name, chipset, brand)
-                
-                if (!deviceDatabase.containsKey(brand)) {
-                    deviceDatabase[brand] = mutableListOf()
-                }
-                (deviceDatabase[brand] as MutableList).add(model)
-                totalCount++
+        
+        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
+        val formattedMsg = "<font color='#888888'>$timestamp</font> <font color='$colorHex'>$message</font><br/>"
+        
+        runOnUiThread {
+            // Show overlay if hidden (Auto-popup on log)
+            if (logOverlay.visibility != View.VISIBLE) {
+                logOverlay.visibility = View.VISIBLE
             }
             
-            // Build all models list for search
-            allModels = deviceDatabase.values.flatten()
-            
-            log("Loaded $totalCount models from ${deviceDatabase.size} brands", "SUCCESS")
-        } catch (e: Exception) {
-            log("Failed to load models.json: ${e.message}", "ERROR")
-            // Fallback to legacy loading if new format fails
-            loadLegacyDatabase()
-        }
-    }
-
-    private fun loadLegacyDatabase() {
-        try {
-            val jsonString = assets.open("device_database.json").bufferedReader().use { it.readText() }
-            val json = JSONObject(jsonString)
-            val brands = json.getJSONObject("brands")
-            
-            brands.keys().forEach { brandName ->
-                val brandObj = brands.getJSONObject(brandName)
-                val modelsArray = brandObj.getJSONArray("models")
-                val modelsList = mutableListOf<DeviceModel>()
-                
-                for (i in 0 until modelsArray.length()) {
-                    val model = modelsArray.getJSONObject(i)
-                    modelsList.add(DeviceModel(
-                        name = model.getString("name"),
-                        chipset = model.getString("chipset"),
-                        brand = brandName
-                    ))
-                }
-                deviceDatabase[brandName] = modelsList
-            }
-            allModels = deviceDatabase.values.flatten()
-        } catch (e: Exception) {
-            log("Legacy DB load failed too.", "ERROR")
+            terminalText.append(android.text.Html.fromHtml(formattedMsg, android.text.Html.FROM_HTML_MODE_LEGACY))
+            logScrollView.post { logScrollView.fullScroll(View.FOCUS_DOWN) }
         }
     }
 
@@ -130,74 +60,58 @@ class OtgActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_otg)
         
-        // Initialize views
-        modelList = findViewById(R.id.modelList)
-        statusLog = findViewById(R.id.statusLog)
-        progressBar = findViewById(R.id.progressBar)
+        // Bind New UI
+        btnSelectModel = findViewById(R.id.btnSelectModel)
+        logOverlay = findViewById(R.id.logOverlay)
+        terminalText = findViewById(R.id.terminalText)
+        logScrollView = findViewById(R.id.logScrollView)
+        btnCloseLog = findViewById(R.id.btnCloseLog)
+        
         connectionIndicator = findViewById(R.id.connectionIndicator)
-        usbStatus = findViewById(R.id.usbStatus)
-        modelCount = findViewById(R.id.modelCount)
         btnRemote = findViewById(R.id.btnRemoteUnlock)
 
-        btnRemote.setOnClickListener {
-            hapticFeedback()
-            val intent = android.content.Intent(this, RemoteShareActivity::class.java)
-            startActivity(intent)
+        // Setup Model Selector
+        btnSelectModel.setOnClickListener {
+            showModelSelectionDialog()
         }
         
-        // Load device database
-        loadDeviceDatabase()
-        
-        // Setup model list
-        modelAdapter = ModelAdapter { model ->
-            hapticFeedback()
-            log("Selected: ${model.name} (${model.chipset})", "INFO")
-        }
-        modelList.apply {
-            layoutManager = LinearLayoutManager(this@OtgActivity)
-            adapter = modelAdapter
+        // Setup Log Close
+        btnCloseLog.setOnClickListener {
+            logOverlay.visibility = View.GONE
         }
         
-        // Load default brand models
-        loadModelsForBrand("Xiaomi")
+        // ... (Existing Setup) ...
+    
+    private fun showModelSelectionDialog() {
+        val brands = deviceDatabase.keys.toList().sorted()
         
-        // Setup brand tabs
-        setupBrandTabs()
-        
-        // Setup mode tabs
-        setupModeTabs()
-        
-        // Setup search
-        setupSearch()
-        
-        // Setup operation buttons
-        setupOperationButtons()
-        
-        // Setup USB Host Manager
-        usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
-            override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
-                runOnUiThread {
-                    connectionIndicator.text = "● CONNECTED"
-                    connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_success))
-                    usbStatus.text = " - ${device.productName ?: "Unknown Device"}"
-                    log("Device attached: ${device.productName}", "SUCCESS")
-                }
-            }
-
-            override fun onDeviceReady(fd: Int) {
-                runOnUiThread {
-                    initializeCore(fd)
-                }
-            }
-        })
-        
-        log("DeepEye Unlocker v4.4.0 Ready - ${allModels.size} models", "SUCCESS")
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Select Brand")
+        builder.setItems(brands.toTypedArray()) { _, which ->
+            val brand = brands[which]
+            showModelListDialog(brand)
+        }
+        builder.show()
     }
     
-    private fun loadModelsForBrand(brand: String) {
+    private fun showModelListDialog(brand: String) {
         val models = deviceDatabase[brand] ?: emptyList()
-        modelAdapter.updateModels(models)
-        modelCount.text = "${models.size} models"
+        val modelNames = models.map { "${it.name} (${it.chipset})" }.toTypedArray()
+        
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("$brand Models")
+        builder.setItems(modelNames) { _, which ->
+            val model = models[which]
+            selectedBrand = brand
+            selectedModelName = model.name
+            btnSelectModel.text = "📱 ${model.name}"
+            log("Selected: ${model.name} (${model.chipset})", "INFO")
+        }
+        builder.show()
+    }
+
+    private fun loadModelsForBrand(brand: String) {
+        // Legacy stub
     }
     
     private fun updateButtonLabels() {

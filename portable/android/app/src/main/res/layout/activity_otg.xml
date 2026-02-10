@@ -1,407 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#1A1A1E">
+    android:background="#121212">
 
-    <!-- Top Header -->
+    <!-- MAIN CONTENT -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="#0D0D0F"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="DEEP"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="EYE"
-            android:textColor="#00F2FF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" UNLOCKER"
-            android:textColor="#FF6B35"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
-
-        <TextView
-            android:id="@+id/connectionIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="● OFFLINE"
-            android:textColor="#FF5252"
-            android:textSize="11sp" />
-    </LinearLayout>
-
-    <!-- Brand Tabs Row 1 -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:background="#252528">
-
+        <!-- Top Header -->
         <LinearLayout
-            android:id="@+id/brandTabs1"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:orientation="horizontal"
-            android:paddingHorizontal="4dp"
-            android:gravity="center_vertical">
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#1E1E22"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:elevation="4dp">
 
-            <TextView android:id="@+id/brandXiaomi" style="@style/BrandTab" android:text="Xiaomi" android:background="@drawable/brand_tab_selected"/>
-            <TextView android:id="@+id/brandSamsung" style="@style/BrandTab" android:text="Samsung"/>
-            <TextView android:id="@+id/brandHuawei" style="@style/BrandTab" android:text="Huawei"/>
-            <TextView android:id="@+id/brandOppo" style="@style/BrandTab" android:text="OPPO"/>
-            <TextView android:id="@+id/brandVivo" style="@style/BrandTab" android:text="Vivo"/>
-            <TextView android:id="@+id/brandRealme" style="@style/BrandTab" android:text="Realme"/>
-            <TextView android:id="@+id/brandOnePlus" style="@style/BrandTab" android:text="OnePlus"/>
-            <TextView android:id="@+id/brandMotorola" style="@style/BrandTab" android:text="Motorola"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEEP"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EYE"
+                android:textColor="#00F2FF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            
+            <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+            
+            <TextView
+                android:id="@+id/connectionIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● OFFLINE"
+                android:textColor="#FF5252"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
         </LinearLayout>
-    </HorizontalScrollView>
 
-    <!-- Brand Tabs Row 2 -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:background="#1E1E22">
+        <!-- Brand Tabs (Horizontal Scroll) -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:scrollbars="none"
+            android:background="#252528">
+            <LinearLayout
+                android:id="@+id/brandTabs1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:paddingHorizontal="8dp"
+                android:gravity="center_vertical">
+                <!-- Populated programmatically or existing IDs -->
+                <TextView android:id="@+id/brandXiaomi" style="@style/BrandTab" android:text="Xiaomi" android:background="@drawable/brand_tab_selected"/>
+                <TextView android:id="@+id/brandSamsung" style="@style/BrandTab" android:text="Samsung"/>
+                <TextView android:id="@+id/brandOppo" style="@style/BrandTab" android:text="OPPO"/>
+                <TextView android:id="@+id/brandVivo" style="@style/BrandTab" android:text="Vivo"/>
+                <TextView android:id="@+id/brandRealme" style="@style/BrandTab" android:text="Realme"/>
+                <TextView android:id="@+id/brandHuawei" style="@style/BrandTab" android:text="Huawei"/>
+                <TextView android:id="@+id/brandOnePlus" style="@style/BrandTab" android:text="OnePlus"/>
+            </LinearLayout>
+        </HorizontalScrollView>
 
+        <!-- Model Select & Mode Bar -->
         <LinearLayout
-            android:id="@+id/brandTabs2"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingHorizontal="4dp"
-            android:gravity="center_vertical">
+            android:padding="12dp"
+            android:background="#1A1A1E">
 
-            <TextView android:id="@+id/brandLenovo" style="@style/BrandTabSmall" android:text="Lenovo"/>
-            <TextView android:id="@+id/brandNokia" style="@style/BrandTabSmall" android:text="Nokia"/>
-            <TextView android:id="@+id/brandLG" style="@style/BrandTabSmall" android:text="LG"/>
-            <TextView android:id="@+id/brandAsus" style="@style/BrandTabSmall" android:text="Asus"/>
-            <TextView android:id="@+id/brandTecno" style="@style/BrandTabSmall" android:text="Tecno"/>
-            <TextView android:id="@+id/brandInfinix" style="@style/BrandTabSmall" android:text="Infinix"/>
-            <TextView android:id="@+id/brandItel" style="@style/BrandTabSmall" android:text="Itel"/>
-            <TextView android:id="@+id/brandZTE" style="@style/BrandTabSmall" android:text="ZTE"/>
-            <TextView android:id="@+id/brandGoogle" style="@style/BrandTabSmall" android:text="Google"/>
+            <!-- Model Selector Button -->
+            <Button
+                android:id="@+id/btnSelectModel"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="📱 SELECT MODEL"
+                android:textColor="#00F2FF"
+                android:backgroundTint="#2C2C30"
+                android:drawableEnd="@android:drawable/arrow_down_float"
+                android:drawableTint="#00F2FF"
+                android:paddingHorizontal="16dp"/>
+
+            <!-- Remote Button -->
+            <Button
+                android:id="@+id/btnRemoteUnlock"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="📡 REMOTE"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#6200EA"
+                android:layout_marginStart="8dp"/>
         </LinearLayout>
-    </HorizontalScrollView>
 
-    <!-- Mode Tabs (BROM, EDL, ADB, Fastboot) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="#0D0D0F"
-        android:orientation="horizontal">
-
-        <TextView android:id="@+id/modeBrom" style="@style/ModeTab" android:text="BROM" android:background="@drawable/mode_tab_selected"/>
-        <TextView android:id="@+id/modeEdl" style="@style/ModeTab" android:text="EDL"/>
-        <TextView android:id="@+id/modeAdb" style="@style/ModeTab" android:text="ADB"/>
-        <TextView android:id="@+id/modeFastboot" style="@style/ModeTab" android:text="FASTBOOT"/>
-        <TextView android:id="@+id/modeTestpoint" style="@style/ModeTab" android:text="TESTPOINT"/>
-    </LinearLayout>
-
-    <!-- Main Content Area -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <!-- Left Panel - Model List -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.35"
-            android:orientation="vertical"
-            android:background="@drawable/panel_bg"
-            android:layout_marginEnd="4dp">
+        <!-- Operations List (Full Width) -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="12dp"
+            android:clipToPadding="false">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="32dp"
-                android:background="#00F2FF"
-                android:gravity="center"
-                android:paddingHorizontal="8dp">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
+                <TextView android:text="UNLOCK OPERATIONS" android:textColor="#00F2FF" android:textSize="12sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="UNLOCK BOOTLOADER"/>
+                <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="RELOCK BOOTLOADER"/>
+                <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonOrange" android:text="ERASE FRP LOCK"/>
+                <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="FACTORY RESET (USERDATA)"/>
+
+                <TextView android:text="SECURITY REPAIR" android:textColor="#FF6B35" android:textSize="12sp" android:textStyle="bold" android:layout_marginTop="16dp" android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnRemovePin" style="@style/OperationButton" android:text="REMOVE SCREEN LOCK (SAFE)"/>
+                <Button android:id="@+id/btnRemoveMiAccount" style="@style/OperationButton" android:text="REMOVE MI CLOUD"/>
+                <Button android:id="@+id/btnBypassAuth" style="@style/OperationButton" android:text="AUTH BYPASS (SLA/DA)"/>
+
+                <TextView android:text="DIAGNOSTICS" android:textColor="#00E676" android:textSize="12sp" android:textStyle="bold" android:layout_marginTop="16dp" android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnReadInfo" style="@style/OperationButton" android:text="READ DEVICE INFO"/>
+                <Button android:id="@+id/btnReadImei" style="@style/OperationButton" android:text="READ IMEI / NVRAM"/>
+                
+                <!-- Added spacing for bottom -->
+                <View android:layout_width="match_parent" android:layout_height="80dp"/>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- LOG OVERLAY (Freya Style Popup) -->
+    <RelativeLayout
+        android:id="@+id/logOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC000000"
+        android:visibility="gone"
+        android:elevation="20dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <!-- Console Window -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/panel_bg"
+            android:orientation="vertical">
+
+            <!-- Title Bar -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="#222222"
+                android:paddingHorizontal="16dp">
+                
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📱 MODELS"
-                    android:textColor="#0D0D0F"
-                    android:textSize="11sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
+                    android:text="PROCESS LOG"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:layout_centerVertical="true"/>
 
-            <EditText
-                android:id="@+id/searchModels"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                android:hint="🔍 Search..."
-                android:textColorHint="#666666"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:background="#1A1A1E"
-                android:paddingHorizontal="8dp"
-                android:inputType="text"/>
+                <ImageView
+                    android:id="@+id/btnCloseLog"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:tint="#FF5252"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"/>
+            </RelativeLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/modelList"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:padding="4dp"/>
-        </LinearLayout>
-
-        <!-- Right Panel - Operations -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.65"
-            android:orientation="vertical"
-            android:layout_marginStart="4dp">
-
-            <!-- Connection Status Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/panel_bg"
-                android:orientation="vertical"
-                android:padding="8dp"
-                android:layout_marginBottom="8dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="USB"
-                        android:textColor="#00F2FF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"/>
-                    <TextView
-                        android:id="@+id/usbStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" - Waiting for device..."
-                        android:textColor="#888888"
-                        android:textSize="10sp"
-                        android:layout_marginStart="4dp"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PORT"
-                        android:textColor="#FF6B35"
-                        android:textSize="10sp"
-                        android:textStyle="bold"/>
-                    <TextView
-                        android:id="@+id/portStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" - OTG (Android USB Host)"
-                        android:textColor="#888888"
-                        android:textSize="10sp"
-                        android:layout_marginStart="4dp"/>
-
-                    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
-
-                    <CheckBox
-                        android:id="@+id/autoConnect"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Auto"
-                        android:textColor="#FFFFFF"
-                        android:textSize="9sp"
-                        android:buttonTint="#00F2FF"
-                        android:checked="true"/>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Operations ScrollView -->
+            <!-- Scrollable Terminal -->
             <ScrollView
+                android:id="@+id/logScrollView"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="@drawable/panel_bg">
+                android:layout_height="match_parent"
+                android:background="#000000"
+                android:padding="12dp"
+                android:fillViewport="true">
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/terminalText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-
-                    <!-- Section: Unlock Operations -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="6dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="🔓 UNLOCK OPERATIONS"
-                            android:textColor="#00F2FF"
-                            android:textSize="10sp"
-                            android:textStyle="bold"/>
-
-                        <Button
-                            android:id="@+id/btnRemoteUnlock"
-                            android:layout_width="wrap_content"
-                            android:layout_height="28dp"
-                            android:text="📡 REMOTE"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"
-                            android:background="@drawable/button_remote_bg"
-                            android:paddingHorizontal="8dp"/>
-                    </LinearLayout>
-
-                    <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="[BROM] UNLOCK BOOTLOADER"/>
-                    <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="[BROM] RELOCK BOOTLOADER"/>
-                    <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonOrange" android:text="[BROM] ERASE FRP"/>
-                    <Button android:id="@+id/btnSamsungQr" style="@style/OperationButton" android:text="[MTP] SAMSUNG QR BYPASS" android:visibility="gone"/>
-                    <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="[BROM] FACTORY RESET"/>
-
-                    <!-- Section: Security -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔐 SECURITY"
-                        android:textColor="#FF6B35"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="6dp"/>
-
-                    <Button android:id="@+id/btnRemovePin" style="@style/OperationButton" android:text="[BROM] REMOVE SCREEN LOCK"/>
-                    <Button android:id="@+id/btnRemoveMiAccount" style="@style/OperationButton" android:text="[BROM] REMOVE MI ACCOUNT"/>
-                    <Button android:id="@+id/btnBypassAuth" style="@style/OperationButton" android:text="[BROM] BYPASS AUTH"/>
-                    <Button android:id="@+id/btnPatchCert" style="@style/OperationButton" android:text="[BROM] PATCH CERT AUTO"/>
-
-                    <!-- Section: Read/Write -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="💾 READ / WRITE"
-                        android:textColor="#00E676"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="6dp"/>
-
-                    <Button android:id="@+id/btnReadInfo" style="@style/OperationButton" android:text="[BROM] READ DEVICE INFO"/>
-                    <Button android:id="@+id/btnReadPartition" style="@style/OperationButton" android:text="[BROM] READ PARTITION"/>
-                    <Button android:id="@+id/btnWritePartition" style="@style/OperationButtonOrange" android:text="[BROM] WRITE PARTITION"/>
-                    <Button android:id="@+id/btnFormatData" style="@style/OperationButtonDanger" android:text="[BROM] FORMAT USERDATA"/>
-
-                    <!-- Section: IMEI/NV -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📡 IMEI / NVRAM"
-                        android:textColor="#FFB300"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="6dp"/>
-
-                    <Button android:id="@+id/btnReadImei" style="@style/OperationButton" android:text="[BROM] READ IMEI"/>
-                    <Button android:id="@+id/btnWriteImei" style="@style/OperationButtonOrange" android:text="[BROM] WRITE IMEI"/>
-                    <Button android:id="@+id/btnBackupNvram" style="@style/OperationButton" android:text="[BROM] BACKUP NVRAM"/>
-                    <Button android:id="@+id/btnRestoreNvram" style="@style/OperationButtonOrange" android:text="[BROM] RESTORE NVRAM"/>
-                    <Button android:id="@+id/btnWipeNv" style="@style/OperationButtonDanger" android:text="[BROM] WIPE NV"/>
-
-                    <!-- Section: Flash -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔥 FLASH"
-                        android:textColor="#FF5252"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="6dp"/>
-
-                    <Button android:id="@+id/btnFlashRom" style="@style/OperationButtonOrange" android:text="[BROM] FLASH FULL ROM"/>
-                    <Button android:id="@+id/btnFlashRecovery" style="@style/OperationButton" android:text="[BROM] FLASH RECOVERY"/>
-                    <Button android:id="@+id/btnFlashBoot" style="@style/OperationButton" android:text="[BROM] FLASH BOOT"/>
-
-                </LinearLayout>
+                    android:text="> Initializing...\n> Waiting for device..."
+                    android:textColor="#00E676"
+                    android:fontFamily="monospace"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="4dp"/>
             </ScrollView>
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
 
-    <!-- Bottom Progress & Log -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#0D0D0F"
-        android:padding="8dp">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:progressTint="#00F2FF"
-            android:progressBackgroundTint="#333333"
-            android:progress="0"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="4dp">
-
-            <TextView
-                android:id="@+id/statusLog"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="[READY] DeepEye Unlocker v4.3.0"
-                android:textColor="#00E676"
-                android:textSize="10sp"
-                android:fontFamily="monospace"
-                android:singleLine="true"
-                android:ellipsize="end"/>
-
-            <TextView
-                android:id="@+id/modelCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="129 models"
-                android:textColor="#666666"
-                android:textSize="9sp"/>
-        </LinearLayout>
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>
