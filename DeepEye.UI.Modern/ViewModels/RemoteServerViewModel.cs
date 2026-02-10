@@ -1,71 +1,23 @@
-using DeepEye.UI.Modern.Infrastructure;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
 
 namespace DeepEye.UI.Modern.ViewModels
 {
-    public class RemoteServerViewModel : ViewModelBase
+    public partial class RemoteServerViewModel : CenterViewModelBase
     {
-        private string _sessionCode;
-        private string _connectionStatus = "DISCONNECTED";
-        private Brush _statusColor = Brushes.Gray;
-        private string _remoteDeviceModel = "---";
-        private string _remoteVidPid = "0000:0000";
-        private string _latencyMs = "0ms";
-        private bool _isConnected;
+        public override string Title => "REMOTE SERVER";
 
-        public string SessionCode
-        {
-            get => _sessionCode;
-            set => SetProperty(ref _sessionCode, value);
-        }
+        [ObservableProperty] private string _sessionCode = "";
+        [ObservableProperty] private string _connectionStatus = "DISCONNECTED";
+        [ObservableProperty] private Brush _statusColor = Brushes.Gray;
+        [ObservableProperty] private string _remoteDeviceModel = "---";
+        [ObservableProperty] private string _remoteVidPid = "0000:0000";
+        [ObservableProperty] private string _latencyMs = "0ms";
+        [ObservableProperty] private bool _isConnected;
 
-        public string ConnectionStatus
-        {
-            get => _connectionStatus;
-            set => SetProperty(ref _connectionStatus, value);
-        }
-
-        public Brush StatusColor
-        {
-            get => _statusColor;
-            set => SetProperty(ref _statusColor, value);
-        }
-
-        public string RemoteDeviceModel
-        {
-            get => _remoteDeviceModel;
-            set => SetProperty(ref _remoteDeviceModel, value);
-        }
-
-        public string RemoteVidPid
-        {
-            get => _remoteVidPid;
-            set => SetProperty(ref _remoteVidPid, value);
-        }
-
-        public string LatencyMs
-        {
-            get => _latencyMs;
-            set => SetProperty(ref _latencyMs, value);
-        }
-
-        public bool IsConnected
-        {
-            get => _isConnected;
-            set => SetProperty(ref _isConnected, value);
-        }
-
-        public ICommand ConnectCommand { get; }
-        public ICommand MountDriverCommand { get; }
-
-        public RemoteServerViewModel()
-        {
-            ConnectCommand = new RelayCommand(ExecuteConnect);
-            MountDriverCommand = new RelayCommand(ExecuteMount);
-        }
-
-        private void ExecuteConnect()
+        [RelayCommand]
+        private void Connect()
         {
             if (string.IsNullOrWhiteSpace(SessionCode))
             {
@@ -77,8 +29,7 @@ namespace DeepEye.UI.Modern.ViewModels
             ConnectionStatus = "CONNECTING...";
             StatusColor = Brushes.Orange;
 
-            // TODO: Call UsbClient.Connect(SessionCode)
-            // Simulating success for UI testing
+            // Simulating success
             IsConnected = true;
             ConnectionStatus = "CONNECTED SECURELY";
             StatusColor = Brushes.LimeGreen;
@@ -87,9 +38,10 @@ namespace DeepEye.UI.Modern.ViewModels
             LatencyMs = "45ms";
         }
 
-        private void ExecuteMount()
+        [RelayCommand]
+        private void MountDriver()
         {
-            // TODO: Install Virtual Driver
+            // Install Virtual Driver logic
         }
     }
 }
