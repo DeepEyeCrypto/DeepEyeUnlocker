@@ -42,6 +42,8 @@ cat > "$CONFIG_H" <<EOF
 #define HAVE_UNISTD_H 1
 #define HAVE_GETTIMEOFDAY 1
 #define HAVE_NFDS_T 1
+#define HAVE_CLOCK_GETTIME 1
+#define _GNU_SOURCE 1
 
 #define OS_LINUX 1
 #define THREADS_POSIX 1
