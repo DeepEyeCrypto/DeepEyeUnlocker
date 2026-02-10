@@ -1,16 +1,11 @@
 package com.deepeye.otg
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONObject
-
 import android.os.Vibrator
 import android.os.VibrationEffect
 import android.content.Context
@@ -31,7 +26,6 @@ class OtgActivity : AppCompatActivity() {
     private lateinit var usbHostManager: UsbHostManager
     private var selectedBrand = "Xiaomi"
     private var selectedModelName = "Auto-Detect"
-    private var selectedMode = "BROM"
     private var nativeHandle: Long = 0
     private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
     private var allModels: List<DeviceModel> = emptyList()
@@ -62,9 +56,6 @@ class OtgActivity : AppCompatActivity() {
         // Load Data & Setup
         loadDeviceDatabase()
         setupBrandTabs()
-        // setupModeTabs() // Removed in UI overhaul, or keep if buttons exist? 
-        // Note: New UI removed Mode Tabs, replaced with direct operations.
-        
         setupOperationButtons()
         
         // USB Manager
@@ -84,7 +75,7 @@ class OtgActivity : AppCompatActivity() {
             }
         })
         
-        log("DeepEye Unlocker v4.8.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
+        log("DeepEye Unlocker v4.8.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
     }
 
     // --- HELPER FUNCTIONS ---
