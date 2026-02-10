@@ -32,50 +32,68 @@ class OtgActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_otg)
         
-        // Bind UI
-        btnSelectModel = findViewById(R.id.btnSelectModel)
-        logOverlay = findViewById(R.id.logOverlay)
-        terminalText = findViewById(R.id.terminalText)
-        logScrollView = findViewById(R.id.logScrollView)
-        btnCloseLog = findViewById(R.id.btnCloseLog)
-        connectionIndicator = findViewById(R.id.connectionIndicator)
-        btnRemote = findViewById(R.id.btnRemoteUnlock)
-
-        // Setup Listeners
-        btnSelectModel.setOnClickListener { showModelSelectionDialog() }
-        btnCloseLog.setOnClickListener { logOverlay.visibility = View.GONE }
-        
-        btnRemote.setOnClickListener {
-            hapticFeedback()
-            val intent = android.content.Intent(this, RemoteShareActivity::class.java)
-            startActivity(intent)
+        // Setup Global Crash Handler to show Dialog instead of closing
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            runOnUiThread {
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("App Crash")
+                    .setMessage(throwable.stackTraceToString())
+                    .setPositiveButton("OK") { _, _ -> finish() }
+                    .show()
+            }
         }
-        
-        // Load Data & Setup
-        loadDeviceDatabase()
-        setupBrandTabs()
-        setupOperationButtons()
-        
-        // USB Manager
-        usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
-            override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
-                runOnUiThread {
-                    connectionIndicator.text = "● CONNECTED"
-                    connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_success))
-                    log("Device attached: ${device.productName}", "SUCCESS")
-                }
-            }
 
-            override fun onDeviceReady(fd: Int) {
-                runOnUiThread {
-                    initializeCore(fd)
-                }
+        try {
+            setContentView(R.layout.activity_otg)
+            
+            // Bind UI
+            btnSelectModel = findViewById(R.id.btnSelectModel)
+            logOverlay = findViewById(R.id.logOverlay)
+            terminalText = findViewById(R.id.terminalText)
+            logScrollView = findViewById(R.id.logScrollView)
+            btnCloseLog = findViewById(R.id.btnCloseLog)
+            connectionIndicator = findViewById(R.id.connectionIndicator)
+            btnRemote = findViewById(R.id.btnRemoteUnlock)
+    
+            // Setup Listeners
+            btnSelectModel.setOnClickListener { showModelSelectionDialog() }
+            btnCloseLog.setOnClickListener { logOverlay.visibility = View.GONE }
+            
+            btnRemote.setOnClickListener {
+                hapticFeedback()
+                val intent = android.content.Intent(this, RemoteShareActivity::class.java)
+                startActivity(intent)
             }
-        })
-        
-        log("DeepEye Unlocker v4.8.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            
+            // Load Data & Setup
+            loadDeviceDatabase()
+            setupBrandTabs()
+            setupOperationButtons()
+            
+            // USB Manager
+            usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
+                override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
+                    runOnUiThread {
+                        connectionIndicator.text = "● CONNECTED"
+                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_success))
+                        log("Device attached: ${device.productName}", "SUCCESS")
+                    }
+                }
+    
+                override fun onDeviceReady(fd: Int) {
+                    runOnUiThread {
+                        initializeCore(fd)
+                    }
+                }
+            })
+            
+            log("DeepEye Unlocker v4.8.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            
+        } catch (e: Exception) {
+            Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+        }
     }
 
     // --- HELPER FUNCTIONS ---

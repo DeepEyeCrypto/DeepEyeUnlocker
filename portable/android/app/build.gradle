@@ -11,8 +11,8 @@ android {
         applicationId "com.deepeye.otg"
         minSdk 26
         targetSdk 34
-        versionCode 487
-        versionName "4.8.1"
+        versionCode 488
+        versionName "4.8.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
