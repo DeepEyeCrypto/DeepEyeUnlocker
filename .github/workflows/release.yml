@@ -57,6 +57,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Setup Native Dependencies (LibUSB)
+        run: |
+          chmod +x scripts/setup-native-deps.sh
+          ./scripts/setup-native-deps.sh
+
       - name: Setup Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
