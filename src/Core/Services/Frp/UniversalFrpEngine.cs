@@ -16,12 +16,17 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             {
                 new SamsungKnoxStrategy(),
                 new QualcommEdlFrpStrategy(),
+                new MtkBromFrpStrategy(),
             };
         }
 
         public bool IsSupported(FrpServiceContext ctx)
         {
             if (ctx?.Profile == null) return false;
+
+            // Fill missing info from Registry if needed
+            EnsureFrpCapabilities(ctx);
+            
             foreach (var strategy in _strategies)
             {
                 if (strategy.CanHandle(ctx)) return true;
@@ -29,44 +34,58 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             return false;
         }
 
-        public Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
+        public async Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
         {
-            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return Task.FromResult("LOCKED (Server-Side)");
-            if (ctx.Profile.FrpInfo.Type == FrpType.GoogleStandard) return Task.FromResult("UNKNOWN (Requires Read Access)");
-            return Task.FromResult("UNSUPPORTED");
+            EnsureFrpCapabilities(ctx);
+            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return "LOCKED (Knox Check Required)";
+            return "UNKNOWN (Check Partition)";
         }
 
         public string GetOfficialInstructions(FrpServiceContext ctx)
         {
-            if (ctx.Profile.FrpInfo.OfficialServiceMethod != "")
-                return $"Official Method ID: {ctx.Profile.FrpInfo.OfficialServiceMethod}";
+            EnsureFrpCapabilities(ctx);
+            if (!string.IsNullOrEmpty(ctx.Profile.FrpInfo.OfficialServiceMethod))
+                return $"Official Mode Required: {ctx.Profile.FrpInfo.OfficialServiceMethod}";
 
-            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox)
-                return "1. Connect device to Samsung Smart Switch.\n2. Sign in with original Samsung/Google account.";
-            
-            if (ctx.Profile.FrpInfo.Type == FrpType.GoogleStandard)
-                return "1. Perform Factory Reset via Settings if possible.\n2. Or use original Google account credentials.";
-
-            return "Refer to OEM documentation for official removal.";
+            return "1. Sign in with Google Account.\n2. Or use Android Enterprise MDM console.";
         }
 
         public async Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx)
         {
-            // CORE GUARDRAIL: Ownership Verification
+            EnsureFrpCapabilities(ctx);
+
+            // 1. Ownership Guardrail
             if (ctx.Ownership == OwnershipStatus.Unverified || ctx.Ownership == OwnershipStatus.Unknown)
             {
-                return FrpResult.Fail("Operation Refused: Ownership verification is mandatory for FRP services.");
+                var fail = FrpResult.Fail("Operation Blocking: Ownership verification is mandatory for FRP services.");
+                FrpAuditLogger.LogOperation(ctx, fail);
+                return fail;
             }
 
+            // 2. Strategy Execution
+            FrpResult result = FrpResult.Fail("No suitable strategy found for this device/mode.");
+            
             foreach (var strategy in _strategies)
             {
                 if (strategy.CanHandle(ctx))
                 {
-                    return await strategy.ExecuteAsync(ctx);
+                    result = await strategy.ExecuteAsync(ctx);
+                    break;
                 }
             }
 
-            return FrpResult.Fail($"No supported strategy found for Protocol: {ctx.Protocol} on {ctx.Profile.Brand} {ctx.Profile.ModelNumber}.");
+            // 3. Compliance Logging
+            FrpAuditLogger.LogOperation(ctx, result);
+            
+            return result;
+        }
+
+        private void EnsureFrpCapabilities(FrpServiceContext ctx)
+        {
+            if (ctx.Profile != null && (ctx.Profile.FrpInfo == null || ctx.Profile.FrpInfo.Type == FrpType.Unknown))
+            {
+                ctx.Profile.FrpInfo = FrpRegistry.GetDefaultCapabilities(ctx.Profile.Brand, ctx.Profile.Chipset?.Manufacturer ?? "Generic");
+            }
         }
     }
 }
