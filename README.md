@@ -1,10 +1,10 @@
-# DeepEyeUnlocker v5.1.0 (The Neural Nexus Update)
+# DeepEyeUnlocker v5.1.2 (The Neural Nexus Update)
 
  "Universal Power. Precision Control."
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v5.1.0](https://img.shields.io/badge/Download-v5.1.0-emerald.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.1.0)
+[![Download DeepEyeUnlocker v5.1.2](https://img.shields.io/badge/Download-v5.1.2-emerald.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.1.2)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Protocol Simulation](https://img.shields.io/badge/Protocol%20Simulation-Passing-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![FRP Policy Verification](https://img.shields.io/badge/FRP%20Policy%20Verification-Passed-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
@@ -20,9 +20,9 @@ DeepEyeUnlocker is a free, open-source alternative to expensive mobile repair bo
 
 ## 🔽 Download
 
-Latest stable release: **v5.1.0**
+Latest stable release: **v5.1.2**
 
-- ⬇️ [Download DeepEyeUnlocker v5.1.0](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.1.0)
+- ⬇️ [Download DeepEyeUnlocker v5.1.2](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.1.2)
 - Platform: Windows (x64), Android
 - Status: Stable Release (Neural Nexus) - Pro UI Overhaul & Android Bridge Stability.
 
@@ -181,10 +181,12 @@ Contributions, ideas and bug reports are welcome – just open an issue and tag 
 
 ## 📦 Changelog
 
-### v5.1.0 – The Neural Nexus Update (2026-02-11)
+### v5.1.2 – The Neural Nexus Update (2026-02-11)
 
-#### New in v5.1.0
+#### New in v5.1.2
 
+- **🔧 USB Stability:** Resolved race conditions and redundancy in USB discovery that caused the "Native Core Offline" error.
+- **🛡️ Diagnostic Logging:** Added detailed error reporting to the USB listener for faster field troubleshooting.
 - **🚀 Pro UI Overhaul (Android):** Radical redesign of the mobile interface with terminal-style log overlays and streamlined model selection.
 - **🛡️ Nexus Stability:** Integrated global crash handlers and safe USB initialization routines for Android OTG operations.
 - **🔗 Unified Core:** Synchronized versioning across Desktop and Mobile for flawless Remote Server Hub integration.

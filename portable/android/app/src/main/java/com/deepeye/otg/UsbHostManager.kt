@@ -18,7 +18,8 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     interface HotplugListener {
         fun onDeviceAttached(device: UsbDevice)
-        fun onDeviceReady(fd: Int)
+        fun onDeviceReady(fd: Int, vid: Int, pid: Int)
+        fun onDeviceError(message: String)
     }
 
     private val usbReceiver = object : BroadcastReceiver() {
@@ -43,9 +44,9 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
                     intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
                 }
                 device?.apply { 
-                    Log.i("DeepEye-OTG", "Proactive Hotplug: Device Attached. Requesting link...")
+                    Log.i("DeepEye-OTG", "Hotplug: Device Attached (${vendorId}:${productId})")
                     listener?.onDeviceAttached(this)
-                    findAndConnect(vendorId, productId) // Auto-connect
+                    handleDevice(this)
                 }
             }
         }
@@ -56,44 +57,58 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
             addAction(ACTION_USB_PERMISSION)
             addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
         }
-        // Android 14+ requires RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED flag
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             context.registerReceiver(usbReceiver, filter)
         }
+        
+        // Scan for already connected devices
+        scanExistingDevices()
+    }
+
+    private fun scanExistingDevices() {
+        Log.i("DeepEye-OTG", "Scanning existing USB devices...")
+        usbManager.deviceList.values.forEach { device ->
+            Log.d("DeepEye-OTG", "Found: ${device.vendorId}:${device.productId}")
+            // We don't automatically connect to EVERYTHING, 
+            // but we alert the UI that something is there.
+            listener?.onDeviceAttached(device)
+            handleDevice(device)
+        }
+    }
+
+    private fun handleDevice(device: UsbDevice) {
+        if (usbManager.hasPermission(device)) {
+            openAndPassFd(device)
+        } else {
+            Log.d("DeepEye-OTG", "Requesting permissions for ${device.vendorId}:${device.productId}")
+            val permissionIntent = PendingIntent.getBroadcast(
+                context, 0, Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
+            )
+            usbManager.requestPermission(device, permissionIntent)
+        }
     }
 
     fun findAndConnect(vid: Int, pid: Int) {
         val targetDevice = usbManager.deviceList.values.find { it.vendorId == vid && it.productId == pid }
-
-        if (targetDevice != null) {
-            if (usbManager.hasPermission(targetDevice)) {
-                openAndPassFd(targetDevice)
-            } else {
-                Log.d("DeepEye-OTG", "Proactive: Requesting permissions for $vid:$pid")
-                val permissionIntent = PendingIntent.getBroadcast(
-                    context, 
-                    0, 
-                    Intent(ACTION_USB_PERMISSION), 
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                usbManager.requestPermission(targetDevice, permissionIntent)
-            }
-        }
+        targetDevice?.apply { handleDevice(this) }
     }
 
     private fun openAndPassFd(device: UsbDevice) {
-        val connection = usbManager.openDevice(device)
-        if (connection != null) {
-            Log.i("DeepEye-OTG", "Direct Link Established. Handing FD to Core.")
-            
-            // Acquire WakeLock (10 mins safety timeout) to prevent CPU sleep during flash
-            if (!wakeLock.isHeld) {
-                wakeLock.acquire(10 * 60 * 1000L)
+        try {
+            val connection = usbManager.openDevice(device)
+            if (connection != null) {
+                Log.i("DeepEye-OTG", "Direct Link Established. Handing FD to Core.")
+                if (!wakeLock.isHeld) wakeLock.acquire(10 * 60 * 1000L)
+                listener?.onDeviceReady(connection.fileDescriptor, device.vendorId, device.productId)
+            } else {
+                Log.e("DeepEye-OTG", "Failed to open device connection (Permission denied?)")
+                listener?.onDeviceError("USB Permission Denied or Device Busy")
             }
-            
-            listener?.onDeviceReady(connection.fileDescriptor)
+        } catch (e: Exception) {
+            Log.e("DeepEye-OTG", "Exception in openAndPassFd: ${e.message}")
+            listener?.onDeviceError("USB Error: ${e.message}")
         }
     }
 

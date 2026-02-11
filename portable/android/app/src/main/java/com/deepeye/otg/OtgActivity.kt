@@ -75,20 +75,28 @@ class OtgActivity : AppCompatActivity() {
             usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
                 override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
                     runOnUiThread {
-                        connectionIndicator.text = "● CONNECTED"
-                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_success))
-                        log("Device attached: ${device.productName}", "SUCCESS")
+                        connectionIndicator.text = "● ATTACHED"
+                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_warning))
+                        log("Device detected: ${device.productName} (${device.vendorId}:${device.productId})", "WARNING")
                     }
                 }
-    
-                override fun onDeviceReady(fd: Int) {
+
+                override fun onDeviceReady(fd: Int, vid: Int, pid: Int) {
                     runOnUiThread {
-                        initializeCore(fd)
+                        initializeCore(fd, vid, pid)
+                    }
+                }
+
+                override fun onDeviceError(message: String) {
+                    runOnUiThread {
+                        connectionIndicator.text = "● ERROR"
+                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_error))
+                        log("USB Error: $message", "ERROR")
                     }
                 }
             })
             
-            log("DeepEye Unlocker v4.8.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.1.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -205,21 +213,24 @@ class OtgActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializeCore(fd: Int) {
-        log("Initializing native core...", "INFO")
+    private fun initializeCore(fd: Int, vid: Int, pid: Int) {
+        log("Initializing native core ($vid:$pid)...", "INFO")
         try {
-            nativeHandle = NativeBridge.initCore(fd, 0x0E8D, 0x0003)
+            nativeHandle = NativeBridge.initCore(fd, vid, pid)
             if (nativeHandle != 0L) {
                 if (NativeBridge.identifyDevice(nativeHandle)) {
-                    log("Device secured! Ready.", "SUCCESS")
+                    log("Device Link Secured (Handle: $nativeHandle)", "SUCCESS")
+                    connectionIndicator.text = "● READY"
+                    connectionIndicator.setTextColor(ContextCompat.getColor(this, R.color.deepeye_success))
                 } else {
-                    log("Handshake failed.", "ERROR")
+                    log("Handshake failed during identification.", "ERROR")
                 }
             } else {
-                log("Native init failed.", "ERROR")
+                log("Native Core Init failed (Handle is 0).", "ERROR")
             }
         } catch (e: Exception) {
             log("Core Init Exception: ${e.message}", "ERROR")
+            e.printStackTrace()
         }
     }
     
