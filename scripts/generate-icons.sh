@@ -20,46 +20,54 @@ fi
 
 echo "📱 Generating launcher icons..."
 
-# MDPI (baseline: 48dp = 48px)
-convert "$SOURCE_IMAGE" -resize 48x48 -background black -gravity center -extent 48x48 \
-    "$OUTPUT_DIR/mipmap-mdpi/ic_launcher.png"
-convert "$SOURCE_IMAGE" -resize 108x108 -background none -gravity center -extent 108x108 \
-    "$OUTPUT_DIR/mipmap-mdpi/ic_launcher_foreground.png"
+# Function to generate icons for a specific density
+generate_density() {
+    local density=$1
+    local size=$2
+    local foreground_size=$3
+    
+    local dir="$OUTPUT_DIR/mipmap-$density"
+    mkdir -p "$dir"
+    
+    echo "  - $density ($size x $size)"
+    
+    # Standard Launcher Icon (Legacy) - Transparent background
+    convert "$SOURCE_IMAGE" -resize ${size}x${size} -background none -gravity center -extent ${size}x${size} \
+        "$dir/ic_launcher.png"
+        
+    # Round Launcher Icon (Legacy) - Transparent background (same as standard for now)
+    cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
+    
+    # Adaptive Foreground (108dp = full size, image within 72dp safe zone)
+    convert "$SOURCE_IMAGE" -resize ${foreground_size}x${foreground_size} -background none -gravity center -extent ${foreground_size}x${foreground_size} \
+        "$dir/ic_launcher_foreground.png"
+}
 
-# HDPI (1.5x: 72px)
-convert "$SOURCE_IMAGE" -resize 72x72 -background black -gravity center -extent 72x72 \
-    "$OUTPUT_DIR/mipmap-hdpi/ic_launcher.png"
-convert "$SOURCE_IMAGE" -resize 162x162 -background none -gravity center -extent 162x162 \
-    "$OUTPUT_DIR/mipmap-hdpi/ic_launcher_foreground.png"
+# MDPI (baseline: 48dp = 48px, fg=108px)
+generate_density "mdpi" 48 108
 
-# XHDPI (2x: 96px)
-convert "$SOURCE_IMAGE" -resize 96x96 -background black -gravity center -extent 96x96 \
-    "$OUTPUT_DIR/mipmap-xhdpi/ic_launcher.png"
-convert "$SOURCE_IMAGE" -resize 216x216 -background none -gravity center -extent 216x216 \
-    "$OUTPUT_DIR/mipmap-xhdpi/ic_launcher_foreground.png"
+# HDPI (1.5x: 72px, fg=162px)
+generate_density "hdpi" 72 162
 
-# XXHDPI (3x: 144px)
-convert "$SOURCE_IMAGE" -resize 144x144 -background black -gravity center -extent 144x144 \
-    "$OUTPUT_DIR/mipmap-xxhdpi/ic_launcher.png"
-convert "$SOURCE_IMAGE" -resize 324x324 -background none -gravity center -extent 324x324 \
-    "$OUTPUT_DIR/mipmap-xxhdpi/ic_launcher_foreground.png"
+# XHDPI (2x: 96px, fg=216px)
+generate_density "xhdpi" 96 216
 
-# XXXHDPI (4x: 192px)
-convert "$SOURCE_IMAGE" -resize 192x192 -background black -gravity center -extent 192x192 \
-    "$OUTPUT_DIR/mipmap-xxxhdpi/ic_launcher.png"
-convert "$SOURCE_IMAGE" -resize 432x432 -background none -gravity center -extent 432x432 \
-    "$OUTPUT_DIR/mipmap-xxxhdpi/ic_launcher_foreground.png"
+# XXHDPI (3x: 144px, fg=324px)
+generate_density "xxhdpi" 144 324
+
+# XXXHDPI (4x: 192px, fg=432px)
+generate_density "xxxhdpi" 192 432
 
 echo "✅ Launcher icons generated"
 
 # Also create a high-res version for desktop/promotional use
 echo "🖥️  Generating desktop icon (512x512)..."
-convert "$SOURCE_IMAGE" -resize 512x512 -background black -gravity center -extent 512x512 \
+convert "$SOURCE_IMAGE" -resize 512x512 -background none -gravity center -extent 512x512 \
     "DeepEye.UI.Modern/Resources/deepeye_icon.png"
 
 # Create ICO for Windows
 echo "🪟 Generating Windows ICO..."
-convert "$SOURCE_IMAGE" -resize 256x256 -background black -gravity center -extent 256x256 \
+convert "$SOURCE_IMAGE" -resize 256x256 -background none -gravity center -extent 256x256 \
     -define icon:auto-resize=256,128,64,48,32,16 \
     "DeepEye.UI.Modern/Resources/deepeye_icon.ico"
 
