@@ -35,13 +35,6 @@ namespace DeepEyeUnlocker.Core.Services
         Universal_Fallback
     }
 
-    public enum RiskLevel
-    {
-        Safe,
-        Low,
-        Medium,
-        High
-    }
 
     public class DeviceClassifier
     {

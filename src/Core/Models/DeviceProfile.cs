@@ -75,7 +75,7 @@ namespace DeepEyeUnlocker.Core.Models
         public string Architecture { get; set; } = "ARM64";
     }
 
-    public enum RiskLevel { Low, Medium, High, Critical }
+    public enum RiskLevel { Safe, Low, Medium, High, Critical }
     public enum TestStatus { Untested, VerifiedAlpha, VerifiedBeta, Stable }
 
     public class SecurityProfile

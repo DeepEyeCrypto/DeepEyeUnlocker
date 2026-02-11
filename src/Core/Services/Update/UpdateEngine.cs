@@ -14,8 +14,8 @@ namespace DeepEyeUnlocker.Core.Services.Update
 
     public class UpdateItem
     {
-        public string Type { get; set; } // "LOADER", "PROFILE", "DIAGRAM"
-        public string Id { get; set; }
+        public string Type { get; set; } = string.Empty; // "LOADER", "PROFILE", "DIAGRAM"
+        public string Id { get; set; } = string.Empty;
         public string DownloadUrl { get; set; } = string.Empty;
         public string Sha256 { get; set; } = string.Empty;
     }
