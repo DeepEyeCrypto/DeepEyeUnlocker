@@ -116,18 +116,41 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView android:text="UNLOCK OPERATIONS" android:textColor="#00F2FF" android:textSize="12sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="UNLOCK OPERATIONS"
+                    android:textColor="#00F2FF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"/>
                 <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="UNLOCK BOOTLOADER"/>
                 <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="RELOCK BOOTLOADER"/>
                 <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonOrange" android:text="ERASE FRP LOCK"/>
                 <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="FACTORY RESET (USERDATA)"/>
 
-                <TextView android:text="SECURITY REPAIR" android:textColor="#FF6B35" android:textSize="12sp" android:textStyle="bold" android:layout_marginTop="16dp" android:layout_marginBottom="8dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="SECURITY REPAIR"
+                    android:textColor="#FF6B35"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
                 <Button android:id="@+id/btnRemovePin" style="@style/OperationButton" android:text="REMOVE SCREEN LOCK (SAFE)"/>
                 <Button android:id="@+id/btnRemoveMiAccount" style="@style/OperationButton" android:text="REMOVE MI CLOUD"/>
                 <Button android:id="@+id/btnBypassAuth" style="@style/OperationButton" android:text="AUTH BYPASS (SLA/DA)"/>
 
-                <TextView android:text="DIAGNOSTICS" android:textColor="#00E676" android:textSize="12sp" android:textStyle="bold" android:layout_marginTop="16dp" android:layout_marginBottom="8dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="DIAGNOSTICS"
+                    android:textColor="#00E676"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
                 <Button android:id="@+id/btnReadInfo" style="@style/OperationButton" android:text="READ DEVICE INFO"/>
                 <Button android:id="@+id/btnReadImei" style="@style/OperationButton" android:text="READ IMEI / NVRAM"/>
                 
