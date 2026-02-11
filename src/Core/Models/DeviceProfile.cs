@@ -20,8 +20,10 @@ namespace DeepEyeUnlocker.Core.Models
         public string Brand { get; set; } = string.Empty;
         public string Series { get; set; } = string.Empty;
         public string Region { get; set; } = "Global";
-        public List<UsbId> UsbIds { get; set; } = new();
+        public List<UsbIdentifier> UsbIds { get; set; } = new();
         public List<FirmwareInfo> KnownFirmwares { get; set; } = new();
+        public List<string> SupportedBootModes { get; set; } = new();
+        public string InterfaceClassGuids { get; set; } = string.Empty;
 
         // Hardware & Modes (v2)
         public ChipsetInfo Chipset { get; set; } = new();
@@ -75,6 +77,7 @@ namespace DeepEyeUnlocker.Core.Models
         public string Model { get; set; } = string.Empty;
         public string Platform { get; set; } = string.Empty;
         public string Architecture { get; set; } = "ARM64";
+        public List<string> SupportedUniversalMethods { get; set; } = new();
     }
 
     public enum RiskLevel { Safe, Low, Medium, High, Critical }
@@ -90,11 +93,15 @@ namespace DeepEyeUnlocker.Core.Models
     public class OperationSupport
     {
         public string OperationName { get; set; } = string.Empty;
+        public string ProtocolPlugin { get; set; } = string.Empty;
+        public string HandlerName { get; set; } = string.Empty;
+        public string Prerequisites { get; set; } = string.Empty;
+        public DateTime? LastVerified { get; set; }
         public RiskLevel RiskLevel { get; set; }
         public bool RequiresAuth { get; set; }
     }
 
-    public class UsbId
+    public class UsbIdentifier
     {
         public int Vid { get; set; }
         public int Pid { get; set; }
@@ -103,7 +110,7 @@ namespace DeepEyeUnlocker.Core.Models
     public class FirmwareInfo
     {
         public string Version { get; set; } = string.Empty;
-        public string BuildId { get; set; } = string.Empty;
-        public string SecurityPatch { get; set; } = string.Empty;
+        public string AndroidVersion { get; set; } = string.Empty;
+        public string ReleaseDate { get; set; } = string.Empty;
     }
 }
