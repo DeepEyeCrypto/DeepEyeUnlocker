@@ -13,7 +13,7 @@ namespace DeepEyeUnlocker.Core
     public class EdlProfileProvider
     {
         private readonly List<EdlProfile> _profiles = new();
-        private readonly Dictionary<string, TestPointInfo> _testPoints = new();
+        private readonly Dictionary<string, EdlTestPointInfo> _testPoints = new();
         private static readonly string ProfilePath;
         
         static EdlProfileProvider()
@@ -196,7 +196,7 @@ namespace DeepEyeUnlocker.Core
         /// <summary>
         /// Get test point info for a device
         /// </summary>
-        public TestPointInfo? GetTestPointInfo(string model)
+        public EdlTestPointInfo? GetTestPointInfo(string model)
         {
             return _testPoints.GetValueOrDefault(model.ToLower());
         }
@@ -210,6 +210,6 @@ namespace DeepEyeUnlocker.Core
     internal class EdlProfileData
     {
         public List<EdlProfile> Profiles { get; set; } = new();
-        public List<TestPointInfo> TestPoints { get; set; } = new();
+        public List<EdlTestPointInfo> TestPoints { get; set; } = new();
     }
 }

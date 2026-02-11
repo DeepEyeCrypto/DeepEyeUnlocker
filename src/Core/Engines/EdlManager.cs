@@ -240,7 +240,7 @@ namespace DeepEyeUnlocker.Core.Engines
         }
 
         /// <inheritdoc />
-        public TestPointInfo? GetTestPointInfo(DeviceContext device)
+        public EdlTestPointInfo? GetTestPointInfo(DeviceContext device)
         {
             return _profiles.GetTestPointInfo(device.Model ?? "");
         }

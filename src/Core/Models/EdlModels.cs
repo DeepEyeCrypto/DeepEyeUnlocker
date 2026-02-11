@@ -80,7 +80,7 @@ namespace DeepEyeUnlocker.Core.Models
     /// <summary>
     /// Test point information for hardware EDL entry
     /// </summary>
-    public class TestPointInfo
+    public class EdlTestPointInfo
     {
         public string DeviceModel { get; set; } = "";
         public string Description { get; set; } = "";

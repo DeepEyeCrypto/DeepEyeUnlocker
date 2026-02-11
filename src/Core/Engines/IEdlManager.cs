@@ -36,7 +36,7 @@ namespace DeepEyeUnlocker.Core.Engines
         /// <summary>
         /// Get test point information for hardware EDL entry
         /// </summary>
-        TestPointInfo? GetTestPointInfo(DeviceContext device);
+        EdlTestPointInfo? GetTestPointInfo(DeviceContext device);
 
         /// <summary>
         /// Wait for a device to appear in EDL mode after reboot command
