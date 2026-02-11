@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DeepEyeUnlocker.Core.Models;
+using DeepEyeUnlocker.Core;
 
 namespace DeepEyeUnlocker.Core.Services.Safety
 {

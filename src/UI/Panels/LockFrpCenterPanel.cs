@@ -9,6 +9,7 @@ using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Operations;
 using DeepEyeUnlocker.Protocols;
 using DeepEyeUnlocker.Core.Services.Repositories;
+using DeepEyeUnlocker.UI;
 
 namespace DeepEyeUnlocker.UI.Panels
 {

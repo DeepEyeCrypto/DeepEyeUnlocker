@@ -31,7 +31,7 @@ namespace DeepEyeUnlocker.Core.Scenarios
 
             // 2. Fetch Profile from DB (Assume we have one or create ad-hoc)
             // In a real app, we'd lookup by VID/PID/Model
-            var profile = new DeviceProfileV2 { Brand = device.Brand, ModelNumber = device.Model };
+            var profile = new DeviceProfile { Brand = device.Brand, ModelNumber = device.Model };
             
             // 3. Asset Loading
             if (!string.IsNullOrEmpty(profile.Loaders.CustomDaId))
@@ -67,11 +67,7 @@ namespace DeepEyeUnlocker.Core.Scenarios
                 return ScenarioResult.Ok(result.Message);
             }
 
-            return ScenarioResult.Fail(result.Message);
+        return ScenarioResult.Fail(result.Message);
         }
     }
-
-    // Helper class to match the V2 schema mentioned in plan
-    // In production this is merged into DeviceProfile.cs
-    public class DeviceProfileV2 : DeviceProfile { }
 }
