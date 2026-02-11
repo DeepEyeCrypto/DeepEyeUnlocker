@@ -2,16 +2,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DeepEyeUnlocker.Core.Models;
 
-namespace DeepEyeUnlocker.Core.Services
+namespace DeepEyeUnlocker.Core.Models
 {
-    public interface IFrpServiceEngine
-    {
-        bool IsSupported(FrpServiceContext ctx);
-        Task<string> CheckLockStatusAsync(FrpServiceContext ctx); 
-        string GetOfficialInstructions(FrpServiceContext ctx);
-        Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx);
-    }
-
     public class FrpResult
     {
         public bool Success { get; set; }
@@ -21,5 +13,16 @@ namespace DeepEyeUnlocker.Core.Services
 
         public static FrpResult Fail(string msg) => new FrpResult { Success = false, Message = msg };
         public static FrpResult Ok(string msg, bool reboot = true) => new FrpResult { Success = true, Message = msg, RequiresReboot = reboot };
+    }
+}
+
+namespace DeepEyeUnlocker.Core.Services
+{
+    public interface IFrpServiceEngine
+    {
+        bool IsSupported(FrpServiceContext ctx);
+        Task<string> CheckLockStatusAsync(FrpServiceContext ctx); 
+        string GetOfficialInstructions(FrpServiceContext ctx);
+        Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx);
     }
 }
