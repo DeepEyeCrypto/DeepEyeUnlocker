@@ -37,6 +37,9 @@ namespace DeepEyeUnlocker.Core.Models
         // Metadata
         public List<FirmwareInfo> KnownFirmwares { get; set; } = new();
         public TestStatus ValidationStatus { get; set; } = TestStatus.Untested;
+
+        // FRP Extensions (v5.0)
+        public FrpCapabilities FrpInfo { get; set; } = new();
     }
 
     public class ChipsetInfo
