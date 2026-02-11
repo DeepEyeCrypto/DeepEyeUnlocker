@@ -19,7 +19,7 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     interface HotplugListener {
         fun onDeviceAttached(device: UsbDevice)
-        fun onDeviceReady(fd: Int, vid: Int, pid: Int)
+        fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol)
         fun onDeviceError(message: String)
         fun onStatusUpdate(message: String)
         fun onPermissionStateChanged(state: UsbPermissionManager.PermissionState, message: String)
@@ -111,8 +111,20 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
                 Log.i("DeepEye-OTG", "Direct Link Established. FD=$fd")
                 listener?.onStatusUpdate("USB Link Secured (FD=$fd)")
                 
+                // Probe Protocol
+                val iface = device.getInterface(0)
+                val probe = ProtocolProbe(connection, iface)
+                val protocol = probe.detect()
+                
+                connection.claimInterface(iface, true)
+                
+                Log.i("DeepEye-OTG", "Protocol Detected: $protocol")
+                if (protocol == DetectedProtocol.UNKNOWN) {
+                    listener?.onStatusUpdate("Warning: Unknown Protocol. Device might be in MTP/Charge-Only mode.")
+                }
+                
                 if (!wakeLock.isHeld) wakeLock.acquire(10 * 60 * 1000L)
-                listener?.onDeviceReady(fd, device.vendorId, device.productId)
+                listener?.onDeviceReady(fd, device.vendorId, device.productId, protocol)
             } else {
                 Log.e("DeepEye-OTG", "openDevice() returned null for ${device.vendorId}:${device.productId}")
                 listener?.onDeviceError("USB Connection Failed (openDevice returned null). Try re-plugging the cable.")

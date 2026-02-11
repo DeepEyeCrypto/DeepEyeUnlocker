@@ -83,10 +83,15 @@ class OtgActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun onDeviceReady(fd: Int, vid: Int, pid: Int) {
+                override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol) {
                     runOnUiThread {
-                        updateConnectionState(ConnectionState.USB_OPEN, "USB FD=$fd acquired")
-                        initializeCore(fd, vid, pid)
+                        if (protocol == DetectedProtocol.UNKNOWN) {
+                            updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Please invoke EDL/BROM (Vol+ & Vol-).")
+                            log("Device Connected but protocol UNKNOWN. Is it MTP/Charging?", "ERROR")
+                        } else {
+                            updateConnectionState(ConnectionState.USB_OPEN, "Mode: $protocol (FD=$fd)")
+                            initializeCore(fd, vid, pid, protocol)
+                        }
                     }
                 }
 
@@ -123,7 +128,7 @@ class OtgActivity : AppCompatActivity() {
                 }
             })
             
-            log("DeepEye Unlocker v5.2.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.2.3 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -250,39 +255,47 @@ class OtgActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializeCore(fd: Int, vid: Int, pid: Int) {
-        updateConnectionState(ConnectionState.NATIVE_INITIALIZING, "[OTG-NATIVE] initCore(fd=$fd, $vid:$pid)...")
+    private fun initializeCore(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol) {
+        updateConnectionState(ConnectionState.NATIVE_INITIALIZING, "[OTG-NATIVE] initCore(fd=$fd, $vid:$pid, proto=$protocol)...")
         
         Thread {
             try {
+                // Future: Pass protocolId to native init if needed
+                log("Native Bridge Init: FD=$fd, VID=$vid, PID=$pid", "DEBUG")
                 nativeHandle = NativeBridge.initCore(fd, vid, pid)
                 
-                runOnUiThread {
-                    if (nativeHandle != 0L) {
-                        log("[OTG-NATIVE] Core initialized (handle=$nativeHandle)", "INFO")
-                        
-                        // Attempt device identification handshake
-                        val identified = try {
-                            NativeBridge.identifyDevice(nativeHandle)
-                        } catch (e: Exception) {
-                            log("[OTG-NATIVE] identifyDevice threw: ${e.message}", "ERROR")
-                            false
+                if (nativeHandle != 0L) {
+                    runOnUiThread {
+                        log("Native Handshake: Identifying device...", "INFO")
+                    }
+                    
+                    // Attempt device identification handshake
+                    val identified = try {
+                        NativeBridge.identifyDevice(nativeHandle)
+                    } catch (e: Exception) {
+                        runOnUiThread {
+                            log("[OTG-NATIVE] identifyDevice threw: ${e.message}","ERROR")
                         }
-                        
+                        false
+                    }
+                    
+                    runOnUiThread {
                         if (identified) {
-                            updateConnectionState(ConnectionState.CONNECTED, "[OTG-NATIVE] Handshake OK. Operations enabled.")
+                            updateConnectionState(ConnectionState.CONNECTED, "Connected: Handshake OK ($protocol)")
                         } else {
                             NativeBridge.closeCore(nativeHandle)
                             nativeHandle = 0L
-                            updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] Handshake failed. Device may not support this protocol.")
+                            updateConnectionState(ConnectionState.ERROR, "Handshake failed. Device rejected protocol $protocol.")
                         }
-                    } else {
-                        updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] initCore returned NULL handle (FD invalid or libusb init failed).")
+                    }
+                } else {
+                    runOnUiThread {
+                        updateConnectionState(ConnectionState.ERROR, "Native Init Failed (Handle=0). USB Config Error?")
                     }
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] Exception: ${e.message}")
+                    updateConnectionState(ConnectionState.ERROR, "Native Exception: ${e.message}")
                     e.printStackTrace()
                 }
             }
