@@ -86,8 +86,39 @@ class OtgActivity : AppCompatActivity() {
                 override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol) {
                     runOnUiThread {
                         if (protocol == DetectedProtocol.UNKNOWN) {
-                            updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Please invoke EDL/BROM (Vol+ & Vol-).")
+                            // Show Smart Mode Guidance
+                            val currentModel = allModels.find { it.name == selectedModelName && it.brand == selectedBrand }
+                            val soc = currentModel?.chipset ?: "Generic"
+                            
+                            val guidance = ModeHelper.getGuidance(selectedBrand, selectedModelName, soc)
+                            
+                            updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Expected ${guidance.requiredMode}")
+                            
+                            // Show detailed dialog
+                            androidx.appcompat.app.AlertDialog.Builder(this@OtgActivity)
+                                .setTitle("Wrong USB Mode")
+                                .setMessage(buildString {
+                                    append("Device connected in UNKNOWN mode (likely MTP/Charging).\n\n")
+                                    append("Required Mode: ${guidance.requiredMode}\n")
+                                    append("Chipset: $soc\n\n")
+                                    append("Instructions:\n")
+                                    guidance.steps.forEach { append("$it\n") }
+                                    
+                                    guidance.alternativeSteps?.let {
+                                        append("\nAlternatives:\n")
+                                        it.forEach { alt -> append("- $alt\n") }
+                                    }
+                                    
+                                    guidance.safetyNotes?.let {
+                                        append("\nNOTE: ${it.joinToString("\n")}")
+                                    }
+                                })
+                                .setPositiveButton("I Understand") { d, _ -> d.dismiss() }
+                                .setCancelable(false)
+                                .show()
+                                
                             log("Device Connected but protocol UNKNOWN. Is it MTP/Charging?", "ERROR")
+                            log("Guidance shown for $selectedBrand $selectedModelName ($soc)", "INFO")
                         } else {
                             updateConnectionState(ConnectionState.USB_OPEN, "Mode: $protocol (FD=$fd)")
                             initializeCore(fd, vid, pid, protocol)
@@ -128,7 +159,7 @@ class OtgActivity : AppCompatActivity() {
                 }
             })
             
-            log("DeepEye Unlocker v5.2.3 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.2.4 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
