@@ -101,9 +101,29 @@ class OtgActivity : AppCompatActivity() {
                         log(message, "INFO")
                     }
                 }
+
+                override fun onPermissionStateChanged(state: UsbPermissionManager.PermissionState, message: String) {
+                    runOnUiThread {
+                        when (state) {
+                            UsbPermissionManager.PermissionState.NONE -> {
+                                // No action needed
+                            }
+                            UsbPermissionManager.PermissionState.REQUESTING -> {
+                                updateConnectionState(ConnectionState.PERMISSION_PENDING, message)
+                            }
+                            UsbPermissionManager.PermissionState.GRANTED -> {
+                                // Permission granted - will trigger onDeviceReady next
+                                log("[PERM] $message", "SUCCESS")
+                            }
+                            UsbPermissionManager.PermissionState.DENIED -> {
+                                updateConnectionState(ConnectionState.ERROR, message)
+                            }
+                        }
+                    }
+                }
             })
             
-            log("DeepEye Unlocker v5.2.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.2.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
