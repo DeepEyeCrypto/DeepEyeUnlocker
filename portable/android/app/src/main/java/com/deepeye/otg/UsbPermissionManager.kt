@@ -132,16 +132,21 @@ class UsbPermissionManager(
         Log.i(TAG, "[REQ] Requesting permission for ${device.deviceName} (${device.vendorId}:${device.productId})")
         
         // Create PendingIntent with correct flags for Android 12+
+        // FIX: Using explicit intent (setPackage) + FLAG_MUTABLE as requested to resolve broadcast delivery issues
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         } else {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
         
+        val intent = Intent(ACTION_USB_PERMISSION).apply {
+            setPackage(context.packageName)
+        }
+
         val permissionIntent = PendingIntent.getBroadcast(
             context,
             0,
-            Intent(ACTION_USB_PERMISSION),
+            intent,
             flags
         )
         

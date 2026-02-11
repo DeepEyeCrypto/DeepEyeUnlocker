@@ -123,7 +123,7 @@ class OtgActivity : AppCompatActivity() {
                 }
             })
             
-            log("DeepEye Unlocker v5.2.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.2.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
