@@ -29,6 +29,10 @@ class OtgActivity : AppCompatActivity() {
     private var nativeHandle: Long = 0
     private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
     private var allModels: List<DeviceModel> = emptyList()
+    
+    // Connection State Machine (FIX FOR "NATIVE CORE OFFLINE")
+    @Volatile private var connectionState: ConnectionState = ConnectionState.DISCONNECTED
+    private val stateLock = Any()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,23 +79,20 @@ class OtgActivity : AppCompatActivity() {
             usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
                 override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
                     runOnUiThread {
-                        connectionIndicator.text = "● ATTACHED"
-                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_warning))
-                        log("Device detected: ${device.productName} (${device.vendorId}:${device.productId})", "WARNING")
+                        updateConnectionState(ConnectionState.DEVICE_FOUND, "Device detected: ${device.productName} (${device.vendorId}:${device.productId})")
                     }
                 }
 
                 override fun onDeviceReady(fd: Int, vid: Int, pid: Int) {
                     runOnUiThread {
+                        updateConnectionState(ConnectionState.USB_OPEN, "USB FD=$fd acquired")
                         initializeCore(fd, vid, pid)
                     }
                 }
 
                 override fun onDeviceError(message: String) {
                     runOnUiThread {
-                        connectionIndicator.text = "● ERROR"
-                        connectionIndicator.setTextColor(ContextCompat.getColor(this@OtgActivity, R.color.deepeye_error))
-                        log("USB Error: $message", "ERROR")
+                        updateConnectionState(ConnectionState.ERROR, "USB Error: $message")
                     }
                 }
 
@@ -102,7 +103,7 @@ class OtgActivity : AppCompatActivity() {
                 }
             })
             
-            log("DeepEye Unlocker v5.1.3 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.2.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -208,36 +209,90 @@ class OtgActivity : AppCompatActivity() {
             findViewById<Button>(viewId)?.setOnClickListener {
                 hapticFeedback()
                 
-                if (nativeHandle == 0L) {
-                    log("Connect device first! (Native Core Offline)", "ERROR")
-                    // Toast.makeText(this, "Connect device via OTG first", Toast.LENGTH_SHORT).show()
-                } else {
-                    log("Executing: $opName...", "INFO")
-                    // Call Native Logic Here
+                synchronized(stateLock) {
+                    if (!connectionState.canExecuteOperations()) {
+                        val stateMsg = when (connectionState) {
+                            ConnectionState.DISCONNECTED -> "No device connected. Plug in OTG cable."
+                            ConnectionState.DEVICE_FOUND -> "Waiting for USB permission..."
+                            ConnectionState.PERMISSION_PENDING -> "Permission pending, please approve."
+                            ConnectionState.USB_OPEN, ConnectionState.NATIVE_INITIALIZING -> "Core is initializing, wait..."
+                            ConnectionState.ERROR -> "Connection error. Try re-plugging device."
+                            else -> "Native Core Offline (State: $connectionState)"
+                        }
+                        log("Cannot execute: $stateMsg", "ERROR")
+                        Toast.makeText(this, stateMsg, Toast.LENGTH_SHORT).show()
+                    } else {
+                        log("[OTG-OP] Executing: $opName...", "INFO")
+                        executeOperation(opName)
+                    }
                 }
             }
         }
     }
 
     private fun initializeCore(fd: Int, vid: Int, pid: Int) {
-        log("Initializing native core ($vid:$pid)...", "INFO")
-        try {
-            nativeHandle = NativeBridge.initCore(fd, vid, pid)
-            if (nativeHandle != 0L) {
-                if (NativeBridge.identifyDevice(nativeHandle)) {
-                    log("Device Link Secured (Handle: $nativeHandle)", "SUCCESS")
-                    connectionIndicator.text = "● READY"
-                    connectionIndicator.setTextColor(ContextCompat.getColor(this, R.color.deepeye_success))
-                } else {
-                    log("Handshake failed during identification.", "ERROR")
+        updateConnectionState(ConnectionState.NATIVE_INITIALIZING, "[OTG-NATIVE] initCore(fd=$fd, $vid:$pid)...")
+        
+        Thread {
+            try {
+                nativeHandle = NativeBridge.initCore(fd, vid, pid)
+                
+                runOnUiThread {
+                    if (nativeHandle != 0L) {
+                        log("[OTG-NATIVE] Core initialized (handle=$nativeHandle)", "INFO")
+                        
+                        // Attempt device identification handshake
+                        val identified = try {
+                            NativeBridge.identifyDevice(nativeHandle)
+                        } catch (e: Exception) {
+                            log("[OTG-NATIVE] identifyDevice threw: ${e.message}", "ERROR")
+                            false
+                        }
+                        
+                        if (identified) {
+                            updateConnectionState(ConnectionState.CONNECTED, "[OTG-NATIVE] Handshake OK. Operations enabled.")
+                        } else {
+                            NativeBridge.closeCore(nativeHandle)
+                            nativeHandle = 0L
+                            updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] Handshake failed. Device may not support this protocol.")
+                        }
+                    } else {
+                        updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] initCore returned NULL handle (FD invalid or libusb init failed).")
+                    }
                 }
-            } else {
-                log("Native Core Init failed (Handle is 0).", "ERROR")
+            } catch (e: Exception) {
+                runOnUiThread {
+                    updateConnectionState(ConnectionState.ERROR, "[OTG-NATIVE] Exception: ${e.message}")
+                    e.printStackTrace()
+                }
             }
-        } catch (e: Exception) {
-            log("Core Init Exception: ${e.message}", "ERROR")
-            e.printStackTrace()
+        }.start()
+    }
+    
+    private fun updateConnectionState(newState: ConnectionState, logMessage: String) {
+        synchronized(stateLock) {
+            val oldState = connectionState
+            connectionState = newState
+            
+            // Update UI
+            connectionIndicator.text = newState.getBadgeText()
+            connectionIndicator.setTextColor(ContextCompat.getColor(this, newState.getBadgeColorRes()))
+            
+            // Log
+            val logType = when (newState) {
+                ConnectionState.CONNECTED -> "SUCCESS"
+                ConnectionState.ERROR -> "ERROR"
+                ConnectionState.DISCONNECTED -> "WARNING"
+                else -> "INFO"
+            }
+            log("[STATE] $oldState → $newState: $logMessage", logType)
         }
+    }
+    
+    private fun executeOperation(opName: String) {
+        // Placeholder for actual native operation calls
+        log("[EXEC] $opName - Native call would happen here with handle=$nativeHandle", "INFO")
+        Toast.makeText(this, "Operation: $opName (not yet implemented)", Toast.LENGTH_SHORT).show()
     }
     
     private fun loadDeviceDatabase() {
