@@ -5,6 +5,7 @@ using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core.Services;
 using DeepEyeUnlocker.Core.Services.Frp.Strategies;
+using DeepEyeUnlocker.Core.Services.Safety;
 
 namespace DeepEyeUnlocker.Core.Services.Frp
 {
@@ -36,14 +37,14 @@ namespace DeepEyeUnlocker.Core.Services.Frp
         public Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
         {
             EnsureFrpCapabilities(ctx);
-            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return Task.FromResult("LOCKED (Knox Check Required)");
+            if (ctx.Profile.FrpInfo != null && ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return Task.FromResult("LOCKED (Knox Check Required)");
             return Task.FromResult("UNKNOWN (Check Partition)");
         }
 
         public string GetOfficialInstructions(FrpServiceContext ctx)
         {
             EnsureFrpCapabilities(ctx);
-            if (!string.IsNullOrEmpty(ctx.Profile.FrpInfo.OfficialServiceMethod))
+            if (ctx.Profile.FrpInfo != null && !string.IsNullOrEmpty(ctx.Profile.FrpInfo.OfficialServiceMethod))
                 return $"Official Mode Required: {ctx.Profile.FrpInfo.OfficialServiceMethod}";
 
             return "1. Sign in with Google Account.\n2. Or use Android Enterprise MDM console.";
@@ -52,11 +53,13 @@ namespace DeepEyeUnlocker.Core.Services.Frp
         public async Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx)
         {
             EnsureFrpCapabilities(ctx);
-            if (ctx.Ownership == OwnershipStatus.Unverified || ctx.Ownership == OwnershipStatus.Unknown)
+
+            // Stage 8: Safety & Compliance Interlock
+            var safetyResult = SafetyInterlock.Check(ctx);
+            if (!safetyResult.Success)
             {
-                var fail = FrpResult.Fail("Operation Blocking: Ownership verification is mandatory for FRP services.");
-                FrpAuditLogger.LogOperation(ctx, fail);
-                return fail;
+                FrpAuditLogger.LogOperation(ctx, safetyResult);
+                return safetyResult;
             }
 
             FrpResult result = FrpResult.Fail("No suitable strategy found for this device/mode.");
