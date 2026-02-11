@@ -94,9 +94,15 @@ class OtgActivity : AppCompatActivity() {
                         log("USB Error: $message", "ERROR")
                     }
                 }
+
+                override fun onStatusUpdate(message: String) {
+                    runOnUiThread {
+                        log(message, "INFO")
+                    }
+                }
             })
             
-            log("DeepEye Unlocker v5.1.2 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.1.3 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()

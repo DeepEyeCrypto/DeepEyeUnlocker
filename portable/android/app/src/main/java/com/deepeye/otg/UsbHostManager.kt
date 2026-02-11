@@ -20,6 +20,7 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
         fun onDeviceAttached(device: UsbDevice)
         fun onDeviceReady(fd: Int, vid: Int, pid: Int)
         fun onDeviceError(message: String)
+        fun onStatusUpdate(message: String)
     }
 
     private val usbReceiver = object : BroadcastReceiver() {
@@ -80,9 +81,12 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     private fun handleDevice(device: UsbDevice) {
         if (usbManager.hasPermission(device)) {
+            Log.d("DeepEye-OTG", "Permission already granted for ${device.vendorId}:${device.productId}")
+            listener?.onStatusUpdate("USB Permission OK - Opening device...")
             openAndPassFd(device)
         } else {
             Log.d("DeepEye-OTG", "Requesting permissions for ${device.vendorId}:${device.productId}")
+            listener?.onStatusUpdate("Requesting USB permission...")
             val permissionIntent = PendingIntent.getBroadcast(
                 context, 0, Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
             )
@@ -97,15 +101,20 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     private fun openAndPassFd(device: UsbDevice) {
         try {
+            listener?.onStatusUpdate("Opening USB connection...")
             val connection = usbManager.openDevice(device)
             if (connection != null) {
-                Log.i("DeepEye-OTG", "Direct Link Established. Handing FD to Core.")
+                Log.i("DeepEye-OTG", "Direct Link Established. Handing FD=${connection.fileDescriptor}")
+                listener?.onStatusUpdate("USB Link Secured (FD=${connection.fileDescriptor})")
                 if (!wakeLock.isHeld) wakeLock.acquire(10 * 60 * 1000L)
                 listener?.onDeviceReady(connection.fileDescriptor, device.vendorId, device.productId)
             } else {
-                Log.e("DeepEye-OTG", "Failed to open device connection (Permission denied?)")
-                listener?.onDeviceError("USB Permission Denied or Device Busy")
+                Log.e("DeepEye-OTG", "openDevice() returned null for ${device.vendorId}:${device.productId}")
+                listener?.onDeviceError("USB Connection Failed (openDevice returned null). Try re-plugging the cable.")
             }
+        } catch (e: SecurityException) {
+            Log.e("DeepEye-OTG", "SecurityException: ${e.message}")
+            listener?.onDeviceError("USB Permission Denied by System")
         } catch (e: Exception) {
             Log.e("DeepEye-OTG", "Exception in openAndPassFd: ${e.message}")
             listener?.onDeviceError("USB Error: ${e.message}")
