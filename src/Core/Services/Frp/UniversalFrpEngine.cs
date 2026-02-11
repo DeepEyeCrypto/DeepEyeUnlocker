@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core.Services;
 using DeepEyeUnlocker.Core.Services.Frp.Strategies;
@@ -23,10 +25,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
         public bool IsSupported(FrpServiceContext ctx)
         {
             if (ctx?.Profile == null) return false;
-
-            // Fill missing info from Registry if needed
             EnsureFrpCapabilities(ctx);
-            
             foreach (var strategy in _strategies)
             {
                 if (strategy.CanHandle(ctx)) return true;
@@ -34,11 +33,11 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             return false;
         }
 
-        public async Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
+        public Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
         {
             EnsureFrpCapabilities(ctx);
-            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return "LOCKED (Knox Check Required)";
-            return "UNKNOWN (Check Partition)";
+            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return Task.FromResult("LOCKED (Knox Check Required)");
+            return Task.FromResult("UNKNOWN (Check Partition)");
         }
 
         public string GetOfficialInstructions(FrpServiceContext ctx)
@@ -53,8 +52,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
         public async Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx)
         {
             EnsureFrpCapabilities(ctx);
-
-            // 1. Ownership Guardrail
             if (ctx.Ownership == OwnershipStatus.Unverified || ctx.Ownership == OwnershipStatus.Unknown)
             {
                 var fail = FrpResult.Fail("Operation Blocking: Ownership verification is mandatory for FRP services.");
@@ -62,9 +59,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
                 return fail;
             }
 
-            // 2. Strategy Execution
             FrpResult result = FrpResult.Fail("No suitable strategy found for this device/mode.");
-            
             foreach (var strategy in _strategies)
             {
                 if (strategy.CanHandle(ctx))
@@ -74,9 +69,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
                 }
             }
 
-            // 3. Compliance Logging
             FrpAuditLogger.LogOperation(ctx, result);
-            
             return result;
         }
 

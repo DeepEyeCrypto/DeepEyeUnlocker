@@ -1,13 +1,9 @@
-using DeepEyeUnlocker.Core.Models;
 using System;
 using System.Collections.Generic;
+using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Core.Services.Frp
 {
-    /// <summary>
-    /// Static registry that provides default FRP configurations based on Brand and Chipset patterns.
-    /// Used when a specific DeviceProfile doesn't have explicit FrpInfo set.
-    /// </summary>
     public static class FrpRegistry
     {
         public static FrpCapabilities GetDefaultCapabilities(string brand, string chipset)
@@ -15,7 +11,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             var brandNorm = brand?.ToUpper() ?? "GENERIC";
             var chipNorm = chipset?.ToUpper() ?? "GENERIC";
 
-            // 1. Samsung Knox Pattern
             if (brandNorm == "SAMSUNG")
             {
                 return new FrpCapabilities
@@ -28,7 +23,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
                 };
             }
 
-            // 2. Qualcomm EDL Pattern
             if (chipNorm.Contains("QUALCOMM") || chipNorm.Contains("SNAPDRAGON") || chipNorm.StartsWith("MSM") || chipNorm.StartsWith("SDM"))
             {
                 return new FrpCapabilities
@@ -41,7 +35,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
                 };
             }
 
-            // 3. MediaTek BROM Pattern
             if (chipNorm.Contains("MEDIATEK") || chipNorm.Contains("MTK") || chipNorm.StartsWith("MT"))
             {
                 return new FrpCapabilities
@@ -54,19 +47,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
                 };
             }
 
-            // 4. Spreadtrum / Unisoc
-            if (chipNorm.Contains("SPREADTRUM") || chipNorm.Contains("UNISOC") || chipNorm.StartsWith("SC"))
-            {
-                return new FrpCapabilities
-                {
-                    Type = FrpType.GoogleStandard,
-                    FrpPartitionName = "frp",
-                    SupportedProtocols = new List<string> { "SPD_DIAG" },
-                    RiskLevel = RiskLevel.Medium
-                };
-            }
-
-            // Default fallback
             return new FrpCapabilities
             {
                 Type = FrpType.GoogleStandard,

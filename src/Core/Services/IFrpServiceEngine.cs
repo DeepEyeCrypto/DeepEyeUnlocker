@@ -6,26 +6,9 @@ namespace DeepEyeUnlocker.Core.Services
 {
     public interface IFrpServiceEngine
     {
-        /// <summary>
-        /// Check if this engine supports FRP service for the given context (device + detected mode)
-        /// </summary>
         bool IsSupported(FrpServiceContext ctx);
-
-        /// <summary>
-        /// Safely check lock status (Read-Only)
-        /// Returns "LOCKED", "UNLOCKED", "UNKNOWN"
-        /// </summary>
         Task<string> CheckLockStatusAsync(FrpServiceContext ctx); 
-
-        /// <summary>
-        /// Get instructions for official removal (e.g. Settings menu)
-        /// </summary>
         string GetOfficialInstructions(FrpServiceContext ctx);
-
-        /// <summary>
-        /// Execute the service clear operation. MUST verify ownership first.
-        /// Throws AccessViolationException if ownership is Unverified.
-        /// </summary>
         Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx);
     }
 

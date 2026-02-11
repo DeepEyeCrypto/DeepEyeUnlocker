@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using DeepEyeUnlocker.Core;
 using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Core.Services.Frp
@@ -13,7 +14,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             try
             {
                 var directory = Path.GetDirectoryName(AuditLogPath);
-                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+                if (directory != null && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
                 var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] " +
                                $"VERIFIED: {ctx.Ownership} | " +
@@ -27,7 +28,6 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             }
             catch (Exception ex)
             {
-                // Fallback to standard logger if file IO fails
                 Logger.Error(ex, "Failed to write FRP audit log.");
             }
         }
