@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Core.Services;
 using DeepEyeUnlocker.Core.Services.Frp.Strategies;
@@ -14,16 +15,13 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             _strategies = new List<IFrpStrategy>
             {
                 new SamsungKnoxStrategy(),
-                // Future strategies:
-                // new StandardQualcommFrpStrategy(),
-                // new StandardMtkFrpStrategy()
+                new QualcommEdlFrpStrategy(),
             };
         }
 
         public bool IsSupported(FrpServiceContext ctx)
         {
             if (ctx?.Profile == null) return false;
-            
             foreach (var strategy in _strategies)
             {
                 if (strategy.CanHandle(ctx)) return true;
@@ -31,12 +29,11 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             return false;
         }
 
-        public string CheckLockStatus(FrpServiceContext ctx)
+        public Task<string> CheckLockStatusAsync(FrpServiceContext ctx)
         {
-            // Simple default logic for now
-            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return "LOCKED (Knox)";
-            if (ctx.Profile.FrpInfo.Type == FrpType.GoogleStandard) return "UNKNOWN (Standard)";
-            return "UNSUPPORTED";
+            if (ctx.Profile.FrpInfo.Type == FrpType.SamsungKnox) return Task.FromResult("LOCKED (Server-Side)");
+            if (ctx.Profile.FrpInfo.Type == FrpType.GoogleStandard) return Task.FromResult("UNKNOWN (Requires Read Access)");
+            return Task.FromResult("UNSUPPORTED");
         }
 
         public string GetOfficialInstructions(FrpServiceContext ctx)
@@ -53,7 +50,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             return "Refer to OEM documentation for official removal.";
         }
 
-        public FrpResult ExecuteServiceClear(FrpServiceContext ctx)
+        public async Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx)
         {
             // CORE GUARDRAIL: Ownership Verification
             if (ctx.Ownership == OwnershipStatus.Unverified || ctx.Ownership == OwnershipStatus.Unknown)
@@ -65,7 +62,7 @@ namespace DeepEyeUnlocker.Core.Services.Frp
             {
                 if (strategy.CanHandle(ctx))
                 {
-                    return strategy.Execute(ctx);
+                    return await strategy.ExecuteAsync(ctx);
                 }
             }
 

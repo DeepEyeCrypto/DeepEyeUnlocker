@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Core.Services
@@ -14,7 +15,7 @@ namespace DeepEyeUnlocker.Core.Services
         /// Safely check lock status (Read-Only)
         /// Returns "LOCKED", "UNLOCKED", "UNKNOWN"
         /// </summary>
-        string CheckLockStatus(FrpServiceContext ctx); 
+        Task<string> CheckLockStatusAsync(FrpServiceContext ctx); 
 
         /// <summary>
         /// Get instructions for official removal (e.g. Settings menu)
@@ -25,7 +26,7 @@ namespace DeepEyeUnlocker.Core.Services
         /// Execute the service clear operation. MUST verify ownership first.
         /// Throws AccessViolationException if ownership is Unverified.
         /// </summary>
-        FrpResult ExecuteServiceClear(FrpServiceContext ctx);
+        Task<FrpResult> ExecuteServiceClearAsync(FrpServiceContext ctx);
     }
 
     public class FrpResult

@@ -1,6 +1,7 @@
 using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Protocols.Samsung;
 using DeepEyeUnlocker.Core.Services;
+using System.Threading.Tasks;
 
 namespace DeepEyeUnlocker.Core.Services.Frp.Strategies
 {
@@ -8,24 +9,18 @@ namespace DeepEyeUnlocker.Core.Services.Frp.Strategies
     {
         public bool CanHandle(FrpServiceContext ctx)
         {
-            // Check if profile explicitly is Samsung Knox type OR if the engine is SamsungEngine
             return ctx.Profile?.FrpInfo?.Type == FrpType.SamsungKnox || 
                    (ctx.ActiveConnection != null && ctx.ActiveConnection.GetType().Name == "SamsungEngine");
         }
 
-        public FrpResult Execute(FrpServiceContext ctx)
+        public async Task<FrpResult> ExecuteAsync(FrpServiceContext ctx)
         {
-            // STRICT GUARDRAIL: Ownership Verification
+            await Task.Yield(); // Async simulation
             if (ctx.Ownership == OwnershipStatus.Unverified || ctx.Ownership == OwnershipStatus.Unknown)
             {
-                return FrpResult.Fail("Security Alert: Samsung Knox operations require verified ownership context.");
+                return FrpResult.Fail("Samsung Knox operations require verified ownership.");
             }
 
-            // Cast connection safely
-            // Using dynamic or configured interface since SamsungEngine might not be directly referencable if circular dependency
-            // But since they are likely in same assembly, we try via name check above
-            // Here we assume ctx.ActiveConnection is usable via reflection or interface if needed.
-            
             if (ctx.Profile.FrpInfo.OfficialServiceMethod == "KNOX_DEPLOYMENT_APP")
             {
                 return FrpResult.Fail("This device is managed by Enterprise Knox. Please contact IT administrator.");
