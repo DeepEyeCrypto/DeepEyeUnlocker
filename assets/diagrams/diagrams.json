@@ -1,0 +1,27 @@
+[
+    {
+        "DiagramId": "realme_c75_tp_v1",
+        "ImagePath": "test_points/realme_c75_tp_v1.png",
+        "Title": "Realme C75 (RMX3941) Test-Point",
+        "Instructions": [
+            "Remove back cover and shielding.",
+            "Short CLK pad to GND (metal bracket).",
+            "Insert USB cable while shorting.",
+            "Release short once BROM detected."
+        ],
+        "Annotations": [
+            {
+                "Label": "CLK",
+                "X": 45.5,
+                "Y": 30.2,
+                "Color": "Red"
+            },
+            {
+                "Label": "GND",
+                "X": 50.1,
+                "Y": 28.5,
+                "Color": "Green"
+            }
+        ]
+    }
+]

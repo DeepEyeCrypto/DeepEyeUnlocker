@@ -11,62 +11,72 @@ namespace DeepEyeUnlocker.Core.Models
 
         // Identity
         [Required]
-        public string ModelNumber { get; set; } = string.Empty; // "SM-A546E", "22041216I"
-        public string MarketingName { get; set; } = string.Empty; // "Galaxy A54 5G"
-        public string Codename { get; set; } = string.Empty; // "a54x"
+        public string ModelNumber { get; set; } = string.Empty; // "RMX3941"
+        public string MarketingName { get; set; } = string.Empty; // "Realme C75"
+        public string Codename { get; set; } = string.Empty;
+        public string CpuVariant { get; set; } = string.Empty; // "MT6789 (Dimensity 1080)"
 
         // Classification
         public string Brand { get; set; } = string.Empty;
         public string Series { get; set; } = string.Empty;
         public string Region { get; set; } = "Global";
 
-        // Hardware
+        // Hardware & Modes (v2)
         public ChipsetInfo Chipset { get; set; } = new();
-        public List<string> SupportedBootModes { get; set; } = new();
+        public ServiceModeDescriptor ServiceModes { get; set; } = new();
+        public LoaderRequirement Loaders { get; set; } = new();
 
-        // USB Identification
-        public List<UsbIdentifier> UsbIds { get; set; } = new();
-        public List<string> InterfaceClassGuids { get; set; } = new();
-
-        // Operations Matrix
+        // Operations
         public List<OperationSupport> SupportedOperations { get; set; } = new();
 
-        // Security Characteristics
+        // Security
         public SecurityProfile Security { get; set; } = new();
-
-        // Metadata
-        public List<FirmwareInfo> KnownFirmwares { get; set; } = new();
-        public TestStatus ValidationStatus { get; set; } = TestStatus.Untested;
-
-        // FRP Extensions (v5.0)
         public FrpCapabilities FrpInfo { get; set; } = new();
+
+        // Status
+        public TestStatus ValidationStatus { get; set; } = TestStatus.Untested;
+    }
+
+    public class ServiceModeDescriptor
+    {
+        public PreloaderConfig Preloader { get; set; } = new();
+        public bool SupportsBromAuthBypass { get; set; }
+        public bool SupportsMetaMode { get; set; }
+        public bool SupportsEdl { get; set; }
+        public bool SupportsOdin { get; set; }
+    }
+
+    public class PreloaderConfig
+    {
+        public bool Supported { get; set; }
+        public string ConnectionMethod { get; set; } = "VOLUME_KEYS"; // VOLUME_KEYS, TEST_POINT
+        public TestPointInfo? TestPoint { get; set; }
+    }
+
+    public class TestPointInfo
+    {
+        public bool Required { get; set; }
+        public string DiagramId { get; set; } = string.Empty;
+        public string PinDescription { get; set; } = string.Empty;
+    }
+
+    public class LoaderRequirement
+    {
+        public string? CustomDaId { get; set; }   // Reference to LoaderRepository ID
+        public string? CustomEmiId { get; set; }  // Reference to LoaderRepository ID
+        public string? FirehoseProgrammerId { get; set; }
     }
 
     public class ChipsetInfo
     {
-        public string Manufacturer { get; set; } = string.Empty; // Qualcomm, MediaTek
-        public string Model { get; set; } = string.Empty; // SM-A7150
-        public string Platform { get; set; } = string.Empty; // Snapdragon 7 Gen 1
+        public string Manufacturer { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string Platform { get; set; } = string.Empty;
         public string Architecture { get; set; } = "ARM64";
-        public List<UniversalMethod> SupportedUniversalMethods { get; set; } = new();
     }
 
-    public class UsbIdentifier
-    {
-        public int Vid { get; set; }
-        public int Pid { get; set; }
-    }
-
-    public class OperationSupport
-    {
-        public string OperationName { get; set; } = string.Empty; // "FrpRemove"
-        public string ProtocolPlugin { get; set; } = string.Empty;
-        public string HandlerName { get; set; } = string.Empty;
-        public bool RequiresAuth { get; set; }
-        public RiskLevel RiskLevel { get; set; }
-        public List<string> Prerequisites { get; set; } = new();
-        public DateTime? LastVerified { get; set; }
-    }
+    public enum RiskLevel { Low, Medium, High, Critical }
+    public enum TestStatus { Untested, VerifiedAlpha, VerifiedBeta, Stable }
 
     public class SecurityProfile
     {
@@ -75,34 +85,10 @@ namespace DeepEyeUnlocker.Core.Models
         public bool EncryptedUserData { get; set; }
     }
 
-    public class FirmwareInfo
+    public class OperationSupport
     {
-        public string Version { get; set; } = string.Empty;
-        public string AndroidVersion { get; set; } = string.Empty;
-        public string ReleaseDate { get; set; } = string.Empty;
-    }
-
-    public enum UniversalMethod
-    {
-        None,
-        MtkBromAuthBypass,
-        QualcommEdlFirehose,
-        SpdDiagMode
-    }
-
-    public enum RiskLevel
-    {
-        Low,     // Read Info
-        Medium,  // FRP Bypass
-        High,    // Flashing
-        Critical // Bootloader Unlock / IMEI
-    }
-
-    public enum TestStatus
-    {
-        Untested,
-        VerifiedAlpha,
-        VerifiedBeta,
-        Stable
+        public string OperationName { get; set; } = string.Empty;
+        public RiskLevel RiskLevel { get; set; }
+        public bool RequiresAuth { get; set; }
     }
 }
