@@ -7,7 +7,7 @@ namespace DeepEyeUnlocker.Core.Models
         public DeviceProfile Profile { get; set; } = new();
         public string ConnectionId { get; set; } = string.Empty;
         public string Protocol { get; set; } = string.Empty;
-        public object ActiveConnection { get; set; } = new object();
+        public object? ActiveConnection { get; set; }
         public OwnershipStatus Ownership { get; set; } = OwnershipStatus.Unknown;
         public string UserReason { get; set; } = "Refurbish";
     }
