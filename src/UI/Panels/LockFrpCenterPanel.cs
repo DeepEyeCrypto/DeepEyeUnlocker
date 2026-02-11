@@ -15,11 +15,7 @@ namespace DeepEyeUnlocker.UI.Panels
 {
     public class LockFrpCenterPanel : Panel
     {
-        private LockFrpDiagnosticsManager? _diagnostics;
         private DeviceContext? _currentDevice;
-        private LockFrpDiagnostics? _lastScan;
-        private bool _expertModeEnabled;
-        private bool _disclaimerAccepted;
 
         private Label _titleLabel = null!;
         private Label _deviceInfoLabel = null!;
@@ -36,7 +32,6 @@ namespace DeepEyeUnlocker.UI.Panels
 
         private GroupBox _actionsGroup = null!;
         private Button _scanButton = null!;
-        private Button _ownerRecoveryButton = null!;
         private Button _oemSupportButton = null!;
         private Button _factoryResetButton = null!;
         private Button _bypassFrpButton = null!;
@@ -45,7 +40,6 @@ namespace DeepEyeUnlocker.UI.Panels
         private CheckBox _expertModeToggle = null!;
         private Panel _expertPanel = null!;
         private Button _backupFrpButton = null!;
-        private Button _exportReportButton = null!;
 
         private RichTextBox _logBox = null!;
         private IProtocol? _currentProtocol;
@@ -60,7 +54,6 @@ namespace DeepEyeUnlocker.UI.Panels
         {
             _currentDevice = device;
             _currentProtocol = protocol;
-            _diagnostics = new LockFrpDiagnosticsManager(protocol);
             UpdateDeviceInfo();
             UpdateDiagramAvailability();
         }

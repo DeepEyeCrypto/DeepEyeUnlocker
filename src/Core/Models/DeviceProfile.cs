@@ -20,6 +20,8 @@ namespace DeepEyeUnlocker.Core.Models
         public string Brand { get; set; } = string.Empty;
         public string Series { get; set; } = string.Empty;
         public string Region { get; set; } = "Global";
+        public List<UsbId> UsbIds { get; set; } = new();
+        public List<FirmwareInfo> KnownFirmwares { get; set; } = new();
 
         // Hardware & Modes (v2)
         public ChipsetInfo Chipset { get; set; } = new();
@@ -90,5 +92,18 @@ namespace DeepEyeUnlocker.Core.Models
         public string OperationName { get; set; } = string.Empty;
         public RiskLevel RiskLevel { get; set; }
         public bool RequiresAuth { get; set; }
+    }
+
+    public class UsbId
+    {
+        public int Vid { get; set; }
+        public int Pid { get; set; }
+    }
+
+    public class FirmwareInfo
+    {
+        public string Version { get; set; } = string.Empty;
+        public string BuildId { get; set; } = string.Empty;
+        public string SecurityPatch { get; set; } = string.Empty;
     }
 }
