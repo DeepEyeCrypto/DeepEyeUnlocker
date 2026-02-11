@@ -16,6 +16,11 @@ namespace DeepEyeUnlocker.Core.Models
         /// </summary>
         public string Protocol { get; set; }
 
+        /// <summary>
+        /// Reference to the active protocol handler (e.g. SamsungEngine, QualcommEngine)
+        /// </summary>
+        public object ActiveConnection { get; set; }
+
         public OwnershipStatus Ownership { get; set; } = OwnershipStatus.Unknown;
         public string UserReason { get; set; } = "Refurbish";
     }
