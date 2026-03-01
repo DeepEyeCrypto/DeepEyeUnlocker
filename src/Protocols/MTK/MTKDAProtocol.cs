@@ -115,8 +115,8 @@ namespace DeepEyeUnlocker.Protocols.MTK
 
             // MediaTek DA: Reading from flash usually happens in 32KB/64KB chunks
             const int chunkSize = 65536; 
-            long totalRead = 0;
-            long totalSize = part.SizeInBytes;
+            ulong totalRead = 0;
+            ulong totalSize = part.SizeInBytes;
             byte[] buffer = new byte[chunkSize];
 
             while (totalRead < totalSize)

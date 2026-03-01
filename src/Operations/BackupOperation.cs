@@ -53,7 +53,7 @@ public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<Pr
                     try
                     {
                         string filePath = Path.Combine(backupDir, $"{part.Name}.img");
-                        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, bufferSize: 65536, FileOptions.Asynchronous))
+                        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 65536, FileOptions.Asynchronous))
                         {
                             await _protocol.ReadPartitionToStreamAsync(part.Name, fs, progress, ct);
                         }
