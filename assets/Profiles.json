@@ -21,6 +21,17 @@
             "ProtocolOverrides": {
                 "Qualcomm": "Firehose",
                 "MTK": "MTK_DA"
+            },
+            "FrpInfo": {
+                "SupportedProtocols": [
+                    "EDL",
+                    "BROM",
+                    "FASTBOOT"
+                ],
+                "FrpPartitionName": "frp",
+                "Type": "GoogleStandard",
+                "OfficialServiceMethod": "ADB_MTP_BYPASS",
+                "RiskLevel": 0
             }
         },
         {
@@ -38,7 +49,17 @@
                 "Region": "Global",
                 "AuthType": "TokenBased"
             },
-            "ProtocolOverrides": {}
+            "ProtocolOverrides": {},
+            "FrpInfo": {
+                "SupportedProtocols": [
+                    "EDL",
+                    "BROM"
+                ],
+                "FrpPartitionName": "frp",
+                "Type": "GoogleStandard",
+                "RequiresAuthAgent": true,
+                "RiskLevel": 1
+            }
         },
         {
             "BrandName": "Samsung",
@@ -58,9 +79,19 @@
             },
             "ProtocolOverrides": {
                 "Download": "Loke"
+            },
+            "FrpInfo": {
+                "SupportedProtocols": [
+                    "ODIN",
+                    "BROM"
+                ],
+                "FrpPartitionName": "persistent",
+                "Type": "SamsungKnox",
+                "OfficialServiceMethod": "KNOX_RESTORE",
+                "RiskLevel": 1
             }
         }
     ],
-    "LastUpdated": "2026-01-28T19:20:00",
-    "Version": "1.1.0"
+    "LastUpdated": "2026-03-01T18:15:00",
+    "Version": "1.3.0"
 }

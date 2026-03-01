@@ -21,6 +21,9 @@ namespace DeepEyeUnlocker.Core.Models
         // Map Chipset -> Default Protocol
         public Dictionary<string, string> ProtocolOverrides { get; set; } = new();
 
+        // FRP Defaults for this brand (v5.0)
+        public FrpCapabilities FrpInfo { get; set; } = new();
+
         public override string ToString() => BrandName;
     }
 

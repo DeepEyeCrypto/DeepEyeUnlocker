@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using DeepEyeUnlocker.Core.Models;
 
 namespace DeepEyeUnlocker.Core.Models
 {

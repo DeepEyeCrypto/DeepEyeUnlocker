@@ -8,7 +8,6 @@ using DeepEyeUnlocker.Core.Models;
 using DeepEyeUnlocker.Protocols;
 using System.Linq;
 using LogLevel = DeepEyeUnlocker.Core.Models.LogLevel;
-
 namespace DeepEyeUnlocker.Operations
 {
     public class BackupOperation : Operation
@@ -22,7 +21,7 @@ namespace DeepEyeUnlocker.Operations
             Name = "Partition Backup";
         }
 
-        public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
+public override async Task<bool> ExecuteAsync(DeviceContext device, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
             try
             {
@@ -35,7 +34,7 @@ namespace DeepEyeUnlocker.Operations
                 }
 
                 if (ct.IsCancellationRequested) return false;
-                
+
                 string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 if (!Directory.Exists(backupDir)) Directory.CreateDirectory(backupDir);
 
@@ -50,11 +49,11 @@ namespace DeepEyeUnlocker.Operations
 
                     Logger.Info($"Backing up {part.Name} ({part.SizeInBytes} bytes)...");
                     Report(progress, (int)((float)completed / partitions.Count * 100), $"Backing up {part.Name}...");
-                    
-                    try 
+
+                    try
                     {
                         string filePath = Path.Combine(backupDir, $"{part.Name}.img");
-                        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, bufferSize: 65536, FileOptions.Asynchronous))
                         {
                             await _protocol.ReadPartitionToStreamAsync(part.Name, fs, progress, ct);
                         }

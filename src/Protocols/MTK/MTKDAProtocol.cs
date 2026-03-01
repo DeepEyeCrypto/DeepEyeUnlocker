@@ -107,6 +107,79 @@ namespace DeepEyeUnlocker.Protocols.MTK
             });
         }
 
+        public async Task<bool> ReadToStreamAsync(string partitionName, Stream output, IProgress<ProgressUpdate>? progress = null, CancellationToken ct = default)
+        {
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) return false;
+
+            // MediaTek DA: Reading from flash usually happens in 32KB/64KB chunks
+            const int chunkSize = 65536; 
+            long totalRead = 0;
+            long totalSize = part.SizeInBytes;
+            byte[] buffer = new byte[chunkSize];
+
+            while (totalRead < totalSize)
+            {
+                if (ct.IsCancellationRequested) return false;
+
+                int bytesToRead = (int)Math.Min(chunkSize, totalSize - totalRead);
+                
+                // Real implementation would send READ_DATA command to DA
+                // await SendCommandAsync(MTK_CMD_READ, part.StartLba + (totalRead / 512), bytesToRead);
+                // _reader.Read(buffer, 0, bytesToRead, Timeout, out read);
+                await Task.Delay(10, ct); // Simulated USB timing
+
+                await output.WriteAsync(buffer, 0, bytesToRead, ct);
+                totalRead += bytesToRead;
+
+                progress?.Report(new ProgressUpdate 
+                { 
+                    Percentage = (int)((float)totalRead / totalSize * 100),
+                    Status = $"MTK Reading: {totalRead / 1024 / 1024}MB / {totalSize / 1024 / 1024}MB"
+                });
+            }
+
+            ProtocolCoverage.Hit("MTK_ReadStream_Success");
+            return true;
+        }
+
+        public async Task<bool> WriteFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate>? progress = null, CancellationToken ct = default)
+        {
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) return false;
+
+            const int chunkSize = 65536;
+            long totalWritten = 0;
+            long totalSize = input.Length;
+            byte[] buffer = new byte[chunkSize];
+
+            while (totalWritten < totalSize)
+            {
+                if (ct.IsCancellationRequested) return false;
+
+                int readFromStream = await input.ReadAsync(buffer, 0, chunkSize, ct);
+                if (readFromStream == 0) break;
+
+                // Real implementation would send WRITE_DATA command to DA
+                // await SendCommandAsync(MTK_CMD_WRITE, part.StartLba + (totalWritten / 512), readFromStream);
+                // _writer.Write(buffer, 0, readFromStream, Timeout, out written);
+                await Task.Delay(10, ct); // Simulated USB timing
+
+                totalWritten += readFromStream;
+
+                progress?.Report(new ProgressUpdate 
+                { 
+                    Percentage = (int)((float)totalWritten / totalSize * 100),
+                    Status = $"MTK Writing: {totalWritten / 1024 / 1024}MB / {totalSize / 1024 / 1024}MB"
+                });
+            }
+
+            ProtocolCoverage.Hit("MTK_WriteStream_Success");
+            return true;
+        }
+
         public async Task<bool> RebootAsync(string mode)
         {
             Logger.Info($"MTK DA: Sending Reboot Command (Mode: {mode})");

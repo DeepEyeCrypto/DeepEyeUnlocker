@@ -82,6 +82,13 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
         public async Task<byte[]> ReadPartitionAsync(string partitionName, long sectorOffset = 0, int sectorCount = 1)
         {
+            long totalBytes = (long)sectorCount * 512;
+            if (totalBytes > 100 * 1024 * 1024) // 100MB limit for byte[]
+            {
+                Logger.Error($"Partition {partitionName} is too large ({totalBytes / 1024 / 1024}MB) to read into memory. Use streaming API.");
+                return Array.Empty<byte>();
+            }
+
             using var ms = new MemoryStream();
             if (await ReadToStreamAsync(ms, sectorOffset, sectorCount))
             {

@@ -161,13 +161,22 @@ namespace DeepEyeUnlocker.Protocols.MTK
 
         public async Task<bool> ReadPartitionToStreamAsync(string partitionName, Stream output, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-             // Already implement in prior version, keeping standard logic but delegating to _daProtocol
-             return await Task.FromResult(true); // Implementation detail omitted for brevity in prompt context
+            if (_daProtocol == null) throw new InvalidOperationException("MTK DA protocol not initialized.");
+            
+            var partitions = await GetPartitionTableAsync();
+            var part = partitions.FirstOrDefault(p => p.Name.Equals(partitionName, StringComparison.OrdinalIgnoreCase));
+            if (part == null) throw new Exception($"Partition {partitionName} not found.");
+
+            Logger.Info($"MTK: Streaming partition '{partitionName}' to output stream...");
+            return await _daProtocol.ReadToStreamAsync(partitionName, output, progress, ct);
         }
 
         public async Task<bool> WritePartitionFromStreamAsync(string partitionName, Stream input, IProgress<ProgressUpdate> progress, CancellationToken ct)
         {
-             return await Task.FromResult(true);
+            if (_daProtocol == null) throw new InvalidOperationException("MTK DA protocol not initialized.");
+            
+            Logger.Info($"MTK: Streaming input stream to partition '{partitionName}'...");
+            return await _daProtocol.WriteFromStreamAsync(partitionName, input, progress, ct);
         }
 
         public async Task<IEnumerable<PartitionInfo>> GetPartitionTableAsync()

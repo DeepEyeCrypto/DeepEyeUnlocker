@@ -25,32 +25,36 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             _writer = _usbDevice.OpenEndpointWriter(WriteEndpointID.Ep01);
         }
 
-        public async Task<bool> ProcessHelloAsync()
+public async Task<bool> ProcessHelloAsync()
         {
             byte[] buffer = new byte[1024];
             int bytesRead;
-            
+
             _reader.Read(buffer, 1000, out bytesRead);
             await Task.Yield();
-            if (bytesRead < Marshal.SizeOf<SaharaPacketHeader>()) 
+
+            // Validate header size before casting
+            if (bytesRead < Marshal.SizeOf<SaharaPacketHeader>())
             {
                 ProtocolCoverage.Hit("Sahara_ProcessHello_HeaderTooSmall");
                 Logger.Error($"Received insufficient data ({bytesRead} bytes) for Sahara header.");
                 return false;
             }
 
+            // Validate complete packet size before processing
+            if (bytesRead < Marshal.SizeOf<SaharaHelloPacket>())
+            {
+                ProtocolCoverage.Hit("Sahara_ProcessHello_BodyTooSmall");
+                Logger.Error($"Received insufficient data for Sahara Hello body. Expected: {Marshal.SizeOf<SaharaHelloPacket>()}, Received: {bytesRead}");
+                return false;
+            }
+
+            // Safe casting with bounds checking
             var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
             if (header.Command != SaharaCommand.Hello)
             {
                 ProtocolCoverage.Hit("Sahara_ProcessHello_WrongCommand");
                 Logger.Error($"Expected Hello packet, got {header.Command}");
-                return false;
-            }
-
-            if (bytesRead < Marshal.SizeOf<SaharaHelloPacket>())
-            {
-                ProtocolCoverage.Hit("Sahara_ProcessHello_BodyTooSmall");
-                Logger.Error($"Received insufficient data for Sahara Hello body.");
                 return false;
             }
 
@@ -71,7 +75,7 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
             return SendPacket(response);
         }
 
-        public async Task<bool> UploadProgrammerAsync(string filePath)
+public async Task<bool> UploadProgrammerAsync(string filePath)
         {
             if (!File.Exists(filePath))
             {
@@ -90,15 +94,39 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
                 if (bytesRead == 0) break;
 
+                // Validate header size before casting
+                if (bytesRead < Marshal.SizeOf<SaharaPacketHeader>())
+                {
+                    ProtocolCoverage.Hit("Sahara_Upload_HeaderTooSmall");
+                    Logger.Error($"Received insufficient data ({bytesRead} bytes) for Sahara header.");
+                    continue;
+                }
+
                 var header = MemoryMarshal.Cast<byte, SaharaPacketHeader>(buffer)[0];
-                
+
                 if (header.Command == SaharaCommand.ReadData)
                 {
                     ProtocolCoverage.Hit("Sahara_Upload_ReadDataReq");
-                    if (bytesRead < Marshal.SizeOf<SaharaReadDataPacket>()) continue;
+
+                    // Validate complete ReadData packet size
+                    if (bytesRead < Marshal.SizeOf<SaharaReadDataPacket>())
+                    {
+                        ProtocolCoverage.Hit("Sahara_Upload_ReadDataTooSmall");
+                        Logger.Error($"Received insufficient data for ReadData packet. Expected: {Marshal.SizeOf<SaharaReadDataPacket>()}, Received: {bytesRead}");
+                        continue;
+                    }
+
                     var readReq = MemoryMarshal.Cast<byte, SaharaReadDataPacket>(buffer)[0];
-                    
-                    if (readReq.DataOffset + readReq.DataLength > programmerData.Length)
+
+                    // Bounds checking with safe arithmetic
+                    if (readReq.DataOffset > int.MaxValue || readReq.DataLength > int.MaxValue)
+                    {
+                        ProtocolCoverage.Hit("Sahara_Upload_Overflow");
+                        Logger.Error($"Data offset or length exceeds maximum safe integer value.");
+                        return false;
+                    }
+
+                    if ((long)readReq.DataOffset + readReq.DataLength > programmerData.Length)
                     {
                         ProtocolCoverage.Hit("Sahara_Upload_OutOfBounds");
                         Logger.Error($"Device requested out-of-bounds data. Offset: {readReq.DataOffset}, Length: {readReq.DataLength}, Total: {programmerData.Length}");
@@ -107,13 +135,22 @@ namespace DeepEyeUnlocker.Protocols.Qualcomm
 
                     byte[] chunk = new byte[readReq.DataLength];
                     Array.Copy(programmerData, (int)readReq.DataOffset, chunk, 0, (int)readReq.DataLength);
-                    
+
                     int written;
                     _writer.Write(chunk, 1000, out written);
                 }
                 else if (header.Command == SaharaCommand.EndTransfer)
                 {
                     ProtocolCoverage.Hit("Sahara_Upload_EndTransferReq");
+
+                    // Validate EndTransfer packet size
+                    if (bytesRead < Marshal.SizeOf<SaharaEndTransferPacket>())
+                    {
+                        ProtocolCoverage.Hit("Sahara_Upload_EndTransferTooSmall");
+                        Logger.Error($"Received insufficient data for EndTransfer packet. Expected: {Marshal.SizeOf<SaharaEndTransferPacket>()}, Received: {bytesRead}");
+                        continue;
+                    }
+
                     var endTransfer = MemoryMarshal.Cast<byte, SaharaEndTransferPacket>(buffer)[0];
                     if (endTransfer.Status == SaharaStatus.Success)
                     {
