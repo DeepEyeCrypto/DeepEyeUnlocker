@@ -131,7 +131,7 @@ namespace DeepEyeUnlocker.Protocols.MTK
                 await Task.Delay(10, ct); // Simulated USB timing
 
                 await output.WriteAsync(buffer, 0, bytesToRead, ct);
-                totalRead += bytesToRead;
+                totalRead += (ulong)bytesToRead;
 
                 progress?.Report(new ProgressUpdate 
                 { 
