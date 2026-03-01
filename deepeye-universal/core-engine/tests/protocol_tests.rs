@@ -50,3 +50,30 @@ fn test_sahara_buffer_bounds() {
         "Sahara parsing did not catch undersized buffer"
     );
 }
+
+#[test]
+fn test_sahara_reset_resp() {
+    let protocol = SaharaProtocol::new();
+    let mut rx_buffer = vec![0u8; 8];
+    rx_buffer[0..4].copy_from_slice(&0x08u32.to_le_bytes()); // SAHARA_RESET_RESP
+    rx_buffer[4..8].copy_from_slice(&8u32.to_le_bytes());
+
+    let result = protocol.process_reset_resp(&rx_buffer);
+    assert!(
+        result.is_ok(),
+        "Failed to parse valid Sahara Reset Response"
+    );
+}
+
+#[test]
+fn test_sahara_done_resp() {
+    let protocol = SaharaProtocol::new();
+    let mut rx_buffer = vec![0u8; 12];
+    rx_buffer[0..4].copy_from_slice(&0x06u32.to_le_bytes()); // SAHARA_DONE_RESP
+    rx_buffer[4..8].copy_from_slice(&12u32.to_le_bytes());
+    rx_buffer[8..12].copy_from_slice(&0u32.to_le_bytes()); // Status = 0 (Success)
+
+    let result = protocol.process_done_resp(&rx_buffer);
+    assert!(result.is_ok(), "Failed to parse valid Sahara Done Response");
+    assert_eq!(result.unwrap(), 0);
+}

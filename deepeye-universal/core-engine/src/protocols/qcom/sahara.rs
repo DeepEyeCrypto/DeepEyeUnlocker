@@ -60,4 +60,35 @@ impl SaharaProtocol {
             mode,
         })
     }
+
+    pub fn process_reset_resp(&self, rx_buffer: &[u8]) -> Result<()> {
+        if rx_buffer.len() < 8 {
+            return Err(anyhow::anyhow!("buffer too small for reset response"));
+        }
+        let cmd = u32::from_le_bytes(rx_buffer[0..4].try_into()?);
+        if cmd != SAHARA_RESET_RESP {
+            return Err(anyhow::anyhow!(
+                "Expected Reset Response (0x08), got 0x{:02X}",
+                cmd
+            ));
+        }
+        info!("Sahara Reset Response OK.");
+        Ok(())
+    }
+
+    pub fn process_done_resp(&self, rx_buffer: &[u8]) -> Result<u32> {
+        if rx_buffer.len() < 12 {
+            return Err(anyhow::anyhow!("buffer too small for done response"));
+        }
+        let cmd = u32::from_le_bytes(rx_buffer[0..4].try_into()?);
+        if cmd != SAHARA_DONE_RESP {
+            return Err(anyhow::anyhow!(
+                "Expected Done Response (0x06), got 0x{:02X}",
+                cmd
+            ));
+        }
+        let status = u32::from_le_bytes(rx_buffer[8..12].try_into()?);
+        info!("Sahara Done Status: {}", status);
+        Ok(status) // 0 implies success
+    }
 }
