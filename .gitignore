@@ -50,3 +50,5 @@ testing/
 *.dylib
 *.lib
 *.exp
+deepeye-universal/target/
+deepeye-universal/desktop-app/node_modules/

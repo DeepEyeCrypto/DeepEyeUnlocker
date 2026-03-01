@@ -1,7 +1,7 @@
-use core_engine::connection::usb::UsbManager;
+use deepeyecore::connection::usb::UsbManager;
 
 fn main() -> anyhow::Result<()> {
-    core_engine::init();
+    deepeyecore::init();
     tracing::info!("Starting DeepEye Universal CLI Tester");
 
     let usb_mgr = UsbManager::new();
