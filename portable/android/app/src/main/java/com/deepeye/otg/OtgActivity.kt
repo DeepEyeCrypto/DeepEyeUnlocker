@@ -10,6 +10,7 @@ import android.os.Vibrator
 import android.os.VibrationEffect
 import android.content.Context
 import android.os.Build
+import android.util.Log
 
 class OtgActivity : AppCompatActivity() {
     
