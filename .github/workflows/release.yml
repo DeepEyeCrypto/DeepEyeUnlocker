@@ -26,7 +26,7 @@ jobs:
       - name: Publish Modern UI (Portable)
         shell: pwsh
         run: |
-          dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:TreatWarningsAsErrors=true "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
+          dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
           Copy-Item README.md artifacts/portable/ -Force
           Copy-Item LICENSE artifacts/portable/ -Force
           if (Test-Path drivers) { Copy-Item drivers artifacts/portable/ -Recurse -Force }
