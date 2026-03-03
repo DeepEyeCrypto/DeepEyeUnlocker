@@ -103,6 +103,44 @@
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
+        <!-- MTP / Permission Guidance Banner -->
+        <LinearLayout
+            android:id="@+id/mtpBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="#332196F3"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="USB mode not ready for DeepEye"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"/>
+                <TextView
+                    android:id="@+id/mtpBannerBody"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#E0E0E0"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+            <ImageView
+                android:id="@+id/mtpBannerDismiss"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="#FFFFFF"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
         <!-- Operations List (Full Width) -->
         <ScrollView
             android:layout_width="match_parent"

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
     Zap, Download, ShieldCheck, HardDrive,
     Trash2, Store, PackageCheck, Settings2,
     Lock, UserCheck, Building2, Cpu,
     Fingerprint, ScanLine, Unlock, Landmark,
-    BadgeCheck, Antenna, Radio, SimCard,
-    Info, Terminal, Rocket, AppWindow
+    BadgeCheck, Antenna, Radio, Smartphone,
+    Info, Terminal, Rocket, AppWindow,
+    Cable, RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -117,7 +119,7 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
             { id: 17, title: "IMEI Integrity Check", desc: "Compare live IMEI against original data to detect corruption or mismatch.", tags: ["MTK", "Qualcomm", "UniSoc"], risk: "safe", iconName: "BadgeCheck" },
             { id: 18, title: "IMEI Restore (Original Only)", desc: "Repair null or corrupted IMEI back to factory value with proof verification.", tags: ["MTK", "Qualcomm"], risk: "restricted", iconName: "Antenna" },
             { id: 19, title: "5G Modem Repair", desc: "Advanced repair tools for modern 5G radio stacks (CPID supported).", tags: ["Qualcomm", "MTK"], risk: "restricted", iconName: "Radio" },
-            { id: 20, title: "Network / SIM Unlock", desc: "Carrier-compliant SIM unlock guidance and tools, fully region-aware.", tags: ["Qualcomm", "Samsung"], risk: "restricted", iconName: "SimCard" }
+            { id: 20, title: "Network / SIM Unlock", desc: "Carrier-compliant SIM unlock guidance and tools, fully region-aware.", tags: ["Qualcomm", "Samsung"], risk: "restricted", iconName: "Smartphone" }
         ]
     },
     {
@@ -129,8 +131,9 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         features: [
             { id: 21, title: "Deep Device Info", desc: "One-click snapshot: model, SoC, security level, bootloader & FRP state.", tags: ["All Chipsets"], risk: "safe", iconName: "Info" },
             { id: 22, title: "Diag / ADB Enabler", desc: "Safely open diagnostic and ADB channels for authorized service work.", tags: ["Samsung", "Qualcomm", "MTK"], risk: "policy", iconName: "Terminal" },
+            { id: 25, title: "Quick APK Install", desc: "Batch install system apps or DeepEye helpers directly from desktop.", tags: ["ADB"], risk: "safe", iconName: "AppWindow" },
             { id: 23, title: "One-Click Root", desc: "Magisk-based root for 450+ Samsung and 170+ Xiaomi supported builds.", tags: ["Samsung", "MTK"], risk: "policy", iconName: "Rocket" },
-            { id: 24, title: "ADB App Manager", desc: "List, disable, uninstall or install APKs directly via ADB from desktop.", tags: ["All Chipsets"], risk: "safe", iconName: "AppWindow" }
+            { id: 24, title: "ADB App Manager", desc: "List, disable, uninstall or install APKs directly via ADB from desktop.", tags: ["All Chipsets"], risk: "safe", iconName: "Smartphone" }
         ]
     }
 ];
@@ -140,7 +143,7 @@ const IconMap: Record<string, any> = {
     Trash2, Store, PackageCheck, Settings2,
     Lock, UserCheck, Building2, Cpu,
     Fingerprint, ScanLine, Unlock, Landmark,
-    BadgeCheck, Antenna, Radio, SimCard,
+    BadgeCheck, Antenna, Radio, Smartphone,
     Info, Terminal, Rocket, AppWindow
 };
 
@@ -178,10 +181,11 @@ function RiskBadge({ risk }: { risk: string }) {
     );
 }
 
-function FeatureCard({ feature, color }: { feature: Feature, color: string }) {
+function FeatureCard({ feature, color, onClick }: { feature: Feature, color: string, onClick: () => void }) {
     const IconCmp = IconMap[feature.iconName] || Zap;
     return (
         <motion.div
+            onClick={onClick}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="group relative flex flex-col gap-2 p-4 rounded-xl bg-[#1A1A2E] border border-white/5 hover:border-purple-500/50 hover:bg-[#252542] transition-all duration-200 cursor-pointer"
@@ -199,7 +203,7 @@ function FeatureCard({ feature, color }: { feature: Feature, color: string }) {
     );
 }
 
-function FeatureGroup({ group, index }: { group: FeatureGroupData, index: number }) {
+function FeatureGroup({ group, index, onFeatureClick }: { group: FeatureGroupData, index: number, onFeatureClick: (f: Feature) => void }) {
     const IconCmp = IconMap[group.iconName] || Zap;
 
     return (
@@ -215,13 +219,13 @@ function FeatureGroup({ group, index }: { group: FeatureGroupData, index: number
                 </div>
                 <h3 className="text-lg font-bold text-white">{group.title}</h3>
                 <span className="ml-auto text-xs px-2 py-1 rounded-full bg-white/10 text-white/60 font-medium">
-                    4 functions
+                    {group.features.length} functions
                 </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-4 h-full">
                 {group.features.map(f => (
-                    <FeatureCard key={f.id} feature={f} color={group.color} />
+                    <FeatureCard key={f.id} feature={f} color={group.color} onClick={() => onFeatureClick(f)} />
                 ))}
             </div>
         </motion.div>
@@ -305,7 +309,7 @@ function TechHighlightsBand() {
     );
 }
 
-function FeatureGroupsSection() {
+function FeatureGroupsSection({ onFeatureClick }: { onFeatureClick: (f: Feature) => void }) {
     return (
         <div className="w-full py-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-3">
@@ -317,37 +321,224 @@ function FeatureGroupsSection() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-6 max-w-7xl mx-auto pb-16">
                 {FEATURE_GROUPS.map((g, i) => (
-                    <FeatureGroup key={g.id} group={g} index={i} />
+                    <FeatureGroup key={g.id} group={g} index={i} onFeatureClick={onFeatureClick} />
                 ))}
             </div>
         </div>
     );
 }
 
-export default function DeepEyeFeaturePage() {
-    return (
-        <div className="min-h-screen bg-[#0D0D1A] text-white overflow-x-hidden font-sans selection:bg-purple-500/30">
-            <HeroStatsStrip />
-            <TechHighlightsBand />
-            <FeatureGroupsSection />
-            <CoverageStrip />
+interface DetailedDevice {
+    vid: number;
+    pid: number;
+    name: string;
+    platform: string;
+    mode: string;
+}
 
-            <footer className="py-8 px-6 border-t border-white/5 flex flex-wrap justify-between items-center gap-4 max-w-7xl mx-auto w-full">
-                <div className="flex flex-col gap-1">
-                    <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                        DeepEye Universal
-                    </span>
-                    <span className="text-xs text-[#9898C4]">
-                        Multi-platform service suite for modern Android devices
-                    </span>
+function HardwareScannerBanner() {
+    const [devices, setDevices] = useState<DetailedDevice[]>([]);
+    const [scanning, setScanning] = useState(false);
+
+    async function pollDevices() {
+        setScanning(true);
+        try {
+            const result = await invoke<DetailedDevice[]>("get_detailed_usb_devices");
+            setDevices(result);
+        } catch (e) {
+            console.error("Hardware Scan Failed:", e);
+        } finally {
+            setScanning(false);
+        }
+    }
+
+    useEffect(() => {
+        pollDevices();
+        const interval = setInterval(pollDevices, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const hasDevices = devices.length > 0;
+
+    return (
+        <div className="w-full bg-[#111122]/90 backdrop-blur-xl border-b border-white/5 py-3 px-6 shadow-2xl relative z-20">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-5 w-full md:w-auto">
+                    <div className="relative flex items-center justify-center p-3 rounded-xl bg-black/40 border border-white/10 shadow-inner group">
+                        <Cable size={22} className={hasDevices ? "text-cyan-400" : "text-gray-600"} />
+                        {hasDevices && (
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400"></span>
+                            </span>
+                        )}
+                        <div className="absolute inset-0 bg-cyan-400/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity"></div>
+                    </div>
+
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-0.5">Hardware Matrix</span>
+                        {hasDevices ? (
+                            <div className="flex flex-wrap gap-2">
+                                {devices.slice(0, 2).map((d, i) => (
+                                    <div key={i} className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1 rounded-lg">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${d.platform === 'Qualcomm' ? 'bg-purple-500' : 'bg-cyan-400'}`}></span>
+                                        <span className="text-sm font-bold text-white">{d.name}</span>
+                                        <span className="text-[10px] font-mono text-gray-500 bg-black/40 px-1.5 rounded">{d.mode}</span>
+                                    </div>
+                                ))}
+                                {devices.length > 2 && (
+                                    <span className="text-xs text-gray-500 self-center">+{devices.length - 2} more</span>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-500 animate-pulse">Waiting for physical physical link...</span>
+                                <div className="hidden lg:flex gap-1">
+                                    {['EDL', 'BROM', 'ODIN', 'FASTBOOT'].map(m => (
+                                        <span key={m} className="text-[9px] font-bold text-gray-700 border border-white/5 px-1.5 rounded">{m}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm font-medium">
-                    <button className="text-gray-400 hover:text-white transition-colors">Documentation</button>
-                    <button className="text-gray-400 hover:text-white transition-colors">Support</button>
-                    <button className="text-gray-400 hover:text-white transition-colors">Pricing</button>
-                    <span className="text-gray-600 ml-4">&copy; 2026 DeepEye</span>
+
+                <div className="flex items-center gap-4 w-full md:w-auto justify-end border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
+                    <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-gray-400">
+                            <Smartphone size={12} className="text-purple-400" />
+                            {hasDevices ? `${devices.length} ATTACHED` : "0 ATTACHED"}
+                        </div>
+                        <div className="w-24 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                            <motion.div
+                                initial={{ width: "0%" }}
+                                animate={{ width: scanning ? "100%" : "0%" }}
+                                transition={{ duration: scanning ? 3 : 0.5 }}
+                                className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={pollDevices}
+                        disabled={scanning}
+                        className={`p-2.5 rounded-xl transition-all border border-white/5 hover:bg-white/10 outline-none ${scanning ? 'text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                    >
+                        <RefreshCw size={18} className={scanning ? 'animate-spin' : ''} />
+                    </button>
                 </div>
-            </footer>
+            </div>
+        </div>
+    );
+}
+
+export default function DeepEyeFeaturePage() {
+    const [execStatus, setExecStatus] = useState<{ active: boolean; message: string; feature?: string; logs: string[] }>({ active: false, message: "", logs: [] });
+
+    async function handleFeatureClick(feature: Feature) {
+        let options = null;
+
+        if (feature.title === "Quick APK Install") {
+            try {
+                const { open } = await import("@tauri-apps/plugin-dialog");
+                const selected = await open({
+                    multiple: false,
+                    filters: [{ name: 'Android Package', extensions: ['apk'] }]
+                });
+
+                if (!selected) return; // User cancelled
+                options = { path: selected };
+            } catch (e) {
+                console.error("Dialog failed:", e);
+                return;
+            }
+        }
+
+        setExecStatus({ active: true, message: `Connecting to Core Engine protocol...`, feature: feature.title, logs: ["Establishing local IPC channel..."] });
+
+        try {
+            // Trigger IPC call to Rust Backend
+            const result = await invoke<{ success: boolean; message: string; log_output: string[] }>(
+                "execute_feature",
+                { id: feature.id, title: feature.title, options }
+            );
+
+            if (result.success) {
+                setExecStatus({
+                    active: true,
+                    message: result.message,
+                    feature: feature.title,
+                    logs: result.log_output
+                });
+                // Auto close success notification after 5 seconds to allow reading
+                setTimeout(() => setExecStatus(prev => ({ ...prev, active: false })), 5000);
+            } else {
+                setExecStatus({ active: true, message: `Error: ${result.message}`, feature: feature.title, logs: ["ERR: Handshake aborted."] });
+            }
+        } catch (error) {
+            setExecStatus({ active: true, message: `Failed: ${error}`, feature: feature.title, logs: [String(error)] });
+        }
+    }
+
+    return (
+        <div className="min-h-screen bg-[#0D0D1A] text-white overflow-x-hidden font-sans selection:bg-purple-500/30 relative">
+            {/* Animated Cyber Grid */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-cyber-grid animate-grid [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]"></div>
+            </div>
+
+            <div className="relative z-10 w-full flex flex-col pt-0">
+                <HardwareScannerBanner />
+                <HeroStatsStrip />
+                <TechHighlightsBand />
+                <FeatureGroupsSection onFeatureClick={handleFeatureClick} />
+                <CoverageStrip />
+
+                <footer className="py-8 px-6 border-t border-white/5 flex flex-wrap justify-between items-center gap-4 max-w-7xl mx-auto w-full">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                            DeepEye Universal
+                        </span>
+                        <span className="text-xs text-[#9898C4]">
+                            Multi-platform service suite for modern Android devices
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-medium">
+                        <button className="text-gray-400 hover:text-white transition-colors">Documentation</button>
+                        <button className="text-gray-400 hover:text-white transition-colors">Support</button>
+                        <button className="text-gray-400 hover:text-white transition-colors">Pricing</button>
+                        <span className="text-gray-600 ml-4">&copy; 2026 DeepEye</span>
+                    </div>
+                </footer>
+
+                {/* Execution Overlay Panel */}
+                {execStatus.active && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1A1A2E]/95 backdrop-blur-md border border-purple-500/30 p-4 rounded-xl shadow-2xl z-50 min-w-[320px] max-w-md w-full flex flex-col gap-2"
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold tracking-wider text-purple-400 uppercase flex items-center gap-2">
+                                <Zap size={12} /> RPC Invoked
+                            </span>
+                            <button onClick={() => setExecStatus({ active: false, message: "", logs: [] })} className="text-gray-500 hover:text-white">✕</button>
+                        </div>
+                        <div className="text-sm font-semibold text-white">{execStatus.feature}</div>
+
+                        <div className="flex flex-col gap-1 mt-1 font-mono text-xs bg-black/40 p-3 rounded-lg border border-white/5 shadow-inner">
+                            {execStatus.logs.map((log, idx) => (
+                                <div key={idx} className="text-[#00C4B4] opacity-90 truncate">
+                                    <span className="opacity-50 mr-2">{">"}</span>{log}
+                                </div>
+                            ))}
+                            <div className="text-purple-300 font-bold mt-2 truncate pt-2 border-t border-white/10">
+                                {execStatus.message}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </div>
         </div>
     );
 }

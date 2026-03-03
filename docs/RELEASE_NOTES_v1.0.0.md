@@ -6,13 +6,10 @@ We are proud to announce the first public release of **DeepEyeUnlocker**, the op
 
 ### 🌟 Key Features
 
-- **Qualcomm Engine:** Full Sahara & Firehose support for 2,000+ models.
-- **MediaTek Engine:** BROM/Preloader handshake support.
-- **Core Operations:**
-  - FRP Bypass (Google Lock removal)
-  - Factory Reset (Pattern/PIN removal)
-  - Firmware Backup & Flashing
-- **Modern UI:** Premium dark-themed dashboard with real-time logging.
+- **Native ADB Bridge:** Direct USB communication with Android devices without external drivers or `adb.exe`.
+- **Quick APK Sideload:** Integrated file picker for batch/single app deployment.
+- **Deep Diagnostics:** One-click retrieval of security patch levels, encryption status, and hardware IDs.
+- **Modern UI:** Premium glassmorphism dashboard with real-time hardware status indicators.
 
 ### 📦 Installation
 

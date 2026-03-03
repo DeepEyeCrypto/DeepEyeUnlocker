@@ -16,8 +16,9 @@ path = "src/main.rs"
 nusb = "0.1" # Modern, memory-safe USB manipulation
 anyhow = "1.0"
 thiserror = "1.0"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.0", features = ["full", "macros", "rt-multi-thread"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+rusqlite = { version = "0.38.0", features = ["bundled"] }

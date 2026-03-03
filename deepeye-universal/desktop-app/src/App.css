@@ -64,6 +64,27 @@
 
   .primary-button:active:not(:disabled) {
     background-color: #2563eb;
-    /* blue-600 equivalent */
+  }
+
+  /* DeepEye Cyber Hacker Grid */
+  .bg-cyber-grid {
+    background-size: 32px 32px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  .animate-grid {
+    animation: flow-grid 15s linear infinite;
+  }
+
+  @keyframes flow-grid {
+    0% {
+      transform: translateY(0) scale(1.05);
+    }
+
+    100% {
+      transform: translateY(32px) scale(1.05);
+    }
   }
 }

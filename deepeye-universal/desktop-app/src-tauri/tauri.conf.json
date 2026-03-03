@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "desktop-app",
-  "version": "0.1.0",
-  "identifier": "com.ejaj.desktop-app",
+  "productName": "DeepEye Universal",
+  "version": "1.0.0",
+  "identifier": "com.deepeye.universal",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "desktop-app",
-        "width": 800,
-        "height": 600
+        "title": "DeepEye Universal",
+        "width": 1280,
+        "height": 850,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false
       }
     ],
     "security": {

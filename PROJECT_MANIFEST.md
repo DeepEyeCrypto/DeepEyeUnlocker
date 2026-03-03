@@ -3,7 +3,7 @@
 ## 💎 Project Identity
 
 - **Name:** DeepEyeUnlocker
-- **Version:** 5.3.0 "UnlockTool Parity"
+- **Version:** 5.4.0 "Universal Foundation"
 - **Mission:** Democratizing mobile repair tools by providing a free, professional-grade open-source alternative to paid repair boxes.
 
 ## 🛠 Technical Stack

@@ -21,6 +21,9 @@ class OtgActivity : AppCompatActivity() {
     private lateinit var btnCloseLog: View
     private lateinit var connectionIndicator: TextView
     private lateinit var btnRemote: Button
+    private lateinit var mtpBanner: View
+    private lateinit var mtpBannerDismiss: View
+    private lateinit var mtpBannerBody: TextView
     
     // Logic Variables
     private lateinit var usbHostManager: UsbHostManager
@@ -59,6 +62,9 @@ class OtgActivity : AppCompatActivity() {
             btnCloseLog = findViewById(R.id.btnCloseLog)
             connectionIndicator = findViewById(R.id.connectionIndicator)
             btnRemote = findViewById(R.id.btnRemoteUnlock)
+            mtpBanner = findViewById(R.id.mtpBanner)
+            mtpBannerDismiss = findViewById(R.id.mtpBannerDismiss)
+            mtpBannerBody = findViewById(R.id.mtpBannerBody)
     
             // Setup Listeners
             btnSelectModel.setOnClickListener { showModelSelectionDialog() }
@@ -69,6 +75,7 @@ class OtgActivity : AppCompatActivity() {
                 val intent = android.content.Intent(this, RemoteShareActivity::class.java)
                 startActivity(intent)
             }
+            mtpBannerDismiss.setOnClickListener { mtpBanner.visibility = View.GONE }
             
             // Load Data & Setup
             loadDeviceDatabase()
@@ -83,7 +90,7 @@ class OtgActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol) {
+                override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol, ifaceDump: String) {
                     runOnUiThread {
                         if (protocol == DetectedProtocol.UNKNOWN) {
                             // Show Smart Mode Guidance
@@ -119,8 +126,13 @@ class OtgActivity : AppCompatActivity() {
                                 
                             log("Device Connected but protocol UNKNOWN. Is it MTP/Charging?", "ERROR")
                             log("Guidance shown for $selectedBrand $selectedModelName ($soc)", "INFO")
+                            log("[PROTO] Dump:\n$ifaceDump", "DEBUG")
+                        } else if (protocol == DetectedProtocol.MTP_ONLY) {
+                            updateConnectionState(ConnectionState.CONNECTED_MTP_ONLY, "MTP-only interface detected. Switch USB mode for DeepEye operations.")
+                            showMtpBanner()
+                            log("[PROTO] Classified as MTP_ONLY. Interfaces:\n$ifaceDump", "WARNING")
                         } else {
-                            updateConnectionState(ConnectionState.USB_OPEN, "Mode: $protocol (FD=$fd)")
+                            updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: $protocol (FD=$fd)")
                             initializeCore(fd, vid, pid, protocol)
                         }
                     }
@@ -128,7 +140,8 @@ class OtgActivity : AppCompatActivity() {
 
                 override fun onDeviceError(message: String) {
                     runOnUiThread {
-                        updateConnectionState(ConnectionState.ERROR, "USB Error: $message")
+                        val next = if (message.contains("detached", ignoreCase = true)) ConnectionState.DISCONNECTED else ConnectionState.ERROR
+                        updateConnectionState(next, "USB Error: $message")
                     }
                 }
 
@@ -152,7 +165,7 @@ class OtgActivity : AppCompatActivity() {
                                 log("[PERM] $message", "SUCCESS")
                             }
                             UsbPermissionManager.PermissionState.DENIED -> {
-                                updateConnectionState(ConnectionState.ERROR, message)
+                                updateConnectionState(ConnectionState.PERMISSION_DENIED, message)
                             }
                         }
                     }
@@ -194,6 +207,17 @@ class OtgActivity : AppCompatActivity() {
             terminalText.append(android.text.Html.fromHtml(formattedMsg, android.text.Html.FROM_HTML_MODE_LEGACY))
             logScrollView.post { logScrollView.fullScroll(View.FOCUS_DOWN) }
         }
+    }
+
+    private fun showMtpBanner() {
+        mtpBannerBody.text = buildString {
+            append("USB mode not ready for DeepEye.\n")
+            append("On the attached phone:\n")
+            append("• Open Quick Settings → USB → choose File transfer/MTP.\n")
+            append("• Enable USB debugging in Developer Options.\n")
+            append("• For some brands (e.g., Xiaomi), enable ‘USB debugging (security)’.\n")
+        }
+        mtpBanner.visibility = View.VISIBLE
     }
 
     private fun showModelSelectionDialog() {
@@ -271,6 +295,8 @@ class OtgActivity : AppCompatActivity() {
                             ConnectionState.DISCONNECTED -> "No device connected. Plug in OTG cable."
                             ConnectionState.DEVICE_FOUND -> "Waiting for USB permission..."
                             ConnectionState.PERMISSION_PENDING -> "Permission pending, please approve."
+                            ConnectionState.PERMISSION_DENIED -> "USB permission denied. Re-plug and approve."
+                            ConnectionState.CONNECTED_MTP_ONLY -> "Device is in MTP-only mode. Switch USB mode to allow operations."
                             ConnectionState.USB_OPEN, ConnectionState.NATIVE_INITIALIZING -> "Core is initializing, wait..."
                             ConnectionState.ERROR -> "Connection error. Try re-plugging device."
                             else -> "Native Core Offline (State: $connectionState)"
@@ -345,8 +371,10 @@ class OtgActivity : AppCompatActivity() {
             // Log
             val logType = when (newState) {
                 ConnectionState.CONNECTED -> "SUCCESS"
+                ConnectionState.CONNECTED_MTP_ONLY -> "WARNING"
                 ConnectionState.ERROR -> "ERROR"
                 ConnectionState.DISCONNECTED -> "WARNING"
+                ConnectionState.PERMISSION_DENIED -> "ERROR"
                 else -> "INFO"
             }
             log("[STATE] $oldState → $newState: $logMessage", logType)

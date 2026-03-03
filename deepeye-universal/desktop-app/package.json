@@ -1,6 +1,6 @@
 {
   "name": "desktop-app",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-opener": "^2.2.6",
-    "framer-motion": "file:/tmp/fm.tgz",
-    "lucide-react": "file:/tmp/luc.tgz",
+    "framer-motion": "^12.34.3",
+    "lucide-react": "^0.575.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
