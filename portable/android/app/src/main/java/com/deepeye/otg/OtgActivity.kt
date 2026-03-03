@@ -5,12 +5,32 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import org.json.JSONObject
 import android.os.Vibrator
 import android.os.VibrationEffect
 import android.content.Context
-import android.os.Build
-import android.util.Log
+import android.view.Gravity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class OtgActivity : AppCompatActivity() {
     
@@ -27,16 +47,15 @@ class OtgActivity : AppCompatActivity() {
     private lateinit var mtpBannerBody: TextView
     
     // Logic Variables
-    private lateinit var usbHostManager: UsbHostManager
     private var selectedBrand = "Xiaomi"
     private var selectedModelName = "Auto-Detect"
     private var nativeHandle: Long = 0
     private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
     private var allModels: List<DeviceModel> = emptyList()
-    
-    // Connection State Machine (FIX FOR "NATIVE CORE OFFLINE")
-    @Volatile private var connectionState: ConnectionState = ConnectionState.DISCONNECTED
-    private val stateLock = Any()
+
+    private val controller by lazy { UsbConnectionController(this, lifecycleScope) }
+    private var latestSession: UsbSessionState = UsbSessionState()
+    private var lastInitializedDeviceKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,121 +109,15 @@ class OtgActivity : AppCompatActivity() {
             setupBrandTabs()
             setupOperationButtons()
             
-            // USB Manager
-            usbHostManager = UsbHostManager(this, object : UsbHostManager.HotplugListener {
-                override fun onDeviceAttached(device: android.hardware.usb.UsbDevice) {
-                    runOnUiThread {
-                        updateConnectionState(ConnectionState.DEVICE_FOUND, "Device detected: ${device.productName} (${device.vendorId}:${device.productId})")
-                    }
+            controller.register()
+            lifecycleScope.launch {
+                controller.state.collect { session ->
+                    latestSession = session
+                    updateUiFromSession(session)
                 }
+            }
 
-                override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol, ifaceDump: String) {
-                    runOnUiThread {
-                        when (protocol) {
-                            DetectedProtocol.UNKNOWN -> {
-                                // Show Smart Mode Guidance
-                                val currentModel = allModels.find { it.name == selectedModelName && it.brand == selectedBrand }
-                                val soc = currentModel?.chipset ?: "Generic"
-                                
-                                val guidance = ModeHelper.getGuidance(selectedBrand, selectedModelName, soc)
-                                
-                                updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Expected ${guidance.requiredMode}")
-                                
-                                // Show detailed dialog with interface dump for debugging
-                                androidx.appcompat.app.AlertDialog.Builder(this@OtgActivity)
-                                    .setTitle("Wrong USB Mode")
-                                    .setMessage(buildString {
-                                        append("Device connected but protocol could not be identified.\n")
-                                        append("The phone may be in Charging-only or MTP mode.\n\n")
-                                        append("Required Mode: ${guidance.requiredMode}\n")
-                                        append("Chipset: $soc\n\n")
-                                        append("Instructions:\n")
-                                        guidance.steps.forEach { append("$it\n") }
-                                        
-                                        guidance.alternativeSteps?.let {
-                                            append("\nAlternatives:\n")
-                                            it.forEach { alt -> append("- $alt\n") }
-                                        }
-                                        
-                                        guidance.safetyNotes?.let {
-                                            append("\nNOTE: ${it.joinToString("\n")}")
-                                        }
-                                    })
-                                    .setPositiveButton("I Understand") { d, _ -> d.dismiss() }
-                                    .setCancelable(false)
-                                    .show()
-                                    
-                                log("[PROTO] Protocol UNKNOWN. Device may need USB mode switch.", "ERROR")
-                                log("[UX] Guidance shown for $selectedBrand $selectedModelName ($soc)", "INFO")
-                                log("[PROTO] Interface dump:\n$ifaceDump", "WARNING")
-                            }
-
-                            DetectedProtocol.MTP_ONLY -> {
-                                updateConnectionState(ConnectionState.CONNECTED_MTP_ONLY, "MTP-only interface detected. Switch USB mode for DeepEye operations.")
-                                showMtpBanner()
-                                log("[PROTO] Classified as MTP_ONLY. All interfaces are Still-Image/MSC class.", "WARNING")
-                                log("[PROTO] Interface dump:\n$ifaceDump", "WARNING")
-                            }
-
-                            DetectedProtocol.ADB -> {
-                                // ADB mode: connected but not in bootloader/diag mode needed for most operations
-                                updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: ADB (FD=$fd)")
-                                log("[PROTO] Device is in ADB mode. Some operations require EDL/BROM/Download mode.", "WARNING")
-                                initializeCore(fd, vid, pid, protocol)
-                            }
-
-                            else -> {
-                                // Known protocol (EDL, BROM, Fastboot, Samsung Odin, MTK Preloader)
-                                updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: $protocol (FD=$fd)")
-                                log("[PROTO] Matched: $protocol", "SUCCESS")
-                                initializeCore(fd, vid, pid, protocol)
-                            }
-                        }
-                    }
-                }
-
-                override fun onDeviceError(message: String) {
-                    runOnUiThread {
-                        val next = when {
-                            message.contains("detached", ignoreCase = true) -> ConnectionState.DISCONNECTED
-                            message.contains("re-enumerat", ignoreCase = true) ||
-                            message.contains("System revoked", ignoreCase = true) -> {
-                                // Don't spam ERROR on re-enumeration; the manager will re-request permission
-                                log("[USB] $message", "WARNING")
-                                return@runOnUiThread
-                            }
-                            else -> ConnectionState.ERROR
-                        }
-                        updateConnectionState(next, "USB Error: $message")
-                    }
-                }
-
-                override fun onStatusUpdate(message: String) {
-                    runOnUiThread {
-                        log(message, "INFO")
-                    }
-                }
-
-                override fun onPermissionStateChanged(state: UsbPermissionManager.PermissionState, message: String) {
-                    runOnUiThread {
-                        when (state) {
-                            UsbPermissionManager.PermissionState.NONE -> {
-                                // No action needed
-                            }
-                            UsbPermissionManager.PermissionState.REQUESTING -> {
-                                updateConnectionState(ConnectionState.PERMISSION_PENDING, message)
-                            }
-                            UsbPermissionManager.PermissionState.GRANTED -> {
-                                // Permission granted - will trigger onDeviceReady next
-                                log("[PERM] $message", "SUCCESS")
-                            }
-                            UsbPermissionManager.PermissionState.DENIED -> {
-                                updateConnectionState(ConnectionState.PERMISSION_DENIED, message)
-                            }
-                        }
-                    }
-                }
-            })
+            attachComposeSessionPanel()
             
             log("DeepEye Unlocker v5.5.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
@@ -326,32 +239,30 @@ class OtgActivity : AppCompatActivity() {
         operations.forEach { (viewId, opName) ->
             findViewById<Button>(viewId)?.setOnClickListener {
                 hapticFeedback()
-                
-                synchronized(stateLock) {
-                    if (!connectionState.canExecuteOperations()) {
-                        val stateMsg = when (connectionState) {
-                            ConnectionState.DISCONNECTED -> "No device connected. Plug in OTG cable."
-                            ConnectionState.DEVICE_FOUND -> "Waiting for USB permission..."
-                            ConnectionState.PERMISSION_PENDING -> "Permission pending, please approve."
-                            ConnectionState.PERMISSION_DENIED -> "USB permission denied. Re-plug and approve."
-                            ConnectionState.CONNECTED_MTP_ONLY -> "Device is in MTP-only mode. Switch USB mode to allow operations."
-                            ConnectionState.USB_OPEN, ConnectionState.NATIVE_INITIALIZING -> "Core is initializing, wait..."
-                            ConnectionState.ERROR -> "Connection error. Try re-plugging device."
-                            else -> "Native Core Offline (State: $connectionState)"
-                        }
-                        log("Cannot execute: $stateMsg", "ERROR")
-                        Toast.makeText(this, stateMsg, Toast.LENGTH_SHORT).show()
-                    } else {
-                        log("[OTG-OP] Executing: $opName...", "INFO")
-                        executeOperation(opName)
+                val session = latestSession
+                if (session.state != ConnState.CONNECTED_READY) {
+                    val stateMsg = when (session.state) {
+                        ConnState.DISCONNECTED -> "No device connected. Plug in OTG cable."
+                        ConnState.DEVICE_FOUND -> "Device detected. Waiting for permission."
+                        ConnState.PERMISSION_PENDING -> "Permission pending, please approve."
+                        ConnState.PERMISSION_DENIED -> "USB permission denied. Re-plug and approve."
+                        ConnState.CONNECTED_MTP_ONLY -> "Device is in MTP/charge-only mode. Switch USB mode."
+                        ConnState.CONNECTED_PROTOCOL_DETECT -> "Detecting protocol..."
+                        ConnState.ERROR -> session.lastError ?: "Connection error. Retry."
+                        else -> "Connection not ready."
                     }
+                    log("Cannot execute: $stateMsg", "ERROR")
+                    Toast.makeText(this, stateMsg, Toast.LENGTH_SHORT).show()
+                } else {
+                    log("[OTG-OP] Executing: $opName...", "INFO")
+                    executeOperation(opName)
                 }
             }
         }
     }
 
-    private fun initializeCore(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol) {
-        updateConnectionState(ConnectionState.NATIVE_INITIALIZING, "[OTG-NATIVE] initCore(fd=$fd, $vid:$pid, proto=$protocol)...")
+    private fun initializeCore(fd: Int, vid: Int, pid: Int, protocolLabel: String) {
+        log("[OTG-NATIVE] initCore(fd=$fd, $vid:$pid, proto=$protocolLabel)...", "INFO")
         
         Thread {
             try {
@@ -360,9 +271,7 @@ class OtgActivity : AppCompatActivity() {
                 nativeHandle = NativeBridge.initCore(fd, vid, pid)
                 
                 if (nativeHandle != 0L) {
-                    runOnUiThread {
-                        log("Native Handshake: Identifying device...", "INFO")
-                    }
+                    runOnUiThread { log("Native Handshake: Identifying device...", "INFO") }
                     
                     // Attempt device identification handshake
                     val identified = try {
@@ -376,63 +285,25 @@ class OtgActivity : AppCompatActivity() {
                     
                     runOnUiThread {
                         if (identified) {
-                            updateConnectionState(ConnectionState.CONNECTED, "Connected: Handshake OK ($protocol)")
+                            log("Connected: Handshake OK ($protocolLabel)", "SUCCESS")
                         } else {
                             NativeBridge.closeCore(nativeHandle)
                             nativeHandle = 0L
-                            updateConnectionState(ConnectionState.ERROR, "Handshake failed. Device rejected protocol $protocol.")
+                            log("Handshake failed. Device rejected protocol $protocolLabel.", "ERROR")
                         }
                     }
                 } else {
                     runOnUiThread {
-                        updateConnectionState(ConnectionState.ERROR, "Native Init Failed (Handle=0). USB Config Error?")
+                        log("Native Init Failed (Handle=0). USB Config Error?", "ERROR")
                     }
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    updateConnectionState(ConnectionState.ERROR, "Native Exception: ${e.message}")
+                    log("Native Exception: ${e.message}", "ERROR")
                     e.printStackTrace()
                 }
             }
         }.start()
-    }
-    
-    private fun updateConnectionState(newState: ConnectionState, logMessage: String) {
-        synchronized(stateLock) {
-            val oldState = connectionState
-
-            // Validate transition to prevent illegal state jumps (e.g. CONNECTED → PERMISSION_PENDING)
-            if (!oldState.canTransitionTo(newState)) {
-                Log.w("DeepEye-OTG", "[STATE] BLOCKED illegal transition: $oldState → $newState ($logMessage)")
-                // Allow the transition to ERROR or DISCONNECTED anyway (universal escapes)
-                if (newState != ConnectionState.ERROR && newState != ConnectionState.DISCONNECTED) {
-                    log("[STATE] Transition blocked: $oldState → $newState (invalid)", "WARNING")
-                    return
-                }
-            }
-
-            connectionState = newState
-            
-            // Update UI
-            connectionIndicator.text = newState.getBadgeText()
-            connectionIndicator.setTextColor(ContextCompat.getColor(this, newState.getBadgeColorRes()))
-
-            // Hide MTP banner on disconnect or new connection
-            if (newState == ConnectionState.DISCONNECTED || newState == ConnectionState.DEVICE_FOUND) {
-                mtpBanner.visibility = View.GONE
-            }
-            
-            // Log
-            val logType = when (newState) {
-                ConnectionState.CONNECTED -> "SUCCESS"
-                ConnectionState.CONNECTED_MTP_ONLY -> "WARNING"
-                ConnectionState.ERROR -> "ERROR"
-                ConnectionState.DISCONNECTED -> "WARNING"
-                ConnectionState.PERMISSION_DENIED -> "ERROR"
-                else -> "INFO"
-            }
-            log("[STATE] $oldState → $newState: $logMessage", logType)
-        }
     }
     
     private fun executeOperation(opName: String) {
@@ -474,9 +345,11 @@ class OtgActivity : AppCompatActivity() {
                 sb.appendLine("    iface[$i]: class=0x${"%02X".format(iface.interfaceClass)}, sub=0x${"%02X".format(iface.interfaceSubclass)}, proto=0x${"%02X".format(iface.interfaceProtocol)}, eps=${iface.endpointCount}")
             }
             sb.appendLine()
-        }
-
-        sb.appendLine("Current connection state: $connectionState")
+        sb.appendLine("Current connection state: ${latestSession.state}")
+        sb.appendLine("DeviceKey: ${latestSession.deviceKey}")
+        sb.appendLine("HasPermission: ${latestSession.hasPermission}")
+        sb.appendLine("Protocol: ${latestSession.protocol}")
+        sb.appendLine("LastError: ${latestSession.lastError}")
         log(sb.toString(), "INFO")
 
         // Also show in a dialog for easy reading
@@ -512,7 +385,96 @@ class OtgActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         if (nativeHandle != 0L) NativeBridge.closeCore(nativeHandle)
-        usbHostManager.unregister()
+        controller.unregister()
         super.onDestroy()
+    }
+
+    // --- STATE/UI BINDING ---
+
+    private fun updateUiFromSession(session: UsbSessionState) {
+        // Badge
+        connectionIndicator.text = "● ${session.state}"
+        connectionIndicator.setTextColor(ContextCompat.getColor(this, badgeColor(session.state)))
+
+        // MTP banner
+        if (session.state == ConnState.CONNECTED_MTP_ONLY) {
+            showMtpBanner()
+        } else if (session.state == ConnState.DISCONNECTED || session.state == ConnState.DEVICE_FOUND) {
+            mtpBanner.visibility = View.GONE
+        }
+
+        // Logging on state transitions
+        log("[STATE] ${latestSession.state} → ${session.state}", "INFO")
+
+        when (session.state) {
+            ConnState.CONNECTED_READY -> {
+                val fd = session.connectionFd ?: -1
+                val vid = session.vid ?: 0
+                val pid = session.pid ?: 0
+                val deviceKey = session.deviceKey
+                if (deviceKey != null && deviceKey != lastInitializedDeviceKey && fd > 0) {
+                    lastInitializedDeviceKey = deviceKey
+                    initializeCore(fd, vid, pid, session.protocol.name)
+                }
+            }
+            ConnState.CONNECTED_MTP_ONLY -> {
+                log("[UX] Connected in MTP_ONLY; showing guidance banner", "WARNING")
+            }
+            ConnState.PERMISSION_DENIED -> {
+                log("[PERM] USB permission denied", "ERROR")
+            }
+            ConnState.ERROR -> {
+                session.lastError?.let { log("[ERROR] $it", "ERROR") }
+            }
+            else -> {}
+        }
+    }
+
+    private fun badgeColor(state: ConnState): Int {
+        return when (state) {
+            ConnState.DISCONNECTED, ConnState.ERROR -> R.color.deepeye_error
+            ConnState.DEVICE_FOUND, ConnState.PERMISSION_PENDING, ConnState.PERMISSION_DENIED -> R.color.deepeye_warning
+            ConnState.CONNECTED_PROTOCOL_DETECT -> R.color.deepeye_cyan
+            ConnState.CONNECTED_READY -> R.color.deepeye_success
+            ConnState.CONNECTED_MTP_ONLY -> R.color.deepeye_warning
+        }
+    }
+
+    private fun attachComposeSessionPanel() {
+        val root = findViewById<FrameLayout>(android.R.id.content)
+        val compose = ComposeView(this).apply {
+            setContent {
+                SessionPanel(sessionFlow = controller.state, onRetry = { controller.retry() })
+            }
+        }
+        val params = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+        params.gravity = Gravity.TOP
+        root.addView(compose, params)
+    }
+}
+
+@Composable
+private fun SessionPanel(sessionFlow: kotlinx.coroutines.flow.StateFlow<UsbSessionState>, onRetry: () -> Unit) {
+    val session by sessionFlow.collectAsState()
+    Surface(color = Color(0xFF1E1E22)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(text = "USB State: ${session.state}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
+                Text(text = "Protocol: ${session.protocol}", fontSize = 12.sp, color = Color(0xFF00F2FF))
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Device: ${session.deviceKey ?: "-"}", fontSize = 12.sp, color = Color.LightGray)
+            Text(text = "Permission: ${session.hasPermission}", fontSize = 12.sp, color = Color.LightGray)
+            session.lastError?.let {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Error: $it", fontSize = 12.sp, color = Color(0xFFFF5252))
+            }
+            if (session.state == ConnState.ERROR || session.state == ConnState.PERMISSION_DENIED || session.state == ConnState.CONNECTED_MTP_ONLY) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = onRetry) {
+                    Text("Retry")
+                }
+            }
+        }
     }
 }

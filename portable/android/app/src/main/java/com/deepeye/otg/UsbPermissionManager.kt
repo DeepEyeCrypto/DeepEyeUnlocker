@@ -24,7 +24,7 @@ class UsbPermissionManager(
     private val usbManager: UsbManager
 ) {
     companion object {
-        private const val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION"
+        const val ACTION_USB_PERMISSION = "com.deepeye.USB_PERMISSION"
         private const val TAG = "DeepEye-Permission"
     }
     
@@ -131,17 +131,12 @@ class UsbPermissionManager(
         
         Log.i(TAG, "[REQ] Requesting permission for ${device.deviceName} (${device.vendorId}:${device.productId})")
         
-        // Create PendingIntent with correct flags for Android 12+
-        // FIX: Using explicit intent (setPackage) + FLAG_MUTABLE as requested to resolve broadcast delivery issues
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
-        
-        val intent = Intent(ACTION_USB_PERMISSION).apply {
-            setPackage(context.packageName)
-        }
+        // Create PendingIntent with correct flags for Android 12+ (immutable)
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_IMMUTABLE
+        } else 0
+
+        val intent = Intent(ACTION_USB_PERMISSION)
 
         val permissionIntent = PendingIntent.getBroadcast(
             context,

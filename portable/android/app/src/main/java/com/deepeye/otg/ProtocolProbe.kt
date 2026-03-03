@@ -79,6 +79,7 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
         var hasVendorSpecIface = false
         var hasAdbIface = false
         var hasFastbootIface = false
+        var storageOrMtpOnly = true
 
         // Phase 1: Enumerate and classify all interfaces
         for (i in 0 until device.interfaceCount) {
@@ -103,6 +104,7 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
             // Track interface types
             if (!isMtpClass(iface)) allIfacesMtp = false
+            if (!isStorageOrMtpRelated(iface)) storageOrMtpOnly = false
             if (iface.interfaceClass == UsbConstants.USB_CLASS_VENDOR_SPEC) hasVendorSpecIface = true
 
             // Detect ADB interface signature: class=0xFF, sub=0x42, proto=0x01
@@ -151,7 +153,7 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
         // Phase 4: No bulk endpoints available → classify by interface types alone
         if (bulkIn == null || bulkOut == null) {
-            val fallback = if (allIfacesMtp) DetectedProtocol.MTP_ONLY else DetectedProtocol.UNKNOWN
+            val fallback = if (storageOrMtpOnly) DetectedProtocol.MTP_ONLY else DetectedProtocol.UNKNOWN
             Log.i(TAG, "[PROTO] No bulk endpoints for probing → classified as $fallback")
             return ProtocolDetectionResult(fallback, ifaceDump, probeInterfaceIndex)
         }
@@ -181,9 +183,8 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
         // Phase 6: Fallback
         val fallback = when {
-            allIfacesMtp -> DetectedProtocol.MTP_ONLY
+            storageOrMtpOnly -> DetectedProtocol.MTP_ONLY
             hasVendorSpecIface -> {
-                // Has vendor-specific interfaces but probes failed → likely needs different USB mode
                 Log.i(TAG, "[PROTO] Vendor-specific interfaces present but all probes failed → UNKNOWN (needs mode switch)")
                 DetectedProtocol.UNKNOWN
             }
@@ -221,6 +222,16 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
     private fun isMtpClass(iface: UsbInterface): Boolean {
         return iface.interfaceClass == UsbConstants.USB_CLASS_STILL_IMAGE ||
                iface.interfaceClass == UsbConstants.USB_CLASS_MASS_STORAGE
+    }
+
+    private fun isStorageOrMtpRelated(iface: UsbInterface): Boolean {
+        return when (iface.interfaceClass) {
+            UsbConstants.USB_CLASS_STILL_IMAGE, // PTP/MTP
+            UsbConstants.USB_CLASS_MASS_STORAGE -> true
+            0x06, // additional still-image class code (already covered) but keep for completeness
+            0x08 -> true
+            else -> false
+        }
     }
 
     private fun dir(ep: UsbEndpoint): String = if (ep.direction == UsbConstants.USB_DIR_IN) "IN" else "OUT"

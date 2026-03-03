@@ -60,3 +60,4 @@ dotnet-sdk/
 *.tsbuildinfo
 *.db
 vite.config.d.ts
+portable/android/app/.cxx/
