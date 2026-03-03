@@ -1,9 +1,9 @@
 package com.deepeye.universal.db
 
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.json.jsonb
@@ -12,86 +12,92 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.time.Instant
+import java.util.UUID
 
 // ============================================================================
-// Feature-ID reference (1–24):
-//  1  FRP_BYPASS           14  PATTERN_UNLOCK
-//  2  FRP_RESET            15  PIN_UNLOCK
-//  3  BOOTLOADER_UNLOCK    16  SCREEN_LOCK_REMOVE
-//  4  FLASH_STOCK_ROM      17  IMEI_REPAIR
-//  5  FLASH_CUSTOM_ROM     18  IMEI_READ
-//  6  FLASH_RECOVERY       19  BASEBAND_REPAIR
-//  7  READ_FLASH           20  NV_DATA_BACKUP
-//  8  READ_INFO            21  NV_DATA_RESTORE
-//  9  READ_GPT             22  CARRIER_UNLOCK
-// 10  FORMAT_USERDATA      23  DRM_FIX
-// 11  ERASE_PARTITION      24  ROOT_INSTALL
-// 12  WRITE_PARTITION
-// 13  BACKUP_FULL
+// Feature-ID reference (1–24) — matches device_profiles.supported_functions
+//
+//  1  FRP_BYPASS             13  SAMSUNG_ACCOUNT_REMOVE
+//  2  SCREEN_LOCK_REMOVE     14  PATTERN_UNLOCK
+//  3  CARRIER_UNLOCK         15  EMERGENCY_DOWNLOAD
+//  4  IMEI_REPAIR            16  QUALCOMM_EDL
+//  5  BOOTLOADER_UNLOCK      17  MEDIATEK_AUTH
+//  6  FACTORY_RESET          18  ADB_ENABLE
+//  7  FIRMWARE_FLASH         19  FASTBOOT_FLASH
+//  8  ROOT_ACCESS            20  ODIN_FLASH
+//  9  KNOX_REMOVE            21  BASEBAND_REPAIR
+// 10  GOOGLE_ACCOUNT_REMOVE  22  NVM_REPAIR
+// 11  MI_ACCOUNT_REMOVE      23  EFS_BACKUP
+// 12  HUAWEI_ID_REMOVE       24  ROOT_INSTALL
 // ============================================================================
 
 /**
- * Enum mapping for frp_state_enum PostgreSQL type.
+ * Maps to PostgreSQL `chipset_type` ENUM.
+ *
+ * Values: qualcomm, mediatek, samsung_exynos, kirin, tensor, unisoc, unknown
  */
-enum class FrpState(val pgValue: String) {
-    NO_FRP("NO_FRP"),
-    FRP_STANDARD("FRP_STANDARD"),
-    FRP_HARDENED("FRP_HARDENED"),
-    FRP_UNKNOWN("FRP_UNKNOWN");
+enum class ChipsetType(val pgValue: String) {
+    QUALCOMM("qualcomm"),
+    MEDIATEK("mediatek"),
+    SAMSUNG_EXYNOS("samsung_exynos"),
+    KIRIN("kirin"),
+    TENSOR("tensor"),
+    UNISOC("unisoc"),
+    UNKNOWN("unknown");
 
     companion object {
-        fun fromPg(value: String): FrpState =
-            entries.first { it.pgValue == value }
+        private val byPg = entries.associateBy { it.pgValue }
+        fun fromPg(value: String): ChipsetType =
+            byPg[value] ?: throw IllegalArgumentException("Unknown chipset_type: $value")
     }
 }
 
 /**
- * Enum mapping for chipset_family_enum PostgreSQL type.
+ * Maps to PostgreSQL `engine_type` ENUM.
+ *
+ * Values: qualcomm, mediatek, samsung, unisoc
  */
-enum class ChipsetFamily(val pgValue: String) {
-    QUALCOMM("QUALCOMM"),
-    MEDIATEK("MEDIATEK"),
-    EXYNOS("EXYNOS"),
-    UNISOC("UNISOC"),
-    KIRIN("KIRIN"),
-    TENSOR("TENSOR"),
-    SNAPDRAGON("SNAPDRAGON"),
-    OTHER("OTHER");
+enum class EngineType(val pgValue: String) {
+    QUALCOMM("qualcomm"),
+    MEDIATEK("mediatek"),
+    SAMSUNG("samsung"),
+    UNISOC("unisoc");
 
     companion object {
-        fun fromPg(value: String): ChipsetFamily =
-            entries.first { it.pgValue == value }
+        private val byPg = entries.associateBy { it.pgValue }
+        fun fromPg(value: String): EngineType =
+            byPg[value] ?: throw IllegalArgumentException("Unknown engine_type: $value")
     }
 }
 
 /**
- * Enum of all 24 supported device functions.
- * The [id] corresponds to the integer stored in device_profiles.supported_functions.
+ * All 24 supported device functions.
+ * [id] corresponds to the integer stored in `device_profiles.supported_functions`.
  */
 enum class DeviceFunction(val id: Int, val label: String) {
     FRP_BYPASS(1, "FRP Bypass"),
-    FRP_RESET(2, "FRP Reset"),
-    BOOTLOADER_UNLOCK(3, "Bootloader Unlock"),
-    FLASH_STOCK_ROM(4, "Flash Stock ROM"),
-    FLASH_CUSTOM_ROM(5, "Flash Custom ROM"),
-    FLASH_RECOVERY(6, "Flash Recovery"),
-    READ_FLASH(7, "Read Flash"),
-    READ_INFO(8, "Read Info"),
-    READ_GPT(9, "Read GPT"),
-    FORMAT_USERDATA(10, "Format Userdata"),
-    ERASE_PARTITION(11, "Erase Partition"),
-    WRITE_PARTITION(12, "Write Partition"),
-    BACKUP_FULL(13, "Full Backup"),
+    SCREEN_LOCK_REMOVE(2, "Screen Lock Remove"),
+    CARRIER_UNLOCK(3, "Carrier Unlock"),
+    IMEI_REPAIR(4, "IMEI Repair"),
+    BOOTLOADER_UNLOCK(5, "Bootloader Unlock"),
+    FACTORY_RESET(6, "Factory Reset"),
+    FIRMWARE_FLASH(7, "Firmware Flash"),
+    ROOT_ACCESS(8, "Root Access"),
+    KNOX_REMOVE(9, "Knox Remove"),
+    GOOGLE_ACCOUNT_REMOVE(10, "Google Account Remove"),
+    MI_ACCOUNT_REMOVE(11, "Mi Account Remove"),
+    HUAWEI_ID_REMOVE(12, "Huawei ID Remove"),
+    SAMSUNG_ACCOUNT_REMOVE(13, "Samsung Account Remove"),
     PATTERN_UNLOCK(14, "Pattern Unlock"),
-    PIN_UNLOCK(15, "PIN Unlock"),
-    SCREEN_LOCK_REMOVE(16, "Screen Lock Remove"),
-    IMEI_REPAIR(17, "IMEI Repair"),
-    IMEI_READ(18, "IMEI Read"),
-    BASEBAND_REPAIR(19, "Baseband Repair"),
-    NV_DATA_BACKUP(20, "NV Data Backup"),
-    NV_DATA_RESTORE(21, "NV Data Restore"),
-    CARRIER_UNLOCK(22, "Carrier Unlock"),
-    DRM_FIX(23, "DRM Fix"),
+    EMERGENCY_DOWNLOAD(15, "Emergency Download"),
+    QUALCOMM_EDL(16, "Qualcomm EDL"),
+    MEDIATEK_AUTH(17, "MediaTek Auth"),
+    ADB_ENABLE(18, "ADB Enable"),
+    FASTBOOT_FLASH(19, "Fastboot Flash"),
+    ODIN_FLASH(20, "Odin Flash"),
+    BASEBAND_REPAIR(21, "Baseband Repair"),
+    NVM_REPAIR(22, "NVM Repair"),
+    EFS_BACKUP(23, "EFS Backup"),
     ROOT_INSTALL(24, "Root Install");
 
     companion object {
@@ -102,145 +108,196 @@ enum class DeviceFunction(val id: Int, val label: String) {
 }
 
 // ============================================================================
-// Exposed Table Object — maps to PostgreSQL device_profiles table
+// Exposed Table — device_profiles  (UUID PK)
 // ============================================================================
 
 private val jsonFormat = Json { ignoreUnknownKeys = true }
 
-object DeviceProfiles : LongIdTable("device_profiles") {
+object DeviceProfiles : UUIDTable("device_profiles") {
 
     // Identity
     val brand: Column<String>          = varchar("brand", 64)
     val model: Column<String>          = varchar("model", 128)
-    val marketingName: Column<String?> = varchar("marketing_name", 128).nullable()
-    val codename: Column<String?>      = varchar("codename", 64).nullable()
+    val series: Column<String?>        = varchar("series", 64).nullable()
+    val releaseYear: Column<Short?>    = short("release_year").nullable()
+    val deviceType: Column<String?>    = varchar("device_type", 32).nullable()
 
     // Hardware
-    val chipset: Column<String>        = varchar("chipset", 128)
-    val chipsetFamily: Column<String>  = varchar("chipset_family", 32).default("OTHER")
-    val cpuArch: Column<String>        = varchar("cpu_arch", 16).default("ARM64")
+    val chipset: Column<String>        = varchar("chipset", 32).default("unknown")
+    val engine: Column<String>         = varchar("engine", 32)
 
     // Security / FRP
-    val frpState: Column<String>       = varchar("frp_state", 24).default("FRP_UNKNOWN")
     val bootloaderUnlockable: Column<Boolean> = bool("bootloader_unlockable").default(false)
+    val frpState: Column<String>       = varchar("frp_state", 32).default("UNKNOWN")
 
     // Capabilities — JSONB array of integer feature IDs 1–24
     val supportedFunctions: Column<List<Int>> = jsonb(
         "supported_functions",
         { jsonFormat.encodeToString(ListSerializer(Int.serializer()), it) },
-        { jsonFormat.decodeFromString(ListSerializer(Int.serializer()), it) }
+        { jsonFormat.decodeFromString(ListSerializer(Int.serializer()), it) },
     )
 
-    // Protocol metadata
-    val supportedProtocols: Column<String?> = text("supported_protocols").nullable() // stored as PG array literal
-    val usbVid: Column<String?>        = varchar("usb_vid", 8).nullable()
-    val usbPid: Column<String?>        = varchar("usb_pid", 8).nullable()
-
-    // Audit
-    val region: Column<String>         = varchar("region", 32).default("Global")
-    val validationStatus: Column<String> = varchar("validation_status", 24).default("untested")
+    // Metadata
     val notes: Column<String?>         = text("notes").nullable()
-    val createdAt: Column<Instant>     = timestamp("created_at").defaultExpression(org.jetbrains.exposed.sql.CurrentTimestamp)
-    val updatedAt: Column<Instant>     = timestamp("updated_at").defaultExpression(org.jetbrains.exposed.sql.CurrentTimestamp)
+    val createdAt: Column<Instant>     = timestamp("created_at")
+        .defaultExpression(org.jetbrains.exposed.sql.CurrentTimestamp)
+    val updatedAt: Column<Instant>     = timestamp("updated_at")
+        .defaultExpression(org.jetbrains.exposed.sql.CurrentTimestamp)
 
     init {
-        uniqueIndex("uq_brand_model", brand, model)
         index("idx_dp_brand", false, brand)
-        index("idx_dp_chipset_family", false, chipsetFamily)
-        index("idx_dp_frp_state", false, frpState)
+        index("idx_dp_chipset", false, chipset)
+        index("idx_dp_engine", false, engine)
+        index("idx_dp_year", false, releaseYear)
+        index("idx_dp_brand_model", false, brand, model)
     }
 }
 
 // ============================================================================
-// Exposed DAO Entity
+// Exposed DAO Entity — DeviceProfile
 // ============================================================================
 
-class DeviceProfile(id: EntityID<Long>) : LongEntity(id) {
-    companion object : LongEntityClass<DeviceProfile>(DeviceProfiles)
+class DeviceProfile(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<DeviceProfile>(DeviceProfiles)
 
-    var brand              by DeviceProfiles.brand
-    var model              by DeviceProfiles.model
-    var marketingName      by DeviceProfiles.marketingName
-    var codename           by DeviceProfiles.codename
-    var chipset            by DeviceProfiles.chipset
-    var chipsetFamily      by DeviceProfiles.chipsetFamily
-    var cpuArch            by DeviceProfiles.cpuArch
-    var frpState           by DeviceProfiles.frpState
+    var brand                by DeviceProfiles.brand
+    var model                by DeviceProfiles.model
+    var series               by DeviceProfiles.series
+    var releaseYear          by DeviceProfiles.releaseYear
+    var deviceType           by DeviceProfiles.deviceType
+    var chipset              by DeviceProfiles.chipset
+    var engine               by DeviceProfiles.engine
     var bootloaderUnlockable by DeviceProfiles.bootloaderUnlockable
-    var supportedFunctions by DeviceProfiles.supportedFunctions
-    var supportedProtocols by DeviceProfiles.supportedProtocols
-    var usbVid             by DeviceProfiles.usbVid
-    var usbPid             by DeviceProfiles.usbPid
-    var region             by DeviceProfiles.region
-    var validationStatus   by DeviceProfiles.validationStatus
-    var notes              by DeviceProfiles.notes
-    var createdAt          by DeviceProfiles.createdAt
-    var updatedAt          by DeviceProfiles.updatedAt
+    var frpState             by DeviceProfiles.frpState
+    var supportedFunctions   by DeviceProfiles.supportedFunctions
+    var notes                by DeviceProfiles.notes
+    var createdAt            by DeviceProfiles.createdAt
+    var updatedAt            by DeviceProfiles.updatedAt
 
     // ── Convenience helpers ──────────────────────────────────────────
 
-    /** Typed FRP state enum. */
-    val frpStateEnum: FrpState get() = FrpState.fromPg(frpState)
+    /** Typed chipset enum. */
+    val chipsetType: ChipsetType get() = ChipsetType.fromPg(chipset)
 
-    /** Typed chipset family enum. */
-    val chipsetFamilyEnum: ChipsetFamily get() = ChipsetFamily.fromPg(chipsetFamily)
+    /** Typed engine enum. */
+    val engineType: EngineType get() = EngineType.fromPg(engine)
 
-    /** Resolved list of [DeviceFunction] enums from the stored integer IDs. */
+    /** Resolved list of [DeviceFunction] enums. */
     val functions: List<DeviceFunction>
         get() = supportedFunctions.map { DeviceFunction.fromId(it) }
 
-    /** Check if a specific function is supported. */
-    fun supports(fn: DeviceFunction): Boolean =
-        fn.id in supportedFunctions
+    /** Check whether a specific function is supported. */
+    fun supports(fn: DeviceFunction): Boolean = fn.id in supportedFunctions
 
-    /** Compact display string for logging/UI. */
     override fun toString(): String =
-        "DeviceProfile(id=$id, brand=$brand, model=$model, chipset=$chipset, frp=$frpState, functions=${supportedFunctions.size})"
+        "DeviceProfile(id=$id, brand=$brand, model=$model, chipset=$chipset, engine=$engine, frp=$frpState, fns=${supportedFunctions.size})"
 }
 
 // ============================================================================
-// Data Transfer Object — for API serialization
+// Exposed Table — device_check_audit  (UUID PK)
+// ============================================================================
+
+object DeviceCheckAudits : UUIDTable("device_check_audit") {
+    val userHash: Column<String>       = varchar("user_hash", 64)
+    val brand: Column<String?>         = varchar("brand", 64).nullable()
+    val model: Column<String?>         = varchar("model", 128).nullable()
+    val serialHash: Column<String?>    = varchar("serial_hash", 64).nullable()
+    val operation: Column<String>      = varchar("operation", 64)
+    val tier: Column<Short>            = short("tier")
+    val result: Column<String>         = varchar("result", 32)
+    val checkedAt: Column<Instant>     = timestamp("checked_at")
+        .defaultExpression(org.jetbrains.exposed.sql.CurrentTimestamp)
+
+    init {
+        index("idx_audit_user_hash", false, userHash, checkedAt)
+        index("idx_audit_serial", false, serialHash)
+    }
+}
+
+// ============================================================================
+// Exposed DAO Entity — DeviceCheckAudit
+// ============================================================================
+
+class DeviceCheckAudit(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<DeviceCheckAudit>(DeviceCheckAudits)
+
+    var userHash   by DeviceCheckAudits.userHash
+    var brand      by DeviceCheckAudits.brand
+    var model      by DeviceCheckAudits.model
+    var serialHash by DeviceCheckAudits.serialHash
+    var operation  by DeviceCheckAudits.operation
+    var tier       by DeviceCheckAudits.tier
+    var result     by DeviceCheckAudits.result
+    var checkedAt  by DeviceCheckAudits.checkedAt
+
+    override fun toString(): String =
+        "DeviceCheckAudit(id=$id, user=$userHash, op=$operation, result=$result)"
+}
+
+// ============================================================================
+// Data Transfer Object — DeviceProfileDto
 // ============================================================================
 
 @Serializable
 data class DeviceProfileDto(
-    val id: Long,
+    val id: String,          // UUID as string
     val brand: String,
     val model: String,
-    val marketingName: String? = null,
-    val codename: String? = null,
+    val series: String? = null,
+    val releaseYear: Int? = null,
+    val deviceType: String? = null,
     val chipset: String,
-    val chipsetFamily: String,
-    val cpuArch: String = "ARM64",
-    val frpState: String,
+    val engine: String,
     val bootloaderUnlockable: Boolean,
     val supportedFunctions: List<Int>,
-    val supportedProtocols: String?,
-    val usbVid: String? = null,
-    val usbPid: String? = null,
-    val region: String = "Global",
-    val validationStatus: String = "untested",
+    val frpState: String,
     val notes: String? = null,
 ) {
     companion object {
         fun from(entity: DeviceProfile) = DeviceProfileDto(
-            id = entity.id.value,
+            id = entity.id.value.toString(),
             brand = entity.brand,
             model = entity.model,
-            marketingName = entity.marketingName,
-            codename = entity.codename,
+            series = entity.series,
+            releaseYear = entity.releaseYear?.toInt(),
+            deviceType = entity.deviceType,
             chipset = entity.chipset,
-            chipsetFamily = entity.chipsetFamily,
-            cpuArch = entity.cpuArch,
-            frpState = entity.frpState,
+            engine = entity.engine,
             bootloaderUnlockable = entity.bootloaderUnlockable,
             supportedFunctions = entity.supportedFunctions,
-            supportedProtocols = entity.supportedProtocols,
-            usbVid = entity.usbVid,
-            usbPid = entity.usbPid,
-            region = entity.region,
-            validationStatus = entity.validationStatus,
+            frpState = entity.frpState,
             notes = entity.notes,
+        )
+    }
+}
+
+// ============================================================================
+// Data Transfer Object — DeviceCheckAuditDto
+// ============================================================================
+
+@Serializable
+data class DeviceCheckAuditDto(
+    val id: String,
+    val userHash: String,
+    val brand: String? = null,
+    val model: String? = null,
+    val serialHash: String? = null,
+    val operation: String,
+    val tier: Int,
+    val result: String,
+    val checkedAt: String,  // ISO-8601
+) {
+    companion object {
+        fun from(entity: DeviceCheckAudit) = DeviceCheckAuditDto(
+            id = entity.id.value.toString(),
+            userHash = entity.userHash,
+            brand = entity.brand,
+            model = entity.model,
+            serialHash = entity.serialHash,
+            operation = entity.operation,
+            tier = entity.tier.toInt(),
+            result = entity.result,
+            checkedAt = entity.checkedAt.toString(),
         )
     }
 }
