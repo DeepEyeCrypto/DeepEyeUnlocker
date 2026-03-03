@@ -42,6 +42,21 @@ namespace DeepEyeUnlocker.Infrastructure.Data
                 .OwnsOne(d => d.Security);
 
             modelBuilder.Entity<DeviceProfile>()
+                .OwnsOne(d => d.FrpInfo, b => b.ToJson());
+
+            modelBuilder.Entity<DeviceProfile>()
+                .OwnsOne(d => d.ServiceModes, sm =>
+                {
+                    sm.OwnsOne(s => s.Preloader, p =>
+                    {
+                        p.OwnsOne(pre => pre.TestPoint);
+                    });
+                });
+
+            modelBuilder.Entity<DeviceProfile>()
+                .OwnsOne(d => d.Loaders);
+
+            modelBuilder.Entity<DeviceProfile>()
                 .OwnsMany(d => d.UsbIds, b => b.ToJson());
 
             modelBuilder.Entity<DeviceProfile>()
