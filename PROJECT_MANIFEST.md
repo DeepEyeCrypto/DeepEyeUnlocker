@@ -3,7 +3,7 @@
 ## 💎 Project Identity
 
 - **Name:** DeepEyeUnlocker
-- **Version:** 5.4.1 "Universal Foundation Hotfix"
+- **Version:** 5.5.0 "The OTG Overhaul"
 - **Mission:** Democratizing mobile repair tools by providing a free, professional-grade open-source alternative to paid repair boxes.
 
 ## 🛠 Technical Stack

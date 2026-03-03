@@ -3,6 +3,35 @@ package com.deepeye.otg
 /**
  * Explicit USB OTG connection state machine.
  * Prevents "Native Core Offline" errors by tracking lifecycle.
+ *
+ * ┌──────────────────────────────────────────────────────────────────────┐
+ * │                    STATE TRANSITION TABLE                           │
+ * ├────────────────────────┬───────────────────┬───────────────────────┤
+ * │ Current State          │ Event             │ Next State            │
+ * ├────────────────────────┼───────────────────┼───────────────────────┤
+ * │ DISCONNECTED           │ USB_ATTACH        │ DEVICE_FOUND          │
+ * │ DEVICE_FOUND           │ HAS_PERMISSION    │ USB_OPEN              │
+ * │ DEVICE_FOUND           │ REQ_PERMISSION    │ PERMISSION_PENDING    │
+ * │ PERMISSION_PENDING     │ PERM_GRANTED      │ USB_OPEN              │
+ * │ PERMISSION_PENDING     │ PERM_DENIED       │ PERMISSION_DENIED     │
+ * │ PERMISSION_DENIED      │ USB_ATTACH(retry) │ DEVICE_FOUND          │
+ * │ USB_OPEN               │ PROBE_START       │ CONNECTED_PROTO_DETECT│
+ * │ CONNECTED_PROTO_DETECT │ PROTO_KNOWN       │ NATIVE_INITIALIZING   │
+ * │ CONNECTED_PROTO_DETECT │ PROTO_MTP         │ CONNECTED_MTP_ONLY    │
+ * │ CONNECTED_PROTO_DETECT │ PROTO_UNKNOWN     │ ERROR                 │
+ * │ NATIVE_INITIALIZING    │ HANDSHAKE_OK      │ CONNECTED             │
+ * │ NATIVE_INITIALIZING    │ HANDSHAKE_FAIL    │ ERROR                 │
+ * │ CONNECTED_MTP_ONLY     │ USB_DETACH        │ DISCONNECTED          │
+ * │ CONNECTED              │ USB_DETACH        │ DISCONNECTED          │
+ * │ ERROR                  │ USB_DETACH        │ DISCONNECTED          │
+ * │ ERROR                  │ USB_ATTACH(retry) │ DEVICE_FOUND          │
+ * │ ANY                    │ USB_DETACH        │ DISCONNECTED          │
+ * │ ANY                    │ SECURITY_EX       │ ERROR                 │
+ * └────────────────────────┴───────────────────┴───────────────────────┘
+ *
+ * IMPORTANT: Never transition from a post-open state (USB_OPEN, CONNECTED_*,
+ * NATIVE_INITIALIZING, CONNECTED) back to PERMISSION_PENDING.
+ * SecurityExceptions after open should go to ERROR or trigger re-enumeration.
  */
 enum class ConnectionState {
     /** No device detected or waiting for hotplug event */
@@ -34,6 +63,28 @@ enum class ConnectionState {
 
     /** Initialization failed or device detached with error */
     ERROR;
+
+    /**
+     * Validate whether a transition from this state to [target] is allowed.
+     * Returns true if allowed, false if the transition would violate the state machine contract.
+     */
+    fun canTransitionTo(target: ConnectionState): Boolean {
+        // Universal: any state can go to DISCONNECTED (detach) or ERROR
+        if (target == DISCONNECTED || target == ERROR) return true
+
+        return when (this) {
+            DISCONNECTED -> target == DEVICE_FOUND
+            DEVICE_FOUND -> target in setOf(PERMISSION_PENDING, USB_OPEN)
+            PERMISSION_PENDING -> target in setOf(USB_OPEN, PERMISSION_DENIED, DEVICE_FOUND)
+            PERMISSION_DENIED -> target == DEVICE_FOUND
+            USB_OPEN -> target == CONNECTED_PROTOCOL_DETECT
+            CONNECTED_PROTOCOL_DETECT -> target in setOf(NATIVE_INITIALIZING, CONNECTED_MTP_ONLY)
+            NATIVE_INITIALIZING -> target == CONNECTED
+            CONNECTED -> target == DEVICE_FOUND // re-enumeration
+            CONNECTED_MTP_ONLY -> target == DEVICE_FOUND // re-enumeration
+            ERROR -> target == DEVICE_FOUND // retry on re-plug
+        }
+    }
     
     /**
      * Check if operations should be allowed in this state.

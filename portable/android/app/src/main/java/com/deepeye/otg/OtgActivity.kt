@@ -76,6 +76,13 @@ class OtgActivity : AppCompatActivity() {
                 startActivity(intent)
             }
             mtpBannerDismiss.setOnClickListener { mtpBanner.visibility = View.GONE }
+
+            // Hidden USB Diagnostic: long-press the connection indicator
+            connectionIndicator.setOnLongClickListener {
+                hapticFeedback()
+                runUsbDiagnostic()
+                true
+            }
             
             // Load Data & Setup
             loadDeviceDatabase()
@@ -92,55 +99,81 @@ class OtgActivity : AppCompatActivity() {
 
                 override fun onDeviceReady(fd: Int, vid: Int, pid: Int, protocol: DetectedProtocol, ifaceDump: String) {
                     runOnUiThread {
-                        if (protocol == DetectedProtocol.UNKNOWN) {
-                            // Show Smart Mode Guidance
-                            val currentModel = allModels.find { it.name == selectedModelName && it.brand == selectedBrand }
-                            val soc = currentModel?.chipset ?: "Generic"
-                            
-                            val guidance = ModeHelper.getGuidance(selectedBrand, selectedModelName, soc)
-                            
-                            updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Expected ${guidance.requiredMode}")
-                            
-                            // Show detailed dialog
-                            androidx.appcompat.app.AlertDialog.Builder(this@OtgActivity)
-                                .setTitle("Wrong USB Mode")
-                                .setMessage(buildString {
-                                    append("Device connected in UNKNOWN mode (likely MTP/Charging).\n\n")
-                                    append("Required Mode: ${guidance.requiredMode}\n")
-                                    append("Chipset: $soc\n\n")
-                                    append("Instructions:\n")
-                                    guidance.steps.forEach { append("$it\n") }
-                                    
-                                    guidance.alternativeSteps?.let {
-                                        append("\nAlternatives:\n")
-                                        it.forEach { alt -> append("- $alt\n") }
-                                    }
-                                    
-                                    guidance.safetyNotes?.let {
-                                        append("\nNOTE: ${it.joinToString("\n")}")
-                                    }
-                                })
-                                .setPositiveButton("I Understand") { d, _ -> d.dismiss() }
-                                .setCancelable(false)
-                                .show()
+                        when (protocol) {
+                            DetectedProtocol.UNKNOWN -> {
+                                // Show Smart Mode Guidance
+                                val currentModel = allModels.find { it.name == selectedModelName && it.brand == selectedBrand }
+                                val soc = currentModel?.chipset ?: "Generic"
                                 
-                            log("Device Connected but protocol UNKNOWN. Is it MTP/Charging?", "ERROR")
-                            log("Guidance shown for $selectedBrand $selectedModelName ($soc)", "INFO")
-                            log("[PROTO] Dump:\n$ifaceDump", "DEBUG")
-                        } else if (protocol == DetectedProtocol.MTP_ONLY) {
-                            updateConnectionState(ConnectionState.CONNECTED_MTP_ONLY, "MTP-only interface detected. Switch USB mode for DeepEye operations.")
-                            showMtpBanner()
-                            log("[PROTO] Classified as MTP_ONLY. Interfaces:\n$ifaceDump", "WARNING")
-                        } else {
-                            updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: $protocol (FD=$fd)")
-                            initializeCore(fd, vid, pid, protocol)
+                                val guidance = ModeHelper.getGuidance(selectedBrand, selectedModelName, soc)
+                                
+                                updateConnectionState(ConnectionState.ERROR, "Wrong Mode: Expected ${guidance.requiredMode}")
+                                
+                                // Show detailed dialog with interface dump for debugging
+                                androidx.appcompat.app.AlertDialog.Builder(this@OtgActivity)
+                                    .setTitle("Wrong USB Mode")
+                                    .setMessage(buildString {
+                                        append("Device connected but protocol could not be identified.\n")
+                                        append("The phone may be in Charging-only or MTP mode.\n\n")
+                                        append("Required Mode: ${guidance.requiredMode}\n")
+                                        append("Chipset: $soc\n\n")
+                                        append("Instructions:\n")
+                                        guidance.steps.forEach { append("$it\n") }
+                                        
+                                        guidance.alternativeSteps?.let {
+                                            append("\nAlternatives:\n")
+                                            it.forEach { alt -> append("- $alt\n") }
+                                        }
+                                        
+                                        guidance.safetyNotes?.let {
+                                            append("\nNOTE: ${it.joinToString("\n")}")
+                                        }
+                                    })
+                                    .setPositiveButton("I Understand") { d, _ -> d.dismiss() }
+                                    .setCancelable(false)
+                                    .show()
+                                    
+                                log("[PROTO] Protocol UNKNOWN. Device may need USB mode switch.", "ERROR")
+                                log("[UX] Guidance shown for $selectedBrand $selectedModelName ($soc)", "INFO")
+                                log("[PROTO] Interface dump:\n$ifaceDump", "WARNING")
+                            }
+
+                            DetectedProtocol.MTP_ONLY -> {
+                                updateConnectionState(ConnectionState.CONNECTED_MTP_ONLY, "MTP-only interface detected. Switch USB mode for DeepEye operations.")
+                                showMtpBanner()
+                                log("[PROTO] Classified as MTP_ONLY. All interfaces are Still-Image/MSC class.", "WARNING")
+                                log("[PROTO] Interface dump:\n$ifaceDump", "WARNING")
+                            }
+
+                            DetectedProtocol.ADB -> {
+                                // ADB mode: connected but not in bootloader/diag mode needed for most operations
+                                updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: ADB (FD=$fd)")
+                                log("[PROTO] Device is in ADB mode. Some operations require EDL/BROM/Download mode.", "WARNING")
+                                initializeCore(fd, vid, pid, protocol)
+                            }
+
+                            else -> {
+                                // Known protocol (EDL, BROM, Fastboot, Samsung Odin, MTK Preloader)
+                                updateConnectionState(ConnectionState.CONNECTED_PROTOCOL_DETECT, "Mode: $protocol (FD=$fd)")
+                                log("[PROTO] Matched: $protocol", "SUCCESS")
+                                initializeCore(fd, vid, pid, protocol)
+                            }
                         }
                     }
                 }
 
                 override fun onDeviceError(message: String) {
                     runOnUiThread {
-                        val next = if (message.contains("detached", ignoreCase = true)) ConnectionState.DISCONNECTED else ConnectionState.ERROR
+                        val next = when {
+                            message.contains("detached", ignoreCase = true) -> ConnectionState.DISCONNECTED
+                            message.contains("re-enumerat", ignoreCase = true) ||
+                            message.contains("System revoked", ignoreCase = true) -> {
+                                // Don't spam ERROR on re-enumeration; the manager will re-request permission
+                                log("[USB] $message", "WARNING")
+                                return@runOnUiThread
+                            }
+                            else -> ConnectionState.ERROR
+                        }
                         updateConnectionState(next, "USB Error: $message")
                     }
                 }
@@ -172,7 +205,7 @@ class OtgActivity : AppCompatActivity() {
                 }
             })
             
-            log("DeepEye Unlocker v5.2.4 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.5.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -211,11 +244,15 @@ class OtgActivity : AppCompatActivity() {
 
     private fun showMtpBanner() {
         mtpBannerBody.text = buildString {
-            append("USB mode not ready for DeepEye.\n")
+            append("The attached phone is in MTP/File Transfer mode.\n")
+            append("DeepEye needs a special boot mode to perform operations.\n\n")
             append("On the attached phone:\n")
-            append("• Open Quick Settings → USB → choose File transfer/MTP.\n")
-            append("• Enable USB debugging in Developer Options.\n")
-            append("• For some brands (e.g., Xiaomi), enable ‘USB debugging (security)’.\n")
+            append("☐ Open Quick Settings → USB → choose 'File Transfer' or 'MTP'\n")
+            append("☐ Enable USB debugging in Developer Options\n")
+            append("☐ For Xiaomi: also enable 'USB debugging (security settings)'\n")
+            append("☐ For Samsung: enable 'OEM unlock' in Developer Options\n\n")
+            append("Then re-plug the cable or switch the phone to the required boot mode\n")
+            append("(EDL / BROM / Download Mode) depending on your operation.")
         }
         mtpBanner.visibility = View.VISIBLE
     }
@@ -362,11 +399,27 @@ class OtgActivity : AppCompatActivity() {
     private fun updateConnectionState(newState: ConnectionState, logMessage: String) {
         synchronized(stateLock) {
             val oldState = connectionState
+
+            // Validate transition to prevent illegal state jumps (e.g. CONNECTED → PERMISSION_PENDING)
+            if (!oldState.canTransitionTo(newState)) {
+                Log.w("DeepEye-OTG", "[STATE] BLOCKED illegal transition: $oldState → $newState ($logMessage)")
+                // Allow the transition to ERROR or DISCONNECTED anyway (universal escapes)
+                if (newState != ConnectionState.ERROR && newState != ConnectionState.DISCONNECTED) {
+                    log("[STATE] Transition blocked: $oldState → $newState (invalid)", "WARNING")
+                    return
+                }
+            }
+
             connectionState = newState
             
             // Update UI
             connectionIndicator.text = newState.getBadgeText()
             connectionIndicator.setTextColor(ContextCompat.getColor(this, newState.getBadgeColorRes()))
+
+            // Hide MTP banner on disconnect or new connection
+            if (newState == ConnectionState.DISCONNECTED || newState == ConnectionState.DEVICE_FOUND) {
+                mtpBanner.visibility = View.GONE
+            }
             
             // Log
             val logType = when (newState) {
@@ -385,6 +438,57 @@ class OtgActivity : AppCompatActivity() {
         // Placeholder for actual native operation calls
         log("[EXEC] $opName - Native call would happen here with handle=$nativeHandle", "INFO")
         Toast.makeText(this, "Operation: $opName (not yet implemented)", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * USB Diagnostic self-test: enumerates all connected devices,
+     * shows protocol classification and permission status for each.
+     * Useful for debugging permission/detection issues on any Android version.
+     */
+    private fun runUsbDiagnostic() {
+        val usbManager = getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
+        val devices = usbManager.deviceList
+        val sb = StringBuilder()
+        sb.appendLine("=== DeepEye USB Diagnostic ===")
+        sb.appendLine("Timestamp: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
+        sb.appendLine("Android SDK: ${Build.VERSION.SDK_INT}")
+        sb.appendLine("Devices found: ${devices.size}")
+        sb.appendLine()
+
+        if (devices.isEmpty()) {
+            sb.appendLine("No USB devices detected.")
+            sb.appendLine("• Ensure OTG adapter is connected.")
+            sb.appendLine("• Check that 'OTG' is enabled in phone settings (some brands require this).")
+        }
+
+        for ((name, device) in devices) {
+            sb.appendLine("─── Device: $name ───")
+            sb.appendLine("  VID: 0x${"%04X".format(device.vendorId)}, PID: 0x${"%04X".format(device.productId)}")
+            sb.appendLine("  Name: ${device.productName ?: "N/A"}")
+            sb.appendLine("  DeviceId: ${device.deviceId}")
+            sb.appendLine("  hasPermission: ${usbManager.hasPermission(device)}")
+            sb.appendLine("  Interfaces: ${device.interfaceCount}")
+            for (i in 0 until device.interfaceCount) {
+                val iface = device.getInterface(i)
+                sb.appendLine("    iface[$i]: class=0x${"%02X".format(iface.interfaceClass)}, sub=0x${"%02X".format(iface.interfaceSubclass)}, proto=0x${"%02X".format(iface.interfaceProtocol)}, eps=${iface.endpointCount}")
+            }
+            sb.appendLine()
+        }
+
+        sb.appendLine("Current connection state: $connectionState")
+        log(sb.toString(), "INFO")
+
+        // Also show in a dialog for easy reading
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("USB Diagnostic")
+            .setMessage(sb.toString())
+            .setPositiveButton("OK") { d, _ -> d.dismiss() }
+            .setNeutralButton("Copy") { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("USB Diagnostic", sb.toString()))
+                Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
     
     private fun loadDeviceDatabase() {

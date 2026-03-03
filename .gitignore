@@ -52,3 +52,11 @@ testing/
 *.exp
 deepeye-universal/target/
 deepeye-universal/desktop-app/node_modules/
+
+# .NET SDK (local SDK installs)
+dotnet-sdk/
+
+# Build artifacts
+*.tsbuildinfo
+*.db
+vite.config.d.ts

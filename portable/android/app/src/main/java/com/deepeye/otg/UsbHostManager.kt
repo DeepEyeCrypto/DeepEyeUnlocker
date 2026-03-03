@@ -17,8 +17,12 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     private var currentDevice: UsbDevice? = null
     private var currentDeviceId: Int? = null
+    private var currentConnection: android.hardware.usb.UsbDeviceConnection? = null
     private var lastErrorTs: Long = 0L
     private var lastErrorMsg: String = ""
+    private var lastErrorCount: Int = 0
+    private val ERROR_THROTTLE_WINDOW_MS = 5000L
+    private val ERROR_THROTTLE_MAX = 3
 
     interface HotplugListener {
         fun onDeviceAttached(device: UsbDevice)
@@ -136,9 +140,18 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     private fun handleDetach(device: UsbDevice) {
         if (currentDevice?.deviceId == device.deviceId) {
+            // Close active connection before clearing state
+            try {
+                currentConnection?.close()
+                Log.i("DeepEye-OTG", "[USB] Closed previous connection for ${device.vendorId}:${device.productId}")
+            } catch (_: Exception) {}
+            currentConnection = null
             currentDevice = null
             currentDeviceId = null
         }
+        // Reset error throttle on detach so next attach starts fresh
+        lastErrorMsg = ""
+        lastErrorCount = 0
         try {
             if (wakeLock.isHeld) wakeLock.release()
         } catch (_: Exception) {}
@@ -151,27 +164,58 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
     }
 
     private fun openAndPassFd(device: UsbDevice) {
+        // Guard: verify permission is still valid right before opening
+        if (!usbManager.hasPermission(device)) {
+            Log.w("DeepEye-OTG", "[USB] Permission lost before openDevice (likely re-enumeration). Re-requesting.")
+            listener?.onStatusUpdate("[USB] System revoked permission (device re-enumerated). Re-requesting...")
+            permissionManager.requestPermission(device)
+            return
+        }
+
         try {
             listener?.onStatusUpdate("Opening USB connection...")
             val connection = usbManager.openDevice(device)
             if (connection != null) {
+                // Store active connection for cleanup on re-enum/detach
+                currentConnection = connection
                 val fd = connection.fileDescriptor
                 Log.i("DeepEye-OTG", "[USB] openDevice OK. FD=$fd")
                 listener?.onStatusUpdate("USB Link Secured (FD=$fd)")
 
-                // Sequence diagram (high-level):
-                // ATTACHED -> DEVICE_FOUND -> PERMISSION_PENDING -> (GRANTED) -> USB_OPEN
-                // -> CONNECTED_PROTOCOL_DETECT (probe) -> CONNECTED / CONNECTED_MTP_ONLY
-                // -> NATIVE_INITIALIZING -> CONNECTED (ready)
+                // ┌──────────────────────────────────────────────────────────────┐
+                // │ USB Connection Sequence Diagram                             │
+                // │                                                            │
+                // │ ATTACH ─► DEVICE_FOUND ─► PERMISSION_PENDING               │
+                // │   ─►(BROADCAST GRANTED)─► USB_OPEN                         │
+                // │   ─► CONNECTED_PROTOCOL_DETECT (probe interfaces)           │
+                // │   ─► CONNECTED_READY / CONNECTED_MTP_ONLY / ERROR          │
+                // │                                                            │
+                // │ Re-enumeration (VID/PID same, deviceId changed):           │
+                // │   Close old connection ─► DISCONNECTED ─► DEVICE_FOUND     │
+                // │   ─► re-request permission for new UsbDevice               │
+                // │                                                            │
+                // │ SecurityException after open:                              │
+                // │   ─► re-request permission (not "Permission Denied" loop)  │
+                // └──────────────────────────────────────────────────────────────┘
 
-                val iface = device.getInterface(0)
                 val probe = ProtocolProbe(connection, device)
                 listener?.onStatusUpdate("[PROTO] Inspecting interfaces/endpoints...")
                 val protocolResult = probe.detect()
 
-                // Claim only after detect decision to avoid failures on MTP-only interfaces
-                if (protocolResult.protocol != DetectedProtocol.UNKNOWN && protocolResult.protocol != DetectedProtocol.MTP_ONLY && iface != null) {
-                    try { connection.claimInterface(iface, true) } catch (_: Exception) {}
+                // Claim the appropriate interface for non-MTP protocols
+                if (protocolResult.protocol != DetectedProtocol.UNKNOWN && protocolResult.protocol != DetectedProtocol.MTP_ONLY) {
+                    // Find the interface that ProtocolProbe identified as having bulk endpoints
+                    val claimIface = protocolResult.claimInterfaceIndex?.let { idx ->
+                        if (idx < device.interfaceCount) device.getInterface(idx) else null
+                    } ?: if (device.interfaceCount > 0) device.getInterface(0) else null
+                    claimIface?.let {
+                        try {
+                            connection.claimInterface(it, true)
+                            Log.d("DeepEye-OTG", "[USB] Claimed interface ${it.id}")
+                        } catch (e: Exception) {
+                            Log.w("DeepEye-OTG", "[USB] claimInterface failed: ${e.message}")
+                        }
+                    }
                 }
 
                 if (!wakeLock.isHeld) wakeLock.acquire(10 * 60 * 1000L)
@@ -181,8 +225,13 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
                 listener?.onDeviceError("USB Connection Failed (openDevice returned null). Try re-plugging the cable.")
             }
         } catch (e: SecurityException) {
-            Log.e("DeepEye-OTG", "[USB] SecurityException: ${e.message}")
-            emitThrottledError("USB Permission Denied by System")
+            // KEY FIX: SecurityException means system revoked permission (device re-enumerated,
+            // or another app claimed it). Do NOT report as "Permission Denied" loop.
+            // Instead, attempt clean re-request.
+            Log.e("DeepEye-OTG", "[USB] SecurityException in openDevice: ${e.message}")
+            currentConnection = null
+            listener?.onStatusUpdate("[USB] System revoked USB access (likely device re-enumeration). Please re-plug or change USB mode.")
+            listener?.onDeviceError("System revoked USB permission. Re-plug device or switch USB mode.")
         } catch (e: Exception) {
             Log.e("DeepEye-OTG", "[USB] Exception in openAndPassFd: ${e.message}")
             emitThrottledError("USB Error: ${e.message}")
@@ -191,9 +240,15 @@ class UsbHostManager(private val context: Context, private val listener: Hotplug
 
     private fun emitThrottledError(message: String) {
         val now = System.currentTimeMillis()
-        if (message == lastErrorMsg && (now - lastErrorTs) < 5000) {
-            Log.w("DeepEye-OTG", "[USB] Throttling repeated error: $message")
-            return
+        if (message == lastErrorMsg && (now - lastErrorTs) < ERROR_THROTTLE_WINDOW_MS) {
+            lastErrorCount++
+            if (lastErrorCount > ERROR_THROTTLE_MAX) {
+                Log.w("DeepEye-OTG", "[USB] Error throttled ($lastErrorCount repeats in window): $message")
+                return
+            }
+        } else {
+            // New error or outside window - reset counter
+            lastErrorCount = 1
         }
         lastErrorMsg = message
         lastErrorTs = now
