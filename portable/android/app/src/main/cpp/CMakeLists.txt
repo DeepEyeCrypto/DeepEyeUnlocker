@@ -40,6 +40,8 @@ add_library(deepeye_core SHARED
     ${CORE_DIR}/src/protocols/protocol_engine.cpp
     ${CORE_DIR}/src/protocols/edl_manager.cpp
     ${CORE_DIR}/src/protocols/brom_manager.cpp
+    ${CORE_DIR}/src/protocols/odin_manager.cpp
+    ${CORE_DIR}/src/protocols/fdl_manager.cpp
     ${CORE_DIR}/src/protocols/firehose.cpp
     ${CORE_DIR}/src/protocols/gpt_parser.cpp
     ${CORE_DIR}/src/protocols/sparse_handler.cpp

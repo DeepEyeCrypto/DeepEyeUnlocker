@@ -1,6 +1,8 @@
 #include "brom_proto.h"
 #include "deepeye_core.h"
 #include "edl_proto.h"
+#include "fdl_proto.h"
+#include "odin_proto.h"
 #include "usb_transport.h"
 #include <android/log.h>
 #include <jni.h>
@@ -362,11 +364,8 @@ Java_com_deepeye_otg_NativeBridge_odinHandshake(JNIEnv *env, jobject thiz,
     return JNI_FALSE;
 
   LOGI("odinHandshake");
-  // TODO: Implement OdinManager class
-  // DeepEye::Protocols::OdinManager odin(transport);
-  // return odin.Handshake() ? JNI_TRUE : JNI_FALSE;
-  LOGI("odinHandshake: stub — returning true");
-  return JNI_TRUE;
+  DeepEye::Protocols::OdinManager odin(transport);
+  return odin.Handshake() ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
@@ -377,9 +376,10 @@ Java_com_deepeye_otg_NativeBridge_readPit(JNIEnv *env, jobject thiz,
   if (!transport)
     return env->NewByteArray(0);
 
-  LOGI("readPit: stub");
-  // TODO: OdinManager.ReadPit()
-  return env->NewByteArray(0);
+  LOGI("readPit");
+  DeepEye::Protocols::OdinManager odin(transport);
+  auto pitData = odin.ReadPit();
+  return vecToJbyteArray(env, pitData);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -393,9 +393,12 @@ Java_com_deepeye_otg_NativeBridge_odinFlash(JNIEnv *env, jobject thiz,
 
   std::string name = jstringToStd(env, partName);
   std::string path = jstringToStd(env, imagePath);
-  LOGI("odinFlash: %s <- %s (stub)", name.c_str(), path.c_str());
-  // TODO: OdinManager.Flash(name, path)
-  return JNI_FALSE;
+  LOGI("odinFlash: %s <- %s", name.c_str(), path.c_str());
+
+  DeepEye::Protocols::OdinManager odin(transport);
+  if (!odin.Handshake())
+    return JNI_FALSE;
+  return odin.FlashPartition(name, path) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
@@ -406,9 +409,12 @@ Java_com_deepeye_otg_NativeBridge_readEfs(JNIEnv *env, jobject thiz,
   if (!transport)
     return env->NewByteArray(0);
 
-  LOGI("readEfs: stub");
-  // TODO: OdinManager.ReadEfs()
-  return env->NewByteArray(0);
+  LOGI("readEfs");
+  DeepEye::Protocols::OdinManager odin(transport);
+  if (!odin.Handshake())
+    return env->NewByteArray(0);
+  auto data = odin.ReadEfs();
+  return vecToJbyteArray(env, data);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -420,9 +426,12 @@ Java_com_deepeye_otg_NativeBridge_writeEfs(JNIEnv *env, jobject thiz,
     return JNI_FALSE;
 
   auto buffer = jbyteArrayToVec(env, data);
-  LOGI("writeEfs: %zu bytes (stub)", buffer.size());
-  // TODO: OdinManager.WriteEfs(buffer)
-  return JNI_FALSE;
+  LOGI("writeEfs: %zu bytes", buffer.size());
+
+  DeepEye::Protocols::OdinManager odin(transport);
+  if (!odin.Handshake())
+    return JNI_FALSE;
+  return odin.WriteEfs(buffer) ? JNI_TRUE : JNI_FALSE;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -438,9 +447,9 @@ Java_com_deepeye_otg_NativeBridge_fdlHandshake(JNIEnv *env, jobject thiz,
   if (!transport)
     return JNI_FALSE;
 
-  LOGI("fdlHandshake: stub");
-  // TODO: FdlManager.Handshake()
-  return JNI_TRUE;
+  LOGI("fdlHandshake");
+  DeepEye::Protocols::FdlManager fdl(transport);
+  return fdl.Handshake() ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -452,9 +461,12 @@ Java_com_deepeye_otg_NativeBridge_fdlFlash(JNIEnv *env, jobject thiz,
     return JNI_FALSE;
 
   std::string path = jstringToStd(env, pacPath);
-  LOGI("fdlFlash: %s (stub)", path.c_str());
-  // TODO: FdlManager.Flash(path)
-  return JNI_FALSE;
+  LOGI("fdlFlash: %s", path.c_str());
+
+  DeepEye::Protocols::FdlManager fdl(transport);
+  if (!fdl.Handshake())
+    return JNI_FALSE;
+  return fdl.FlashPac(path) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
@@ -465,9 +477,10 @@ Java_com_deepeye_otg_NativeBridge_readUnisocNv(JNIEnv *env, jobject thiz,
   if (!transport)
     return env->NewByteArray(0);
 
-  LOGI("readUnisocNv: id=%d (stub)", nvId);
-  // TODO: FdlManager.ReadNv(nvId)
-  return env->NewByteArray(0);
+  LOGI("readUnisocNv: id=%d", nvId);
+  DeepEye::Protocols::FdlManager fdl(transport);
+  auto data = fdl.ReadNv(nvId);
+  return vecToJbyteArray(env, data);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -480,9 +493,10 @@ Java_com_deepeye_otg_NativeBridge_writeUnisocNv(JNIEnv *env, jobject thiz,
     return JNI_FALSE;
 
   auto buffer = jbyteArrayToVec(env, data);
-  LOGI("writeUnisocNv: id=%d, %zu bytes (stub)", nvId, buffer.size());
-  // TODO: FdlManager.WriteNv(nvId, buffer)
-  return JNI_FALSE;
+  LOGI("writeUnisocNv: id=%d, %zu bytes", nvId, buffer.size());
+
+  DeepEye::Protocols::FdlManager fdl(transport);
+  return fdl.WriteNv(nvId, buffer) ? JNI_TRUE : JNI_FALSE;
 }
 
 // ═══════════════════════════════════════════════════════════════════

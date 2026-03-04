@@ -9,7 +9,14 @@
 namespace DeepEye {
 namespace Core {
 
-enum class ProtocolType { Qualcomm_EDL, MediaTek_BROM, Fastboot, Unknown };
+enum class ProtocolType {
+  Qualcomm_EDL,
+  MediaTek_BROM,
+  Samsung_Odin,
+  UniSoc_FDL,
+  Fastboot,
+  Unknown
+};
 
 struct DeviceInfo {
   int fd;
