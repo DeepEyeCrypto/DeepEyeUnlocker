@@ -1,5 +1,6 @@
 package com.deepeye.otg
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -345,6 +346,8 @@ class OtgActivity : AppCompatActivity() {
                 sb.appendLine("    iface[$i]: class=0x${"%02X".format(iface.interfaceClass)}, sub=0x${"%02X".format(iface.interfaceSubclass)}, proto=0x${"%02X".format(iface.interfaceProtocol)}, eps=${iface.endpointCount}")
             }
             sb.appendLine()
+        }
+
         sb.appendLine("Current connection state: ${latestSession.state}")
         sb.appendLine("DeviceKey: ${latestSession.deviceKey}")
         sb.appendLine("HasPermission: ${latestSession.hasPermission}")
