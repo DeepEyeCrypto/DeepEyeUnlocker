@@ -498,13 +498,17 @@ class OtgActivity : AppCompatActivity() {
             .setPositiveButton("Activate") { _, _ ->
                 val token = input.text.toString().trim()
                 if (token.isNotEmpty()) {
-                    val ok = LicenseManager.activate(token)
-                    if (ok) {
-                        log("[AUTH] License activated: ${LicenseManager.currentRole.label}", "SUCCESS")
-                        Toast.makeText(this, "License activated: ${LicenseManager.currentRole.label}", Toast.LENGTH_SHORT).show()
-                    } else {
-                        log("[AUTH] Invalid license token", "ERROR")
-                        Toast.makeText(this, "Invalid token", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        val result = LicenseManager.activateFromBackend(this@OtgActivity, token)
+                        if (result.isSuccess) {
+                            val role = result.getOrNull()
+                            log("[AUTH] License activated from backend: ${role?.label}", "SUCCESS")
+                            Toast.makeText(this@OtgActivity, "License activated: ${role?.label}", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val err = result.exceptionOrNull()?.message ?: "Unknown error"
+                            log("[AUTH] Backend activation failed: $err", "ERROR")
+                            Toast.makeText(this@OtgActivity, "Invalid token or network error", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

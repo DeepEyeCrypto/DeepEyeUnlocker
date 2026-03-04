@@ -7,6 +7,14 @@ import com.deepeye.otg.policy.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
+import android.provider.Settings
 
 // ═══════════════════════════════════════════════════════════════════
 //  LicenseManager — manages user role based on license/auth state.
@@ -68,35 +76,79 @@ object LicenseManager {
     // ── Activation ───────────────────────────────────────────────
 
     /**
-     * Activate a license token. In production, this validates the token
-     * against the backend, checks signature, and extracts the granted role.
+     * Activate a license token directly with the backend.
+     * Hits POST /api/licenses/activate to verify signature and device binding.
      *
-     * @param token  Signed JWT or license key from purchase/KYC
-     * @return true if activation succeeded
+     * @param context Application context to fetch device ID
+     * @param token   Signed JWT or license token
      */
-    fun activate(token: String): Boolean {
-        Log.i(TAG, "[AUTH] Activating license token: ${token.take(16)}...")
+    suspend fun activateFromBackend(context: Context, token: String): Result<UserRole> = withContext(Dispatchers.IO) {
+        try {
+            Log.i(TAG, "[AUTH] Activating token with backend: ${token.take(16)}...")
 
-        // ── Token validation (simplified) ────────────────────────
-        // Production: verify JWT signature, check issuer, check device binding
-        val grantedRole = parseTokenRole(token)
-        if (grantedRole == null) {
-            Log.e(TAG, "[AUTH] Invalid or expired token")
-            return false
+            val deviceId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+                ?: "unknown_device_id"
+
+            // Connect to local backend (emulator uses 10.0.2.2 for localhost)
+            // In production, use real HTTPS URL.
+            val url = URL("http://10.0.2.2:5000/api/licenses/activate")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.doOutput = true
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            // Sending body
+            val requestBody = JSONObject().apply {
+                put("token", token)
+                put("deviceId", deviceId)
+            }.toString()
+
+            OutputStreamWriter(connection.outputStream).use { it.write(requestBody) }
+
+            val responseCode = connection.responseCode
+            val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+            val responseText = InputStreamReader(stream).use { it.readText() }
+            val responseJson = JSONObject(responseText)
+
+            if (responseCode !in 200..299) {
+                val errorMsg = responseJson.optString("error", "Unknown backend error")
+                val reason = responseJson.optString("reason", "")
+                Log.e(TAG, "[AUTH] Backend activation failed: $errorMsg - $reason")
+                return@withContext Result.failure(Exception("$errorMsg${if (reason.isNotEmpty()) " ($reason)" else ""}"))
+            }
+
+            // Success response: { "success": true, "role": "TECHNICIAN", "expiresAt": "2024-...", ... }
+            val roleStr = responseJson.getString("role")
+            val grantedRole = try { UserRole.valueOf(roleStr) } catch (e: Exception) {
+                return@withContext Result.failure(Exception("Unknown role from server: $roleStr"))
+            }
+
+            val expiresAtIso = responseJson.optString("expiresAt", "")
+            val expiryTimeMs = try {
+                if (expiresAtIso.isNotEmpty()) {
+                    java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                        .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+                        .parse(expiresAtIso)?.time ?: 0L
+                } else 0L
+            } catch (e: Exception) { 0L }
+
+            // Persist
+            prefs.edit()
+                .putString(KEY_ROLE, grantedRole.name)
+                .putString(KEY_LICENSE_TOKEN, token)
+                .putLong(KEY_LICENSE_EXPIRY, expiryTimeMs)
+                .apply()
+
+            _role.value = grantedRole
+            Log.i(TAG, "[AUTH] Activated via Backend: role=${grantedRole.label}, expiry=$expiresAtIso")
+            
+            Result.success(grantedRole)
+        } catch (e: Exception) {
+            Log.e(TAG, "[AUTH] Network error during activation", e)
+            Result.failure(e)
         }
-
-        val expiry = parseTokenExpiry(token)
-
-        // Persist
-        prefs.edit()
-            .putString(KEY_ROLE, grantedRole.name)
-            .putString(KEY_LICENSE_TOKEN, token)
-            .putLong(KEY_LICENSE_EXPIRY, expiry)
-            .apply()
-
-        _role.value = grantedRole
-        Log.i(TAG, "[AUTH] Activated: role=${grantedRole.label}, expiry=$expiry")
-        return true
     }
 
     /**
