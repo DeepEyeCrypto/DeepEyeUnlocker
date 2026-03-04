@@ -151,5 +151,5 @@ object PolicyEngine {
 class PolicyDeniedException(
     val op: DeepEyeOperation,
     val role: UserRole,
-    override val message: String
+    message: String
 ) : SecurityException(message)
