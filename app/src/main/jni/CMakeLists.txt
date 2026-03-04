@@ -45,15 +45,16 @@ add_library(deepeye_core SHARED
     native-lib.cpp
     core/src/jni_bridge.cpp
     core/src/deepeye_exports.cpp
+    core/src/transport/usb_transport.cpp
+    core/src/protocols/protocol_engine.cpp
+    core/src/protocols/edl_manager.cpp
+    core/src/protocols/mtk_brom.cpp
     core/src/protocols/brom_manager.cpp
     core/src/protocols/odin_manager.cpp
     core/src/protocols/fdl_manager.cpp
     core/src/protocols/firehose.cpp
     core/src/protocols/gpt_parser.cpp
     core/src/protocols/sparse_handler.cpp
-    core/src/protocols/da_handler.cpp
-    core/src/protocols/boot_patcher.cpp
-    core/src/protocols/mtk_brom.cpp
     core/src/protocols/da_handler.cpp
     core/src/protocols/boot_patcher.cpp
 )
@@ -73,5 +74,7 @@ target_compile_definitions(deepeye_core PRIVATE
 target_link_libraries(deepeye_core
     usb_static
     android
+    log
+)
     log
 )
