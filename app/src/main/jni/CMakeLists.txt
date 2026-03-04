@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("deepeye_otg_jni")
 
-# Core Paths (Updated for v4.7.9)
-get_filename_component(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core" ABSOLUTE)
-get_filename_component(LIBUSB_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../core/libusb-source" ABSOLUTE)
+# Core Paths (Pure Android structure)
+set(CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/core")
+set(LIBUSB_ROOT_PATH "${CORE_DIR}/libusb-source")
 
 message(STATUS "DeepEye Core Dir: ${CORE_DIR}")
 message(STATUS "LibUSB Source Dir: ${LIBUSB_ROOT_PATH}")
