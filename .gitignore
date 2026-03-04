@@ -17,6 +17,7 @@
 # Kotlin
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # Purge desktop leftovers
 node_modules/
