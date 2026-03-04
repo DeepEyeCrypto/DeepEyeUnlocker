@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace DeepEyeUnlocker.Core.Models
 {
+    [Owned]
     public class FrpCapabilities
     {
         public List<string> SupportedProtocols { get; set; } = new();

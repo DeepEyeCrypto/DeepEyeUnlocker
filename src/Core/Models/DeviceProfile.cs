@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace DeepEyeUnlocker.Core.Models
 {
@@ -41,6 +42,7 @@ namespace DeepEyeUnlocker.Core.Models
         public TestStatus ValidationStatus { get; set; } = TestStatus.Untested;
     }
 
+    [Owned]
     public class ServiceModeDescriptor
     {
         public PreloaderConfig Preloader { get; set; } = new();
@@ -50,6 +52,7 @@ namespace DeepEyeUnlocker.Core.Models
         public bool SupportsOdin { get; set; }
     }
 
+    [Owned]
     public class PreloaderConfig
     {
         public bool Supported { get; set; }
@@ -57,6 +60,7 @@ namespace DeepEyeUnlocker.Core.Models
         public TestPointInfo? TestPoint { get; set; }
     }
 
+    [Owned]
     public class TestPointInfo
     {
         public bool Required { get; set; }
@@ -64,6 +68,7 @@ namespace DeepEyeUnlocker.Core.Models
         public string PinDescription { get; set; } = string.Empty;
     }
 
+    [Owned]
     public class LoaderRequirement
     {
         public string? CustomDaId { get; set; }   // Reference to LoaderRepository ID
@@ -83,6 +88,7 @@ namespace DeepEyeUnlocker.Core.Models
     public enum RiskLevel { Safe, Low, Medium, High, Critical }
     public enum TestStatus { Untested, VerifiedAlpha, VerifiedBeta, Stable }
 
+    [Owned]
     public class SecurityProfile
     {
         public string PatchLevel { get; set; } = string.Empty;
