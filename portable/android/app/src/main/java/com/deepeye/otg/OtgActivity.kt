@@ -152,7 +152,7 @@ class OtgActivity : AppCompatActivity() {
             attachComposeSessionPanel()
             attachQueueWaitOverlay()
             
-            log("DeepEye Unlocker v5.6.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.6.1 Ready - ${allModels.size} models loaded. (24 ops wired)", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -259,15 +259,41 @@ class OtgActivity : AppCompatActivity() {
     // Maps layout button IDs to DeepEyeOperation for Queue & Wait
     private val opButtonMap: Map<Int, DeepEyeOperation> by lazy {
         mapOf(
-            R.id.btnUnlockBl       to DeepEyeOperation.UNLOCK_BOOTLOADER,
-            R.id.btnRelockBl       to DeepEyeOperation.LOCK_STATE_ANALYSIS,
-            R.id.btnEraseFrp       to DeepEyeOperation.ERASE_FRP,
+            // Category A — Flashing & Firmware
+            R.id.btnWriteFirmware  to DeepEyeOperation.WRITE_FIRMWARE,
+            R.id.btnReadFirmware   to DeepEyeOperation.READ_FIRMWARE,
+            R.id.btnBackupEfs      to DeepEyeOperation.BACKUP_EFS,
+            R.id.btnRestoreEfs     to DeepEyeOperation.RESTORE_EFS,
+            R.id.btnPartitionMgr   to DeepEyeOperation.PARTITION_MANAGER,
+
+            // Category B — Reset & Cleanup
             R.id.btnFactoryReset   to DeepEyeOperation.FACTORY_RESET,
-            R.id.btnRemovePin      to DeepEyeOperation.REMOVE_SCREEN_LOCK,
+            R.id.btnDemoUnlock     to DeepEyeOperation.DEMO_UNLOCK,
+            R.id.btnSafeWipe       to DeepEyeOperation.SAFE_WIPE,
+
+            // Category C — FRP & Account
+            R.id.btnEraseFrp       to DeepEyeOperation.ERASE_FRP,
             R.id.btnRemoveMiAccount to DeepEyeOperation.REMOVE_MI_CLOUD,
-            R.id.btnBypassAuth     to DeepEyeOperation.MTK_METAMODE_FRP,
+            R.id.btnEfrpMdm        to DeepEyeOperation.EFRP_MDM_HOOK,
+            R.id.btnMtkMetaFrp     to DeepEyeOperation.MTK_METAMODE_FRP,
+
+            // Category D — Locks & Security
+            R.id.btnRemovePin      to DeepEyeOperation.REMOVE_SCREEN_LOCK,
+            R.id.btnLockState      to DeepEyeOperation.LOCK_STATE_ANALYSIS,
+            R.id.btnUnlockBl       to DeepEyeOperation.UNLOCK_BOOTLOADER,
+            R.id.btnMdmRemove      to DeepEyeOperation.MDM_REMOVE,
+
+            // Category E — IMEI & Network
+            R.id.btnReadImei       to DeepEyeOperation.IMEI_CHECK,
+            R.id.btnImeiRestore    to DeepEyeOperation.IMEI_RESTORE,
+            R.id.btnModemRepair    to DeepEyeOperation.MODEM_REPAIR,
+            R.id.btnNetworkUnlock  to DeepEyeOperation.NETWORK_UNLOCK,
+
+            // Category F — Advanced & Diagnostics
             R.id.btnReadInfo       to DeepEyeOperation.DEEP_DEVICE_INFO,
-            R.id.btnReadImei       to DeepEyeOperation.IMEI_CHECK
+            R.id.btnAdbEnable      to DeepEyeOperation.ADB_ENABLE,
+            R.id.btnOneClickRoot   to DeepEyeOperation.ONE_CLICK_ROOT,
+            R.id.btnAppManager     to DeepEyeOperation.APP_MANAGER,
         )
     }
 

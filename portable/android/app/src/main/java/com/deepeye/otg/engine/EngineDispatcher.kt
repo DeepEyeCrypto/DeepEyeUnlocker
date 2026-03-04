@@ -90,7 +90,14 @@ object EngineDispatcher {
                 ProtocolFamily.QC      -> executeQualcomm(op, handle, onProgress)
                 ProtocolFamily.SAMSUNG -> executeSamsung(op, handle, onProgress)
                 ProtocolFamily.UNISOC  -> executeUnisoc(op, handle, onProgress)
-                else -> EngineResult(false, "No engine for protocol: $protocol")
+                ProtocolFamily.MTP_ONLY -> {
+                    onProgress(100, "MTP mode detected. Switch to File Transfer/Service mode")
+                    EngineResult(false, "Protocol MTP_ONLY is not service-capable")
+                }
+                ProtocolFamily.UNKNOWN -> {
+                    onProgress(100, "Unsupported or unknown protocol")
+                    EngineResult(false, "No engine for protocol: $protocol")
+                }
             }
         } finally {
             NativeBridge.closeCore(handle)
@@ -543,6 +550,15 @@ object EngineDispatcher {
                 EngineResult(false, "${op.label} not supported on this protocol/engine combination")
             }
         }
+    }
+
+    private suspend fun unsupported(
+        op: DeepEyeOperation,
+        protocol: ProtocolFamily,
+        onProgress: ProgressCallback
+    ): EngineResult {
+        onProgress(100, "${op.label} is not supported on $protocol")
+        return EngineResult(false, "${op.label} not supported on protocol $protocol")
     }
 
     private fun log(msg: String) = Log.i(TAG, msg)

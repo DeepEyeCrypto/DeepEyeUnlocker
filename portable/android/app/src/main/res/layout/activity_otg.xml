@@ -154,45 +154,96 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <!-- ═══ Category A — Flashing & Firmware ═══ -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="UNLOCK OPERATIONS"
+                    android:text="FLASHING &amp; FIRMWARE"
                     android:textColor="#00F2FF"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp"/>
-                <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="UNLOCK BOOTLOADER"/>
-                <Button android:id="@+id/btnRelockBl" style="@style/OperationButton" android:text="RELOCK BOOTLOADER"/>
-                <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonOrange" android:text="ERASE FRP LOCK"/>
-                <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="FACTORY RESET (USERDATA)"/>
+                <Button android:id="@+id/btnWriteFirmware" style="@style/OperationButton" android:text="⬆ WRITE FIRMWARE"/>
+                <Button android:id="@+id/btnReadFirmware" style="@style/OperationButton" android:text="⬇ READ / BACKUP FIRMWARE"/>
+                <Button android:id="@+id/btnBackupEfs" style="@style/OperationButtonOrange" android:text="🔐 BACKUP EFS / NV"/>
+                <Button android:id="@+id/btnRestoreEfs" style="@style/OperationButtonOrange" android:text="🔓 RESTORE EFS / NV"/>
+                <Button android:id="@+id/btnPartitionMgr" style="@style/OperationButton" android:text="📦 PARTITION MANAGER"/>
 
+                <!-- ═══ Category B — Reset & Cleanup ═══ -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SECURITY REPAIR"
+                    android:text="RESET &amp; CLEANUP"
                     android:textColor="#FF6B35"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"/>
-                <Button android:id="@+id/btnRemovePin" style="@style/OperationButton" android:text="REMOVE SCREEN LOCK (SAFE)"/>
-                <Button android:id="@+id/btnRemoveMiAccount" style="@style/OperationButton" android:text="REMOVE MI CLOUD"/>
-                <Button android:id="@+id/btnBypassAuth" style="@style/OperationButton" android:text="AUTH BYPASS (SLA/DA)"/>
+                <Button android:id="@+id/btnFactoryReset" style="@style/OperationButtonDanger" android:text="🗑 FACTORY RESET"/>
+                <Button android:id="@+id/btnDemoUnlock" style="@style/OperationButton" android:text="🏪 DEMO → RETAIL"/>
+                <Button android:id="@+id/btnSafeWipe" style="@style/OperationButton" android:text="🧹 SAFE WIPE + BACKUP"/>
 
+                <!-- ═══ Category C — FRP & Account ═══ -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="DIAGNOSTICS"
+                    android:text="FRP &amp; ACCOUNT"
+                    android:textColor="#EF4444"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnEraseFrp" style="@style/OperationButtonDanger" android:text="🔥 ERASE FRP LOCK"/>
+                <Button android:id="@+id/btnRemoveMiAccount" style="@style/OperationButtonDanger" android:text="☁ REMOVE MI CLOUD"/>
+                <Button android:id="@+id/btnEfrpMdm" style="@style/OperationButtonDanger" android:text="🏢 ENTERPRISE EFRP HOOK"/>
+                <Button android:id="@+id/btnMtkMetaFrp" style="@style/OperationButtonDanger" android:text="⚡ MTK METAMODE FRP"/>
+
+                <!-- ═══ Category D — Locks & Security ═══ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOCKS &amp; SECURITY"
+                    android:textColor="#F59E0B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnRemovePin" style="@style/OperationButtonOrange" android:text="🔑 REMOVE SCREEN LOCK"/>
+                <Button android:id="@+id/btnLockState" style="@style/OperationButton" android:text="🔍 LOCK STATE ANALYSIS"/>
+                <Button android:id="@+id/btnUnlockBl" style="@style/OperationButton" android:text="🔓 UNLOCK BOOTLOADER"/>
+                <Button android:id="@+id/btnMdmRemove" style="@style/OperationButtonDanger" android:text="🏦 MDM / FINANCE UNLOCK"/>
+
+                <!-- ═══ Category E — IMEI & Network ═══ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="IMEI &amp; NETWORK"
                     android:textColor="#00E676"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"/>
-                <Button android:id="@+id/btnReadInfo" style="@style/OperationButton" android:text="READ DEVICE INFO"/>
-                <Button android:id="@+id/btnReadImei" style="@style/OperationButton" android:text="READ IMEI / NVRAM"/>
-                
-                <!-- Added spacing for bottom -->
+                <Button android:id="@+id/btnReadImei" style="@style/OperationButton" android:text="📋 IMEI INTEGRITY CHECK"/>
+                <Button android:id="@+id/btnImeiRestore" style="@style/OperationButtonOrange" android:text="🔧 IMEI RESTORE"/>
+                <Button android:id="@+id/btnModemRepair" style="@style/OperationButtonOrange" android:text="📡 5G MODEM / CPID REPAIR"/>
+                <Button android:id="@+id/btnNetworkUnlock" style="@style/OperationButtonDanger" android:text="🌐 NETWORK / SIM UNLOCK"/>
+
+                <!-- ═══ Category F — Advanced & Diagnostics ═══ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ADVANCED &amp; DIAGNOSTICS"
+                    android:textColor="#00F2FF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnReadInfo" style="@style/OperationButton" android:text="🔍 DEEP DEVICE INFO"/>
+                <Button android:id="@+id/btnAdbEnable" style="@style/OperationButton" android:text="⚙ ADB / DIAG ENABLE"/>
+                <Button android:id="@+id/btnOneClickRoot" style="@style/OperationButton" android:text="🌱 ONE-CLICK ROOT"/>
+                <Button android:id="@+id/btnAppManager" style="@style/OperationButton" android:text="📱 ADB APP MANAGER"/>
+
+                <!-- Bottom spacing -->
                 <View android:layout_width="match_parent" android:layout_height="80dp"/>
             </LinearLayout>
         </ScrollView>
