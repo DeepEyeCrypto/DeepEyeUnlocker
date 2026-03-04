@@ -12,6 +12,7 @@ app.use(express.json());
 // Routes
 app.use('/api/devices', require('./routes/devices'));
 app.use('/api/logs', require('./routes/logs'));
+app.use('/api/licenses', require('./routes/licenses'));
 
 // Resource Download Route (Mock)
 app.get('/api/resource/:filename', (req, res) => {
