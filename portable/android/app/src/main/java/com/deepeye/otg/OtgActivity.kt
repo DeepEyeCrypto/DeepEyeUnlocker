@@ -1,5 +1,6 @@
 package com.deepeye.otg
 
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -9,11 +10,14 @@ import androidx.core.content.ContextCompat
 import android.os.Vibrator
 import android.os.VibrationEffect
 import android.content.Context
+import android.hardware.usb.UsbManager
 import android.view.Gravity
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -31,6 +36,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.deepeye.otg.ui.ExecutingOperationOverlay
+import com.deepeye.otg.ui.OperationCompleteBanner
+import com.deepeye.otg.ui.ReenumerationWaitBanner
+import com.deepeye.otg.ui.WaitingForDeviceScreen
+import com.deepeye.otg.usb.DeepEyeOperation
+import com.deepeye.otg.usb.SessionState
+import com.deepeye.otg.usb.UsbBroadcastReceiver
+import com.deepeye.otg.usb.UsbSessionManager
 import kotlinx.coroutines.launch
 
 class OtgActivity : AppCompatActivity() {
@@ -57,6 +70,10 @@ class OtgActivity : AppCompatActivity() {
     private val controller by lazy { UsbConnectionController(this, lifecycleScope) }
     private var latestSession: UsbSessionState = UsbSessionState()
     private var lastInitializedDeviceKey: String? = null
+
+    // Queue & Wait session manager
+    private lateinit var sessionManager: UsbSessionManager
+    private lateinit var usbReceiver: UsbBroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,7 +135,22 @@ class OtgActivity : AppCompatActivity() {
                 }
             }
 
+            // Queue & Wait session manager
+            sessionManager = UsbSessionManager(this)
+            usbReceiver = UsbBroadcastReceiver(sessionManager)
+            val usbFilter = IntentFilter().apply {
+                addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+                addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+                addAction(UsbSessionManager.ACTION_USB_PERMISSION)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(usbReceiver, usbFilter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(usbReceiver, usbFilter)
+            }
+
             attachComposeSessionPanel()
+            attachQueueWaitOverlay()
             
             log("DeepEye Unlocker v5.5.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
@@ -224,41 +256,27 @@ class OtgActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupOperationButtons() {
-        val operations = mapOf(
-            R.id.btnUnlockBl to "Unlock Bootloader",
-            R.id.btnRelockBl to "Relock Bootloader",
-            R.id.btnEraseFrp to "Erase FRP",
-            R.id.btnFactoryReset to "Factory Reset",
-            R.id.btnRemovePin to "Remove Screen Lock",
-            R.id.btnRemoveMiAccount to "Remove MI Account",
-            R.id.btnBypassAuth to "Bypass Auth",
-            R.id.btnReadInfo to "Read Device Info",
-            R.id.btnReadImei to "Read IMEI"
+    // Maps layout button IDs to DeepEyeOperation for Queue & Wait
+    private val opButtonMap: Map<Int, DeepEyeOperation> by lazy {
+        mapOf(
+            R.id.btnUnlockBl       to DeepEyeOperation.UNLOCK_BOOTLOADER,
+            R.id.btnRelockBl       to DeepEyeOperation.LOCK_STATE_ANALYSIS,
+            R.id.btnEraseFrp       to DeepEyeOperation.ERASE_FRP,
+            R.id.btnFactoryReset   to DeepEyeOperation.FACTORY_RESET,
+            R.id.btnRemovePin      to DeepEyeOperation.REMOVE_SCREEN_LOCK,
+            R.id.btnRemoveMiAccount to DeepEyeOperation.REMOVE_MI_CLOUD,
+            R.id.btnBypassAuth     to DeepEyeOperation.MTK_METAMODE_FRP,
+            R.id.btnReadInfo       to DeepEyeOperation.DEEP_DEVICE_INFO,
+            R.id.btnReadImei       to DeepEyeOperation.IMEI_CHECK
         )
-        
-        operations.forEach { (viewId, opName) ->
+    }
+
+    private fun setupOperationButtons() {
+        opButtonMap.forEach { (viewId, op) ->
             findViewById<Button>(viewId)?.setOnClickListener {
                 hapticFeedback()
-                val session = latestSession
-                if (session.state != ConnState.CONNECTED_READY) {
-                    val stateMsg = when (session.state) {
-                        ConnState.DISCONNECTED -> "No device connected. Plug in OTG cable."
-                        ConnState.DEVICE_FOUND -> "Device detected. Waiting for permission."
-                        ConnState.PERMISSION_PENDING -> "Permission pending, please approve."
-                        ConnState.PERMISSION_DENIED -> "USB permission denied. Re-plug and approve."
-                        ConnState.REENUMERATION_WAIT -> "Device mode-switching (MTK re-enum). Please wait..."
-                        ConnState.CONNECTED_MTP_ONLY -> "Device is in MTP/charge-only mode. Switch USB mode."
-                        ConnState.CONNECTED_PROTOCOL_DETECT -> "Detecting protocol..."
-                        ConnState.ERROR -> session.lastError ?: "Connection error. Retry."
-                        else -> "Connection not ready."
-                    }
-                    log("Cannot execute: $stateMsg", "ERROR")
-                    Toast.makeText(this, stateMsg, Toast.LENGTH_SHORT).show()
-                } else {
-                    log("[OTG-OP] Executing: $opName...", "INFO")
-                    executeOperation(opName)
-                }
+                log("[QUEUE] ${op.label} queued — plug in device or auto-execute if connected", "INFO")
+                sessionManager.queueOperation(op)
             }
         }
     }
@@ -390,6 +408,8 @@ class OtgActivity : AppCompatActivity() {
     override fun onDestroy() {
         if (nativeHandle != 0L) NativeBridge.closeCore(nativeHandle)
         controller.unregister()
+        try { unregisterReceiver(usbReceiver) } catch (_: Exception) {}
+        sessionManager.destroy()
         super.onDestroy()
     }
 
@@ -459,33 +479,156 @@ class OtgActivity : AppCompatActivity() {
         params.gravity = Gravity.TOP
         root.addView(compose, params)
     }
+
+    /**
+     * Full-screen Compose overlay driven by [UsbSessionManager.state].
+     * Shows WaitingForDevice, ExecutingOperation, OperationComplete,
+     * and ReenumerationWait screens on top of the XML layout.
+     */
+    private fun attachQueueWaitOverlay() {
+        val root = findViewById<FrameLayout>(android.R.id.content)
+        val overlay = ComposeView(this).apply {
+            setContent {
+                val session by sessionManager.state.collectAsState()
+                QueueWaitOverlay(
+                    session = session,
+                    onCancel = { sessionManager.cancelQueue() },
+                    onDismiss = { sessionManager.reset() },
+                    onRetry = {
+                        val op = (session as? SessionState.PermissionDenied)?.queuedOp
+                            ?: (session as? SessionState.Error)?.queuedOp
+                        if (op != null) sessionManager.queueOperation(op)
+                        else sessionManager.reset()
+                    }
+                )
+            }
+        }
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        root.addView(overlay, params)
+    }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  Queue & Wait Compose overlay — driven by SessionState
+// ═══════════════════════════════════════════════════════════════════
+
 @Composable
-private fun SessionPanel(sessionFlow: kotlinx.coroutines.flow.StateFlow<UsbSessionState>, onRetry: () -> Unit) {
+private fun QueueWaitOverlay(
+    session: SessionState,
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit,
+    onRetry: () -> Unit
+) {
+    when (session) {
+        is SessionState.WaitingForDevice -> {
+            WaitingForDeviceScreen(
+                queuedOp = session.queuedOp,
+                onCancel = onCancel
+            )
+        }
+        is SessionState.ReenumerationWait -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                ReenumerationWaitBanner()
+            }
+        }
+        is SessionState.ExecutingOperation -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                ExecutingOperationOverlay(
+                    op = session.op,
+                    protocol = session.protocol,
+                    progress = session.progress,
+                    statusMsg = session.statusMsg
+                )
+            }
+        }
+        is SessionState.OperationComplete -> {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                OperationCompleteBanner(
+                    op = session.op,
+                    success = session.success,
+                    message = session.message,
+                    onDismiss = onDismiss
+                )
+            }
+        }
+        is SessionState.PermissionDenied -> {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("⚠\uFE0F", fontSize = 48.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("USB Permission Denied", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Re-plug the cable and tap Allow", color = Color.LightGray, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(onClick = onRetry) { Text("Retry") }
+                }
+            }
+        }
+        is SessionState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("\u274C", fontSize = 48.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Error", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(session.message, color = Color.LightGray, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(onClick = onRetry) { Text("Retry") }
+                }
+            }
+        }
+        // Idle / DeviceFound / PermissionPending / ProtocolDetect / ConnectedReady / MtpOnly
+        // → overlay is invisible, main XML layout shows through
+        else -> {}
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Legacy connection-indicator panel (reads UsbConnectionController state)
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun SessionPanel(
+    sessionFlow: kotlinx.coroutines.flow.StateFlow<UsbSessionState>,
+    onRetry: () -> Unit
+) {
     val session by sessionFlow.collectAsState()
     Surface(color = Color(0xFF1E1E22)) {
         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "USB State: ${session.state}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
-                Text(text = "Protocol: ${session.protocol}", fontSize = 12.sp, color = Color(0xFF00F2FF))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "USB: ${session.state}",
+                    fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White
+                )
+                Text(
+                    text = "Proto: ${session.protocol}",
+                    fontSize = 12.sp, color = Color(0xFF00F2FF)
+                )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Device: ${session.deviceKey ?: "-"}", fontSize = 12.sp, color = Color.LightGray)
-            Text(text = "Permission: ${session.hasPermission}", fontSize = 12.sp, color = Color.LightGray)
             session.lastError?.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Error: $it", fontSize = 12.sp, color = Color(0xFFFF5252))
             }
-            if (session.state == ConnState.REENUMERATION_WAIT) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "\u23F3 MTK mode-switch — re-requesting permission...", fontSize = 12.sp, color = Color(0xFFFFB300))
-            }
-            if (session.state == ConnState.ERROR || session.state == ConnState.PERMISSION_DENIED || session.state == ConnState.CONNECTED_MTP_ONLY) {
+            if (session.state == ConnState.ERROR || session.state == ConnState.PERMISSION_DENIED) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = onRetry) {
-                    Text("Retry")
-                }
+                Button(onClick = onRetry) { Text("Retry") }
             }
         }
     }
