@@ -17,12 +17,10 @@ set(LIBUSB_SRC
     ${LIBUSB_ROOT_PATH}/libusb/descriptor.c
     ${LIBUSB_ROOT_PATH}/libusb/io.c
     ${LIBUSB_ROOT_PATH}/libusb/sync.c
-    ${LIBUSB_ROOT_PATH}/libusb/hotplug.c
     ${LIBUSB_ROOT_PATH}/libusb/strerror.c
     ${LIBUSB_ROOT_PATH}/libusb/os/linux_usbfs.c
     ${LIBUSB_ROOT_PATH}/libusb/os/events_posix.c
     ${LIBUSB_ROOT_PATH}/libusb/os/threads_posix.c
-    ${LIBUSB_ROOT_PATH}/libusb/os/linux_netlink.c
 )
 
 add_library(usb_static STATIC ${LIBUSB_SRC})
@@ -32,6 +30,7 @@ target_compile_definitions(usb_static PRIVATE
     PLATFORM_POSIX
     __ANDROID__
     ANDROID
+    LIBUSB_CALL_MISSING_HOTPLUG=1
 )
 target_include_directories(usb_static PRIVATE
     ${CORE_DIR}/include
