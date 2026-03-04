@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@android:drawable/ic_menu_compass"
+            android:title="Dashboard" />
+            
+        <item
+            android:id="@+id/nav_da_manager"
+            android:icon="@android:drawable/ic_menu_upload"
+            android:title="DA Manager" />
+            
+        <item
+            android:id="@+id/nav_partition"
+            android:icon="@android:drawable/ic_menu_agenda"
+            android:title="Partition Tools" />
+    </group>
+
+    <item android:title="Advanced">
+        <menu>
+            <item
+                android:id="@+id/nav_scatter"
+                android:icon="@android:drawable/ic_menu_edit"
+                android:title="Scatter Editor" />
+                
+            <item
+                android:id="@+id/nav_preloader"
+                android:icon="@android:drawable/ic_menu_manage"
+                android:title="Preloader Tools" />
+                
+            <item
+                android:id="@+id/nav_auth"
+                android:icon="@android:drawable/ic_lock_lock"
+                android:title="Auth Bypass" />
+        </menu>
+    </item>
+
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:title="Preferences" />
+                
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@android:drawable/ic_menu_info_details"
+                android:title="About" />
+                
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@android:drawable/ic_menu_help"
+                android:title="Help &amp; Support" />
+        </menu>
+    </item>
+
+</menu>

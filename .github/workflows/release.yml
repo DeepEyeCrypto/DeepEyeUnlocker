@@ -1,4 +1,4 @@
-name: DeepEyeUnlocker - Multi-Platform Release
+name: DeepEyeUnlocker - Android Release
 
 on:
   push:
@@ -9,39 +9,6 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    name: Windows Bundle
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-          
-      - name: Setup WiX
-        run: dotnet tool install --global wix
-
-      - name: Publish Modern UI (Portable)
-        shell: pwsh
-        run: |
-          dotnet publish DeepEye.UI.Modern/DeepEye.UI.Modern.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true "/p:SourceRevisionId=${{ github.sha }}" -o "artifacts/portable"
-          Copy-Item README.md artifacts/portable/ -Force
-          Copy-Item LICENSE artifacts/portable/ -Force
-          if (Test-Path drivers) { Copy-Item drivers artifacts/portable/ -Recurse -Force }
-
-      - name: Pack Windows Artifacts
-        shell: pwsh
-        run: |
-          Compress-Archive -Path artifacts/portable/* -DestinationPath DeepEyeUnlocker-Windows-v${{ github.ref_name }}.zip
-          
-      - name: Upload Windows
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-artifact
-          path: DeepEyeUnlocker-Windows-*.zip
-
   build-android:
     name: Android APK
     runs-on: ubuntu-latest
@@ -57,104 +24,44 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Native Dependencies (LibUSB)
-        run: |
-          chmod +x scripts/setup-native-deps.sh
-          ./scripts/setup-native-deps.sh
-          echo "=== Debugging Native Directories ==="
-          ls -F portable/core/
-          if [ -d "portable/core/libusb-source" ]; then 
-             echo "libusb-source exists. Listing content:"
-             ls -F portable/core/libusb-source/
-          else 
-             echo "libusb-source MISSING"
-          fi
-          
-          echo "=== Debugging CMakeLists.txt Content ==="
-          cat portable/android/app/src/main/cpp/CMakeLists.txt
-
       - name: Setup Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo "Checking Keystore configuration..."
+          mkdir -p app/
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "Decoding Keystore from Secrets..."
-            echo "$KEYSTORE_BASE64" | base64 --decode > portable/android/app/release.jks
-          elif [ ! -f "portable/android/app/release.jks" ]; then
-            echo "Generating Temporary Release Keystore..."
-            keytool -genkeypair -v -keystore portable/android/app/release.jks \
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/release.jks
+          else
+            keytool -genkeypair -v -keystore app/release.jks \
               -keyalg RSA -keysize 2048 -validity 10000 \
               -alias key0 -dname "CN=DeepEye, OU=Mobile, O=DeepEyeCrypto, L=Cyber, S=Net, C=US" \
               -storepass android -keypass android
-          else
-            echo "Keystore already exists in repo. Using it."
           fi
-          
-          # Verify Keystore
-          ls -l portable/android/app/release.jks
-          keytool -list -v -keystore portable/android/app/release.jks -storepass android || echo "Keystore verification failed (password mismatch?)"
 
       - name: Build APK
-        working-directory: portable/android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'android' }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'key0' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'android' }}
         run: |
           chmod +x gradlew
-          # Build both Debug (failsafe) and Release
-          ./gradlew clean assembleDebug assembleRelease --no-daemon || ./gradlew assembleDebug --no-daemon
+          ./gradlew clean :app:assembleRelease --no-daemon
 
       - name: Locate Artifact
         id: locate
         run: |
-          # Try Release first, fallback to Debug
-          APK_PATH=$(find portable/android/app/build/outputs/apk -name "*-release.apk" ! -name "*-unaligned.apk" | head -1)
+          APK_PATH=$(find app/build/outputs/apk/release -name "*-release.apk" | head -1)
           if [ -z "$APK_PATH" ]; then
-             echo "Release APK not found, checking Debug..."
-             APK_PATH=$(find portable/android/app/build/outputs/apk -name "*-debug.apk" | head -1)
-          fi
-          
-          if [ -z "$APK_PATH" ]; then
-            echo "::error::No APK found in build outputs!"
+            echo "::error::Release APK not found!"
             exit 1
           fi
-          
           cp "$APK_PATH" "DeepEyeUnlocker-Android-${{ github.ref_name }}.apk"
           echo "apk_path=DeepEyeUnlocker-Android-${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
 
-      - name: Upload Android
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-artifact
-          path: DeepEyeUnlocker-Android-*.apk
-
-  create-unified-release:
-    name: Finalize Release
-    needs: [build-windows, build-android]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download Windows
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-artifact
-          path: .
-
-      - name: Download Android
-        uses: actions/download-artifact@v4
-        with:
-          name: android-artifact
-          path: .
-
-      - name: Ship to GitHub
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            *.zip
-            *.apk
+          files: DeepEyeUnlocker-Android-*.apk
           generate_release_notes: true
           make_latest: true
         env:

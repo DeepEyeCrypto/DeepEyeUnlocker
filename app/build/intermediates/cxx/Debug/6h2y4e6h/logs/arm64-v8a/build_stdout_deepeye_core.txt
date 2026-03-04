@@ -1,0 +1,50 @@
+ninja: Entering directory `/Users/enayat/Documents/DeepEyeUnlocker/portable/android/app/.cxx/Debug/6h2y4e6h/arm64-v8a'
+[1/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/hotplug.c:22:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+[2/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/core.c:23:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+[3/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/descriptor.c:22:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+[4/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/sync.c:23:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+[5/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/io.c:24:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+[6/22] Building C object CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c.o
+FAILED: CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c.o 
+/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --sysroot=/usr/local/share/android-commandlinetools/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHAVE_NFDS_T -DLINUX -DPLATFORM_POSIX -D__ANDROID__ -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/include -I/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c.o -MF CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c.o.d -o CMakeFiles/usb_static.dir/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c.o -c /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c
+In file included from /Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/strerror.c:20:
+/Users/enayat/Documents/DeepEyeUnlocker/portable/core/libusb-source/libusb/libusbi.h:27:10: fatal error: 'config.h' file not found
+#include <config.h>
+         ^~~~~~~~~~
+1 error generated.
+ninja: build stopped: subcommand failed.

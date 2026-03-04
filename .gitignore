@@ -1,63 +1,26 @@
-# .NET Core / C#
-[Bb]in/
-[Oo]bj/
-*.user
-*.userosscache
-*.sln.docstates
-
-# Visual Studio
-.vs/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-*.dll
-*.exe
-*.pdb
-*.log
-
-# Visual Studio Code
-.vscode/
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.env
-
-# OS Files
-.DS_Store
-Thumbs.db
-
 # Android
-.gradle/
-build/
-local.properties
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
 *.apk
-*.aar
-capture/
+*.aab
+*.keystore
+*.jks
+!debug.keystore
 
-# C++ / CMake
-CMakeCache.txt
-CMakeFiles/
-CMakeSettings.json
-cmake-build-*/
-.cmake/
-testing/
-*.a
-*.so
-*.dylib
-*.lib
-*.exp
-deepeye-universal/target/
-deepeye-universal/desktop-app/node_modules/
+# Kotlin
+*.class
+*.jar
 
-# .NET SDK (local SDK installs)
-dotnet-sdk/
-
-# Build artifacts
-*.tsbuildinfo
-*.db
-vite.config.d.ts
-portable/android/app/.cxx/
+# Purge desktop leftovers
+node_modules/
+dist/
+target/
+.tauri/
+src-tauri/target/

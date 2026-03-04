@@ -1,0 +1,202 @@
+[
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_action_card.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/action_card.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/layout_activity_otg.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/layout/activity_otg.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_panel_bg.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/panel_bg.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_action_card_danger.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/action_card_danger.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_button_primary.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/button_primary.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_terminal_bg.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/terminal_bg.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_glow_indicator.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/glow_indicator.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_glow_indicator_offline.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/glow_indicator_offline.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/anim_pulse.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/anim/pulse.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_chip_badge.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/chip_badge.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_badge_pro.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/badge_pro.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/anim_fade_in.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/anim/fade_in.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/anim_slide_in_up.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/anim/slide_in_up.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_operation_btn_orange.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/operation_btn_orange.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_button_secondary.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/button_secondary.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_button_outline.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/button_outline.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/xml_device_filter.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/xml/device_filter.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/layout_item_partition.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/layout/item_partition.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_brand_tab_selected.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/brand_tab_selected.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/layout_activity_remote_share.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/layout/activity_remote_share.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/layout_item_model.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/layout/item_model.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_button_orange.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/button_orange.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_mode_tab_selected.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/mode_tab_selected.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_glass_card.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/glass_card.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_tab_selected.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/tab_selected.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_tab_unselected.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/tab_unselected.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_operation_btn_normal.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/operation_btn_normal.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_brand_tab_unselected.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/brand_tab_unselected.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_button_remote_bg.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/button_remote_bg.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/drawable_operation_btn_danger.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/drawable/operation_btn_danger.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/anim_flip_in.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/anim/flip_in.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.deepeye.otg.app-main-34:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.deepeye.otg.app-merged_res-32:/menu_drawer_menu.xml.flat",
+        "source": "com.deepeye.otg.app-main-34:/menu/drawer_menu.xml"
+    }
+]

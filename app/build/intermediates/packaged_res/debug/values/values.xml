@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="deepeye_cyan">#00F2FF</color>
+    <color name="deepeye_cyan_dark">#00C4CC</color>
+    <color name="deepeye_error">#FF5252</color>
+    <color name="deepeye_grey_deep">#1A1A1E</color>
+    <color name="deepeye_grey_medium">#2A2A30</color>
+    <color name="deepeye_obsidian">#0D0D0F</color>
+    <color name="deepeye_orange">#FF6B35</color>
+    <color name="deepeye_orange_dark">#E55A2B</color>
+    <color name="deepeye_success">#00E676</color>
+    <color name="deepeye_warning">#FFB300</color>
+    <color name="deepeye_white">#F5F5F7</color>
+    <color name="ic_launcher_background">#0D0D0F</color>
+    <color name="ic_launcher_foreground">#00F2FF</color>
+    <style name="BrandTab">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginHorizontal">2dp</item>
+        <item name="android:background">@drawable/brand_tab_unselected</item>
+    </style>
+    <style name="BrandTabSmall">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#AAAAAA</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:layout_marginHorizontal">2dp</item>
+        <item name="android:background">@drawable/brand_tab_unselected</item>
+    </style>
+    <style name="ModeTab">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#888888</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+    <style name="OperationButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:textColor">#0D0D0F</item> 
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:background">@drawable/operation_btn_normal</item>
+    </style>
+    <style name="OperationButtonDanger">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:background">@drawable/operation_btn_danger</item>
+    </style>
+    <style name="OperationButtonOrange">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:textColor">#0D0D0F</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:background">@drawable/operation_btn_orange</item>
+    </style>
+    <style name="Theme.DeepEye.Portable" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/deepeye_cyan</item>
+        <item name="colorOnPrimary">@color/deepeye_obsidian</item>
+        <item name="colorSecondary">@color/deepeye_orange</item>
+        <item name="android:windowBackground">@color/deepeye_obsidian</item>
+        <item name="android:statusBarColor">@color/deepeye_grey_deep</item>
+        <item name="android:navigationBarColor">@color/deepeye_obsidian</item>
+        
+        
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>

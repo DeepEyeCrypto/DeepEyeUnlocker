@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.deepeye.otg.app-mergeDebugResources-31:/layout/activity_otg.xml",
+        "source": "com.deepeye.otg.app-main-34:/layout/activity_otg.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-mergeDebugResources-31:/layout/item_model.xml",
+        "source": "com.deepeye.otg.app-main-34:/layout/item_model.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-mergeDebugResources-31:/layout/activity_remote_share.xml",
+        "source": "com.deepeye.otg.app-main-34:/layout/activity_remote_share.xml"
+    },
+    {
+        "merged": "com.deepeye.otg.app-mergeDebugResources-31:/layout/item_partition.xml",
+        "source": "com.deepeye.otg.app-main-34:/layout/item_partition.xml"
+    }
+]
