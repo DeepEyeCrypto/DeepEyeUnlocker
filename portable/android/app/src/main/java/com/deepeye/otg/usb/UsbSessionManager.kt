@@ -11,6 +11,7 @@ import android.util.Log
 import com.deepeye.otg.ProtocolProbe
 import com.deepeye.otg.DetectedProtocol
 import com.deepeye.otg.engine.EngineDispatcher
+import com.deepeye.otg.auth.LicenseManager
 import com.deepeye.otg.policy.PolicyDeniedException
 import com.deepeye.otg.policy.UserRole
 import kotlinx.coroutines.*
@@ -413,7 +414,7 @@ class UsbSessionManager(private val context: Context) {
                     device = device,
                     protocol = protocol,
                     fd = fd,
-                    role = UserRole.DEV  // TODO: wire real user role from auth
+                    role = LicenseManager.currentRole
                 ) { progress, msg ->
                     withContext(Dispatchers.Main) {
                         _state.value = SessionState.ExecutingOperation(op, protocol, progress, msg)

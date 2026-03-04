@@ -40,6 +40,7 @@ import com.deepeye.otg.ui.ExecutingOperationOverlay
 import com.deepeye.otg.ui.OperationCompleteBanner
 import com.deepeye.otg.ui.ReenumerationWaitBanner
 import com.deepeye.otg.ui.WaitingForDeviceScreen
+import com.deepeye.otg.auth.LicenseManager
 import com.deepeye.otg.usb.DeepEyeOperation
 import com.deepeye.otg.usb.SessionState
 import com.deepeye.otg.usb.UsbBroadcastReceiver
@@ -74,6 +75,10 @@ class OtgActivity : AppCompatActivity() {
     // Queue & Wait session manager
     private lateinit var sessionManager: UsbSessionManager
     private lateinit var usbReceiver: UsbBroadcastReceiver
+
+    // Hidden license dialog: triple-tap counter
+    private var tapCount = 0
+    private var lastTapTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +126,19 @@ class OtgActivity : AppCompatActivity() {
                 runUsbDiagnostic()
                 true
             }
+
+            // Hidden License Dialog: triple-tap the connection indicator
+            connectionIndicator.setOnClickListener {
+                val now = System.currentTimeMillis()
+                if (now - lastTapTime > 800) tapCount = 0
+                tapCount++
+                lastTapTime = now
+                if (tapCount >= 3) {
+                    tapCount = 0
+                    hapticFeedback()
+                    showLicenseDialog()
+                }
+            }
             
             // Load Data & Setup
             loadDeviceDatabase()
@@ -134,6 +152,9 @@ class OtgActivity : AppCompatActivity() {
                     updateUiFromSession(session)
                 }
             }
+
+            // Initialize license/auth system
+            LicenseManager.init(this)
 
             // Queue & Wait session manager
             sessionManager = UsbSessionManager(this)
@@ -151,8 +172,15 @@ class OtgActivity : AppCompatActivity() {
 
             attachComposeSessionPanel()
             attachQueueWaitOverlay()
+
+            // Observe license role changes
+            lifecycleScope.launch {
+                LicenseManager.role.collect { role ->
+                    log("[AUTH] Role: ${role.label} (level=${role.level})", "INFO")
+                }
+            }
             
-            log("DeepEye Unlocker v5.6.1 Ready - ${allModels.size} models loaded. (24 ops wired)", "SUCCESS")
+            log("DeepEye Unlocker v5.6.1 Ready - ${allModels.size} models loaded. [${LicenseManager.currentRole.label}]", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -429,6 +457,74 @@ class OtgActivity : AppCompatActivity() {
         } catch (e: Exception) {
             log("DB Load Error: ${e.message}", "ERROR")
         }
+    }
+
+    /**
+     * License activation dialog — shows current auth status,
+     * allows token entry or dev quick-set.
+     * Hidden feature: triple-tap on DEEPEYE title bar.
+     */
+    private fun showLicenseDialog() {
+        val current = LicenseManager.currentRole
+        val isLicensed = LicenseManager.isLicensed
+        val expiry = LicenseManager.licenseExpiry
+        val expiryStr = if (expiry > 0) {
+            java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(expiry))
+        } else "N/A"
+
+        val status = buildString {
+            appendLine("Current Role: ${current.label} (level ${current.level})")
+            appendLine("Licensed: $isLicensed")
+            appendLine("Expiry: $expiryStr")
+            appendLine("Expired: ${LicenseManager.isExpired}")
+            appendLine()
+            appendLine("Token format: DEEPEYE-{ROLE}-{EXPIRY_MS}-{SIG}")
+            appendLine("Roles: CONSUMER, POWER_USER, TECHNICIAN, ENTERPRISE, DEV")
+        }
+
+        val input = EditText(this).apply {
+            hint = "Enter license token..."
+            setPadding(48, 24, 48, 24)
+            setTextColor(0xFFFFFFFF.toInt())
+            setHintTextColor(0xFF888888.toInt())
+            setBackgroundColor(0xFF2C2C30.toInt())
+        }
+
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("🔑 License Manager")
+            .setMessage(status)
+            .setView(input)
+            .setPositiveButton("Activate") { _, _ ->
+                val token = input.text.toString().trim()
+                if (token.isNotEmpty()) {
+                    val ok = LicenseManager.activate(token)
+                    if (ok) {
+                        log("[AUTH] License activated: ${LicenseManager.currentRole.label}", "SUCCESS")
+                        Toast.makeText(this, "License activated: ${LicenseManager.currentRole.label}", Toast.LENGTH_SHORT).show()
+                    } else {
+                        log("[AUTH] Invalid license token", "ERROR")
+                        Toast.makeText(this, "Invalid token", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .setNeutralButton("Deactivate") { _, _ ->
+                LicenseManager.deactivate()
+                log("[AUTH] License deactivated — reverted to Consumer", "WARNING")
+                Toast.makeText(this, "Reverted to Consumer", Toast.LENGTH_SHORT).show()
+            }
+
+        // Dev quick-set: add extra option
+        if (current == com.deepeye.otg.policy.UserRole.DEV || !isLicensed) {
+            builder.setNeutralButton("Dev Mode") { _, _ ->
+                LicenseManager.setRole(com.deepeye.otg.policy.UserRole.DEV)
+                log("[AUTH] Dev mode activated — all tiers unlocked", "SUCCESS")
+                Toast.makeText(this, "Dev mode: all tiers unlocked", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        builder.show()
     }
 
     override fun onDestroy() {

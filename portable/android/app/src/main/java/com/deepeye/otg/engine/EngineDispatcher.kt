@@ -3,6 +3,7 @@ package com.deepeye.otg.engine
 import android.hardware.usb.UsbDevice
 import android.util.Log
 import com.deepeye.otg.NativeBridge
+import com.deepeye.otg.auth.LicenseManager
 import com.deepeye.otg.policy.PolicyDeniedException
 import com.deepeye.otg.policy.PolicyEngine
 import com.deepeye.otg.policy.UserRole
@@ -55,7 +56,7 @@ object EngineDispatcher {
         device: UsbDevice,
         protocol: ProtocolFamily,
         fd: Int,
-        role: UserRole = UserRole.DEV,
+        role: UserRole = LicenseManager.currentRole,
         onProgress: ProgressCallback
     ): EngineResult = withContext(Dispatchers.IO) {
 
