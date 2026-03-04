@@ -1,10 +1,10 @@
-# DeepEyeUnlocker v5.5.0 (The OTG Overhaul)
+# DeepEyeUnlocker v5.6.0 (The Engine Wire-Up)
 
  "Universal Power. Precision Control."
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Download DeepEyeUnlocker v5.5.0](https://img.shields.io/badge/Download-v5.5.0-emerald.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.5.0)
+[![Download DeepEyeUnlocker v5.6.0](https://img.shields.io/badge/Download-v5.6.0-emerald.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v5.6.0)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Protocol Simulation](https://img.shields.io/badge/Protocol%20Simulation-Passing-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![FRP Policy Verification](https://img.shields.io/badge/FRP%20Policy%20Verification-Passed-success.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)

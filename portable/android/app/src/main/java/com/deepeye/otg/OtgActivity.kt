@@ -152,7 +152,7 @@ class OtgActivity : AppCompatActivity() {
             attachComposeSessionPanel()
             attachQueueWaitOverlay()
             
-            log("DeepEye Unlocker v5.5.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.6.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()

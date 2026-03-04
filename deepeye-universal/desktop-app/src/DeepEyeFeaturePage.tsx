@@ -66,8 +66,8 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         features: [
             { id: 1, title: "Write Firmware", desc: "Flash stock or custom ROMs via MTK, Qualcomm, UniSoc, Samsung formats.", tags: ["MTK", "Qualcomm", "UniSoc", "Samsung"], risk: "safe", iconName: "Upload" },
             { id: 2, title: "Read / Backup Firmware", desc: "Full ROM backup before any risky operation. Supports all partition layouts.", tags: ["MTK", "Qualcomm", "UniSoc"], risk: "safe", iconName: "Download" },
-            { id: 3, title: "Backup / Restore Security", desc: "Save and restore EFS, NV data, modem certs and device identity.", tags: ["Qualcomm", "Samsung"], risk: "safe", iconName: "ShieldCheck" },
-            { id: 4, title: "Partition Manager", desc: "List, read, write or erase individual partitions with fine control.", tags: ["MTK", "Qualcomm"], risk: "policy", iconName: "HardDrive" }
+            { id: 3, title: "Backup / Restore Security", desc: "Save and restore EFS, NV data, modem certs and device identity.", tags: ["Qualcomm", "Samsung"], risk: "policy", iconName: "ShieldCheck" },
+            { id: 4, title: "Partition Manager", desc: "List, read, write or erase individual partitions with fine control.", tags: ["MTK", "Qualcomm"], risk: "safe", iconName: "HardDrive" }
         ]
     },
     {
@@ -78,7 +78,7 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         bgAccent: "from-teal-900/40 to-teal-800/10",
         features: [
             { id: 5, title: "Factory Reset / Format", desc: "One-click wipe for resale or reuse across all chipsets and modes.", tags: ["MTK", "Qualcomm", "UniSoc", "Samsung"], risk: "safe", iconName: "Trash2" },
-            { id: 6, title: "Demo Mode to Retail", desc: "Convert retail demo units to normal consumer mode (proof required).", tags: ["Samsung", "Qualcomm"], risk: "policy", iconName: "Store" },
+            { id: 6, title: "Demo Mode to Retail", desc: "Convert retail demo units to normal consumer mode (proof required).", tags: ["Samsung", "Qualcomm"], risk: "safe", iconName: "Store" },
             { id: 7, title: "Safe Wipe with Backup", desc: "Guided wipe flow that always prompts backup first to prevent data loss.", tags: ["All Chipsets"], risk: "safe", iconName: "PackageCheck" },
             { id: 8, title: "Brand Config Presets", desc: "Pre-tuned reset profiles for Samsung, Xiaomi, Infinix, Tecno and more.", tags: ["Samsung", "MTK"], risk: "safe", iconName: "Settings2" }
         ]
@@ -90,10 +90,10 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         color: "#F59E0B",
         bgAccent: "from-amber-900/40 to-amber-800/10",
         features: [
-            { id: 9, title: "Google FRP Assistant", desc: "Detect FRP status and guide users to official Google account recovery.", tags: ["Samsung", "Qualcomm", "MTK"], risk: "policy", iconName: "Lock" },
-            { id: 10, title: "Samsung / Mi Account Guide", desc: "Explain OEM account locks and open official unlock portals for users.", tags: ["Samsung"], risk: "policy", iconName: "UserCheck" },
-            { id: 11, title: "Enterprise EFRP Hooks", desc: "Show when a company admin can clear FRP via MDM or EFRP configuration.", tags: ["Enterprise"], risk: "policy", iconName: "Building2" },
-            { id: 12, title: "MetaMode FRP Flows", desc: "Chipset-aware wizards for MetaMode FRP handling on MTK devices.", tags: ["MTK"], risk: "policy", iconName: "Cpu" }
+            { id: 9, title: "Google FRP Assistant", desc: "Detect FRP status and guide users to official Google account recovery.", tags: ["Samsung", "Qualcomm", "MTK"], risk: "restricted", iconName: "Lock" },
+            { id: 10, title: "Samsung / Mi Account Guide", desc: "Explain OEM account locks and open official unlock portals for users.", tags: ["Samsung"], risk: "restricted", iconName: "UserCheck" },
+            { id: 11, title: "Enterprise EFRP Hooks", desc: "Show when a company admin can clear FRP via MDM or EFRP configuration.", tags: ["Enterprise"], risk: "restricted", iconName: "Building2" },
+            { id: 12, title: "MetaMode FRP Flows", desc: "Chipset-aware wizards for MetaMode FRP handling on MTK devices.", tags: ["MTK"], risk: "restricted", iconName: "Cpu" }
         ]
     },
     {
@@ -105,7 +105,7 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         features: [
             { id: 13, title: "Screen Lock Repair", desc: "Help owners recover devices after forgotten PIN, pattern, or password.", tags: ["MTK", "Qualcomm", "UniSoc"], risk: "policy", iconName: "Fingerprint" },
             { id: 14, title: "Lock State Analysis", desc: "Analyze lock type to pick the safest official recovery route automatically.", tags: ["All Chipsets"], risk: "safe", iconName: "ScanLine" },
-            { id: 15, title: "Bootloader Unlock (Official)", desc: "OEM-approved guided unlock for custom ROMs and rooting workflows.", tags: ["Qualcomm", "MTK"], risk: "policy", iconName: "Unlock" },
+            { id: 15, title: "Bootloader Unlock (Official)", desc: "OEM-approved guided unlock for custom ROMs and rooting workflows.", tags: ["Qualcomm", "MTK"], risk: "safe", iconName: "Unlock" },
             { id: 16, title: "MDM / Finance Lock Handling", desc: "Legal, policy-driven flows for enterprise MDM and financing locks.", tags: ["Enterprise", "Samsung"], risk: "restricted", iconName: "Landmark" }
         ]
     },
@@ -117,8 +117,8 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         bgAccent: "from-orange-900/40 to-orange-800/10",
         features: [
             { id: 17, title: "IMEI Integrity Check", desc: "Compare live IMEI against original data to detect corruption or mismatch.", tags: ["MTK", "Qualcomm", "UniSoc"], risk: "safe", iconName: "BadgeCheck" },
-            { id: 18, title: "IMEI Restore (Original Only)", desc: "Repair null or corrupted IMEI back to factory value with proof verification.", tags: ["MTK", "Qualcomm"], risk: "restricted", iconName: "Antenna" },
-            { id: 19, title: "5G Modem Repair", desc: "Advanced repair tools for modern 5G radio stacks (CPID supported).", tags: ["Qualcomm", "MTK"], risk: "restricted", iconName: "Radio" },
+            { id: 18, title: "IMEI Restore (Original Only)", desc: "Repair null or corrupted IMEI back to factory value with proof verification.", tags: ["MTK", "Qualcomm"], risk: "policy", iconName: "Antenna" },
+            { id: 19, title: "5G Modem Repair", desc: "Advanced repair tools for modern 5G radio stacks (CPID supported).", tags: ["Qualcomm", "MTK"], risk: "policy", iconName: "Radio" },
             { id: 20, title: "Network / SIM Unlock", desc: "Carrier-compliant SIM unlock guidance and tools, fully region-aware.", tags: ["Qualcomm", "Samsung"], risk: "restricted", iconName: "Smartphone" }
         ]
     },
@@ -130,10 +130,9 @@ const FEATURE_GROUPS: FeatureGroupData[] = [
         bgAccent: "from-green-900/40 to-green-800/10",
         features: [
             { id: 21, title: "Deep Device Info", desc: "One-click snapshot: model, SoC, security level, bootloader & FRP state.", tags: ["All Chipsets"], risk: "safe", iconName: "Info" },
-            { id: 22, title: "Diag / ADB Enabler", desc: "Safely open diagnostic and ADB channels for authorized service work.", tags: ["Samsung", "Qualcomm", "MTK"], risk: "policy", iconName: "Terminal" },
-            { id: 25, title: "Quick APK Install", desc: "Batch install system apps or DeepEye helpers directly from desktop.", tags: ["ADB"], risk: "safe", iconName: "AppWindow" },
-            { id: 23, title: "One-Click Root", desc: "Magisk-based root for 450+ Samsung and 170+ Xiaomi supported builds.", tags: ["Samsung", "MTK"], risk: "policy", iconName: "Rocket" },
-            { id: 24, title: "ADB App Manager", desc: "List, disable, uninstall or install APKs directly via ADB from desktop.", tags: ["All Chipsets"], risk: "safe", iconName: "Smartphone" }
+            { id: 22, title: "Diag / ADB Enabler", desc: "Safely open diagnostic and ADB channels for authorized service work.", tags: ["Samsung", "Qualcomm", "MTK"], risk: "safe", iconName: "Terminal" },
+            { id: 23, title: "One-Click Root", desc: "Magisk-based root for 450+ Samsung and 170+ Xiaomi supported builds.", tags: ["Samsung", "MTK"], risk: "safe", iconName: "Rocket" },
+            { id: 24, title: "ADB App Manager", desc: "List, disable, uninstall or install APKs directly via ADB from desktop.", tags: ["All Chipsets"], risk: "safe", iconName: "AppWindow" }
         ]
     }
 ];
@@ -436,31 +435,13 @@ export default function DeepEyeFeaturePage() {
     const [execStatus, setExecStatus] = useState<{ active: boolean; message: string; feature?: string; logs: string[] }>({ active: false, message: "", logs: [] });
 
     async function handleFeatureClick(feature: Feature) {
-        let options = null;
-
-        if (feature.title === "Quick APK Install") {
-            try {
-                const { open } = await import("@tauri-apps/plugin-dialog");
-                const selected = await open({
-                    multiple: false,
-                    filters: [{ name: 'Android Package', extensions: ['apk'] }]
-                });
-
-                if (!selected) return; // User cancelled
-                options = { path: selected };
-            } catch (e) {
-                console.error("Dialog failed:", e);
-                return;
-            }
-        }
-
         setExecStatus({ active: true, message: `Connecting to Core Engine protocol...`, feature: feature.title, logs: ["Establishing local IPC channel..."] });
 
         try {
             // Trigger IPC call to Rust Backend
             const result = await invoke<{ success: boolean; message: string; log_output: string[] }>(
                 "execute_feature",
-                { id: feature.id, title: feature.title, options }
+                { id: feature.id, title: feature.title }
             );
 
             if (result.success) {

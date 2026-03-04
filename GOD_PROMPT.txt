@@ -1,10 +1,11 @@
 ================================================================================
-                    DEEPEYEUNLOCKER - GOD PROMPT v4.2.0
+                    DEEPEYEUNLOCKER - GOD PROMPT v5.1.0
                     Builder-Friendly AI Analysis Guide
 ================================================================================
 
 PROJECT: DeepEyeUnlocker - Universal Mobile Repair Tool
-TARGETS: Windows (.zip portable) + Android (.apk OTG)
+VERSION: v5.6.0 "The Engine Wire-Up"
+TARGETS: Windows (.zip portable) + Android (.apk OTG) + Desktop (Tauri)
 REPO: https://github.com/DeepEyeCrypto/DeepEyeUnlocker
 
 ================================================================================

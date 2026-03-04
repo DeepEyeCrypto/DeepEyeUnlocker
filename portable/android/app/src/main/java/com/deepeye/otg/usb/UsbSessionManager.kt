@@ -10,6 +10,9 @@ import android.os.Build
 import android.util.Log
 import com.deepeye.otg.ProtocolProbe
 import com.deepeye.otg.DetectedProtocol
+import com.deepeye.otg.engine.EngineDispatcher
+import com.deepeye.otg.policy.PolicyDeniedException
+import com.deepeye.otg.policy.UserRole
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -165,6 +168,13 @@ class UsbSessionManager(private val context: Context) {
     private var connection: UsbDeviceConnection? = null
     private var cachedPhysicalKey: PhysicalDeviceKey? = null
     private var reenumTimeoutJob: Job? = null
+
+    // Error throttle: tag → (count, firstSeen)
+    private val errorThrottle = mutableMapOf<String, Pair<Int, Long>>()
+    private companion object ErrorThrottleConfig {
+        private const val ERROR_THROTTLE_MAX = 3
+        private const val ERROR_THROTTLE_WINDOW_MS = 5_000L
+    }
 
     // ── Public API ──────────────────────────────────────────────
 
@@ -398,28 +408,34 @@ class UsbSessionManager(private val context: Context) {
 
         withContext(Dispatchers.IO) {
             try {
-                // ── [PSEUDO] Replace with EngineDispatcher.execute() ──
-                // EngineDispatcher.execute(op, device, protocol, fd) { progress, msg ->
-                //     _state.value = SessionState.ExecutingOperation(op, protocol, progress, msg)
-                // }
-                for (i in 1..10) {
-                    delay(200)
+                val result = EngineDispatcher.execute(
+                    op = op,
+                    device = device,
+                    protocol = protocol,
+                    fd = fd,
+                    role = UserRole.DEV  // TODO: wire real user role from auth
+                ) { progress, msg ->
                     withContext(Dispatchers.Main) {
-                        _state.value = SessionState.ExecutingOperation(
-                            op, protocol, i * 10, "Processing... ${i * 10}%"
-                        )
+                        _state.value = SessionState.ExecutingOperation(op, protocol, progress, msg)
                     }
                 }
 
                 withContext(Dispatchers.Main) {
                     _state.value = SessionState.OperationComplete(
-                        op, true, "${op.label} completed successfully"
+                        op, result.success, result.message
                     )
-                    log("[ENGINE] ${op.name} completed")
+                    log("[ENGINE] ${op.name} ${if (result.success) "completed" else "failed"}: ${result.message}")
+                }
+            } catch (e: PolicyDeniedException) {
+                withContext(Dispatchers.Main) {
+                    log("[POLICY] ${op.name} denied: ${e.message}")
+                    _state.value = SessionState.OperationComplete(
+                        op, false, "Policy denied: ${e.message}"
+                    )
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    log("[ENGINE] ${op.name} failed: ${e.message}")
+                    logThrottled("ENGINE-${op.name}", "[ENGINE] ${op.name} failed: ${e.message}")
                     _state.value = SessionState.OperationComplete(
                         op, false, "${op.label} failed: ${e.message}"
                     )
@@ -456,7 +472,9 @@ class UsbSessionManager(private val context: Context) {
 
     private fun buildPhysicalKey(device: UsbDevice): PhysicalDeviceKey? {
         val serial = try { device.serialNumber } catch (_: SecurityException) { null }
-        return PhysicalDeviceKey(device.vendorId, device.productId, serial ?: "")
+        // Empty serial → can't track across re-enum, return null to prevent false matches
+        if (serial.isNullOrBlank()) return null
+        return PhysicalDeviceKey(device.vendorId, device.productId, serial)
     }
 
     private fun closeConnection() {
@@ -465,6 +483,31 @@ class UsbSessionManager(private val context: Context) {
     }
 
     private fun log(msg: String) = Log.i(TAG, msg)
+
+    /**
+     * Error throttle: suppress repeated identical errors (>3x in 5s).
+     * Prevents infinite error log loops from flapping USB state.
+     */
+    private fun logThrottled(tag: String, msg: String) {
+        val now = System.currentTimeMillis()
+        val existing = errorThrottle[tag]
+        if (existing != null) {
+            val (count, firstSeen) = existing
+            if (now - firstSeen < ERROR_THROTTLE_WINDOW_MS) {
+                if (count >= ERROR_THROTTLE_MAX) {
+                    // Suppressed — already logged 3x in this window
+                    return
+                }
+                errorThrottle[tag] = (count + 1) to firstSeen
+            } else {
+                // Window expired, reset
+                errorThrottle[tag] = 1 to now
+            }
+        } else {
+            errorThrottle[tag] = 1 to now
+        }
+        Log.i(TAG, msg)
+    }
 
     /** Extract the queued op from whatever state we're currently in. */
     private fun SessionState.extractQueuedOp(): DeepEyeOperation? = when (this) {
