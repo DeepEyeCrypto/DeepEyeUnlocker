@@ -41,3 +41,4 @@ jobs:
         with:
           name: testsprite-results
           path: results/
+          if-no-files-found: ignore
