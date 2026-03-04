@@ -97,6 +97,91 @@ bool BromManager::DaErasePartition(const std::string &name) {
          status == 0x5A; // 0x5A = DA_ACK
 }
 
+// ── NVRAM Operations ─────────────────────────────────────────
+
+std::vector<uint8_t> BromManager::ReadNvramItem(int item) {
+  std::cout << "[DA] Reading NVRAM item " << item << "..." << std::endl;
+
+  // DA command: read NVRAM by item ID
+  uint8_t cmd[8] = {0xBD, 0x10}; // DA NVRAM Read
+  memcpy(cmd + 2, &item, 4);
+  uint16_t maxLen = 512;
+  memcpy(cmd + 6, &maxLen, 2);
+
+  if (_transport->Send(cmd, 8, 1000) != 8)
+    return {};
+
+  // First read: 4 bytes = length
+  uint32_t dataLen = 0;
+  if (_transport->Receive((uint8_t *)&dataLen, 4, 2000) != 4)
+    return {};
+
+  if (dataLen == 0 || dataLen > 65536)
+    return {};
+
+  // Read actual NVRAM data
+  std::vector<uint8_t> data(dataLen);
+  if (_transport->Receive(data.data(), dataLen, 5000) != (int)dataLen)
+    return {};
+
+  return data;
+}
+
+bool BromManager::WriteNvramItem(int item, const std::vector<uint8_t> &data) {
+  std::cout << "[DA] Writing NVRAM item " << item << " (" << data.size()
+            << " bytes)..." << std::endl;
+
+  uint8_t cmd[8] = {0xBD, 0x11}; // DA NVRAM Write
+  memcpy(cmd + 2, &item, 4);
+  uint16_t len = (uint16_t)data.size();
+  memcpy(cmd + 6, &len, 2);
+
+  if (_transport->Send(cmd, 8, 1000) != 8)
+    return false;
+
+  if (_transport->Send(data.data(), data.size(), 5000) != (int)data.size())
+    return false;
+
+  uint8_t status = 0;
+  return _transport->Receive(&status, 1, 2000) == 1 && status == 0x5A;
+}
+
+// ── MetaMode / seccfg ────────────────────────────────────────
+
+bool BromManager::EnterMetaMode() {
+  std::cout << "[BROM] Entering MetaMode..." << std::endl;
+
+  // MTK MetaMode entry: send META_CONNECT command
+  uint8_t metaCmd[] = {0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  if (_transport->Send(metaCmd, 8, 1000) != 8)
+    return false;
+
+  // Wait for ACK (device may re-enumerate)
+  uint8_t ack = 0;
+  if (_transport->Receive(&ack, 1, 3000) != 1)
+    return false;
+
+  return ack == 0x5A || ack == 0xFE;
+}
+
+std::vector<uint8_t> BromManager::ReadSeccfg() {
+  std::cout << "[DA] Reading seccfg partition..." << std::endl;
+
+  // seccfg is typically at a known partition name
+  std::vector<uint8_t> out;
+  // Read full seccfg (typically 32KB or smaller)
+  if (DaReadPartition("seccfg", 0, 64, out)) { // 64 sectors = 32KB
+    return out;
+  }
+  return {};
+}
+
+bool BromManager::WriteSeccfg(const std::vector<uint8_t> &data) {
+  std::cout << "[DA] Writing seccfg (" << data.size() << " bytes)..."
+            << std::endl;
+  return DaWritePartition("seccfg", 0, data);
+}
+
 bool BromManager::EchoCmd(uint8_t cmd) {
   if (_transport->Send(&cmd, 1, 100) != 1)
     return false;

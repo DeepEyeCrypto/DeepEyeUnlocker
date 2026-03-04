@@ -27,6 +27,15 @@ public:
                         const std::vector<uint8_t> &data);
   bool DaErasePartition(const std::string &name);
 
+  // NVRAM Operations
+  std::vector<uint8_t> ReadNvramItem(int item);
+  bool WriteNvramItem(int item, const std::vector<uint8_t> &data);
+
+  // MetaMode / seccfg
+  bool EnterMetaMode();
+  std::vector<uint8_t> ReadSeccfg();
+  bool WriteSeccfg(const std::vector<uint8_t> &data);
+
 private:
   Core::ITransport *_transport;
   bool EchoCmd(uint8_t cmd);

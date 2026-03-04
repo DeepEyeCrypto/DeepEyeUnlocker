@@ -36,6 +36,19 @@ public:
   bool SendXmlCommand(const std::string &xml);
   std::string ReceiveXmlResponse();
 
+  // Sahara with programmer file path
+  bool SaharaHandshake(const std::string &programmerPath);
+
+  // Firehose XML command → response
+  std::string FirehoseXml(const std::string &xmlCommand);
+
+  // NV item read/write (via diag or Firehose)
+  std::vector<uint8_t> ReadNvItem(int nvItem);
+  bool WriteNvItem(int nvItem, const std::vector<uint8_t> &data);
+
+  // Raw diag command
+  std::vector<uint8_t> DiagCommand(const std::vector<uint8_t> &cmd);
+
   bool ReadPartition(const std::string &name, uint64_t offset, uint64_t count,
                      std::vector<uint8_t> &out);
   bool WritePartition(const std::string &name, uint64_t offset,
