@@ -42,12 +42,12 @@ class BinaryDeployer(private val context: Context) {
         
         val digest = MessageDigest.getInstance("SHA-256")
         val buffer = ByteArray(8192)
-        val input = file.inputStream()
-        
-        var bytesRead = input.read(buffer)
-        while (bytesRead != -1) {
-            digest.update(buffer, 0, bytesRead)
-            bytesRead = input.read(buffer)
+        file.inputStream().use { input ->
+            var bytesRead = input.read(buffer)
+            while (bytesRead != -1) {
+                digest.update(buffer, 0, bytesRead)
+                bytesRead = input.read(buffer)
+            }
         }
         
         val actualHash = digest.digest().joinToString("") { "%02x".format(it) }

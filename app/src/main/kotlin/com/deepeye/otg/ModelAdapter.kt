@@ -25,12 +25,13 @@ class ModelAdapter(
         
         init {
             itemView.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION && pos < models.size) {
                     val prevSelected = selectedPosition
-                    selectedPosition = adapterPosition
-                    notifyItemChanged(prevSelected)
+                    selectedPosition = pos
+                    if (prevSelected in 0 until models.size) notifyItemChanged(prevSelected)
                     notifyItemChanged(selectedPosition)
-                    onItemClick(models[adapterPosition])
+                    onItemClick(models[pos])
                 }
             }
         }

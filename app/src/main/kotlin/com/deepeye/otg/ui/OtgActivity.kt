@@ -60,14 +60,20 @@ class OtgActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Setup Global Crash Handler
-        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
-            runOnUiThread {
-                androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("App Crash")
-                    .setMessage(throwable.stackTraceToString())
-                    .setPositiveButton("OK") { _, _ -> finish() }
-                    .show()
+        // Setup Global Crash Handler (use applicationContext to avoid Activity leak)
+        val appCtx = applicationContext
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                runOnUiThread {
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("App Crash")
+                        .setMessage(throwable.stackTraceToString())
+                        .setPositiveButton("OK") { _, _ -> finish() }
+                        .show()
+                }
+            } catch (_: Exception) {
+                defaultHandler?.uncaughtException(thread, throwable)
             }
         }
 
@@ -78,8 +84,8 @@ class OtgActivity : AppCompatActivity() {
             controller.register()
             lifecycleScope.launch {
                 controller.state.collect { session ->
-                    latestSession = session
                     updateUiFromSession(session)
+                    latestSession = session
                 }
             }
 
@@ -122,18 +128,19 @@ class OtgActivity : AppCompatActivity() {
     // --- HELPER FUNCTIONS ---
 
     private fun hapticFeedback() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+            vm.defaultVibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(30)
+            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     }
     
     private fun log(message: String, type: String = "INFO") {
         val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
-        _logs.value += LogEntry(message, type, timestamp)
+        _logs.value = (_logs.value + LogEntry(message, type, timestamp)).takeLast(500)
     }
 
     private fun showModelSelectionDialog() {
@@ -232,15 +239,12 @@ class OtgActivity : AppCompatActivity() {
         try {
             val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
             val jsonArray = org.json.JSONArray(jsonString)
-            deviceDatabase.clear()
-            for (i in 0 until jsonArray.length()) {
+            val models = (0 until jsonArray.length()).map { i ->
                 val obj = jsonArray.getJSONObject(i)
-                val brand = obj.getString("brand")
-                val model = DeviceModel(obj.getString("name"), obj.getString("chipset"), brand)
-                if (!deviceDatabase.containsKey(brand)) deviceDatabase[brand] = mutableListOf()
-                (deviceDatabase[brand] as MutableList).add(model)
+                DeviceModel(obj.getString("name"), obj.getString("chipset"), obj.getString("brand"))
             }
-            allModels = deviceDatabase.values.flatten()
+            deviceDatabase = models.groupBy { it.brand }.mapValues { it.value.toMutableList() }.toMutableMap()
+            allModels = models
         } catch (e: Exception) {
             log("DB Load Error: ${e.message}", "ERROR")
         }
@@ -281,6 +285,7 @@ class OtgActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        Thread.setDefaultUncaughtExceptionHandler(null)
         if (nativeHandle != 0L) NativeBridge.closeCore(nativeHandle)
         controller.unregister()
         try { unregisterReceiver(usbReceiver) } catch (_: Exception) {}

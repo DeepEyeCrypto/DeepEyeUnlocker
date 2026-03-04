@@ -111,6 +111,8 @@ class UsbPermissionManager(
         } catch (e: IllegalArgumentException) {
             Log.w(TAG, "[CLEANUP] Receiver was not registered: ${e.message}")
         }
+        listener = null
+        pendingDevice = null
     }
     
     /**
@@ -131,9 +133,9 @@ class UsbPermissionManager(
         
         Log.i(TAG, "[REQ] Requesting permission for ${device.deviceName} (${device.vendorId}:${device.productId})")
         
-        // Create PendingIntent with correct flags for Android 12+ (immutable)
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_IMMUTABLE
+        // FLAG_MUTABLE required on Android 12+ so the system can fill in EXTRA_DEVICE / EXTRA_PERMISSION_GRANTED
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_MUTABLE
         } else 0
 
         val intent = Intent(ACTION_USB_PERMISSION)

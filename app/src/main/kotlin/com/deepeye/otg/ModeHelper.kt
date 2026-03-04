@@ -6,8 +6,8 @@ object ModeHelper {
     data class ModeGuidance(
         val requiredMode: String,
         val steps: List<String>,
-        val alternativeSteps: List<String>?,
-        val safetyNotes: List<String>?
+        val alternativeSteps: List<String> = emptyList(),
+        val safetyNotes: List<String> = emptyList()
     )
 
     fun getGuidance(brand: String, model: String, socType: String): ModeGuidance {
@@ -66,8 +66,7 @@ object ModeHelper {
                 alternativeSteps = listOf(
                     "Try holding only Volume Up.",
                     "Auth Bypass may be required for some models."
-                ),
-                safetyNotes = null
+                )
             )
         } else {
             ModeGuidance(
@@ -77,7 +76,6 @@ object ModeHelper {
                     "2. Hold Volume Up + Volume Down.",
                     "3. Connect USB cable."
                 ),
-                alternativeSteps = null,
                 safetyNotes = listOf("Oppo/Realme often require test-points for EDL on newer security.")
             )
         }
@@ -131,9 +129,7 @@ object ModeHelper {
                     "2. Hold Vol Up + Vol Down.",
                     "3. Connect USB.",
                     "4. Press Vol Up to continue when prompted."
-                ),
-                alternativeSteps = null,
-                safetyNotes = null
+                )
             )
         }
     }
@@ -157,15 +153,13 @@ object ModeHelper {
             ModeGuidance(
                 requiredMode = "BROM / Preloader",
                 steps = listOf("Power Off > Hold Vol+ > Connect USB"),
-                alternativeSteps = listOf("Try Vol- or Vol+ & Vol-"),
-                safetyNotes = null
+                alternativeSteps = listOf("Try Vol- or Vol+ & Vol-")
             )
         } else {
              ModeGuidance(
                 requiredMode = "EDL (9008) / Fastboot",
                 steps = listOf("Power Off > Hold Vol+ & Vol- > Connect USB"),
-                alternativeSteps = listOf("Use 'adb reboot edl' or 'adb reboot bootloader'"),
-                safetyNotes = null
+                alternativeSteps = listOf("Use 'adb reboot edl' or 'adb reboot bootloader'")
             )
         }
     }

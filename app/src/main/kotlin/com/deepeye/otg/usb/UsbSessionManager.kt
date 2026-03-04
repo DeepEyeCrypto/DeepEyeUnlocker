@@ -157,7 +157,9 @@ class UsbSessionManager(private val context: Context) {
     companion object {
         private const val TAG = "DeepEye-Session"
         const val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION"
-        private const val REENUM_TIMEOUT_MS = 2_500L
+        private const val REENUM_TIMEOUT_MS = 3_000L
+        private const val ERROR_THROTTLE_WINDOW_MS = 5_000L
+        private const val ERROR_THROTTLE_MAX = 3
     }
 
     private val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
@@ -166,16 +168,12 @@ class UsbSessionManager(private val context: Context) {
     private val _state = MutableStateFlow<SessionState>(SessionState.Idle)
     val state: StateFlow<SessionState> = _state
 
-    private var connection: UsbDeviceConnection? = null
-    private var cachedPhysicalKey: PhysicalDeviceKey? = null
+    @Volatile private var connection: UsbDeviceConnection? = null
+    @Volatile private var cachedPhysicalKey: PhysicalDeviceKey? = null
     private var reenumTimeoutJob: Job? = null
 
     // Error throttle: tag → (count, firstSeen)
     private val errorThrottle = mutableMapOf<String, Pair<Int, Long>>()
-    private companion object ErrorThrottleConfig {
-        private const val ERROR_THROTTLE_MAX = 3
-        private const val ERROR_THROTTLE_WINDOW_MS = 5_000L
-    }
 
     // ── Public API ──────────────────────────────────────────────
 
@@ -520,6 +518,9 @@ class UsbSessionManager(private val context: Context) {
         is SessionState.ReenumerationWait -> queuedOp
         is SessionState.ConnectedReady -> queuedOp
         is SessionState.Error -> queuedOp
-        else -> null
+        is SessionState.Idle -> null
+        is SessionState.ExecutingOperation -> null
+        is SessionState.ConnectedMtpOnly -> null
+        is SessionState.OperationComplete -> null
     }
 }

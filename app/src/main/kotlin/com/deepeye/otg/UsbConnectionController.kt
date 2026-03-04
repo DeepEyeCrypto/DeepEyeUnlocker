@@ -56,17 +56,17 @@ class UsbConnectionController(
     private val _state = MutableStateFlow(UsbSessionState())
     val state: StateFlow<UsbSessionState> = _state
 
-    private var connection: UsbDeviceConnection? = null
-    private var currentDevice: UsbDevice? = null
+    @Volatile private var connection: UsbDeviceConnection? = null
+    @Volatile private var currentDevice: UsbDevice? = null
     private var pendingPermissionKey: String? = null
     private var lastPermissionRequestMs: Long = 0L
     private var lastErrorLog: MutableMap<String, MutableList<Long>> = mutableMapOf()
 
     // ── Re-enumeration tracking ─────────────────────────────────
     /** Cached identity of the physical device (survives re-enumeration). */
-    private var cachedPhysicalKey: PhysicalDeviceKey? = null
+    @Volatile private var cachedPhysicalKey: PhysicalDeviceKey? = null
     /** True while we are inside CONNECTED_PROTOCOL_DETECT — the window where re-enum can happen. */
-    private var wasInProtocolDetect: Boolean = false
+    @Volatile private var wasInProtocolDetect: Boolean = false
     private val handler = Handler(Looper.getMainLooper())
     private val reEnumTimeoutRunnable = Runnable { onReEnumTimeout() }
 

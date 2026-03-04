@@ -45,7 +45,7 @@ object PolicyEngine {
     private const val TAG = "DeepEye-Policy"
 
     // Rolling invocation counter: op → list of timestamps (epoch ms)
-    private val invocationLog = mutableMapOf<DeepEyeOperation, MutableList<Long>>()
+    private val invocationLog = java.util.concurrent.ConcurrentHashMap<DeepEyeOperation, MutableList<Long>>()
     private const val RATE_WINDOW_MS = 86_400_000L  // 24h
     private const val IMEI_CHECK_LIMIT = 20
 
@@ -139,8 +139,12 @@ object PolicyEngine {
     }
 
     private fun recordInvocation(op: DeepEyeOperation) {
-        val list = invocationLog.getOrPut(op) { mutableListOf() }
-        list.add(System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val list = invocationLog.getOrPut(op) { java.util.Collections.synchronizedList(mutableListOf()) }
+        synchronized(list) {
+            list.removeAll { now - it > RATE_WINDOW_MS }
+            list.add(now)
+        }
     }
 
     // ── Logging ─────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -50,7 +51,7 @@ class RemoteShareActivity : AppCompatActivity() {
                 onStartSharing = {
                     if (sessionCode == null) {
                         if (usbDevice != null) {
-                            if (usbManager.hasPermission(usbDevice)) {
+                            if (usbDevice != null && usbManager.hasPermission(usbDevice)) {
                                 sessionCode = UUID.randomUUID().toString().substring(0, 8).uppercase()
                                 status = "SHARING ACTIVE"
                                 subStatus = "Relay Tunnel Established via TCP"
@@ -80,10 +81,13 @@ class RemoteShareActivity : AppCompatActivity() {
     }
 
     private fun requestUsbPermission(device: UsbDevice) {
-        val permissionIntent = PendingIntent.getBroadcast(
-            this, 0, Intent(ACTION_USB_PERMISSION), 
-            PendingIntent.FLAG_IMMUTABLE
-        )
+        // FLAG_MUTABLE required on Android 12+ so the system can fill in EXTRA_DEVICE / EXTRA_PERMISSION_GRANTED
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            PendingIntent.FLAG_MUTABLE else 0
+        val intent = Intent(ACTION_USB_PERMISSION).apply {
+            setPackage(packageName)
+        }
+        val permissionIntent = PendingIntent.getBroadcast(this, 0, intent, flags)
         usbManager.requestPermission(device, permissionIntent)
     }
 }

@@ -24,8 +24,9 @@ class PartitionAdapter(
         
         init {
             itemView.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
-                    onItemClick(partitions[adapterPosition])
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION && pos < partitions.size) {
+                    onItemClick(partitions[pos])
                 }
             }
         }
