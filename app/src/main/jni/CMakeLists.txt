@@ -27,12 +27,17 @@ set(LIBUSB_SRC
 
 add_library(usb_static STATIC ${LIBUSB_SRC})
 target_compile_definitions(usb_static PRIVATE 
-    __ANDROID__ 
-    PLATFORM_POSIX 
     HAVE_NFDS_T
     LINUX
+    PLATFORM_POSIX
+    __ANDROID__
+    ANDROID
 )
-target_include_directories(usb_static PUBLIC ${LIBUSB_ROOT_PATH}/libusb)
+target_include_directories(usb_static PRIVATE
+    ${CORE_DIR}/include
+    ${LIBUSB_ROOT_PATH}/libusb
+    ${LIBUSB_ROOT_PATH}
+)
 
 # --- DEEPEYE JNI CORE ---
 add_library(deepeye_core SHARED
