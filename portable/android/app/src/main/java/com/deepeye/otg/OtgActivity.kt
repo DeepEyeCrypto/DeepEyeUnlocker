@@ -120,7 +120,7 @@ class OtgActivity : AppCompatActivity() {
 
             attachComposeSessionPanel()
             
-            log("DeepEye Unlocker v5.5.0 Ready - ${allModels.size} models loaded.", "SUCCESS")
+            log("DeepEye Unlocker v5.5.1 Ready - ${allModels.size} models loaded.", "SUCCESS")
             
         } catch (e: Exception) {
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -247,6 +247,7 @@ class OtgActivity : AppCompatActivity() {
                         ConnState.DEVICE_FOUND -> "Device detected. Waiting for permission."
                         ConnState.PERMISSION_PENDING -> "Permission pending, please approve."
                         ConnState.PERMISSION_DENIED -> "USB permission denied. Re-plug and approve."
+                        ConnState.REENUMERATION_WAIT -> "Device mode-switching (MTK re-enum). Please wait..."
                         ConnState.CONNECTED_MTP_ONLY -> "Device is in MTP/charge-only mode. Switch USB mode."
                         ConnState.CONNECTED_PROTOCOL_DETECT -> "Detecting protocol..."
                         ConnState.ERROR -> session.lastError ?: "Connection error. Retry."
@@ -410,6 +411,9 @@ class OtgActivity : AppCompatActivity() {
         log("[STATE] ${latestSession.state} → ${session.state}", "INFO")
 
         when (session.state) {
+            ConnState.REENUMERATION_WAIT -> {
+                log("[USB] MTK re-enumeration detected — waiting for device to re-attach...", "WARNING")
+            }
             ConnState.CONNECTED_READY -> {
                 val fd = session.connectionFd ?: -1
                 val vid = session.vid ?: 0
@@ -437,6 +441,7 @@ class OtgActivity : AppCompatActivity() {
         return when (state) {
             ConnState.DISCONNECTED, ConnState.ERROR -> R.color.deepeye_error
             ConnState.DEVICE_FOUND, ConnState.PERMISSION_PENDING, ConnState.PERMISSION_DENIED -> R.color.deepeye_warning
+            ConnState.REENUMERATION_WAIT -> R.color.deepeye_cyan
             ConnState.CONNECTED_PROTOCOL_DETECT -> R.color.deepeye_cyan
             ConnState.CONNECTED_READY -> R.color.deepeye_success
             ConnState.CONNECTED_MTP_ONLY -> R.color.deepeye_warning
@@ -471,6 +476,10 @@ private fun SessionPanel(sessionFlow: kotlinx.coroutines.flow.StateFlow<UsbSessi
             session.lastError?.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Error: $it", fontSize = 12.sp, color = Color(0xFFFF5252))
+            }
+            if (session.state == ConnState.REENUMERATION_WAIT) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "\u23F3 MTK mode-switch — re-requesting permission...", fontSize = 12.sp, color = Color(0xFFFFB300))
             }
             if (session.state == ConnState.ERROR || session.state == ConnState.PERMISSION_DENIED || session.state == ConnState.CONNECTED_MTP_ONLY) {
                 Spacer(modifier = Modifier.height(8.dp))
