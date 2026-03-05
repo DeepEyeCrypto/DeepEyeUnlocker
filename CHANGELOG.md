@@ -6,6 +6,24 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.0.2] — 2026-03-05
+
+### Fixed
+
+- UI: Black screen issue resolved by transitioning from ComposeView XML injection to direct `setContent` in `OtgActivity`.
+- Build: Explicitly specified `ndkVersion "25.1.8937393"` in `app/build.gradle` to ensure stable NDK resolution.
+
+---
+
+## [1.0.1] — 2026-03-05
+
+### Fixed
+
+- CI: Updated APK locate pattern in GitHub Actions to match `-unsigned.apk`.
+- Build: Added `release` signingConfig stub in `app/build.gradle` for local keystores.
+
+---
+
 ## [1.0.0] — 2026-03-05
 
 ### 🎉 Initial Release — DeepEye Unlocker
