@@ -11,8 +11,8 @@ android {
         applicationId "com.deepeye.otg"
         minSdk 26
         targetSdk 35
-        versionCode 100
-        versionName "1.0.0"
+        versionCode 101
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -43,8 +43,25 @@ android {
         kotlinCompilerExtensionVersion '1.5.8'
     }
 
+    signingConfigs {
+        release {
+            def keystoreFile = file("release.jks")
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "android"
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "key0"
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: "android"
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (file("release.jks").exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
