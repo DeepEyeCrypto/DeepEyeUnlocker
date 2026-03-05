@@ -50,11 +50,13 @@ jobs:
       - name: Locate Artifact
         id: locate
         run: |
-          APK_PATH=$(find app/build/outputs/apk/release -name "*-release.apk" | head -1)
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" ! -name "output-metadata.json" | head -1)
           if [ -z "$APK_PATH" ]; then
             echo "::error::Release APK not found!"
+            ls -R app/build/outputs/apk/ || true
             exit 1
           fi
+          echo "Found APK: $APK_PATH"
           cp "$APK_PATH" "DeepEyeUnlocker-Android-${{ github.ref_name }}.apk"
           echo "apk_path=DeepEyeUnlocker-Android-${{ github.ref_name }}.apk" >> $GITHUB_OUTPUT
 
