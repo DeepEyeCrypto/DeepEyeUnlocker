@@ -35,7 +35,10 @@ fun FeatureListScreen(
             item(span = { GridItemSpan(2) }) {
                 CategoryHeader(title)
             }
-            items(ops) { op ->
+            items(
+                items = ops,
+                key = { op -> op.name }
+            ) { op ->
                 OperationItem(op) { onOperationSelected(op) }
             }
         }

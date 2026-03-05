@@ -10,9 +10,13 @@ import android.os.Vibrator
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 
 import androidx.lifecycle.lifecycleScope
 import com.deepeye.otg.ConnState
@@ -107,13 +111,13 @@ class OtgActivity : AppCompatActivity() {
             loadDeviceDatabase()
 
             // Attach Compose UI Layers
-            androidx.activity.compose.setContent {
+            setContent {
                 val session by controller.state.collectAsState()
                 val queueSession by sessionManager.state.collectAsState()
                 val logList by logs.collectAsState()
 
-                androidx.compose.foundation.layout.Box(
-                    modifier = androidx.compose.ui.Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     MainScreen(
                         sessionState = session,

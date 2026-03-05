@@ -42,11 +42,12 @@ target_compile_definitions(usb_static PRIVATE
 
 # ── deepeye_core shared library ─────────────────────────────
 # native-lib.cpp = JNI entry point
-# deepeye_exports.cpp #includes transport/usb_transport.cpp internally,
-# so usb_transport.cpp must NOT be listed separately here.
+# transport/usb_transport.cpp provides LibUsbTransport implementation used by
+# native-lib.cpp and deepeye_exports.cpp.
 add_library(deepeye_core SHARED
     native-lib.cpp
     core/src/deepeye_exports.cpp
+    core/src/transport/usb_transport.cpp
     core/src/protocols/protocol_engine.cpp
     core/src/protocols/edl_manager.cpp
     core/src/protocols/brom_manager.cpp

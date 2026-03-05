@@ -1,9 +1,7 @@
 #include "../include/deepeye_exports.h"
 #include "../include/deepeye_core.h"
+#include "../include/usb_transport.h"
 #include <cstring>
-// For simplicity in this build, we assume LibUsbTransport is the primary
-// implementation
-#include "transport/usb_transport.cpp"
 
 using namespace DeepEye::Core;
 

@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "itransport.h"
+
 namespace DeepEye {
 namespace Core {
 
@@ -24,15 +26,6 @@ struct DeviceInfo {
   uint16_t pid;
   std::string serial;
   ProtocolType type;
-};
-
-class ITransport {
-public:
-  virtual ~ITransport() = default;
-  virtual bool Open(int fd) = 0;
-  virtual void Close() = 0;
-  virtual int Send(const uint8_t *data, size_t length, uint32_t timeout_ms) = 0;
-  virtual int Receive(uint8_t *data, size_t length, uint32_t timeout_ms) = 0;
 };
 
 class ProtocolEngine {

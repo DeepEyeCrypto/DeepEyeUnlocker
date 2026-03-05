@@ -471,10 +471,11 @@ class UsbConnectionController(
 
     private fun emitError(message: String) {
         val now = System.currentTimeMillis()
-        val list = lastErrorLog.getOrPut(message) { mutableListOf() }
-        list.add(now)
-        lastErrorLog[message] = list.filter { now - it < ERROR_WINDOW_MS }.toMutableList()
-        val count = lastErrorLog[message]!!.size
+        val filtered = (lastErrorLog[message].orEmpty() + now)
+            .filter { now - it < ERROR_WINDOW_MS }
+            .toMutableList()
+        lastErrorLog[message] = filtered
+        val count = filtered.size
         if (count > ERROR_THRESHOLD) {
             logInfo("[UX] Error throttled ($count in ${ERROR_WINDOW_MS}ms): $message")
             if (_state.value.state != ConnState.ERROR) {

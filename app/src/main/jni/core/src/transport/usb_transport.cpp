@@ -1,5 +1,7 @@
 #include "../../include/usb_transport.h"
+#include <algorithm>
 #include <iostream>
+#include <limits>
 #ifdef HAS_LIBUSB
 #include <libusb.h>
 #endif
@@ -29,9 +31,34 @@ LibUsbTransport::~LibUsbTransport() {
 #endif
 }
 
+bool LibUsbTransport::Open() {
+  if (_fd < 0) {
+    return false;
+  }
+  return Open(_fd);
+}
+
 bool LibUsbTransport::Open(int fd) {
 #ifdef HAS_LIBUSB
+  if (fd < 0) {
+    std::cerr << "Invalid FD passed to transport" << std::endl;
+    return false;
+  }
+
+  // Re-open safety: drop any previous handle first.
+  if (_handle) {
+    Close();
+  }
+
   _fd = fd;
+  _ep_in = 0;
+  _ep_out = 0;
+
+  if (!_ctx) {
+    std::cerr << "LibUSB context is null" << std::endl;
+    return false;
+  }
+
   // On Android, we use libusb_wrap_sys_device to wrap the OS-provided FD.
   int rc = libusb_wrap_sys_device(
       reinterpret_cast<libusb_context *>(_ctx), (intptr_t)fd,
@@ -42,23 +69,38 @@ bool LibUsbTransport::Open(int fd) {
   }
 
   libusb_device_handle *handle = reinterpret_cast<libusb_device_handle *>(_handle);
-  libusb_claim_interface(handle, 0);
+  rc = libusb_claim_interface(handle, 0);
+  if (rc != 0) {
+    std::cerr << "Failed to claim USB interface 0: " << libusb_error_name(rc)
+              << std::endl;
+    Close();
+    return false;
+  }
 
   // Dynamic Endpoint Discovery
   libusb_device *dev = libusb_get_device(handle);
   libusb_config_descriptor *config;
-  if (libusb_get_active_config_descriptor(dev, &config) == 0) {
+  if (dev && libusb_get_active_config_descriptor(dev, &config) == 0) {
       for (int i = 0; i < config->bNumInterfaces; i++) {
           const libusb_interface *inter = &config->interface[i];
-          const libusb_interface_descriptor *interdesc = &inter->altsetting[0];
-          
-          for (int j = 0; j < interdesc->bNumEndpoints; j++) {
-              const libusb_endpoint_descriptor *epdesc = &interdesc->endpoint[j];
-              if ((epdesc->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
-                  if ((epdesc->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
-                      if (_ep_in == 0) _ep_in = epdesc->bEndpointAddress;
-                  } else {
-                      if (_ep_out == 0) _ep_out = epdesc->bEndpointAddress;
+          if (!inter || inter->num_altsetting <= 0) {
+              continue;
+          }
+
+          for (int a = 0; a < inter->num_altsetting; a++) {
+              const libusb_interface_descriptor *interdesc = &inter->altsetting[a];
+              if (!interdesc) {
+                  continue;
+              }
+
+              for (int j = 0; j < interdesc->bNumEndpoints; j++) {
+                  const libusb_endpoint_descriptor *epdesc = &interdesc->endpoint[j];
+                  if ((epdesc->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
+                      if ((epdesc->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
+                          if (_ep_in == 0) _ep_in = epdesc->bEndpointAddress;
+                      } else {
+                          if (_ep_out == 0) _ep_out = epdesc->bEndpointAddress;
+                      }
                   }
               }
           }
@@ -89,15 +131,85 @@ void LibUsbTransport::Close() {
 #endif
 }
 
+bool LibUsbTransport::IsOpen() const {
+  return _handle != nullptr;
+}
+
+bool LibUsbTransport::Write(const std::vector<uint8_t> &data) {
+  if (data.empty()) {
+    return true;
+  }
+  return WriteBulk(data.data(), data.size(), 5000);
+}
+
+bool LibUsbTransport::Read(std::vector<uint8_t> &out, size_t length, int timeoutMs) {
+  if (length > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    out.clear();
+    return false;
+  }
+  out.assign(length, 0);
+  if (length == 0) {
+    return true;
+  }
+  const int received = ReadBulk(out.data(), length, timeoutMs);
+  if (received < 0) {
+    out.clear();
+    return false;
+  }
+  out.resize(static_cast<size_t>(received));
+  return static_cast<size_t>(received) == length;
+}
+
+bool LibUsbTransport::WriteBulk(const uint8_t *buf, size_t len, int timeoutMs) {
+  if (!buf && len > 0) {
+    return false;
+  }
+  if (len > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return false;
+  }
+  return Send(buf, len, static_cast<uint32_t>(timeoutMs)) == static_cast<int>(len);
+}
+
+int LibUsbTransport::ReadBulk(uint8_t *buf, size_t maxLen, int timeoutMs) {
+  if (!buf && maxLen > 0) {
+    return -1;
+  }
+  if (maxLen > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return -1;
+  }
+  return Receive(buf, maxLen, static_cast<uint32_t>(timeoutMs));
+}
+
+std::string LibUsbTransport::GetDeviceName() const {
+  return "libusb-wrapped-fd";
+}
+
+int LibUsbTransport::GetFileDescriptor() const {
+  return _fd;
+}
+
 int LibUsbTransport::Send(const uint8_t *data, size_t length,
                           uint32_t timeout_ms) {
 #ifdef HAS_LIBUSB
-  int totalTransferred = 0;
-  const size_t CHUNK_SIZE = 16 * 1024; // 16KB Chunks for OTG stability
+  if (!_handle) {
+    return -1;
+  }
+  if (length == 0) {
+    return 0;
+  }
+  if (!data) {
+    return -1;
+  }
+  if (length > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return -1;
+  }
 
-  while (totalTransferred < (int)length) {
-    int toTransfer =
-        std::min((int)(length - totalTransferred), (int)CHUNK_SIZE);
+  size_t totalTransferred = 0;
+  constexpr size_t CHUNK_SIZE = 16 * 1024; // 16KB Chunks for OTG stability
+
+  while (totalTransferred < length) {
+    const size_t remaining = length - totalTransferred;
+    int toTransfer = static_cast<int>(std::min(remaining, CHUNK_SIZE));
     int transferred = 0;
     int rc =
         libusb_bulk_transfer(reinterpret_cast<libusb_device_handle *>(_handle),
@@ -106,11 +218,14 @@ int LibUsbTransport::Send(const uint8_t *data, size_t length,
 
     if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT)
       break;
-    totalTransferred += transferred;
+    if (transferred < 0) {
+      break;
+    }
+    totalTransferred += static_cast<size_t>(transferred);
     if (transferred < toTransfer)
       break; // Partial transfer
   }
-  return totalTransferred;
+  return static_cast<int>(totalTransferred);
 #else
   (void)data;
   (void)length;
@@ -122,12 +237,25 @@ int LibUsbTransport::Send(const uint8_t *data, size_t length,
 int LibUsbTransport::Receive(uint8_t *data, size_t length,
                              uint32_t timeout_ms) {
 #ifdef HAS_LIBUSB
-  int totalTransferred = 0;
-  const size_t CHUNK_SIZE = 16 * 1024;
+  if (!_handle) {
+    return -1;
+  }
+  if (length == 0) {
+    return 0;
+  }
+  if (!data) {
+    return -1;
+  }
+  if (length > static_cast<size_t>(std::numeric_limits<int>::max())) {
+    return -1;
+  }
 
-  while (totalTransferred < (int)length) {
-    int toTransfer =
-        std::min((int)(length - totalTransferred), (int)CHUNK_SIZE);
+  size_t totalTransferred = 0;
+  constexpr size_t CHUNK_SIZE = 16 * 1024;
+
+  while (totalTransferred < length) {
+    const size_t remaining = length - totalTransferred;
+    int toTransfer = static_cast<int>(std::min(remaining, CHUNK_SIZE));
     int transferred = 0;
     int rc = libusb_bulk_transfer(
         reinterpret_cast<libusb_device_handle *>(_handle), _ep_in,
@@ -135,11 +263,14 @@ int LibUsbTransport::Receive(uint8_t *data, size_t length,
 
     if (rc != 0 && rc != LIBUSB_ERROR_TIMEOUT)
       break;
-    totalTransferred += transferred;
+    if (transferred < 0) {
+      break;
+    }
+    totalTransferred += static_cast<size_t>(transferred);
     if (transferred < toTransfer)
       break; // Partial read
   }
-  return totalTransferred;
+  return static_cast<int>(totalTransferred);
 #else
   (void)data;
   (void)length;

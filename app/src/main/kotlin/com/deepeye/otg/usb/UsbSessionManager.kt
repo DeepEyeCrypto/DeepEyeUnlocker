@@ -160,6 +160,7 @@ class UsbSessionManager(private val context: Context) {
         private const val REENUM_TIMEOUT_MS = 3_000L
         private const val ERROR_THROTTLE_WINDOW_MS = 5_000L
         private const val ERROR_THROTTLE_MAX = 3
+        private const val PROGRESS_MIN_INTERVAL_MS = 100L // max ~10 updates/sec
     }
 
     private val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
@@ -252,9 +253,10 @@ class UsbSessionManager(private val context: Context) {
         // Close FD immediately — never reuse after detach
         closeConnection()
 
-        if (wasProbing && cachedPhysicalKey != null) {
+        val physicalKey = cachedPhysicalKey
+        if (wasProbing && physicalKey != null) {
             log("[USB] Detach during probe — entering REENUMERATION_WAIT (${REENUM_TIMEOUT_MS}ms)")
-            _state.value = SessionState.ReenumerationWait(cachedPhysicalKey!!, queuedOp)
+            _state.value = SessionState.ReenumerationWait(physicalKey, queuedOp)
             startReenumTimeout(queuedOp)
         } else if (queuedOp != null) {
             log("[USB] Detach — returning to WaitingForDevice (queued: ${queuedOp.label})")
@@ -343,6 +345,13 @@ class UsbSessionManager(private val context: Context) {
 
                 connection = conn
                 val fd = conn.fileDescriptor
+                if (fd <= 0) {
+                    runCatching { conn.close() }
+                    withContext(Dispatchers.Main) {
+                        _state.value = SessionState.Error("Invalid USB file descriptor", queuedOp)
+                    }
+                    return@withContext
+                }
                 log("[USB] Link secured (FD=$fd)")
 
                 // Cache serial from live connection if we don't have it yet
@@ -405,6 +414,9 @@ class UsbSessionManager(private val context: Context) {
         _state.value = SessionState.ExecutingOperation(op, protocol, 0, "Starting ${op.label}...")
         log("[ENGINE] Executing: ${op.name} | protocol=$protocol | tier=${op.tier} | FD=$fd")
 
+        var lastProgressEmitAt = 0L
+        var lastProgressValue = -1
+
         withContext(Dispatchers.IO) {
             try {
                 val result = EngineDispatcher.execute(
@@ -414,6 +426,16 @@ class UsbSessionManager(private val context: Context) {
                     fd = fd,
                     role = LicenseManager.currentRole
                 ) { progress, msg ->
+                    val now = System.currentTimeMillis()
+                    val shouldEmit = progress == 0 ||
+                            progress == 100 ||
+                            progress != lastProgressValue &&
+                            (now - lastProgressEmitAt >= PROGRESS_MIN_INTERVAL_MS)
+                    if (!shouldEmit) {
+                        return@execute
+                    }
+                    lastProgressEmitAt = now
+                    lastProgressValue = progress
                     withContext(Dispatchers.Main) {
                         _state.value = SessionState.ExecutingOperation(op, protocol, progress, msg)
                     }
