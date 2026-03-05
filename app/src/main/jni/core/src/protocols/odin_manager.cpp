@@ -389,7 +389,7 @@ bool OdinManager::ReadPartition(const std::string &name,
   uint32_t partSize = 0;
   memcpy(&partSize, sizeBuf, 4);
 
-  if (partSize == 0 || partSize > 4ULL * 1024 * 1024 * 1024)
+  if (partSize == 0) // uint32_t can never exceed 4GB, skip check
     return false;
 
   // Stream to file
