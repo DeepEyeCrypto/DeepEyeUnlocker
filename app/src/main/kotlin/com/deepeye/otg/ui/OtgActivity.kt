@@ -13,7 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.ComposeView
+
 import androidx.lifecycle.lifecycleScope
 import com.deepeye.otg.ConnState
 import com.deepeye.otg.DeviceModel
@@ -107,8 +107,44 @@ class OtgActivity : AppCompatActivity() {
             loadDeviceDatabase()
 
             // Attach Compose UI Layers
-            attachComposeMainUi()
-            attachQueueWaitOverlay()
+            androidx.activity.compose.setContent {
+                val session by controller.state.collectAsState()
+                val queueSession by sessionManager.state.collectAsState()
+                val logList by logs.collectAsState()
+
+                androidx.compose.foundation.layout.Box(
+                    modifier = androidx.compose.ui.Modifier.fillMaxSize()
+                ) {
+                    MainScreen(
+                        sessionState = session,
+                        queueState = queueSession,
+                        logs = logList,
+                        onSelectModel = { showModelSelectionDialog() },
+                        onRemoteUnlock = {
+                            hapticFeedback()
+                            val intent = android.content.Intent(this@OtgActivity, RemoteShareActivity::class.java)
+                            startActivity(intent)
+                        },
+                        onOperationSelected = { op ->
+                            hapticFeedback()
+                            log("[QUEUE] ${op.label} queued", "INFO")
+                            sessionManager.queueOperation(op)
+                        }
+                    )
+
+                    QueueWaitOverlay(
+                        session = queueSession,
+                        onCancel = { sessionManager.cancelQueue() },
+                        onDismiss = { sessionManager.reset() },
+                        onRetry = {
+                            val op = (queueSession as? SessionState.PermissionDenied)?.queuedOp
+                                ?: (queueSession as? SessionState.Error)?.queuedOp
+                            if (op != null) sessionManager.queueOperation(op)
+                            else sessionManager.reset()
+                        }
+                    )
+                }
+            }
 
             // Observe license role changes
             lifecycleScope.launch {
@@ -313,52 +349,4 @@ class OtgActivity : AppCompatActivity() {
         }
     }
 
-    private fun attachComposeMainUi() {
-        val root = findViewById<FrameLayout>(android.R.id.content)
-        val compose = ComposeView(this).apply {
-            setContent {
-                val session by controller.state.collectAsState()
-                val queueSession by sessionManager.state.collectAsState()
-                val logList by logs.collectAsState()
-                MainScreen(
-                    sessionState = session,
-                    queueState = queueSession,
-                    logs = logList,
-                    onSelectModel = { showModelSelectionDialog() },
-                    onRemoteUnlock = {
-                        hapticFeedback()
-                        val intent = android.content.Intent(this@OtgActivity, RemoteShareActivity::class.java)
-                        startActivity(intent)
-                    },
-                    onOperationSelected = { op ->
-                        hapticFeedback()
-                        log("[QUEUE] ${op.label} queued", "INFO")
-                        sessionManager.queueOperation(op)
-                    }
-                )
-            }
-        }
-        root.addView(compose, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-    }
-
-    private fun attachQueueWaitOverlay() {
-        val root = findViewById<FrameLayout>(android.R.id.content)
-        val overlay = ComposeView(this).apply {
-            setContent {
-                val session by sessionManager.state.collectAsState()
-                QueueWaitOverlay(
-                    session = session,
-                    onCancel = { sessionManager.cancelQueue() },
-                    onDismiss = { sessionManager.reset() },
-                    onRetry = {
-                        val op = (session as? SessionState.PermissionDenied)?.queuedOp
-                            ?: (session as? SessionState.Error)?.queuedOp
-                        if (op != null) sessionManager.queueOperation(op)
-                        else sessionManager.reset()
-                    }
-                )
-            }
-        }
-        root.addView(overlay, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-    }
 }
