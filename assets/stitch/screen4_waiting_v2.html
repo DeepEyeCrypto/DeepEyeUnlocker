@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeepEye Waiting Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "liquid-bg-start": "#05050F",
+                        "liquid-bg-end": "#0A0015",
+                        "glass-border": "rgba(255, 255, 255, 0.12)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-20px) scale(1.05)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --orb-purple: rgba(108, 62, 244, 0.15);
+            --orb-blue: rgba(62, 127, 244, 0.1);
+        }
+        .frosted-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+        }
+        .purple-radial {
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0.1) 70%, transparent 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-liquid-bg-start font-display text-white overflow-hidden">
+<div class="fixed inset-0 bg-gradient-to-b from-liquid-bg-start to-liquid-bg-end overflow-hidden">
+<div class="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[var(--orb-purple)] blur-[100px] animate-pulse-slow"></div>
+<div class="absolute bottom-[5%] right-[-5%] w-[50%] h-[50%] rounded-full bg-[var(--orb-blue)] blur-[80px] animate-float"></div>
+<div class="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-[var(--orb-purple)] blur-[120px] opacity-30 animate-pulse-slow"></div>
+</div>
+<div class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
+<div class="w-full max-w-[340px] frosted-glass rounded-[28px] p-8 flex flex-col items-center text-center shadow-2xl">
+<div class="relative mb-8">
+<div class="absolute inset-0 scale-150 bg-purple-500/10 blur-3xl rounded-full"></div>
+<div class="w-20 h-20 rounded-full purple-radial flex items-center justify-center border border-white/10 relative">
+<span class="material-symbols-outlined text-4xl animate-pulse text-white/90">cable</span>
+</div>
+</div>
+<div class="mb-8">
+<h1 class="text-[22px] font-bold tracking-tight mb-2">Waiting for Device</h1>
+<p class="text-sm text-white/60 leading-relaxed max-w-[200px] mx-auto">
+                    Plug in your device via USB OTG cable
+                </p>
+</div>
+<div class="mb-10 w-full flex flex-col items-center">
+<p class="text-[11px] font-medium uppercase tracking-[0.1em] text-white/40 mb-2">Ready to run</p>
+<div class="frosted-glass px-4 py-2 rounded-xl border border-white/5 inline-flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+<span class="text-amber-400 text-sm font-semibold tracking-wide">Unlock Bootloader</span>
+</div>
+</div>
+<button class="w-full h-12 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-all duration-300 text-sm font-bold tracking-wider uppercase text-white backdrop-blur-sm">
+                Cancel
+            </button>
+</div>
+<div class="mt-8 opacity-20">
+<div class="w-32 h-1 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+<button class="w-10 h-10 rounded-full frosted-glass border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-xl">arrow_back</span>
+</button>
+<div class="px-3 py-1.5 rounded-full frosted-glass border border-white/10 flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-[10px] font-bold tracking-widest text-white/80 uppercase">Tier 1 Safe</span>
+</div>
+<button class="w-10 h-10 rounded-full frosted-glass border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</div>
+
+</body></html>

@@ -1,7 +1,9 @@
 package com.deepeye.otg.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,14 +25,15 @@ fun OperationCompleteScreen(
     message: String,
     onDismiss: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DeepEyeColors.DarkBackground)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        OperationCompleteBanner(op, success, message, onDismiss)
+    DeepSpaceBackground {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            OperationCompleteBanner(op, success, message, onDismiss)
+        }
     }
 }
 
@@ -41,61 +44,56 @@ fun OperationCompleteBanner(
     message: String,
     onDismiss: () -> Unit
 ) {
-    val bg = if (success) DeepEyeColors.Tier1Bg else DeepEyeColors.Tier3Bg
-    val accent = if (success) DeepEyeColors.SafeGreen else DeepEyeColors.RestrictedRed
-    val borderColor = if (success) Color(0xFF166534) else Color(0xFF7F1D1D)
+    val accent = if (success) DeepEyeColors.Tier1Green else DeepEyeColors.Tier3Red
     val icon = if (success) "✅" else "❌"
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(bg)
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(icon, fontSize = 48.sp)
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = if (success) "Operation Complete" else "Operation Failed",
-            color = accent,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = op.label,
-            color = DeepEyeColors.TextPrimary,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = message,
-            color = DeepEyeColors.TextSecondary,
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        Button(
-            onClick = onDismiss,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = accent)
+    GlassCard(cornerRadius = 28.dp) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("DONE", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Text(icon, fontSize = 48.sp)
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = if (success) "Operation Complete" else "Operation Failed",
+                color = accent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = op.label,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = message,
+                color = DeepEyeColors.TextSecondary,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            // Gradient DONE button
+            GradientRunButton(
+                text = "DONE",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

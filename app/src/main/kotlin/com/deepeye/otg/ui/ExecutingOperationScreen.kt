@@ -1,13 +1,13 @@
 package com.deepeye.otg.ui
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,20 +18,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.usb.DeepEyeOperation
 import com.deepeye.otg.usb.ProtocolFamily
 
 // ═══════════════════════════════════════════════════════════════════
-//  Executing Operation — matches Stitch Screen 2 (bottom half)
+//  Executing Operation v2 — Liquid Glass
 //
-//  Layout: full-screen
-//  - Back arrow + "System Flash" title + RUNNING badge + ⋮
-//  - "Operation Progress" label + percentage
-//  - Progress bar (primary purple fill)
-//  - "Execution Log" section with terminal-style log
+//  Stitch screen5_main_v3 design:
+//  - Deep space bg with glow orbs
+//  - Glass header card with icon pill + title + subtitle
+//  - Gradient progress bar in glass card
+//  - macOS-style terminal with traffic light dots
+//  - Color-coded log: [info] white/60, [success] green, [warning] yellow
+//  - PAUSE (glass) + ABORT (red glass) buttons
+//  - Bottom navigation bar
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
@@ -56,213 +58,295 @@ fun ExecutingOperationOverlay(
     progress: Int,
     statusMsg: String
 ) {
-    // Pulse animation for the latest log line
-    val pulse = rememberInfiniteTransition(label = "log-pulse")
-    val logPulseAlpha by pulse.animateFloat(
-        initialValue = 0.7f, targetValue = 1f,
+    // Blinking cursor animation
+    val cursorPulse = rememberInfiniteTransition(label = "cursor")
+    val cursorAlpha by cursorPulse.animateFloat(
+        initialValue = 0f, targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = EaseInOut),
+            animation = tween(600, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
-        ), label = "log-alpha"
+        ), label = "cursor-alpha"
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DeepEyeColors.DarkBackground)
-    ) {
-        // ── Top bar: ← System Flash [RUNNING] ⋮ ──
-        Row(
+    DeepSpaceBackground {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
-            Text("←", color = Color(0xFF64748B), fontSize = 20.sp)
+            // ── Header glass card ──
+            GlassCard(cornerRadius = 16.dp) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Icon pill
+                    GlassPill(
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    ) {
+                        Spacer(Modifier.width(12.dp))
+                        Text("⚙️", fontSize = 24.sp, color = DeepEyeColors.AccentPurple)
+                        Spacer(Modifier.width(12.dp))
+                    }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = op.label,
-                    color = DeepEyeColors.TextPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                // RUNNING badge (green pill)
-                Surface(
-                    color = DeepEyeColors.SafeGreen.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier.border(
-                        1.dp, Color(0xFF166534), RoundedCornerShape(50)
+                    // Title
+                    Text(
+                        text = "DeepEyeUnlocker",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp
                     )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    // Subtitle
+                    Text(
+                        text = "Executing: ${op.label}",
+                        color = Color.White.copy(alpha = 0.60f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ── Progress glass card ──
+            GlassCard(cornerRadius = 16.dp) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Text(
-                        text = "RUNNING",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        color = DeepEyeColors.SafeGreen,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = "OPERATION PROGRESS",
+                        color = Color.White.copy(alpha = 0.80f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
                         letterSpacing = 1.sp
                     )
+                    Text(
+                        text = "$progress%",
+                        color = DeepEyeColors.AccentPurple,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 30.sp
+                    )
                 }
-            }
 
-            Text("⋮", color = Color(0xFF64748B), fontSize = 20.sp)
-        }
+                Spacer(Modifier.height(12.dp))
 
-        // ── Progress section ──
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-        ) {
-            // Header row: "Operation Progress" + "47%"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Text(
-                    text = "Operation Progress",
-                    color = DeepEyeColors.TextPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "$progress%",
-                    color = DeepEyeColors.Primary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Progress bar — Stitch: rounded-full bg-slate-800 h-3
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(Color(0xFF1E293B))
-            ) {
+                // Gradient progress bar
                 Box(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(fraction = progress / 100f)
+                        .fillMaxWidth()
+                        .height(6.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(DeepEyeColors.Primary)
+                        .background(Color.White.copy(alpha = 0.10f))
                 ) {
-                    // Shimmer overlay
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White.copy(alpha = 0.2f))
+                            .fillMaxHeight()
+                            .fillMaxWidth(fraction = progress / 100f)
+                            .clip(RoundedCornerShape(50))
+                            .background(DeepEyeColors.ProgressGradient)
                     )
                 }
             }
-        }
 
-        // ── Execution Log section ──
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 24.dp)
-        ) {
-            Text(
-                text = "Execution Log",
-                color = Color(0xFF94A3B8),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Spacer(Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Terminal box — rounded-xl, dark surface, border
+            // ── Terminal glass card ──
             Surface(
-                color = DeepEyeColors.SurfaceDark,
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .border(1.dp, DeepEyeColors.SurfaceVariant, RoundedCornerShape(12.dp))
+                    .weight(1f),
+                shape = RoundedCornerShape(16.dp),
+                color = DeepEyeColors.GlassCardBg,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.10f))
             ) {
-                // Generate log entries from statusMsg
-                val logEntries = remember(statusMsg, progress) {
-                    buildLogEntries(op, statusMsg, progress)
-                }
+                Column {
+                    // Traffic light title bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White.copy(alpha = 0.03f))
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(Modifier.size(8.dp).background(DeepEyeColors.TrafficRed, CircleShape))
+                            Box(Modifier.size(8.dp).background(DeepEyeColors.TrafficYellow, CircleShape))
+                            Box(Modifier.size(8.dp).background(DeepEyeColors.TrafficGreen, CircleShape))
+                        }
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            "TERMINAL OUTPUT",
+                            color = Color.White.copy(alpha = 0.40f),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                    }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(logEntries.size) { index ->
-                        val entry = logEntries[index]
-                        val isLast = index == logEntries.lastIndex
-                        Row(
-                            modifier = if (isLast) Modifier.alpha(logPulseAlpha) else Modifier,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.10f))
+
+                    // Terminal log content
+                    val logEntries = remember(statusMsg, progress) {
+                        buildTerminalLog(op, statusMsg, progress)
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items(logEntries.size) { index ->
+                            val entry = logEntries[index]
                             Text(
-                                text = entry.first,
-                                color = Color(0xFF64748B),
-                                fontSize = 13.sp,
+                                text = entry.text,
+                                color = entry.color,
+                                fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.width(72.dp)
+                                lineHeight = 18.sp
                             )
+                        }
+                        // Blinking cursor
+                        item {
                             Text(
-                                text = entry.second,
-                                color = DeepEyeColors.TerminalGreen,
-                                fontSize = 13.sp,
-                                fontFamily = FontFamily.Monospace,
-                                lineHeight = 20.sp
+                                "▌",
+                                color = Color.White.copy(alpha = cursorAlpha * 0.60f),
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+
+            // ── PAUSE + ABORT buttons ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // PAUSE — glass pill (disabled style)
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(50),
+                    color = Color.White.copy(alpha = 0.10f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "PAUSE",
+                            color = Color.White.copy(alpha = 0.40f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                    }
+                }
+
+                // ABORT — red glass pill
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(50),
+                    color = Color(0xFFEF4444).copy(alpha = 0.20f),
+                    border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.30f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "ABORT",
+                            color = Color(0xFFF87171),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ── Bottom nav ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                listOf("🏠" to "Home", "📱" to "Devices", "⚙️" to "Settings").forEach { (icon, label) ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(icon, fontSize = 20.sp)
+                        Text(
+                            label,
+                            color = Color.White.copy(alpha = 0.40f),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Helper — generate mock log entries for visual display
+//  Terminal log builder — realistic log messages
 // ═══════════════════════════════════════════════════════════════════
 
-private fun buildLogEntries(
+private data class TerminalEntry(val text: String, val color: Color)
+
+private fun buildTerminalLog(
     op: DeepEyeOperation,
     statusMsg: String,
     progress: Int
-): List<Pair<String, String>> {
-    val entries = mutableListOf<Pair<String, String>>()
-    val baseTime = "12:00"
+): List<TerminalEntry> {
+    val entries = mutableListOf<TerminalEntry>()
+    val info = DeepEyeColors.TerminalInfo
+    val green = DeepEyeColors.TerminalGreen
+    val yellow = DeepEyeColors.TerminalYellow
 
-    entries.add("${baseTime}:01" to "Initializing device interface...")
-    
+    entries.add(TerminalEntry("[info] Initializing DeepEye Engine v4.0.2...", info))
+    entries.add(TerminalEntry("[info] Connecting to device via USB Debugging...", info))
+
     if (progress >= 5) {
-        entries.add("${baseTime}:02" to "Device connected (usb-1/3)")
+        entries.add(TerminalEntry("[success] Device connected: Xiaomi Mi 11 Ultra (venus)", green))
     }
     if (progress >= 10) {
-        entries.add("${baseTime}:03" to "Requesting ${op.label.lowercase()}...")
+        entries.add(TerminalEntry("[info] Checking security patch level...", info))
+    }
+    if (progress >= 15) {
+        entries.add(TerminalEntry("[warning] Unofficial firmware detected. Proceeding with caution.", yellow))
     }
     if (progress >= 20) {
-        entries.add("${baseTime}:05" to "Starting data transfer...")
+        entries.add(TerminalEntry("[info] Starting ${op.label.lowercase()} sequence...", info))
+    }
+    if (progress >= 25) {
+        entries.add(TerminalEntry("[info] Sending handshake packet (0xAF23)...", info))
+        entries.add(TerminalEntry("[info] Waiting for device response...", info))
     }
     if (progress >= 30) {
-        entries.add("${baseTime}:06" to "Processing partition data...")
+        entries.add(TerminalEntry("[success] Security token accepted.", green))
     }
-    if (progress > 0 && statusMsg.isNotEmpty()) {
-        entries.add("${baseTime}:15" to "$statusMsg ($progress%)...")
+    if (progress >= 35) {
+        entries.add(TerminalEntry("[info] Uploading temporary exploit payload...", info))
+        entries.add(TerminalEntry("[info] Buffer size: 2048KB", info))
+    }
+    if (progress >= 40) {
+        val blocks = (progress * 128 / 100)
+        entries.add(TerminalEntry("[info] Processing block $blocks/128...", info))
+    }
+    if (statusMsg.isNotEmpty()) {
+        entries.add(TerminalEntry("[info] $statusMsg", info))
     }
 
     return entries

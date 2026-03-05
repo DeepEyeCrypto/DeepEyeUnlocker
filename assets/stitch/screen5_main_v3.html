@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeepEye Liquid Glass Executing Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-purple": "#9C6FFF",
+                        "glass-white": "rgba(255, 255, 255, 0.05)",
+                        "glass-border": "rgba(255, 255, 255, 0.1)",
+                        "deep-space": "#0D0D1A"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        :root {
+            --primary-purple: #9C6FFF;
+        }
+        .glass-pill {
+            @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-full;
+        }
+        .glass-card {
+            @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl;
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+<style>
+        body {
+            background: radial-gradient(circle at 50% 0%, #1a1a3a 0%, #0d0d1a 100%);
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+        .glow-orb {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.15;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display text-white selection:bg-primary-purple/30">
+<div class="glow-orb bg-primary-purple top-[-50px] left-[-100px]"></div>
+<div class="glow-orb bg-blue-500 bottom-[10%] right-[-50px]"></div>
+<div class="flex flex-col h-screen max-w-md mx-auto p-5 pb-safe">
+<header class="glass-card p-6 mb-4 flex flex-col items-center text-center">
+<div class="glass-pill p-3 mb-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-purple text-3xl">settings_suggest</span>
+</div>
+<h1 class="text-2xl font-bold tracking-tight mb-1">DeepEyeUnlocker</h1>
+<p class="text-white/60 text-sm font-medium tracking-wide">Executing: Unlock Bootloader</p>
+</header>
+<div class="glass-card p-5 mb-4">
+<div class="flex justify-between items-end mb-4">
+<span class="text-white/80 text-xs font-semibold uppercase tracking-wider">Operation Progress</span>
+<span class="text-3xl font-bold text-[var(--primary-purple)] leading-none">42%</span>
+</div>
+<div class="w-full bg-white/10 rounded-full h-[6px] overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-purple to-purple-400 rounded-full transition-all duration-500" style="width: 42%"></div>
+</div>
+</div>
+<div class="glass-card flex-1 flex flex-col overflow-hidden mb-6" style="background-color: rgba(255, 255, 255, 0.05);">
+<div class="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-red-500/50"></div>
+<div class="w-2 h-2 rounded-full bg-yellow-500/50"></div>
+<div class="w-2 h-2 rounded-full bg-green-500/50"></div>
+<span class="text-[10px] text-white/40 uppercase font-bold tracking-widest ml-auto">Terminal Output</span>
+</div>
+<div class="flex-1 p-4 font-mono text-[11px] leading-relaxed overflow-y-auto terminal-scroll">
+<p class="text-white/60">[info] Initializing DeepEye Engine v4.0.2...</p>
+<p class="text-white/60">[info] Connecting to device via USB Debugging...</p>
+<p class="text-green-400">[success] Device connected: Xiaomi Mi 11 Ultra (venus)</p>
+<p class="text-white/60">[info] Checking security patch level...</p>
+<p class="text-yellow-400">[warning] Unofficial firmware detected. Proceeding with caution.</p>
+<p class="text-white/60">[info] Starting bootloader unlock sequence...</p>
+<p class="text-white/60">[info] Sending handshake packet (0xAF23)...</p>
+<p class="text-white/60">[info] Waiting for device response...</p>
+<p class="text-green-400">[success] Security token accepted.</p>
+<p class="text-white/60">[info] Uploading temporary exploit payload...</p>
+<p class="text-white/60">[info] Buffer size: 2048KB</p>
+<p class="text-white/60">[info] Processing block 14/128...</p>
+<p class="text-white/60">[info] Processing block 28/128...</p>
+<p class="text-white/60">[info] Processing block 42/128...</p>
+<p class="text-white/60">[info] Processing block 56/128...</p>
+<p class="animate-pulse inline-block text-white/60">_</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 mb-4">
+<button class="glass-pill py-3 px-4 text-xs font-bold text-white/40 uppercase tracking-widest cursor-not-allowed">Pause</button>
+<button class="bg-red-500/20 border border-red-500/30 backdrop-blur-xl rounded-full py-3 px-4 text-xs font-bold text-red-400 uppercase tracking-widest">Abort</button>
+</div>
+<nav class="mt-auto flex justify-around items-center pt-2">
+<a class="flex flex-col items-center gap-1 p-2 text-white/40" href="#">
+<span class="material-symbols-outlined text-xl">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-white/40" href="#">
+<span class="material-symbols-outlined text-xl">devices</span>
+<span class="text-[10px] font-medium">Devices</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-white/40" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<script>
+        // Placeholder to simulate terminal scrolling if needed, 
+        // but instructions said no JS. Auto-scroll styling is handled by CSS.
+    </script>
+
+</body></html>

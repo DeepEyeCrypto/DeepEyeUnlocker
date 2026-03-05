@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeepEye Liquid Glass</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-glow": "#7C4DFF",
+                        "ios-bg-start": "#05050F",
+                        "ios-bg-end": "#0A0015",
+                        "accent-purple": "#9C6FFF",
+                        "tier-green": "#69FF47",
+                        "tier-yellow": "#FFD740",
+                        "tier-red": "#FF6E6E",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-ios-bg-start font-display text-white min-h-screen relative overflow-x-hidden;
+                background: linear-gradient(135deg, #05050F 0%, #0A0015 100%);
+            }
+        }
+        .glass {
+            @apply backdrop-blur-xl bg-white/10 border border-white/20;
+        }
+        .glass-pill {
+            @apply backdrop-blur-lg bg-white/5 border border-white/10;
+        }
+        .orb {
+            @apply absolute rounded-full blur-[100px] opacity-40 pointer-events-none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .gradient-border-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+        }
+        .gradient-border-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        .animate-pulse-dot {
+            animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="pb-24">
+<div class="orb bg-purple-600 w-[300px] h-[300px] -top-20 -left-20"></div>
+<div class="orb bg-blue-600 w-[300px] h-[300px] -bottom-20 -right-20"></div>
+<header class="sticky top-0 z-50 glass border-b-0 px-4 py-4 flex items-center justify-between backdrop-blur-2xl bg-white/5">
+<h1 class="text-xl font-bold tracking-tight text-white">DeepEyeUnlocker</h1>
+<div class="flex items-center gap-2 glass-pill px-3 py-1.5 rounded-full">
+<div class="w-2 h-2 rounded-full bg-[#69FF47] animate-pulse-dot shadow-[0_0_8px_#69FF47]"></div>
+<span class="text-[11px] font-bold tracking-widest text-white/90">REMOTE</span>
+</div>
+</header>
+<div class="mt-4 px-4 overflow-x-auto no-scrollbar">
+<div class="flex gap-2 min-w-max">
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold border-white/30 bg-primary-glow/25 text-white shadow-[0_0_15px_rgba(124,77,255,0.2)]">Xiaomi</button>
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold text-white/60">Samsung</button>
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold text-white/60">Oppo</button>
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold text-white/60">Vivo</button>
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold text-white/60">Realme</button>
+<button class="glass-pill px-5 py-2 rounded-full text-sm font-semibold text-white/60">OnePlus</button>
+</div>
+</div>
+<div class="p-4 mt-2">
+<div class="gradient-border-card p-0 overflow-hidden">
+<div class="relative flex items-center px-4 py-4">
+<span class="material-symbols-outlined text-white/60 mr-3">smartphone</span>
+<select class="w-full bg-transparent border-none text-white text-sm font-medium focus:ring-0 appearance-none outline-none">
+<option class="bg-[#0A0015]" disabled="" selected="">SELECT MODEL</option>
+<option class="bg-[#0A0015]" value="mi11">Mi 11 Ultra</option>
+<option class="bg-[#0A0015]" value="poco">Poco X3 Pro</option>
+<option class="bg-[#0A0015]" value="redmi">Redmi Note 10</option>
+</select>
+<span class="material-symbols-outlined text-white/40 absolute right-4 pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<main class="px-4 space-y-8 mt-4">
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group A Unlock Operations</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">lock_open</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Unlock Bootloader</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">lock</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Relock Bootloader</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">delete_forever</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Erase FRP Lock</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">settings_backup_restore</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Factory Reset</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group B Security Repair</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">screen_lock_landscape</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-yellow/30 text-tier-yellow bg-tier-yellow/10">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Remove Screen Lock</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">cloud_off</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Remove Mi Cloud</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">vpn_key</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Auth Bypass (SLA)</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">storefront</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Demo to Retail</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group C FRP &amp; Account</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">admin_panel_settings</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Google FRP Assis.</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">manage_accounts</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Mi Account Remove</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">business_center</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Enterprise Hook</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">precision_manufacturing</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">MetaMode FRP</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group D Firmware &amp; Partitions</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">system_update_alt</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Write Firmware</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">backup</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Read Firmware</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">pie_chart</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Partition Mgr</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">folder_zip</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-yellow/30 text-tier-yellow bg-tier-yellow/10">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Restore EFS</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group E IMEI &amp; Network</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">verified_user</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">IMEI Integrity</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">restore_page</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-yellow/30 text-tier-yellow bg-tier-yellow/10">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">IMEI NV Restore</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">5g</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-yellow/30 text-tier-yellow bg-tier-yellow/10">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">CPID Repair</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">sim_card</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-red/30 text-tier-red bg-tier-red/10">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">SIM Unlock</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="bg-primary-glow/10 backdrop-blur-md rounded-full px-4 py-1.5 mb-4 inline-block border border-primary-glow/20">
+<h2 class="text-[10px] font-black tracking-[0.2em] text-accent-purple uppercase">Group F Advanced &amp; Diagnostics</h2>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">info</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">Device Info</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">bug_report</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">ADB Enable</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">terminal</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">One-Click Root</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+<div class="gradient-border-card p-4 flex flex-col justify-between min-h-[140px]">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-accent-purple">apps</span>
+<span class="text-[9px] font-bold px-2 py-0.5 rounded-full border border-tier-green/30 text-tier-green bg-tier-green/10">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-white leading-tight mb-3">App Manager</h3>
+<button class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-[#9747FF] to-[#6B2FE0] text-[11px] font-bold tracking-wider text-white shadow-lg shadow-purple-900/20 active:scale-95 transition-transform">RUN</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 glass backdrop-blur-3xl bg-white/5 border-t-0 pt-3 pb-8 px-6 flex justify-around items-center z-50">
+<a class="flex flex-col items-center gap-1 text-white" href="#">
+<span class="material-symbols-outlined text-[28px] fill-1">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-white/40 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px]">devices</span>
+<span class="text-[10px] font-medium">Devices</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-white/40 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px]">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</a>
+</nav>
+
+</body></html>

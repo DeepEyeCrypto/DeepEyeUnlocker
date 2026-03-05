@@ -1,11 +1,15 @@
 package com.deepeye.otg.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -13,8 +17,11 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.usb.DeepEyeOperation
 
 // ═══════════════════════════════════════════════════════════════════
-//  Feature List — 6 groups matching Stitch design (A–F)
-//  2-column grid with category headers, tier badges, RUN buttons
+//  Feature List v2 — Liquid Glass
+//  - Frosted pill category headers with purple accent text
+//  - Glass cards with gradient border effect
+//  - Gradient RUN buttons with press animation
+//  - 6 groups (A–F) matching Stitch screen3_main_v2
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
@@ -23,30 +30,29 @@ fun FeatureListScreen(
 ) {
     val ops = DeepEyeOperation.entries
 
-    // Groups matching the Stitch design exactly
     val categories = listOf(
-        "GROUP A UNLOCK OPERATIONS" to listOf(
+        "Group A Unlock Operations" to listOf(
             ops.find { it.name == "UNLOCK_BOOTLOADER" },
             ops.find { it.name == "ERASE_FRP" },
             ops.find { it.name == "FACTORY_RESET" },
             ops.find { it.name == "DEMO_UNLOCK" }
         ).filterNotNull(),
 
-        "GROUP B SECURITY REPAIR" to listOf(
+        "Group B Security Repair" to listOf(
             ops.find { it.name == "REMOVE_SCREEN_LOCK" },
             ops.find { it.name == "REMOVE_MI_CLOUD" },
             ops.find { it.name == "LOCK_STATE_ANALYSIS" },
             ops.find { it.name == "SAFE_WIPE" }
         ).filterNotNull(),
 
-        "GROUP C FRP & ACCOUNT" to listOf(
+        "Group C FRP & Account" to listOf(
             ops.find { it.name == "EFRP_MDM_HOOK" },
             ops.find { it.name == "MTK_METAMODE_FRP" },
             ops.find { it.name == "MDM_REMOVE" },
             ops.find { it.name == "NETWORK_UNLOCK" }
         ).filterNotNull(),
 
-        "GROUP D FIRMWARE & PARTITIONS" to listOf(
+        "Group D Firmware & Partitions" to listOf(
             ops.find { it.name == "WRITE_FIRMWARE" },
             ops.find { it.name == "READ_FIRMWARE" },
             ops.find { it.name == "PARTITION_MANAGER" },
@@ -54,13 +60,13 @@ fun FeatureListScreen(
             ops.find { it.name == "RESTORE_EFS" }
         ).filterNotNull(),
 
-        "GROUP E IMEI & NETWORK" to listOf(
+        "Group E IMEI & Network" to listOf(
             ops.find { it.name == "IMEI_CHECK" },
             ops.find { it.name == "IMEI_RESTORE" },
             ops.find { it.name == "MODEM_REPAIR" }
         ).filterNotNull(),
 
-        "GROUP F ADVANCED & DIAGNOSTICS" to listOf(
+        "Group F Advanced & Diagnostics" to listOf(
             ops.find { it.name == "DEEP_DEVICE_INFO" },
             ops.find { it.name == "ADB_ENABLE" },
             ops.find { it.name == "ONE_CLICK_ROOT" },
@@ -76,20 +82,20 @@ fun FeatureListScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         categories.forEach { (title, ops) ->
-            // Section header — full width
+            // ── Category pill header ──
             item(span = { GridItemSpan(2) }) {
-                CategoryHeader(title)
+                CategoryPillHeader(title)
             }
-            // Operation cards
+            // ── Operation glass cards ──
             items(
                 items = ops,
                 key = { op -> op.name }
             ) { op ->
-                OperationCard(op) { onOperationSelected(op) }
+                LiquidOperationCard(op) { onOperationSelected(op) }
             }
         }
 
-        // Bottom spacer for navigation bar
+        // Bottom spacer for nav bar
         item(span = { GridItemSpan(2) }) {
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -97,42 +103,49 @@ fun FeatureListScreen(
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Category Header — bold text with bottom border (Stitch style)
+//  Category Pill Header — frosted pill with purple accent
+//  Stitch: bg-primary-glow/10 backdrop-blur rounded-full
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun CategoryHeader(title: String) {
-    Column(modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)) {
-        Text(
-            text = title,
-            color = DeepEyeColors.TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = DeepEyeColors.SurfaceVariant
-        )
+private fun CategoryPillHeader(title: String) {
+    Box(modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)) {
+        Surface(
+            color = DeepEyeColors.PrimaryGlow.copy(alpha = 0.10f),
+            shape = RoundedCornerShape(50),
+            modifier = Modifier.border(
+                1.dp,
+                DeepEyeColors.PrimaryGlow.copy(alpha = 0.20f),
+                RoundedCornerShape(50)
+            )
+        ) {
+            Text(
+                text = title.uppercase(),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                color = DeepEyeColors.AccentPurple,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp
+            )
+        }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Operation Card — icon + tier badge + label + RUN button
-//  Height: 128dp (matching Stitch h-32 = 8rem ≈ 128dp)
+//  Liquid Operation Card — glass card with gradient border
+//  140dp min height, icon + tier badge + label + gradient RUN
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
-private fun OperationCard(
+private fun LiquidOperationCard(
     op: DeepEyeOperation,
     onClick: () -> Unit
 ) {
-    val icon = operationIcon(op)
-
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(128.dp)
+            .height(140.dp),
+        cornerRadius = 20.dp
     ) {
         // Top row: icon + tier badge
         Row(
@@ -140,7 +153,11 @@ private fun OperationCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            Text(icon, fontSize = 20.sp, color = DeepEyeColors.Primary)
+            Text(
+                operationIcon(op),
+                fontSize = 22.sp,
+                color = DeepEyeColors.AccentPurple
+            )
             OperationTierBadge(op.tier)
         }
 
@@ -149,18 +166,17 @@ private fun OperationCard(
         // Label
         Text(
             text = op.label,
-            color = DeepEyeColors.TextPrimary,
+            color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             lineHeight = 18.sp,
             maxLines = 2
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // RUN button — full width
-        PrimaryButton(
-            text = "RUN",
+        // Gradient RUN button
+        GradientRunButton(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth()
         )
@@ -168,8 +184,7 @@ private fun OperationCard(
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Icon mapping — emoji stand-ins for Material Symbols
-//  (Stitch uses Material Symbols via web font; Compose uses emoji/icons)
+//  Icon mapping
 // ═══════════════════════════════════════════════════════════════════
 
 private fun operationIcon(op: DeepEyeOperation): String = when (op) {

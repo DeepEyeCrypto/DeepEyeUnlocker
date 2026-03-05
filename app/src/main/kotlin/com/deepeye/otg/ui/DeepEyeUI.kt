@@ -3,118 +3,257 @@ package com.deepeye.otg.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════════════
-//  DeepEye Design System — Stitch Theme Tokens
+//  DeepEye Design System v2 — LIQUID GLASS
+//  Ported from Stitch "Liquid Glass" designs (screen3/4/5)
 // ═══════════════════════════════════════════════════════════════════
 
 object DeepEyeColors {
-    // Core palette — mapped from Stitch designs
-    val Primary        = Color(0xFF6C3EF4)   // #6c3ef4
-    val PrimaryHover   = Color(0xFF5A32D0)
-    val DarkBackground = Color(0xFF0D0D1A)   // #0d0d1a
-    val SurfaceDark    = Color(0xFF1A1A2E)   // #1a1a2e
-    val SurfaceVariant = Color(0xFF2A2A4A)   // #2a2a4a
-    val TextPrimary    = Color(0xFFF8F8F2)   // #f8f8f2
-    val TextSecondary  = Color(0xFF9CA3AF)   // #9ca3af
+    // Core palette — deep space gradient
+    val BgStart         = Color(0xFF05050F)
+    val BgEnd           = Color(0xFF0A0015)
+    val DeepSpace       = Color(0xFF0D0D1A)
 
-    // Tier colors
-    val Tier1Green     = Color(0xFF22C55E)
-    val Tier1Bg        = Color(0xFF052E16)
-    val Tier2Amber     = Color(0xFFF59E0B)
-    val Tier2Bg        = Color(0xFF1C1207)
-    val Tier3Red       = Color(0xFFEF4444)
-    val Tier3Bg        = Color(0xFF2D0A0A)
+    // Purple accent system
+    val PrimaryGlow     = Color(0xFF7C4DFF)
+    val AccentPurple    = Color(0xFF9C6FFF)
+    val GradientStart   = Color(0xFF9747FF)
+    val GradientEnd     = Color(0xFF6B2FE0)
+
+    // Glass
+    val GlassWhite      = Color.White.copy(alpha = 0.10f)
+    val GlassBg         = Color.White.copy(alpha = 0.03f)
+    val GlassBorder     = Color.White.copy(alpha = 0.12f)
+    val GlassBorderLight = Color.White.copy(alpha = 0.20f)
+    val GlassCardBg     = Color.White.copy(alpha = 0.05f)
+
+    // Tier colors — brighter for glass theme
+    val Tier1Green      = Color(0xFF69FF47)
+    val Tier2Yellow     = Color(0xFFFFD740)
+    val Tier3Red        = Color(0xFFFF6E6E)
+
+    // Text
+    val TextPrimary     = Color.White
+    val TextSecondary   = Color.White.copy(alpha = 0.60f)
+    val TextTertiary    = Color.White.copy(alpha = 0.40f)
 
     // Terminal
-    val TerminalGreen  = Color(0xFF4ADE80)
-    val TerminalBg     = Color(0xFF1A1A2E)
+    val TerminalGreen   = Color(0xFF4ADE80)
+    val TerminalYellow  = Color(0xFFFACC15)
+    val TerminalInfo    = Color.White.copy(alpha = 0.60f)
 
-    // Legacy aliases
-    val SafeGreen      = Tier1Green
-    val RestrictedRed  = Tier3Red
-    val IndigoAccent   = Primary
-    val CyanAccent     = Color(0xFF00F2FF)
-    val GlassWhite     = Color(0xFFFFFFFF).copy(alpha = 0.05f)
-    val GlassBorder    = Color(0xFFFFFFFF).copy(alpha = 0.1f)
+    // Orbs
+    val OrbPurple       = Color(0xFF6C3EF4).copy(alpha = 0.15f)
+    val OrbBlue         = Color(0xFF3E7FF4).copy(alpha = 0.10f)
 
-    // Logo gradient
-    val LogoGradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFFEC4899), Color(0xFFF97316))
+    // Traffic lights
+    val TrafficRed      = Color(0xFFEF4444).copy(alpha = 0.5f)
+    val TrafficYellow   = Color(0xFFEAB308).copy(alpha = 0.5f)
+    val TrafficGreen    = Color(0xFF22C55E).copy(alpha = 0.5f)
+
+    // Legacy aliases (backward compat)
+    val Primary         = PrimaryGlow
+    val DarkBackground  = BgStart
+    val SurfaceDark     = Color(0xFF1A1A2E)
+    val SurfaceVariant  = Color(0xFF2A2A4A)
+    val IndigoAccent    = PrimaryGlow
+    val CyanAccent      = Color(0xFF00F2FF)
+    val SafeGreen       = Tier1Green
+    val RestrictedRed   = Tier3Red
+
+    // Gradients
+    val BgGradient = Brush.linearGradient(
+        colors = listOf(BgStart, BgEnd),
+        start = Offset(0f, 0f),
+        end = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
+    )
+
+    val ButtonGradient = Brush.horizontalGradient(
+        colors = listOf(GradientStart, GradientEnd)
+    )
+
+    val ProgressGradient = Brush.horizontalGradient(
+        colors = listOf(AccentPurple, Color(0xFFC084FC))
+    )
+
+    val GradientBorderBrush = Brush.linearGradient(
+        colors = listOf(
+            Color.White.copy(alpha = 0.30f),
+            Color.White.copy(alpha = 0.05f)
+        )
     )
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  Deep Space Background — gradient + blurred orbs
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+fun DeepSpaceBackground(
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(DeepEyeColors.BgGradient)
+    ) {
+        // Purple orb — top left
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .offset(x = (-80).dp, y = (-80).dp)
+                .blur(100.dp)
+                .background(DeepEyeColors.OrbPurple, CircleShape)
+        )
+        // Blue orb — bottom right
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 80.dp, y = 80.dp)
+                .blur(80.dp)
+                .background(DeepEyeColors.OrbBlue, CircleShape)
+        )
+        content()
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Glass Card — frosted glass with gradient border
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
+    cornerRadius: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(DeepEyeColors.SurfaceDark)
-            .border(1.dp, DeepEyeColors.SurfaceVariant, RoundedCornerShape(8.dp))
-            .padding(12.dp),
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(DeepEyeColors.GlassCardBg)
+            .border(1.dp, DeepEyeColors.GlassBorder, RoundedCornerShape(cornerRadius))
+            .padding(16.dp),
         content = content
     )
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  Glass Pill — frosted pill button/badge
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+fun GlassPill(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(50)),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Tier Badge — pill with glow border
+// ═══════════════════════════════════════════════════════════════════
+
 @Composable
 fun OperationTierBadge(tier: Int) {
-    val (label, fg, bg) = when (tier) {
-        1 -> Triple("TIER 1", DeepEyeColors.Tier1Green, DeepEyeColors.Tier1Bg)
-        2 -> Triple("TIER 2", DeepEyeColors.Tier2Amber, DeepEyeColors.Tier2Bg)
-        3 -> Triple("TIER 3", DeepEyeColors.Tier3Red, DeepEyeColors.Tier3Bg)
-        else -> Triple("N/A", DeepEyeColors.TextSecondary, DeepEyeColors.SurfaceVariant)
+    val (label, fg) = when (tier) {
+        1 -> "TIER 1" to DeepEyeColors.Tier1Green
+        2 -> "TIER 2" to DeepEyeColors.Tier2Yellow
+        3 -> "TIER 3" to DeepEyeColors.Tier3Red
+        else -> "N/A" to DeepEyeColors.TextSecondary
     }
     Surface(
-        color = bg,
-        shape = RoundedCornerShape(4.dp)
+        color = fg.copy(alpha = 0.10f),
+        shape = RoundedCornerShape(50),
+        modifier = Modifier.border(1.dp, fg.copy(alpha = 0.30f), RoundedCornerShape(50))
     ) {
         Text(
             text = label,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             color = fg,
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  Gradient RUN Button
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+fun GradientRunButton(
+    text: String = "RUN",
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(DeepEyeColors.ButtonGradient)
+            .clickableNoRipple(onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(vertical = 10.dp),
+            color = Color.White,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+    }
+}
+
+// Alias for backward compat
 @Composable
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = DeepEyeColors.Primary
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(32.dp),
-        shape = RoundedCornerShape(4.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-    ) {
-        Text(text = text, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-    }
-}
+    containerColor: Color = DeepEyeColors.PrimaryGlow
+) = GradientRunButton(text = text, onClick = onClick, modifier = modifier)
 
-// Legacy alias
 @Composable
 fun PrimaryIconButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = DeepEyeColors.Primary
-) = PrimaryButton(text, onClick, modifier, containerColor)
+    containerColor: Color = DeepEyeColors.PrimaryGlow
+) = GradientRunButton(text = text, onClick = onClick, modifier = modifier)
+
+// ═══════════════════════════════════════════════════════════════════
+//  Utility — clickable without ripple
+// ═══════════════════════════════════════════════════════════════════
+
+private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
+    this.then(androidx.compose.foundation.clickable(
+        interactionSource = null,
+        indication = null,
+        onClick = onClick
+    ))
