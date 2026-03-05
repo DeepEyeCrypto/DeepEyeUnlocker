@@ -2,13 +2,17 @@ package com.deepeye.otg.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -247,13 +251,10 @@ fun PrimaryIconButton(
     containerColor: Color = DeepEyeColors.PrimaryGlow
 ) = GradientRunButton(text = text, onClick = onClick, modifier = modifier)
 
-// ═══════════════════════════════════════════════════════════════════
-//  Utility — clickable without ripple
-// ═══════════════════════════════════════════════════════════════════
-
-private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
-    this.then(androidx.compose.foundation.clickable(
-        interactionSource = null,
+private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = composed {
+    clickable(
+        interactionSource = remember { MutableInteractionSource() },
         indication = null,
         onClick = onClick
-    ))
+    )
+}
