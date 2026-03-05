@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeepEye Main Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6c3ef4",
+                        "background-light": "#0d0d1a",
+                        "background-dark": "#0d0d1a",
+                        "surface": "#1a1a2e",
+                        "surface-variant": "#2a2a4a",
+                        "text-primary": "#f8f8f2",
+                        "text-secondary": "#9ca3af",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+            background-color: #0D0D1A;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark font-display text-slate-900 dark:text-text-primary min-h-screen flex flex-col pb-20">
+<header class="flex items-center justify-between p-4 bg-surface border-b border-surface-variant sticky top-0 z-10">
+<h1 class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 text-xl font-bold tracking-widest">DeepEyeUnlocker</h1>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<button class="text-primary text-sm font-semibold tracking-wide border border-primary rounded px-3 py-1">REMOTE</button>
+</div>
+</header>
+<div class="overflow-x-auto bg-surface border-b border-surface-variant no-scrollbar">
+<div class="flex px-4 min-w-max">
+<button class="px-4 py-3 border-b-2 border-primary text-text-primary font-bold text-sm">Xiaomi</button>
+<button class="px-4 py-3 border-b-2 border-transparent text-text-secondary font-semibold text-sm hover:text-text-primary transition-colors">Samsung</button>
+<button class="px-4 py-3 border-b-2 border-transparent text-text-secondary font-semibold text-sm hover:text-text-primary transition-colors">Oppo</button>
+<button class="px-4 py-3 border-b-2 border-transparent text-text-secondary font-semibold text-sm hover:text-text-primary transition-colors">Vivo</button>
+<button class="px-4 py-3 border-b-2 border-transparent text-text-secondary font-semibold text-sm hover:text-text-primary transition-colors">Realme</button>
+<button class="px-4 py-3 border-b-2 border-transparent text-text-secondary font-semibold text-sm hover:text-text-primary transition-colors">OnePlus</button>
+</div>
+</div>
+<div class="p-4">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary">smartphone</span>
+</div>
+<select class="w-full bg-surface border border-surface-variant rounded-lg py-3 pl-10 pr-10 text-text-primary text-sm focus:ring-primary focus:border-primary appearance-none outline-none">
+<option disabled="" selected="" value="">SELECT MODEL</option>
+<option value="mi11">Mi 11 Ultra</option>
+<option value="poco">Poco X3 Pro</option>
+<option value="redmi">Redmi Note 10</option>
+</select>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary">expand_more</span>
+</div>
+</div>
+</div>
+<main class="flex-1 px-4 space-y-6 pb-6">
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP A UNLOCK OPERATIONS</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">lock_open</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Unlock Bootloader</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">lock</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Relock Bootloader</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">delete_forever</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Erase FRP Lock</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">settings_backup_restore</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Factory Reset</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP B SECURITY REPAIR</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">screen_lock_landscape</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #F59E0B; background-color: #1C1207;">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Remove Screen Lock</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">cloud_off</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Remove Mi Cloud</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">vpn_key</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Auth Bypass (SLA/DA)</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">storefront</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Demo to Retail</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP C FRP &amp; ACCOUNT</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Google FRP Assistant</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">manage_accounts</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Samsung/Mi Account</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">business_center</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Enterprise EFRP Hook</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">precision_manufacturing</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">MTK MetaMode FRP</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP D FIRMWARE &amp; PARTITIONS</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">system_update_alt</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Write Firmware</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">backup</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Read/Backup Firmware</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">pie_chart</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Partition Manager</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">folder_zip</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #F59E0B; background-color: #1C1207;">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Backup/Restore EFS</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP E IMEI &amp; NETWORK</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">IMEI Integrity Check</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">restore_page</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #F59E0B; background-color: #1C1207;">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">IMEI Restore (NV)</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">5g</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #F59E0B; background-color: #1C1207;">TIER 2</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">5G Modem/CPID Repair</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">sim_card</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #EF4444; background-color: #2D0A0A;">TIER 3</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Network/SIM Unlock</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-text-primary text-lg font-bold mb-3 border-b border-surface-variant pb-1">GROUP F ADVANCED &amp; DIAGNOSTICS</h2>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">info</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">Deep Device Info</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">bug_report</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">ADB/Diag Enable</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">One-Click Root (Magisk)</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-3 border border-surface-variant flex flex-col justify-between h-32">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-primary">apps</span>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="color: #22C55E; background-color: #052E16;">TIER 1</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary leading-tight mb-2">ADB App Manager</h3>
+<button class="w-full bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded transition-colors">RUN</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 bg-surface border-t border-surface-variant px-4 pb-safe pt-2 flex justify-around items-center z-20">
+<a class="flex flex-col items-center gap-1 p-2 text-primary" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-secondary hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">devices</span>
+<span class="text-xs font-medium">Devices</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-secondary hover:text-text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-xs font-medium">Settings</span>
+</a>
+</nav>
+</body></html>

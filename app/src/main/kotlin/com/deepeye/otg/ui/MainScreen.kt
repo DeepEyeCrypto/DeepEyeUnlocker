@@ -1,15 +1,19 @@
 package com.deepeye.otg.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,7 +34,7 @@ fun MainScreen(
 ) {
     var selectedBrand by remember { mutableStateOf("Xiaomi") }
     var showConsole by remember { mutableStateOf(false) }
-    val brands = listOf("Xiaomi", "Samsung", "OPPO", "Vivo", "Realme", "Huawei", "OnePlus")
+    val brands = listOf("Xiaomi", "Samsung", "Oppo", "Vivo", "Realme", "OnePlus")
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -38,34 +42,34 @@ fun MainScreen(
                 .fillMaxSize()
                 .background(DeepEyeColors.DarkBackground)
         ) {
-            // --- HEADER ---
-            MainHeader(
+            // ── HEADER (Stitch: sticky header with gradient logo + REMOTE button) ──
+            StitchHeader(
                 state = sessionState.state,
                 onRemoteClick = onRemoteUnlock,
                 onLogoClick = { showConsole = !showConsole }
             )
 
-            // --- BRAND TABS ---
-            BrandTabs(
+            // ── BRAND TABS (Stitch: horizontal scroll with bottom border indicator) ──
+            StitchBrandTabs(
                 brands = brands,
                 selectedBrand = selectedBrand,
-                onBrandSelected = { 
+                onBrandSelected = {
                     selectedBrand = it
-                    onSelectModel() 
+                    onSelectModel()
                 }
             )
 
-            // --- MODEL SELECTOR BAR ---
-            ModelSelectorBar(
-                selectedModel = "Auto-Detect",
+            // ── MODEL SELECTOR (Stitch: dropdown with smartphone icon) ──
+            StitchModelSelector(
+                selectedModel = "SELECT MODEL",
                 onSelectClick = onSelectModel
             )
 
-            // --- FEATURE LIST ---
+            // ── FEATURE GRID ──
             FeatureListScreen(onOperationSelected = onOperationSelected)
         }
-        
-        // --- CONSOLE OVERLAY ---
+
+        // ── CONSOLE OVERLAY ──
         if (showConsole || queueState is SessionState.ExecutingOperation) {
             ConsoleOverlay(
                 logs = logs,
@@ -75,6 +79,176 @@ fun MainScreen(
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  Header — gradient logo + green dot + REMOTE button
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun StitchHeader(
+    state: ConnState,
+    onRemoteClick: () -> Unit,
+    onLogoClick: () -> Unit
+) {
+    Surface(
+        color = DeepEyeColors.SurfaceDark,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Gradient logo text
+            Text(
+                text = "DeepEyeUnlocker",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                style = LocalTextStyle.current.copy(
+                    brush = DeepEyeColors.LogoGradient
+                ),
+                modifier = Modifier.clickable { onLogoClick() }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Green dot
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(
+                        when (state) {
+                            ConnState.CONNECTED_READY -> DeepEyeColors.SafeGreen
+                            ConnState.DISCONNECTED, ConnState.ERROR -> DeepEyeColors.RestrictedRed
+                            else -> DeepEyeColors.Tier2Amber
+                        },
+                        CircleShape
+                    )
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // REMOTE button
+            OutlinedButton(
+                onClick = onRemoteClick,
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepEyeColors.Primary),
+                border = BorderStroke(1.dp, DeepEyeColors.Primary),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                modifier = Modifier.height(32.dp)
+            ) {
+                Text(
+                    text = "REMOTE",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                    color = DeepEyeColors.Primary
+                )
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Brand Tabs — horizontal scroll with underline indicator
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun StitchBrandTabs(
+    brands: List<String>,
+    selectedBrand: String,
+    onBrandSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DeepEyeColors.SurfaceDark)
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+    ) {
+        brands.forEach { brand ->
+            val isSelected = brand == selectedBrand
+            Column(
+                modifier = Modifier
+                    .clickable { onBrandSelected(brand) }
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = brand,
+                    color = if (isSelected) DeepEyeColors.TextPrimary else DeepEyeColors.TextSecondary,
+                    fontSize = 14.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+                // Bottom border indicator
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(
+                            if (isSelected) DeepEyeColors.Primary
+                            else Color.Transparent
+                        )
+                )
+            }
+        }
+    }
+
+    // Divider below tabs
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = DeepEyeColors.SurfaceVariant
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Model Selector — dropdown with smartphone icon
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+private fun StitchModelSelector(
+    selectedModel: String,
+    onSelectClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onSelectClick() },
+            shape = RoundedCornerShape(8.dp),
+            color = DeepEyeColors.SurfaceDark,
+            border = BorderStroke(1.dp, DeepEyeColors.SurfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("📱", fontSize = 18.sp)
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = selectedModel,
+                    color = DeepEyeColors.TextPrimary,
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("▾", color = DeepEyeColors.TextSecondary, fontSize = 16.sp)
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Console Overlay — execution log
+// ═══════════════════════════════════════════════════════════════════
+
 @Composable
 fun ConsoleOverlay(
     logs: List<OtgActivity.LogEntry>,
@@ -83,14 +257,14 @@ fun ConsoleOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.8f))
+            .background(Color.Black.copy(alpha = 0.85f))
             .clickable { onClose() }
-            .padding(top = 100.dp)
+            .padding(top = 80.dp)
     ) {
         GlassCard(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 0.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clickable(enabled = false) {}
         ) {
             Row(
@@ -98,159 +272,49 @@ fun ConsoleOverlay(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("EXECUTION CONSOLE", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text(
+                    "Execution Log",
+                    color = DeepEyeColors.TextPrimary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
                 IconButton(onClick = onClose) {
                     Text("✕", color = DeepEyeColors.RestrictedRed, fontSize = 18.sp)
                 }
             }
-            
-            Divider(color = DeepEyeColors.GlassBorder)
-            
+
+            HorizontalDivider(color = DeepEyeColors.SurfaceVariant)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             androidx.compose.foundation.lazy.LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(top = 8.dp),
-                reverseLayout = false
+                modifier = Modifier.fillMaxSize()
             ) {
-                items(logs) { log ->
+                items(logs.size) { i ->
+                    val log = logs[i]
                     Row(modifier = Modifier.padding(vertical = 2.dp)) {
                         Text(
-                            text = "[${log.timestamp}] ",
-                            color = Color.Gray,
-                            fontSize = 11.sp,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            text = log.timestamp,
+                            color = Color(0xFF64748B),
+                            fontSize = 12.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            modifier = Modifier.width(70.dp)
                         )
-                        val color = when(log.type) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        val color = when (log.type) {
                             "ERROR" -> DeepEyeColors.RestrictedRed
-                            "SUCCESS" -> DeepEyeColors.SafeGreen
-                            "WARNING" -> Color(0xFFF59E0B)
-                            else -> DeepEyeColors.CyanAccent
+                            "SUCCESS" -> DeepEyeColors.TerminalGreen
+                            "WARNING" -> DeepEyeColors.Tier2Amber
+                            else -> DeepEyeColors.TerminalGreen
                         }
                         Text(
                             text = log.message,
                             color = color,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MainHeader(
-    state: ConnState,
-    onRemoteClick: () -> Unit,
-    onLogoClick: () -> Unit
-) {
-    Surface(
-        color = DeepEyeColors.SurfaceDark,
-        tonalElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth().height(56.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(modifier = Modifier.clickable { onLogoClick() }) {
-                Text("DEEP", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-                Text("EYE", color = DeepEyeColors.CyanAccent, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            ConnectionBadge(state)
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            PrimaryIconButton(
-                text = "REMOTE",
-                onClick = onRemoteClick,
-                containerColor = Color(0xFF6200EA)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ConnectionBadge(state: ConnState) {
-    val color = when (state) {
-        ConnState.CONNECTED_READY -> DeepEyeColors.SafeGreen
-        ConnState.DISCONNECTED, ConnState.ERROR -> DeepEyeColors.RestrictedRed
-        else -> Color(0xFFF59E0B)
-    }
-    
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(color, RoundedCornerShape(4.dp))
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = state.name.replace("_", " "),
-            color = color,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun BrandTabs(
-    brands: List<String>,
-    selectedBrand: String,
-    onBrandSelected: (String) -> Unit
-) {
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF1A1A1E))
-            .padding(vertical = 8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(brands) { brand ->
-            val isSelected = brand == selectedBrand
-            Surface(
-                color = if (isSelected) DeepEyeColors.IndigoAccent else Color(0xFF2C2C30),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.clickable { onBrandSelected(brand) }
-            ) {
-                Text(
-                    text = brand,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    fontSize = 13.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModelSelectorBar(
-    selectedModel: String,
-    onSelectClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF141417))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Button(
-            onClick = onSelectClick,
-            modifier = Modifier.weight(1f).height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2C30)),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📱 $selectedModel", color = DeepEyeColors.CyanAccent, fontSize = 14.sp)
-                Spacer(modifier = Modifier.weight(1f))
-                Text("▼", color = DeepEyeColors.CyanAccent, fontSize = 10.sp)
             }
         }
     }

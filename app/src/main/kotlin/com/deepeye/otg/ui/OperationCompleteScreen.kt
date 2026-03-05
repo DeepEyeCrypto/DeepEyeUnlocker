@@ -1,11 +1,10 @@
 package com.deepeye.otg.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +24,10 @@ fun OperationCompleteScreen(
     onDismiss: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DeepEyeColors.DarkBackground)
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         OperationCompleteBanner(op, success, message, onDismiss)
@@ -39,8 +41,9 @@ fun OperationCompleteBanner(
     message: String,
     onDismiss: () -> Unit
 ) {
-    val bg = if (success) Color(0xFF0D2818) else Color(0xFF2D0A0A)
+    val bg = if (success) DeepEyeColors.Tier1Bg else DeepEyeColors.Tier3Bg
     val accent = if (success) DeepEyeColors.SafeGreen else DeepEyeColors.RestrictedRed
+    val borderColor = if (success) Color(0xFF166534) else Color(0xFF7F1D1D)
     val icon = if (success) "✅" else "❌"
 
     Column(
@@ -48,30 +51,51 @@ fun OperationCompleteBanner(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(bg)
-            .padding(20.dp),
+            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(icon, fontSize = 36.sp)
-        Spacer(Modifier.height(8.dp))
+        Text(icon, fontSize = 48.sp)
+
+        Spacer(Modifier.height(16.dp))
+
         Text(
-            text = if (success) "Success" else "Failed",
+            text = if (success) "Operation Complete" else "Operation Failed",
             color = accent,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 20.sp
         )
-        Spacer(Modifier.height(4.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = op.label,
+            color = DeepEyeColors.TextPrimary,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp
+        )
+
+        Spacer(Modifier.height(8.dp))
+
         Text(
             text = message,
-            color = Color.White.copy(alpha = 0.8f),
+            color = DeepEyeColors.TextSecondary,
             fontSize = 14.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
         )
-        Spacer(Modifier.height(16.dp))
+
+        Spacer(Modifier.height(24.dp))
+
         Button(
             onClick = onDismiss,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = accent)
         ) {
-            Text("OK", color = Color.White)
+            Text("DONE", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }
     }
 }

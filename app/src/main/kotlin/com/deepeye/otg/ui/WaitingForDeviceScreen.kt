@@ -1,7 +1,10 @@
 package com.deepeye.otg.ui
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -9,19 +12,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.usb.DeepEyeOperation
-import com.deepeye.otg.usb.ProtocolFamily
-import com.deepeye.otg.usb.SessionState
 
 // ═══════════════════════════════════════════════════════════════════
-//  Waiting-for-Device screen — shown when an operation is queued
-//  and the USB cable is not yet plugged in.
+//  Waiting-for-Device screen — matches Stitch Screen 2 (top half)
+//
+//  Layout: full-screen, centered vertically
+//  - Back arrow + "Waiting for Device" title + more_vert
+//  - Pulsing cable icon (900ms ease-in-out infinite)
+//  - "Plug in your device" heading
+//  - "Waiting for device connection..." subtitle
+//  - Queued operation name + TIER badge
+//  - Cancel button (outlined)
 // ═══════════════════════════════════════════════════════════════════
 
 @Composable
@@ -29,84 +36,162 @@ fun WaitingForDeviceScreen(
     queuedOp: DeepEyeOperation,
     onCancel: () -> Unit
 ) {
-    val pulse = rememberInfiniteTransition(label = "pulse")
+    // Stitch: pulseAlpha 900ms ease-in-out infinite (0.3 → 1.0)
+    val pulse = rememberInfiniteTransition(label = "cable-pulse")
     val alpha by pulse.animateFloat(
         initialValue = 0.3f, targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(900, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
-        ), label = "alpha"
+        ), label = "pulse-alpha"
     )
+
+    // Tier info
+    val tierLabel = when (queuedOp.tier) {
+        1 -> "TIER 1 SAFE"
+        2 -> "TIER 2 POLICY"
+        3 -> "TIER 3 RESTRICTED"
+        else -> "TIER ?"
+    }
+    val tierColor = when (queuedOp.tier) {
+        1 -> DeepEyeColors.Tier1Green
+        2 -> DeepEyeColors.Tier2Amber
+        3 -> DeepEyeColors.Tier3Red
+        else -> DeepEyeColors.TextSecondary
+    }
+    val tierBorderColor = when (queuedOp.tier) {
+        1 -> Color(0xFF166534)
+        2 -> Color(0xFF713F12)
+        3 -> Color(0xFF7F1D1D)
+        else -> DeepEyeColors.SurfaceVariant
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepEyeColors.SurfaceDark)
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(DeepEyeColors.DarkBackground)
     ) {
-        // Pulsing USB icon
-        Text("🔌", fontSize = 64.sp, modifier = Modifier.alpha(alpha))
-
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = "Plug in your device",
-            style = MaterialTheme.typography.headlineSmall,
-            color = DeepEyeColors.IndigoAccent,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Text("Waiting to run:", color = DeepEyeColors.TextSecondary, fontSize = 14.sp)
-
-        Spacer(Modifier.height(4.dp))
-
-        Text(
-            text = queuedOp.label,
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(Modifier.height(4.dp))
-
-        OperationTierBadge(queuedOp.tier)
-
-        Spacer(Modifier.height(40.dp))
-
-        WaitingDots()
-
-        Spacer(Modifier.height(40.dp))
-
-        OutlinedButton(
-            onClick = onCancel,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepEyeColors.TextSecondary)
+        // ── Top bar: ← Waiting for Device ⋮ ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Cancel")
-        }
-    }
-}
-
-
-@Composable
-private fun WaitingDots() {
-    val transition = rememberInfiniteTransition(label = "dots")
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(0, 200, 400).forEach { delayMs ->
-            val scale by transition.animateFloat(
-                initialValue = 0.3f, targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis = delayMs),
-                    repeatMode = RepeatMode.Reverse
-                ), label = "dot$delayMs"
+            Text(
+                "←",
+                color = Color(0xFF64748B),
+                fontSize = 20.sp,
+                modifier = Modifier.clickable(onClick = onCancel)
             )
-            Text("●", color = DeepEyeColors.IndigoAccent.copy(alpha = scale), fontSize = 20.sp)
+            Text(
+                text = "Waiting for Device",
+                color = DeepEyeColors.TextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+            Text("⋮", color = Color(0xFF64748B), fontSize = 20.sp)
+        }
+
+        // ── Centered content ──
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Pulsing cable icon — 64sp matching Stitch font-size: 64px
+            Text(
+                "🔌",
+                fontSize = 64.sp,
+                modifier = Modifier.alpha(alpha)
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // "Plug in your device" — 20sp bold
+            Text(
+                text = "Plug in your device",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // Subtitle
+            Text(
+                text = "Waiting for device connection...",
+                color = DeepEyeColors.TextSecondary,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            // "Waiting to run:" label
+            Text(
+                text = "Waiting to run:",
+                color = DeepEyeColors.TextSecondary,
+                fontSize = 14.sp
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            // Operation name — 18sp bold white
+            Text(
+                text = queuedOp.label,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Tier badge — rounded-full with border (Stitch style)
+            Surface(
+                color = tierColor.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.border(1.dp, tierBorderColor, RoundedCornerShape(50))
+            ) {
+                Text(
+                    text = tierLabel,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    color = tierColor,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            // Cancel button — outlined, rounded-lg
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.height(48.dp).widthIn(min = 160.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = DeepEyeColors.TextSecondary
+                ),
+                border = BorderStroke(1.dp, DeepEyeColors.TextSecondary)
+            ) {
+                Text(
+                    text = "Cancel",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }
+
 
 @Composable
 fun ReenumerationWaitBanner() {
@@ -130,7 +215,7 @@ fun ReenumerationWaitBanner() {
         Column {
             Text(
                 "MTK Mode Switch",
-                color = Color(0xFFFFB300),
+                color = DeepEyeColors.Tier2Amber,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp
             )
@@ -142,3 +227,4 @@ fun ReenumerationWaitBanner() {
         }
     }
 }
+
