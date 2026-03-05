@@ -1,6 +1,7 @@
 package com.deepeye.otg.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.UsbSessionState
 import com.deepeye.otg.ConnState
 import com.deepeye.otg.usb.DeepEyeOperation
+import com.deepeye.otg.usb.SessionState
 
 @Composable
 fun MainScreen(

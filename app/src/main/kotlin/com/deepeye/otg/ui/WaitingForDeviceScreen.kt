@@ -41,7 +41,7 @@ fun WaitingForDeviceScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SurfaceDark)
+            .background(DeepEyeColors.SurfaceDark)
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

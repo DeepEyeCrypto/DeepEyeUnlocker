@@ -9,6 +9,8 @@
 #define HAVE_PTHREAD_SETNAME_NP 1
 #define HAVE_EVENTFD 1
 #define HAVE_TIMERFD 1
+#define HAVE_CLOCK_GETTIME 1
+#define HAVE_ASM_TYPES_H 1
 #define POLL_NFDS_TYPE nfds_t
 #define ENABLE_LOGGING 1
 #define ENABLE_DEBUG_LOGGING 0
@@ -21,3 +23,7 @@
 #define HAVE_UNISTD_H 1
 #define DEFAULT_VISIBILITY __attribute__((visibility("default")))
 #define STDC_HEADERS 1
+#define PLATFORM_POSIX 1
+#define PRINTF_FORMAT(a, b) __attribute__((__format__(__printf__, a, b)))
+#define USE_SYSTEM_LOGGING_FACILITY 1
+#define _GNU_SOURCE 1

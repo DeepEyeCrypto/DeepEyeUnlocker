@@ -14,14 +14,16 @@ configure_file(
 add_library(usb_static STATIC
     ${LIBUSB_ROOT}/core.c
     ${LIBUSB_ROOT}/descriptor.c
+    ${LIBUSB_ROOT}/hotplug.c
     ${LIBUSB_ROOT}/io.c
     ${LIBUSB_ROOT}/sync.c
     ${LIBUSB_ROOT}/strerror.c
     ${LIBUSB_ROOT}/os/linux_usbfs.c
-    ${LIBUSB_ROOT}/os/poll_posix.c
+    ${LIBUSB_ROOT}/os/events_posix.c
     ${LIBUSB_ROOT}/os/threads_posix.c
 )
-# NOTE: hotplug.c and linux_netlink.c EXCLUDED — no udev on Android
+# NOTE: linux_netlink.c and linux_udev.c EXCLUDED — no udev on Android
+# hotplug.c included — it's pure logic, no udev dependency
 
 target_include_directories(usb_static PUBLIC
     ${JNI_ROOT}/core/include
@@ -36,19 +38,17 @@ target_compile_definitions(usb_static PRIVATE
     PLATFORM_POSIX
     __ANDROID__
     ANDROID
-    LIBUSB_CALL_MISSING_HOTPLUG=1
-    LIBUSB_NO_HOTPLUG=1
 )
 
 # ── deepeye_core shared library ─────────────────────────────
+# native-lib.cpp = JNI entry point
+# deepeye_exports.cpp #includes transport/usb_transport.cpp internally,
+# so usb_transport.cpp must NOT be listed separately here.
 add_library(deepeye_core SHARED
     native-lib.cpp
-    core/src/jni_bridge.cpp
     core/src/deepeye_exports.cpp
-    core/src/transport/usb_transport.cpp
     core/src/protocols/protocol_engine.cpp
     core/src/protocols/edl_manager.cpp
-    core/src/protocols/mtk_brom.cpp
     core/src/protocols/brom_manager.cpp
     core/src/protocols/odin_manager.cpp
     core/src/protocols/fdl_manager.cpp
@@ -68,13 +68,11 @@ target_include_directories(deepeye_core PRIVATE
 target_compile_definitions(deepeye_core PRIVATE
     __ANDROID__
     ANDROID
-    LIBUSB_NO_HOTPLUG=1
+    HAS_LIBUSB=1
 )
 
 target_link_libraries(deepeye_core
     usb_static
     android
-    log
-)
     log
 )
