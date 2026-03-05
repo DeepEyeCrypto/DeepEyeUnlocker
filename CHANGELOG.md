@@ -6,6 +6,41 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.1] — 2026-03-05
+
+### 🔒 Hardening Release — Native Transport & EDL Stabilization
+
+Switched to **CalVer** (YYYY.N) versioning. This release focuses on
+production-hardening the native USB transport layer and EDL handshake,
+making the tool more resilient on real Qualcomm devices.
+
+### Changed
+
+- **Versioning**: Migrated from SemVer (1.0.x) to CalVer (2026.N)
+- **EDL Manager**: Rewrote Sahara hello/handshake flow with proper
+  state machine, command validation, and retry logic (~250 lines added)
+- **USB Transport**: Hardened bulk transfer with timeout handling,
+  error recovery, and endpoint validation (~180 lines added)
+- **ITransport**: Introduced pure-virtual `ITransport` interface header
+  for clean transport abstraction
+- **Remote Share**: Improved `RemoteShareActivity` with better error
+  handling and connection lifecycle management
+
+### Fixed
+
+- EDL handshake failing silently on certain Qualcomm chipsets
+- USB bulk read/write not respecting timeout boundaries
+- Transport layer crash on unexpected USB disconnect
+- Remote share activity not cleaning up connection state
+
+### Includes all changes from v1.0.0 → v1.0.2
+
+- `v1.0.2`: Black screen fix (setContent vs ComposeView), NDK version pin
+- `v1.0.1`: CI APK locate pattern fix, release signingConfig
+- `v1.0.0`: Initial release — 24 features, 6 brand tabs, C++ native core
+
+---
+
 ## [1.0.2] — 2026-03-05
 
 ### Fixed
@@ -125,23 +160,24 @@ security research on personal/lab devices.
 ### Known Limitations (v1.0.0)
 
 - Protocol implementations are stub-complete (return OK/empty).
-  Real byte-level EDL/BROM/Odin protocol bodies in v1.1.0
+  Real byte-level EDL/BROM/Odin protocol bodies planned for next release.
 - armeabi-v7a: compiled, not tested on 32-bit devices
-- No APK signing in CI (unsigned APK artifact only)
-- Remote mode (server ↔ client) UI-only, backend in v1.1.0
-- Phone model database: static list, dynamic sync in v1.2.0
+- Remote mode (server ↔ client) UI-only, backend coming soon
+- Phone model database: static list, dynamic sync planned
 
 ---
 
 ## [Unreleased]
 
-- EDL Sahara/Firehose full implementation
+- EDL Sahara/Firehose byte-level protocol completion
 - BROM META/BROM handshake complete
-- APK release signing in CI
 - Remote backend WebSocket server
 - Dynamic model database sync
 - armeabi-v7a device testing
 
 ---
 
+[2026.1]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.1
+[1.0.2]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.0.2
+[1.0.1]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.0.1
 [1.0.0]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.0.0
