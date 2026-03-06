@@ -30,7 +30,7 @@ import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.components.UsbTypeCIcon
 import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun WaitingScreen(
@@ -43,7 +43,7 @@ fun WaitingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(GlassTokens.backgroundBrush)
-            .haze(hazeState)
+            .hazeSource(hazeState)
     ) {
         Column(
             modifier = Modifier

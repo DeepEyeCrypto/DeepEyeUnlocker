@@ -41,7 +41,8 @@ import com.deepeye.otg.ui.components.GlassTierBadge
 import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun MainScreen(viewModel: UsbViewModel) {
@@ -52,6 +53,7 @@ fun MainScreen(viewModel: UsbViewModel) {
     // RULE: HazeState precisely ONE per screen to prevent CPU/memory sink
     val hazeState = remember { HazeState() }
     val groups = FeatureData.groups
+    val perfMode by viewModel.performanceMode.collectAsState()
     
     val selectedBrandIndex by viewModel.selectedBrand.collectAsState()
     val safeIndex = selectedBrandIndex.coerceIn(0, groups.size - 1)
@@ -63,25 +65,29 @@ fun MainScreen(viewModel: UsbViewModel) {
             .background(GlassTokens.backgroundBrush)
     ) {
         // Base Layer 0: Ambient Orbs manually managed safely
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            if (size.width < 1f || size.height < 1f) return@Canvas
-            drawCircle(
-                color = Color(0xFF6750A4).copy(alpha = 0.08f),
-                radius = 400.dp.toPx(),
-                center = Offset(0f, 0f)
-            )
-            drawCircle(
-                color = Color(0xFFEADDFF).copy(alpha = 0.12f),
-                radius = 350.dp.toPx(),
-                center = Offset(size.width, size.height * 0.8f)
-            )
+        if (!perfMode) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                if (size.width < 1f || size.height < 1f) return@Canvas
+                drawCircle(
+                    color = Color(0xFF6750A4).copy(alpha = 0.08f),
+                    radius = 400.dp.toPx(),
+                    center = Offset(0f, 0f)
+                )
+                drawCircle(
+                    color = Color(0xFFEADDFF).copy(alpha = 0.12f),
+                    radius = 350.dp.toPx(),
+                    center = Offset(size.width, size.height * 0.8f)
+                )
+            }
         }
 
         // Layer 1: Content Scroller with Haze Source definition
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .haze(hazeState),
+                .then(
+                    if (!perfMode) Modifier.hazeSource(hazeState) else Modifier
+                ),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)
         ) {
             // Spacer bridging floating top elements
@@ -92,6 +98,7 @@ fun MainScreen(viewModel: UsbViewModel) {
                 item {
                     GlassCard(
                         hazeState = hazeState,
+                        performanceMode = perfMode,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -131,6 +138,7 @@ fun MainScreen(viewModel: UsbViewModel) {
                         GlassFeatureCard(
                             feature = feature,
                             hazeState = hazeState,
+                            performanceMode = perfMode,
                             modifier = Modifier.weight(1f),
                             onRun = { viewModel.queueOperation(feature) }
                         )
@@ -144,10 +152,12 @@ fun MainScreen(viewModel: UsbViewModel) {
 
         // Layer 2: Fixed Overlay App Header UI
         Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp) // Added safe padding avoiding window bar externally setup in Root
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Dashboard",
@@ -155,12 +165,20 @@ fun MainScreen(viewModel: UsbViewModel) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+                
+                GlassButton(
+                    label = if (perfMode) "PERF: LOW" else "PERF: HIGH",
+                    onClick = { viewModel.togglePerformance() },
+                    modifier = Modifier.width(100.dp),
+                    accent = !perfMode
+                )
             }
             GlassTabRow(
                 tabs = groups.map { it.title.substringBefore(":") },
                 selectedIndex = safeIndex,
                 onSelect = { viewModel.selectedBrand.value = it },
-                hazeState = hazeState
+                hazeState = hazeState,
+                performanceMode = perfMode
             )
         }
     }
@@ -170,11 +188,13 @@ fun MainScreen(viewModel: UsbViewModel) {
 private fun GlassFeatureCard(
     feature: FeatureItem,
     hazeState: HazeState,
+    performanceMode: Boolean,
     modifier: Modifier = Modifier,
     onRun: () -> Unit
 ) {
     GlassCard(
         hazeState = hazeState,
+        performanceMode = performanceMode,
         modifier = modifier.height(160.dp),
         onClick = null
     ) {

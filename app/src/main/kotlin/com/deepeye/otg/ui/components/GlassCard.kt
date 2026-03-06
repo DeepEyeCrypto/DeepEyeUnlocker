@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun GlassCard(
@@ -32,6 +32,7 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(20.dp),
     elevation: Dp = 8.dp,
+    performanceMode: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -61,7 +62,7 @@ fun GlassCard(
             .shadow(elevation, shape, spotColor = Color(0x146750A4))
             .clip(shape)
             .then(
-                if (hazeState != null) Modifier.hazeChild(state = hazeState)
+                if (hazeState != null && !performanceMode) Modifier.hazeEffect(state = hazeState)
                 else Modifier.background(GlassTokens.glassBrush)
             )
             .border(1.dp, GlassTokens.cardBorderColor, shape)

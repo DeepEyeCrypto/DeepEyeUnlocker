@@ -1,0 +1,13 @@
+### ✨ Liquid Glass UI v2
+- **Material You Support**: Integrated dynamicLightColorScheme for Android 12+.
+- **Haze Blur Engine**: Switched to dev.chrisbanes.haze for ultra-premium background glass effects.
+- **Glassmorphism v2**: Rebuilt all components (GlassCard, GlassButton, GlassProgressBar) with high-fidelity transparency.
+- **Performance Optimized**: 
+  - Isolated @Composable scopes for minimal recomposition.
+  - Zero-size safety for gradients (fixes LinearGradient crashes).
+  - Pre-allocated Brush tokens in GlassTokens.
+- **Navigation**: State-driven AnimatedContent for seamless UI transitions.
+- **Bug Fixes**: 
+  - Removed outdated 2024 dark theme files.
+  - Fixed safe area padding on notched devices.
+  - Resolved Kotlin/Compose compiler version mismatch.

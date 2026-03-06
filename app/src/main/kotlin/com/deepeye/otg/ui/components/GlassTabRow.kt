@@ -21,21 +21,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun GlassTabRow(
     tabs: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    hazeState: HazeState
+    hazeState: HazeState,
+    performanceMode: Boolean = false
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .hazeChild(state = hazeState)
+            .then(
+                if (!performanceMode) Modifier.hazeEffect(state = hazeState)
+                else Modifier.background(Color.White.copy(alpha = 0.9f))
+            )
             .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {

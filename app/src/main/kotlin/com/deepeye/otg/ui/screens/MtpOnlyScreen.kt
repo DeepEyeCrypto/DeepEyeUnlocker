@@ -23,17 +23,17 @@ import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeSource
 
 @Composable
-fun MtpOnlyScreen(onDismiss: () -> Unit) {
+fun MtpOnlyScreen(onBack: () -> Unit) {
     val hazeState = remember { HazeState() }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(GlassTokens.backgroundBrush)
-            .haze(hazeState)
+            .hazeSource(hazeState)
     ) {
         Column(
             modifier = Modifier
@@ -74,8 +74,8 @@ fun MtpOnlyScreen(onDismiss: () -> Unit) {
                     Spacer(modifier = Modifier.height(32.dp))
                     
                     GlassButton(
-                        label = "DISMISS",
-                        onClick = onDismiss,
+                        label = "BACK",
+                        onClick = onBack,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

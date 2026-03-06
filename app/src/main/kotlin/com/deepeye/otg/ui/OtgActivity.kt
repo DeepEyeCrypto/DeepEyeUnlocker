@@ -73,8 +73,10 @@ class OtgActivity : AppCompatActivity() {
         // │  Everything else → IO thread AFTER UI is up.         │
         // └──────────────────────────────────────────────────────┘
 
+        val settingsManager = com.deepeye.otg.data.SettingsManager(this)
         val viewModel = com.deepeye.otg.viewmodel.UsbViewModel(
             sessionManager = sessionManager,
+            settings = settingsManager,
             usbState = controller.state,
             logs = logs
         )

@@ -13,12 +13,18 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class UsbViewModel(
     private val sessionManager: UsbSessionManager,
+    private val settings: com.deepeye.otg.data.SettingsManager,
     val usbState: StateFlow<UsbSessionState>,
     val logs: StateFlow<List<LogEntry>>
 ) : ViewModel() {
 
     val queueState: StateFlow<SessionState> = sessionManager.state
+    val performanceMode: StateFlow<Boolean> = settings.performanceMode
     val selectedBrand = MutableStateFlow(0)
+    
+    fun togglePerformance() {
+        settings.togglePerformanceMode()
+    }
 
     fun queueOperation(feature: FeatureItem) {
         val op = DeepEyeOperation.entries.find { it.label == feature.label }

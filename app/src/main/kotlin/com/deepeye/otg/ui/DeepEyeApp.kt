@@ -104,7 +104,7 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
                 )
                 
                 is SessionState.ConnectedMtpOnly -> MtpOnlyScreen(
-                    onDismiss = { viewModel.resetToIdle() }
+                    onBack = { viewModel.resetToIdle() }
                 )
             }
         }

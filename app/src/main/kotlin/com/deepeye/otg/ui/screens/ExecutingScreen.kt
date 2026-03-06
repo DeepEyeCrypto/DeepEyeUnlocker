@@ -31,7 +31,7 @@ import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.components.GlassProgressBar
 import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun ExecutingScreen(
@@ -55,7 +55,7 @@ fun ExecutingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(GlassTokens.backgroundBrush)
-            .haze(hazeState)
+            .hazeSource(hazeState)
     ) {
         Column(
             modifier = Modifier
