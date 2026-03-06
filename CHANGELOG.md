@@ -6,6 +6,26 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.5] — 2026-03-06
+
+### 🔥 Crash Fixes
+
+- **LinearGradient.nativeCreate Crash**: Fixed `IllegalArgumentException` triggered by `Brush.linearGradient` or `Brush.radialGradient` on zero-width bounds.
+- **Progress Bar**: Added `fraction.coerceIn(0.02f, 1.0f)` to prevent zero-width crash.
+- **Glass Ambient Orbs**: Fixed 0-size radius crash by explicitly setting `radius = 450f` and `radius = 600f`.
+- **Card Borders**: Adopted solid `Color` backgrounds/borders to replace dangerous `Brush.linearGradient()` usages without start/end coordinates.
+
+---
+
+## [2026.4] — 2026-03-06
+
+### 🚀 ANR & Cold-Start Fix
+
+- **Asynchronous JNI Load**: Refactored `NativeBridge.loadAsync()` to execute on `Dispatchers.IO`, effectively fixing the 5-sec ANR ("System.loadLibrary blocking main thread" dialog).
+- **Fast Startup UI`: Introduced`DeepEyeLoadingScreen` for immediate visual feedback.
+- **Main Thread Unblocked**: Prevented blocking calls to USB init and LicenseManager. All device setup is deferred entirely until `setContent` is called.
+- **Eliminated White Flashes**: `Theme.DeepEyeUnlocker.Splash` prevents white screen flash by matching the `#05050F` background immediately upon app open.
+
 ## [2026.3] — 2026-03-06
 
 ### 🎨 Liquid Glass Polish — Full Theme + Cleanup
