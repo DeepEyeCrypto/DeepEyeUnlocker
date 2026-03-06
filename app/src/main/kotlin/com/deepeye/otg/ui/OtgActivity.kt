@@ -60,7 +60,7 @@ class OtgActivity : AppCompatActivity() {
     // ── Engine loading state ────────────────────────────────────
     private val _engineLoaded = MutableStateFlow(false)
 
-    data class LogEntry(val message: String, val type: String, val timestamp: String)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -73,49 +73,19 @@ class OtgActivity : AppCompatActivity() {
         // │  Everything else → IO thread AFTER UI is up.         │
         // └──────────────────────────────────────────────────────┘
 
-        // 1. Show UI immediately — loading screen if engine not ready
+        val viewModel = com.deepeye.otg.viewmodel.UsbViewModel(
+            sessionManager = sessionManager,
+            usbState = controller.state,
+            logs = logs
+        )
+
         setContent {
-            val engineReady by _engineLoaded.collectAsState()
-
-            if (!engineReady) {
-                // Show loading screen while native lib loads
-                DeepEyeLoadingScreen()
-            } else {
-                val session by controller.state.collectAsState()
-                val queueSession by sessionManager.state.collectAsState()
-                val logList by logs.collectAsState()
-
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    MainScreen(
-                        sessionState = session,
-                        queueState = queueSession,
-                        logs = logList,
-                        onSelectModel = { showModelSelectionDialog() },
-                        onRemoteUnlock = {
-                            hapticFeedback()
-                            val intent = android.content.Intent(this@OtgActivity, RemoteShareActivity::class.java)
-                            startActivity(intent)
-                        },
-                        onOperationSelected = { op ->
-                            hapticFeedback()
-                            log("[QUEUE] ${op.label} queued", "INFO")
-                            sessionManager.queueOperation(op)
-                        }
-                    )
-
-                    QueueWaitOverlay(
-                        session = queueSession,
-                        onCancel = { sessionManager.cancelQueue() },
-                        onDismiss = { sessionManager.reset() },
-                        onRetry = {
-                            val op = (queueSession as? SessionState.PermissionDenied)?.queuedOp
-                                ?: (queueSession as? SessionState.Error)?.queuedOp
-                            if (op != null) sessionManager.queueOperation(op)
-                            else sessionManager.reset()
-                        }
-                    )
+            com.deepeye.otg.ui.theme.DeepEyeTheme {
+                val engineReady by _engineLoaded.collectAsState()
+                if (!engineReady) {
+                    com.deepeye.otg.ui.screens.LoadingScreen()
+                } else {
+                    com.deepeye.otg.ui.DeepEyeApp(viewModel = viewModel)
                 }
             }
         }
