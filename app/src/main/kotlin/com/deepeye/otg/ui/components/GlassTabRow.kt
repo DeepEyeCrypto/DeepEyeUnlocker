@@ -13,6 +13,7 @@ import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
 @Composable
@@ -31,13 +34,22 @@ fun GlassTabRow(
     hazeState: HazeState,
     performanceMode: Boolean = false
 ) {
+    val hazeStyle = remember {
+        HazeStyle(
+            backgroundColor = Color.White,
+            tint = HazeTint(Color.White.copy(alpha = 0.72f)),
+            blurRadius = 28.dp,
+            noiseFactor = 0.0f
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .then(
-                if (!performanceMode) Modifier.hazeEffect(state = hazeState)
+                if (!performanceMode) Modifier.hazeEffect(state = hazeState, style = hazeStyle)
                 else Modifier.background(Color.White.copy(alpha = 0.9f))
             )
             .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),

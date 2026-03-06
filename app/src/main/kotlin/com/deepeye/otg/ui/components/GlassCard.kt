@@ -1,6 +1,5 @@
 package com.deepeye.otg.ui.components
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -16,57 +15,70 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun GlassCard(
     hazeState: HazeState?,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(20.dp),
-    elevation: Dp = 8.dp,
+    cornerRadius: Dp = 20.dp,
     performanceMode: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
-    val scaleAnim by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.96f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow), label = "CardPressAnim"
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        label = "cardScale"
     )
 
-    var rootModifier = modifier.graphicsLayer {
-        scaleX = scaleAnim
-        scaleY = scaleAnim
-    }
-
-    if (onClick != null) {
-        rootModifier = rootModifier.clickable(
-            interactionSource = interactionSource,
-            indication = null, // Disable default ripple for zero-latency custom feel
-            onClick = onClick
+    // ── CRITICAL: backgroundColor MUST be specified ──────────
+    val hazeStyle = remember {
+        HazeStyle(
+            backgroundColor = Color.White,   // ← fixes crash
+            tint = HazeTint(Color.White.copy(alpha = 0.52f)),
+            blurRadius = 24.dp,
+            noiseFactor = 0.0f
         )
     }
 
     Box(
-        modifier = rootModifier
-            .shadow(elevation, shape, spotColor = Color(0x146750A4))
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(shape)
             .then(
-                if (hazeState != null && !performanceMode) Modifier.hazeEffect(state = hazeState)
-                else Modifier.background(GlassTokens.glassBrush)
+                if (hazeState != null && !performanceMode) {
+                    Modifier.hazeEffect(state = hazeState, style = hazeStyle)
+                } else {
+                    Modifier.background(GlassTokens.glassBrush)
+                }
             )
-            .border(1.dp, GlassTokens.cardBorderColor, shape)
-    ) {
-        content()
-    }
+            .border(
+                width = 1.dp,
+                color = GlassTokens.cardBorderColor,
+                shape = shape
+            )
+            .then(
+                if (onClick != null) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ) else Modifier
+            ),
+        content = content
+    )
 }
