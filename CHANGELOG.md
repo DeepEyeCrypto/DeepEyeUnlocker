@@ -6,6 +6,18 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.6] — 2026-03-06
+
+### ✨ Liquid Glass UI Rebuild
+
+- **Zero-Latency Glassmorphism**: Fully implemented Stitch UI designs utilizing native Jetpack Compose and Haze, keeping strict zero frame-drop rendering constraints.
+- **Haze Integration**: Integrated `dev.chrisbanes.haze` to render physically-correct blurred glass material natively. Safe usage scoped to single instances per root screen.
+- **Crash Prevention Native Core**: Eliminated all `linearGradient` bounding crashes by caching SolidColors and `Brush` items behind `remember{}` layers.
+- **Dynamic Assets**: Converted USB Type-C and custom branding assets into math-modeled `Canvas` arrays allowing zero-cost scaling and hardware acceleration.
+- **Refined Safe Mode Padding**: Applied `windowInsetsPadding(WindowInsets.safeDrawing)` globally on app-level scope.
+
+---
+
 ## [2026.5] — 2026-03-06
 
 ### 🔥 Crash Fixes
