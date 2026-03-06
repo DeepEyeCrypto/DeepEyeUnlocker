@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -30,9 +29,11 @@ import com.deepeye.otg.usb.DeepEyeOperation
 import com.deepeye.otg.usb.SessionState
 import com.deepeye.otg.usb.UsbBroadcastReceiver
 import com.deepeye.otg.usb.UsbSessionManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OtgActivity : AppCompatActivity() {
     
@@ -59,59 +60,28 @@ class OtgActivity : AppCompatActivity() {
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
     val logs = _logs.asStateFlow()
 
+    // ── Engine loading state ────────────────────────────────────
+    private val _engineLoaded = MutableStateFlow(false)
+
     data class LogEntry(val message: String, val type: String, val timestamp: String)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Setup Global Crash Handler (use applicationContext to avoid Activity leak)
-        val appCtx = applicationContext
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            try {
-                runOnUiThread {
-                    androidx.appcompat.app.AlertDialog.Builder(this)
-                        .setTitle("App Crash")
-                        .setMessage(throwable.stackTraceToString())
-                        .setPositiveButton("OK") { _, _ -> finish() }
-                        .show()
-                }
-            } catch (_: Exception) {
-                defaultHandler?.uncaughtException(thread, throwable)
-            }
-        }
 
-        try {
-            // initialize license/auth system
-            LicenseManager.init(this)
+        // ┌──────────────────────────────────────────────────────┐
+        // │  RULE: onCreate MUST return in < 100ms               │
+        // │  setContent is the ONLY heavy thing here.            │
+        // │  Everything else → IO thread AFTER UI is up.         │
+        // └──────────────────────────────────────────────────────┘
 
-            controller.register()
-            lifecycleScope.launch {
-                controller.state.collect { session ->
-                    updateUiFromSession(session)
-                    latestSession = session
-                }
-            }
+        // 1. Show UI immediately — loading screen if engine not ready
+        setContent {
+            val engineReady by _engineLoaded.collectAsState()
 
-            // Queue & Wait session manager
-            sessionManager = UsbSessionManager(this)
-            usbReceiver = UsbBroadcastReceiver(sessionManager)
-            val usbFilter = IntentFilter().apply {
-                addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
-                addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
-                addAction(UsbSessionManager.ACTION_USB_PERMISSION)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(usbReceiver, usbFilter, Context.RECEIVER_NOT_EXPORTED)
+            if (!engineReady) {
+                // Show loading screen while native lib loads
+                DeepEyeLoadingScreen()
             } else {
-                registerReceiver(usbReceiver, usbFilter)
-            }
-
-            // Load Data
-            loadDeviceDatabase()
-
-            // Attach Compose UI Layers
-            setContent {
                 val session by controller.state.collectAsState()
                 val queueSession by sessionManager.state.collectAsState()
                 val logList by logs.collectAsState()
@@ -149,19 +119,60 @@ class OtgActivity : AppCompatActivity() {
                     )
                 }
             }
+        }
 
-            // Observe license role changes
-            lifecycleScope.launch {
-                LicenseManager.role.collect { role ->
-                    log("[AUTH] Role: ${role.label} (level=${role.level})", "INFO")
-                }
+        // 2. Deferred init — runs on IO thread AFTER setContent returns
+        lifecycleScope.launch(Dispatchers.IO) {
+            // Wait for native lib (Application already started loading it)
+            NativeBridge.loadAsync()
+
+            // Init license system (lightweight, but off main thread to be safe)
+            withContext(Dispatchers.Main) {
+                LicenseManager.init(this@OtgActivity)
             }
-            
-            log("DeepEye Unlocker v5.6.1 Ready - ${allModels.size} models loaded. [${LicenseManager.currentRole.label}]", "SUCCESS")
-            
-        } catch (e: Exception) {
-            Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
-            e.printStackTrace()
+
+            // Load device database from assets
+            loadDeviceDatabase()
+
+            // Init session manager + USB receiver on main thread
+            withContext(Dispatchers.Main) {
+                sessionManager = UsbSessionManager(this@OtgActivity)
+                usbReceiver = UsbBroadcastReceiver(sessionManager)
+                registerUsbReceiver()
+
+                controller.register()
+                lifecycleScope.launch {
+                    controller.state.collect { session ->
+                        updateUiFromSession(session)
+                        latestSession = session
+                    }
+                }
+
+                // Observe license role changes
+                lifecycleScope.launch {
+                    LicenseManager.role.collect { role ->
+                        log("[AUTH] Role: ${role.label} (level=${role.level})", "INFO")
+                    }
+                }
+
+                log("DeepEye Unlocker v${com.deepeye.otg.BuildConfig.VERSION_NAME} Ready - ${allModels.size} models loaded. [${LicenseManager.currentRole.label}]", "SUCCESS")
+
+                // ── Signal engine ready — switches from loading screen to main UI
+                _engineLoaded.value = true
+            }
+        }
+    }
+
+    private fun registerUsbReceiver() {
+        val usbFilter = IntentFilter().apply {
+            addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+            addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
+            addAction(UsbSessionManager.ACTION_USB_PERMISSION)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(usbReceiver, usbFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(usbReceiver, usbFilter)
         }
     }
 
@@ -210,6 +221,11 @@ class OtgActivity : AppCompatActivity() {
     }
 
     private fun initializeCore(fd: Int, vid: Int, pid: Int, protocolLabel: String) {
+        if (!NativeBridge.isLoaded()) {
+            log("[OTG-NATIVE] Cannot init — native lib not loaded yet", "ERROR")
+            return
+        }
+
         log("[OTG-NATIVE] initCore(fd=$fd, $vid:$pid, proto=$protocolLabel)...", "INFO")
         
         Thread {
@@ -325,11 +341,10 @@ class OtgActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        Thread.setDefaultUncaughtExceptionHandler(null)
-        if (nativeHandle != 0L) NativeBridge.closeCore(nativeHandle)
+        if (nativeHandle != 0L && NativeBridge.isLoaded()) NativeBridge.closeCore(nativeHandle)
         controller.unregister()
         try { unregisterReceiver(usbReceiver) } catch (_: Exception) {}
-        sessionManager.destroy()
+        if (::sessionManager.isInitialized) sessionManager.destroy()
         super.onDestroy()
     }
 

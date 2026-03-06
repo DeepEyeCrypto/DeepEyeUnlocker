@@ -1,15 +1,42 @@
 package com.deepeye.otg
 
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 /**
  * JNI bridge to deepeye_core (C++ via NDK).
  *
  * All methods run on Dispatchers.IO — callers must ensure this.
  * The `handle` parameter is a pointer returned by [initCore].
+ *
+ * ⚠ loadLibrary is async — call [loadAsync] on IO thread at startup.
+ *   Never call System.loadLibrary on the main thread.
  */
 object NativeBridge {
-    init {
-        System.loadLibrary("deepeye_core")
+    private const val TAG = "NativeBridge"
+
+    @Volatile var loaded = false
+        private set
+    @Volatile private var loading = false
+
+    // ── Async library load — MUST be called on Dispatchers.IO ───
+    suspend fun loadAsync() = withContext(Dispatchers.IO) {
+        if (loaded || loading) return@withContext
+        loading = true
+        try {
+            System.loadLibrary("deepeye_core")
+            loaded = true
+            Log.i(TAG, "deepeye_core loaded OK")
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e(TAG, "deepeye_core FAILED: ${e.message}")
+            loaded = false
+        } finally {
+            loading = false
+        }
     }
+
+    fun isLoaded() = loaded
 
     // ── Lifecycle ────────────────────────────────────────────────
     /** Open transport on the given USB FD. Returns handle (>0) or 0 on failure. */

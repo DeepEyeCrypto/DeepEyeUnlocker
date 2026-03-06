@@ -2,13 +2,19 @@ package com.deepeye.otg
 
 import android.app.Application
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
- * Global application class — installs crash handler for diagnostics.
+ * Global application class — loads native lib on IO thread + crash handler.
  *
  * Registered in AndroidManifest.xml via android:name=".DeepEyeApplication"
  */
 class DeepEyeApplication : Application() {
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         private const val TAG = "DeepEye"
@@ -16,7 +22,15 @@ class DeepEyeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // ── Load native lib on IO thread — NEVER on main ────────
+        appScope.launch(Dispatchers.IO) {
+            NativeBridge.loadAsync()
+        }
+
+        // ── Crash handler for diagnostics ───────────────────────
         setupCrashHandler()
+
         Log.i(TAG, "DeepEye Unlocker v${BuildConfig.VERSION_NAME} initialized")
     }
 

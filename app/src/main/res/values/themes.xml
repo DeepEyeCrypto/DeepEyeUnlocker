@@ -2,14 +2,14 @@
 <resources>
     <!-- Base application theme -->
     <style name="Theme.DeepEye.Portable" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Main colors -->
+        <!-- Main colors — Liquid Glass -->
         <item name="colorPrimary">@color/deepeye_cyan</item>
         <item name="colorOnPrimary">@color/deepeye_obsidian</item>
         <item name="colorSecondary">@color/deepeye_orange</item>
-        <item name="android:windowBackground">@color/deepeye_obsidian</item>
-        <item name="android:statusBarColor">@color/deepeye_grey_deep</item>
-        <item name="android:navigationBarColor">@color/deepeye_obsidian</item>
-        
+        <item name="android:windowBackground">#05050F</item>
+        <item name="android:statusBarColor">#05050F</item>
+        <item name="android:navigationBarColor">#05050F</item>
+
         <!-- Premium UI elements -->
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
