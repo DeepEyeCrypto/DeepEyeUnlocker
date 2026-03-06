@@ -86,7 +86,7 @@ class UsbConnectionController(
     //  PUBLIC API
     // ══════════════════════════════════════════════════════════════
 
-    fun register() {
+    fun register(scanExistingDevices: Boolean = true) {
         val filter = IntentFilter().apply {
             addAction(ACTION_USB_PERMISSION)
             addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
@@ -97,8 +97,24 @@ class UsbConnectionController(
         } else {
             context.registerReceiver(receiver, filter)
         }
-        // Bootstrap: scan devices already plugged in
-        usbManager.deviceList.values.forEach { device -> onDeviceAttached(device) }
+
+        if (scanExistingDevices) {
+            bootstrapAttachedDevicesAsync()
+        }
+    }
+
+    /**
+     * Scans already attached devices off main thread and dispatches attach handling on main.
+     * Useful for startup warmup without blocking Activity.onCreate.
+     */
+    fun bootstrapAttachedDevicesAsync() {
+        scope.launch(Dispatchers.IO) {
+            val existing = usbManager.deviceList.values.toList()
+            if (existing.isEmpty()) return@launch
+            scope.launch(Dispatchers.Main) {
+                existing.forEach { device -> onDeviceAttached(device) }
+            }
+        }
     }
 
     fun unregister() {

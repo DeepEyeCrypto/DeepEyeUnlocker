@@ -138,7 +138,7 @@ fun ExecutingOperationOverlay(
 
                 Spacer(Modifier.height(12.dp))
 
-                // Gradient progress bar
+                // Gradient progress bar — guarded against zero-width crash
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,13 +146,16 @@ fun ExecutingOperationOverlay(
                         .clip(RoundedCornerShape(50))
                         .background(Color.White.copy(alpha = 0.10f))
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(fraction = progress / 100f)
-                            .clip(RoundedCornerShape(50))
-                            .background(DeepEyeColors.ProgressGradient)
-                    )
+                    val fraction = progress / 100f
+                    if (fraction > 0.01f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(fraction = fraction.coerceIn(0.02f, 1.0f))
+                                .clip(RoundedCornerShape(50))
+                                .background(DeepEyeColors.ProgressGradient)
+                        )
+                    }
                 }
             }
 

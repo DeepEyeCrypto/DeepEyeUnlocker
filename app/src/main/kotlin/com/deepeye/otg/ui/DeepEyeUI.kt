@@ -13,10 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -82,11 +79,9 @@ object DeepEyeColors {
     val SafeGreen       = Tier1Green
     val RestrictedRed   = Tier3Red
 
-    // Gradients
-    val BgGradient = Brush.linearGradient(
-        colors = listOf(BgStart, BgEnd),
-        start = Offset(0f, 0f),
-        end = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
+    // Gradients — use verticalGradient/horizontalGradient (safe, no Offset needed)
+    val BgGradient = Brush.verticalGradient(
+        colors = listOf(BgStart, BgEnd)
     )
 
     val ButtonGradient = Brush.horizontalGradient(
@@ -97,12 +92,8 @@ object DeepEyeColors {
         colors = listOf(AccentPurple, Color(0xFFC084FC))
     )
 
-    val GradientBorderBrush = Brush.linearGradient(
-        colors = listOf(
-            Color.White.copy(alpha = 0.30f),
-            Color.White.copy(alpha = 0.05f)
-        )
-    )
+    // Border brush — solid color is crash-safe at 1dp width
+    val GradientBorderColor = Color.White.copy(alpha = 0.18f)
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -130,7 +121,8 @@ fun DeepSpaceBackground(
                             Color(0xFF6C3EF4).copy(alpha = 0.20f),
                             Color(0xFF6C3EF4).copy(alpha = 0.05f),
                             Color.Transparent
-                        )
+                        ),
+                        radius = 600f  // fixed radius — prevents 0-size crash
                     ),
                     CircleShape
                 )
@@ -147,7 +139,8 @@ fun DeepSpaceBackground(
                             Color(0xFF3E7FF4).copy(alpha = 0.15f),
                             Color(0xFF3E7FF4).copy(alpha = 0.03f),
                             Color.Transparent
-                        )
+                        ),
+                        radius = 600f  // fixed radius — prevents 0-size crash
                     ),
                     CircleShape
                 )

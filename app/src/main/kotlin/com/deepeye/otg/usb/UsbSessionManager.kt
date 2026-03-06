@@ -293,6 +293,21 @@ class UsbSessionManager(private val context: Context) {
         }
     }
 
+    /**
+     * Warm-up call for first USB enumeration.
+     *
+     * Must be called off the main thread during startup to avoid ANR on
+     * devices where the first [UsbManager.deviceList] call is slow.
+     */
+    suspend fun initAsync() = withContext(Dispatchers.IO) {
+        runCatching {
+            val devices = usbManager.deviceList
+            log("[USB] init warmup: ${devices.size} device(s) found")
+        }.onFailure { t ->
+            Log.w(TAG, "[USB] init warmup failed: ${t.message}")
+        }
+    }
+
     // ── Internals ───────────────────────────────────────────────
 
     private fun advanceToDeviceFound(device: UsbDevice, queuedOp: DeepEyeOperation?) {

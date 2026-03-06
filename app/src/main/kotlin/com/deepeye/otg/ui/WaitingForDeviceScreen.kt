@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -95,7 +94,8 @@ fun WaitingForDeviceScreen(
                             Color(0xFF6C3EF4).copy(alpha = 0.25f),
                             Color(0xFF6C3EF4).copy(alpha = 0.05f),
                             Color.Transparent
-                        )
+                        ),
+                        radius = 450f  // fixed radius — prevents 0-size crash
                     ),
                     CircleShape
                 )
@@ -183,7 +183,8 @@ fun WaitingForDeviceScreen(
                                         Color(0xFF8B5CF6).copy(alpha = 0.40f),
                                         Color(0xFF8B5CF6).copy(alpha = 0.10f),
                                         Color.Transparent
-                                    )
+                                    ),
+                                    radius = 120f  // fixed radius — prevents 0-size crash
                                 )
                             )
                             .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),

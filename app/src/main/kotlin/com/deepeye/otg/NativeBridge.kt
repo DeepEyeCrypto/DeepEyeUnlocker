@@ -3,6 +3,8 @@ package com.deepeye.otg
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * JNI bridge to deepeye_core (C++ via NDK).
@@ -15,24 +17,28 @@ import kotlinx.coroutines.withContext
  */
 object NativeBridge {
     private const val TAG = "NativeBridge"
+    private val loadMutex = Mutex()
 
     @Volatile var loaded = false
         private set
-    @Volatile private var loading = false
 
     // ── Async library load — MUST be called on Dispatchers.IO ───
-    suspend fun loadAsync() = withContext(Dispatchers.IO) {
-        if (loaded || loading) return@withContext
-        loading = true
-        try {
-            System.loadLibrary("deepeye_core")
-            loaded = true
-            Log.i(TAG, "deepeye_core loaded OK")
-        } catch (e: UnsatisfiedLinkError) {
-            Log.e(TAG, "deepeye_core FAILED: ${e.message}")
-            loaded = false
-        } finally {
-            loading = false
+    suspend fun loadAsync() {
+        if (loaded) return
+
+        loadMutex.withLock {
+            if (loaded) return
+
+            try {
+                withContext(Dispatchers.IO) {
+                    System.loadLibrary("deepeye_core")
+                }
+                loaded = true
+                Log.i(TAG, "deepeye_core loaded OK")
+            } catch (e: UnsatisfiedLinkError) {
+                loaded = false
+                Log.e(TAG, "deepeye_core FAILED: ${e.message}")
+            }
         }
     }
 

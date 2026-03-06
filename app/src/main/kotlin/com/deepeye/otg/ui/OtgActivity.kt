@@ -8,8 +8,9 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.EditText
-import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,12 +50,8 @@ class OtgActivity : AppCompatActivity() {
     private var lastInitializedDeviceKey: String? = null
 
     // Queue & Wait session manager
-    private lateinit var sessionManager: UsbSessionManager
-    private lateinit var usbReceiver: UsbBroadcastReceiver
-
-    // Hidden license dialog: triple-tap counter
-    private var tapCount = 0
-    private var lastTapTime = 0L
+    private val sessionManager by lazy { UsbSessionManager(this) }
+    private val usbReceiver by lazy { UsbBroadcastReceiver(sessionManager) }
 
     // Log State for Compose
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
@@ -66,6 +63,8 @@ class OtgActivity : AppCompatActivity() {
     data class LogEntry(val message: String, val type: String, val timestamp: String)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         // ┌──────────────────────────────────────────────────────┐
@@ -121,10 +120,26 @@ class OtgActivity : AppCompatActivity() {
             }
         }
 
-        // 2. Deferred init — runs on IO thread AFTER setContent returns
+        // 2. Register receivers/controllers after first frame setup
+        registerUsbReceiver()
+        controller.register(scanExistingDevices = false)
+        lifecycleScope.launch {
+            controller.state.collect { session ->
+                updateUiFromSession(session)
+                latestSession = session
+            }
+        }
+
+        // 3. Deferred init — runs on IO thread AFTER setContent returns
         lifecycleScope.launch(Dispatchers.IO) {
             // Wait for native lib (Application already started loading it)
             NativeBridge.loadAsync()
+
+            // USB manager warmup (can be slow on first call)
+            sessionManager.initAsync()
+
+            // Existing attached-device bootstrap off main thread
+            controller.bootstrapAttachedDevicesAsync()
 
             // Init license system (lightweight, but off main thread to be safe)
             withContext(Dispatchers.Main) {
@@ -134,20 +149,8 @@ class OtgActivity : AppCompatActivity() {
             // Load device database from assets
             loadDeviceDatabase()
 
-            // Init session manager + USB receiver on main thread
+            // Finish lightweight startup state
             withContext(Dispatchers.Main) {
-                sessionManager = UsbSessionManager(this@OtgActivity)
-                usbReceiver = UsbBroadcastReceiver(sessionManager)
-                registerUsbReceiver()
-
-                controller.register()
-                lifecycleScope.launch {
-                    controller.state.collect { session ->
-                        updateUiFromSession(session)
-                        latestSession = session
-                    }
-                }
-
                 // Observe license role changes
                 lifecycleScope.launch {
                     LicenseManager.role.collect { role ->
@@ -261,36 +264,6 @@ class OtgActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun runUsbDiagnostic() {
-        val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-        val devices = usbManager.deviceList
-        val sb = StringBuilder()
-        sb.appendLine("=== DeepEye USB Diagnostic ===")
-        sb.appendLine("Timestamp: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
-        sb.appendLine("Android SDK: ${Build.VERSION.SDK_INT}")
-        sb.appendLine("Devices found: ${devices.size}")
-        sb.appendLine()
-
-        if (devices.isEmpty()) {
-            sb.appendLine("No USB devices detected.")
-        }
-
-        for ((name, device) in devices) {
-            sb.appendLine("─── Device: $name ───")
-            sb.appendLine("  VID: 0x${"%04X".format(device.vendorId)}, PID: 0x${"%04X".format(device.productId)}")
-            sb.appendLine("  Name: ${device.productName ?: "N/A"}")
-            sb.appendLine("  hasPermission: ${usbManager.hasPermission(device)}")
-            sb.appendLine()
-        }
-
-        log(sb.toString(), "INFO")
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("USB Diagnostic")
-            .setMessage(sb.toString())
-            .setPositiveButton("OK") { d, _ -> d.dismiss() }
-            .show()
-    }
-    
     private fun loadDeviceDatabase() {
         try {
             val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
@@ -344,7 +317,7 @@ class OtgActivity : AppCompatActivity() {
         if (nativeHandle != 0L && NativeBridge.isLoaded()) NativeBridge.closeCore(nativeHandle)
         controller.unregister()
         try { unregisterReceiver(usbReceiver) } catch (_: Exception) {}
-        if (::sessionManager.isInitialized) sessionManager.destroy()
+        sessionManager.destroy()
         super.onDestroy()
     }
 

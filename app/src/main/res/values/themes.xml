@@ -14,4 +14,10 @@
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
+
+    <style name="Theme.DeepEye.Portable.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#05050F</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.DeepEye.Portable</item>
+    </style>
 </resources>
