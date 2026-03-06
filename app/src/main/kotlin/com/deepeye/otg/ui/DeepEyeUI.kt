@@ -251,20 +251,22 @@ fun GradientRunButton(
 }
 
 // Alias for backward compat
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = DeepEyeColors.PrimaryGlow
+    @Suppress("unused") containerColor: Color = DeepEyeColors.PrimaryGlow
 ) = GradientRunButton(text = text, onClick = onClick, modifier = modifier)
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun PrimaryIconButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = DeepEyeColors.PrimaryGlow
+    @Suppress("unused") containerColor: Color = DeepEyeColors.PrimaryGlow
 ) = GradientRunButton(text = text, onClick = onClick, modifier = modifier)
 
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = composed {

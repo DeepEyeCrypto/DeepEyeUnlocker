@@ -1,13 +1,13 @@
-# DeepEye Unlocker v2026.1
+# DeepEye Unlocker v2026.3
 
-> Universal Power. Precision Control. Zero Latency.
+> Universal Power. Precision Control. Liquid Glass.
 
 ![DeepEye Banner](assets/deepeye_readme_banner.png)
 
-[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?style=flat-square&color=6C3EF4)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest)
+[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?style=flat-square&color=9C6FFF)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest)
 [![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
 [![Platform](https://img.shields.io/badge/Platform-Android%20(OTG)-green.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
-[![UI](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
+[![UI](https://img.shields.io/badge/UI-Liquid%20Glass%20·%20Compose-9C6FFF.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
 
 ---
 
@@ -19,13 +19,16 @@ DeepEye Unlocker is a high-performance Android application designed for mobile t
 
 ## ✨ Features
 
-### 🎨 Modern Dark UI
+### 🎨 Liquid Glass UI (v2)
 
 - **Jetpack Compose Native:** Built from the ground up with a premium, zero-latency interface
-- **Dark Theme:** Sleek dark UI (bg `#0D0D1A`, primary `#6C3EF4`) with Material3
-- **6 Brand Tabs:** Xiaomi, Samsung, Oppo, Vivo, Realme, OnePlus
-- **24 Feature Cards:** Organized across 6 groups with tier badge system
-- **Terminal Console:** Real-time log overlay for deep diagnostic visibility
+- **Liquid Glass Theme:** Deep space gradient bg (`#05050F` → `#0A0015`) with animated purple/blue orbs
+- **Glassmorphism:** Frosted glass cards (`white/5%` + `white/12%` border) throughout
+- **Gradient Accents:** Purple gradient buttons (`#9747FF` → `#6B2FE0`), frosted pill badges
+- **6 Brand Tabs:** Xiaomi, Samsung, Oppo, Vivo, Realme, OnePlus — glass pill style
+- **24 Feature Cards:** Organized across 6 groups with glow-border tier badges
+- **macOS-Style Terminal:** Traffic light dots (🔴🟡🟢) with color-coded logs and blinking cursor
+- **Remote Tunnel:** Glass-themed remote device sharing with session ID display
 
 ### 🔌 Advanced USB OTG Engine
 
@@ -51,7 +54,7 @@ DeepEye Unlocker is a high-performance Android application designed for mobile t
 
 ### Prerequisites
 
-- Android Studio Hedgehog or newer
+- JDK 17 (Temurin recommended)
 - Android SDK 26+ (Android 8.0 → 15+)
 - NDK 25.1.8937393 + CMake 3.22.1
 - OTG Adapter (Type-C to USB-A or C-to-C)
@@ -61,8 +64,16 @@ DeepEye Unlocker is a high-performance Android application designed for mobile t
 ```bash
 git clone https://github.com/DeepEyeCrypto/DeepEyeUnlocker.git
 cd DeepEyeUnlocker
-./gradlew :app:assembleRelease
+
+# Set environment
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export ANDROID_HOME=/usr/local/share/android-commandlinetools
+
+# Build signed release
+./gradlew assembleRelease
 ```
+
+APK output: `app/build/outputs/apk/release/app-release.apk`
 
 Run on a **physical Android device** — emulators do not support OTG.
 
@@ -70,10 +81,10 @@ Run on a **physical Android device** — emulators do not support OTG.
 
 ## 🏗️ Architecture
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  Jetpack Compose UI (Kotlin)        │
-│  Material3 · Dark Theme · Compose   │
+│  Material3 · Liquid Glass · Compose │
 ├─────────────────────────────────────┤
 │  Business Logic                     │
 │  Coroutines · Flow · ViewModel      │
@@ -85,6 +96,20 @@ Run on a **physical Android device** — emulators do not support OTG.
 │  EDL · BROM · Odin · FDL · Firehose │
 │  libusb 1.0.26 · ITransport         │
 └─────────────────────────────────────┘
+```
+
+### Design System
+
+```
+DeepEyeColors (DeepEyeUI.kt)
+├── BgStart: #05050F → BgEnd: #0A0015  (deep space gradient)
+├── PrimaryGlow: #7C4DFF               (accent purple)
+├── AccentPurple: #9C6FFF              (highlights)
+├── GradientButton: #9747FF → #6B2FE0  (RUN buttons)
+├── GlassCardBg: white/5%             (frosted cards)
+├── GlassBorder: white/12%            (card borders)
+├── Tier1: #69FF47  Tier2: #FFD740  Tier3: #FF6E6E
+└── Terminal: green #4ADE80, yellow #FACC15
 ```
 
 ---

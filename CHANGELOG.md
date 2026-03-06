@@ -6,6 +6,73 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.3] — 2026-03-06
+
+### 🎨 Liquid Glass Polish — Full Theme + Cleanup
+
+Final polish pass: every screen now uses Liquid Glass, all compiler
+warnings resolved, README updated, version bumped.
+
+### Changed
+
+- **RemoteShareScreen**: Upgraded to Liquid Glass — frosted back button,
+  glass status card, monospace session code, gradient START / red STOP,
+  glass text field + CONNECT button
+- **README.md**: Updated to v2026.3 — Liquid Glass branding, design
+  system docs, color token reference, build instructions with env vars
+- **CHANGELOG.md**: Added v2026.2 + v2026.3 entries
+- **Version**: Bumped `versionCode` 20263, `versionName` "2026.3"
+
+### Fixed
+
+- Deprecated `Divider` → `HorizontalDivider` in RemoteShareScreen
+- Unused `containerColor` parameter warnings in `PrimaryButton` / `PrimaryIconButton`
+- Hard-coded v1 colors in RemoteShareScreen replaced with design tokens
+
+---
+
+## [2026.2] — 2026-03-06
+
+### 🎨 Liquid Glass UI — Glassmorphism Overhaul from Stitch
+
+Complete visual retheme from solid dark to Liquid Glass — frosted glass
+cards, gradient borders, animated orbs, macOS-style terminal.
+
+### Added
+
+- **DeepSpaceBackground**: Gradient bg (#05050F → #0A0015) with purple/blue
+  radial gradient orbs
+- **GlassCard**: Frosted glass component (white/5% bg + white/12% border)
+- **GlassPill**: Frosted pill badges/buttons
+- **GradientRunButton**: Purple gradient (#9747FF → #6B2FE0) replacing solid
+- **OperationTierBadge**: Glow-border pill with tier colors
+- macOS-style terminal: traffic light dots (🔴🟡🟢) + blinking cursor
+- PAUSE (glass) + ABORT (red glass) buttons on executing screen
+- Bottom navigation bar (Home / Devices / Settings)
+
+### Changed
+
+- **MainScreen**: Glass header, frosted pill brand tabs, glass model selector
+- **FeatureListScreen**: Frosted pill category headers, 140dp glass cards
+- **WaitingForDeviceScreen**: Animated orbs, frosted card, radial icon bg
+- **ExecutingOperationScreen**: Glass header + gradient progress + terminal
+- **OperationCompleteScreen**: DeepSpaceBackground + glass card
+- **ErrorScreen**: DeepSpaceBackground + red glass RETRY
+- **PermissionDeniedScreen**: DeepSpaceBackground + amber glass TRY AGAIN
+- **ConnectedMtpOnlyScreen**: DeepSpaceBackground + glass DISMISS
+- **Color tokens**: BgStart #05050F, AccentPurple #9C6FFF, brighter tiers
+  (#69FF47, #FFD740, #FF6E6E)
+
+### Fixed
+
+- **ANR on API < 31**: Replaced `Modifier.blur()` (requires Android 12+) with
+  `Brush.radialGradient()` — identical visual, works on all API levels from 26
+- **Build**: Moved mid-file imports to top (invalid Kotlin syntax)
+- **Compose compat**: Used `Modifier.composed` + `remember { MutableInteractionSource() }`
+  instead of `interactionSource = null` (requires Compose 1.7+)
+
+---
+
 ## [2026.1] — 2026-03-05
 
 ### 🔒 Hardening Release — Native Transport & EDL Stabilization
@@ -177,6 +244,8 @@ security research on personal/lab devices.
 
 ---
 
+[2026.3]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.3
+[2026.2]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.2
 [2026.1]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.1
 [1.0.2]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.0.2
 [1.0.1]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v1.0.1
