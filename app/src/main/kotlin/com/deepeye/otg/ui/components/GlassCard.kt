@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
@@ -59,6 +60,12 @@ fun GlassCard(
                 scaleX = scale
                 scaleY = scale
             }
+            .shadow(
+                elevation = 4.dp,
+                shape = shape,
+                ambientColor = Color(0xFF6750A4).copy(alpha = 0.12f),
+                spotColor = Color(0xFF6750A4).copy(alpha = 0.08f)
+            )
             .clip(shape)
             .then(
                 if (hazeState != null && !performanceMode) {
