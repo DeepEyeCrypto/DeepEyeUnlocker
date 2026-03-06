@@ -31,7 +31,6 @@ import com.deepeye.otg.ui.components.GlassTierBadge
 import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.data.ConnectionMode
-import com.deepeye.otg.data.availableFeatureIds
 import com.deepeye.otg.ui.components.ConnectionModeBar
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -52,9 +51,7 @@ fun MainScreen(viewModel: UsbViewModel) {
     
     val selectedMode by viewModel.selectedMode.collectAsState()
     val availableIds by viewModel.availableFeatureIds.collectAsState()
-
-    // For this UI version, groups are global categories shown for every brand
-    val groups = FeatureData.groups
+    val brandFeatures by viewModel.activeBrandFeatures.collectAsState()
 
     Box(
         modifier = Modifier
@@ -125,13 +122,13 @@ fun MainScreen(viewModel: UsbViewModel) {
             }
 
             // Groups and Features
-            groups.forEach { group ->
-                item {
+            brandFeatures.groups.forEach { group ->
+                item(key = group.id) {
                     GroupHeader(title = group.title)
                 }
 
                 val rowChunks = group.features.chunked(2)
-                items(rowChunks) { rowItems ->
+                items(rowChunks, key = { it.joinToString { f -> f.id } }) { rowItems ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
