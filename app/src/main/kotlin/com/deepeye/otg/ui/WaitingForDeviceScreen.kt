@@ -83,14 +83,22 @@ fun WaitingForDeviceScreen(
     }
 
     DeepSpaceBackground {
-        // Extra animated orb
+        // Extra animated orb (radial gradient instead of blur for API < 31)
         Box(
             modifier = Modifier
-                .size(200.dp)
+                .size(300.dp)
                 .align(Alignment.Center)
                 .offset(y = floatY.dp)
-                .blur(120.dp)
-                .background(DeepEyeColors.OrbPurple.copy(alpha = 0.30f), CircleShape)
+                .background(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF6C3EF4).copy(alpha = 0.25f),
+                            Color(0xFF6C3EF4).copy(alpha = 0.05f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
         )
 
         // ── Top bar ──

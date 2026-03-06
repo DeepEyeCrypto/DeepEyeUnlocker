@@ -119,22 +119,38 @@ fun DeepSpaceBackground(
             .fillMaxSize()
             .background(DeepEyeColors.BgGradient)
     ) {
-        // Purple orb — top left
+        // Purple orb — top left (large + low alpha instead of blur)
         Box(
             modifier = Modifier
-                .size(300.dp)
-                .offset(x = (-80).dp, y = (-80).dp)
-                .blur(100.dp)
-                .background(DeepEyeColors.OrbPurple, CircleShape)
+                .size(400.dp)
+                .offset(x = (-100).dp, y = (-100).dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF6C3EF4).copy(alpha = 0.20f),
+                            Color(0xFF6C3EF4).copy(alpha = 0.05f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
         )
         // Blue orb — bottom right
         Box(
             modifier = Modifier
-                .size(300.dp)
+                .size(400.dp)
                 .align(Alignment.BottomEnd)
-                .offset(x = 80.dp, y = 80.dp)
-                .blur(80.dp)
-                .background(DeepEyeColors.OrbBlue, CircleShape)
+                .offset(x = 100.dp, y = 100.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF3E7FF4).copy(alpha = 0.15f),
+                            Color(0xFF3E7FF4).copy(alpha = 0.03f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
         )
         content()
     }
