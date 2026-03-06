@@ -35,6 +35,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import android.util.Log
 
 class OtgActivity : AppCompatActivity() {
     
@@ -45,13 +49,23 @@ class OtgActivity : AppCompatActivity() {
     private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
     private var allModels: List<DeviceModel> = emptyList()
 
-    private val controller by lazy { UsbConnectionController(this, lifecycleScope) }
-    private var latestSession: UsbSessionState = UsbSessionState()
-    private var lastInitializedDeviceKey: String? = null
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    // Queue & Wait session manager
-    private val sessionManager by lazy { UsbSessionManager(this) }
-    private val usbReceiver by lazy { UsbBroadcastReceiver(sessionManager) }
+    // Lifecycle Manager
+    private val lifecycleManager by lazy { 
+        com.deepeye.otg.usb.UsbLifecycleManager(
+            this, 
+            getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager,
+            appScope
+        ) 
+    }
+
+    private val usbReceiver by lazy {
+        com.deepeye.otg.usb.UsbBroadcastReceiver(
+            lifecycleManager = lifecycleManager,
+            scope = appScope
+        )
+    }
 
     // Log State for Compose
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
@@ -60,30 +74,39 @@ class OtgActivity : AppCompatActivity() {
     // ── Engine loading state ────────────────────────────────────
     private val _engineLoaded = MutableStateFlow(false)
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // ┌──────────────────────────────────────────────────────┐
-        // │  RULE: onCreate MUST return in < 100ms               │
-        // │  setContent is the ONLY heavy thing here.            │
-        // │  Everything else → IO thread AFTER UI is up.         │
-        // └──────────────────────────────────────────────────────┘
-
         val settingsManager = com.deepeye.otg.data.SettingsManager(this)
         val viewModel = com.deepeye.otg.viewmodel.UsbViewModel(
-            sessionManager = sessionManager,
+            context = this,
+            lifecycleManager = lifecycleManager,
             settings = settingsManager,
-            usbState = controller.state,
+            usbState = kotlinx.coroutines.flow.MutableStateFlow(com.deepeye.otg.UsbSessionState.Idle).asStateFlow(),
             logs = logs
         )
 
         setContent {
             com.deepeye.otg.ui.theme.DeepEyeTheme {
                 val engineReady by _engineLoaded.collectAsState()
+                
+                // Foreground Service Orchestrator
+                val activeState by viewModel.activeUsbState.collectAsState()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                
+                LaunchedEffect(activeState) {
+                    val serviceIntent = Intent(context, com.deepeye.otg.service.UsbForegroundService::class.java)
+                    if (activeState is com.deepeye.otg.UsbSessionState.ConnectedReady) {
+                        serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_START
+                        context.startForegroundService(serviceIntent)
+                    } else if (activeState is com.deepeye.otg.UsbSessionState.Idle || activeState is com.deepeye.otg.UsbSessionState.Error) {
+                        serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_STOP
+                        context.startService(serviceIntent)
+                    }
+                }
+
                 if (!engineReady) {
                     com.deepeye.otg.ui.screens.LoadingScreen()
                 } else {
@@ -91,226 +114,61 @@ class OtgActivity : AppCompatActivity() {
                 }
             }
         }
-
-        // 2. Register receivers/controllers after first frame setup
+        
         registerUsbReceiver()
-        controller.register(scanExistingDevices = false)
-        lifecycleScope.launch {
-            controller.state.collect { session ->
-                updateUiFromSession(session)
-                latestSession = session
-            }
+
+        // Handle device that was already connected when app launched
+        val deviceFromIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent?.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE, android.hardware.usb.UsbDevice::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent?.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE)
+        }
+        
+        deviceFromIntent?.let { device ->
+            lifecycleManager.onDeviceAttached(device)
         }
 
-        // 3. Deferred init — runs on IO thread AFTER setContent returns
         lifecycleScope.launch(Dispatchers.IO) {
-            // Wait for native lib (Application already started loading it)
-            NativeBridge.loadAsync()
-
-            // USB manager warmup (can be slow on first call)
-            sessionManager.initAsync()
-
-            // Existing attached-device bootstrap off main thread
-            controller.bootstrapAttachedDevicesAsync()
-
-            // Init license system (lightweight, but off main thread to be safe)
-            withContext(Dispatchers.Main) {
-                LicenseManager.init(this@OtgActivity)
-            }
-
-            // Load device database from assets
+            com.deepeye.otg.NativeBridge.loadAsync()
             loadDeviceDatabase()
-
-            // Finish lightweight startup state
             withContext(Dispatchers.Main) {
-                // Observe license role changes
-                lifecycleScope.launch {
-                    LicenseManager.role.collect { role ->
-                        log("[AUTH] Role: ${role.label} (level=${role.level})", "INFO")
-                    }
-                }
-
-                log("DeepEye Unlocker v${com.deepeye.otg.BuildConfig.VERSION_NAME} Ready - ${allModels.size} models loaded. [${LicenseManager.currentRole.label}]", "SUCCESS")
-
-                // ── Signal engine ready — switches from loading screen to main UI
+                com.deepeye.otg.auth.LicenseManager.init(this@OtgActivity)
                 _engineLoaded.value = true
             }
         }
     }
 
     private fun registerUsbReceiver() {
-        val usbFilter = IntentFilter().apply {
-            addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED)
-            addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
-            addAction(UsbSessionManager.ACTION_USB_PERMISSION)
+        val filter = IntentFilter().apply {
+            addAction(android.hardware.usb.UsbManager.ACTION_USB_DEVICE_ATTACHED)
+            addAction(android.hardware.usb.UsbManager.ACTION_USB_DEVICE_DETACHED)
+            addAction(com.deepeye.otg.usb.UsbSessionManager.ACTION_USB_PERMISSION)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(usbReceiver, usbFilter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
-            registerReceiver(usbReceiver, usbFilter)
+            registerReceiver(usbReceiver, filter)
         }
     }
 
-    // --- HELPER FUNCTIONS ---
-
-    private fun hapticFeedback() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-            vm.defaultVibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
-        }
-    }
-    
-    private fun log(message: String, type: String = "INFO") {
-        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
-        _logs.value = (_logs.value + LogEntry(message, type, timestamp)).takeLast(500)
-    }
-
-    private fun showModelSelectionDialog() {
-        val brands = deviceDatabase.keys.toList().sorted()
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-        builder.setTitle("Select Brand")
-        builder.setItems(brands.toTypedArray()) { _, which ->
-            val brand = brands[which]
-            showModelListDialog(brand)
-        }
-        builder.show()
-    }
-    
-    private fun showModelListDialog(brand: String) {
-        val models = deviceDatabase[brand] ?: emptyList()
-        val modelNames = models.map { "${it.name} (${it.chipset})" }.toTypedArray()
-        
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-        builder.setTitle("$brand Models")
-        builder.setItems(modelNames) { _, which ->
-            val model = models[which]
-            selectedBrand = brand
-            selectedModelName = model.name
-            log("Selected: ${model.name} (${model.chipset})", "INFO")
-        }
-        builder.show()
-    }
-
-    private fun initializeCore(fd: Int, vid: Int, pid: Int, protocolLabel: String) {
-        if (!NativeBridge.isLoaded()) {
-            log("[OTG-NATIVE] Cannot init — native lib not loaded yet", "ERROR")
-            return
-        }
-
-        log("[OTG-NATIVE] initCore(fd=$fd, $vid:$pid, proto=$protocolLabel)...", "INFO")
-        
-        Thread {
-            try {
-                nativeHandle = NativeBridge.initCore(fd, vid, pid)
-                if (nativeHandle != 0L) {
-                    runOnUiThread { log("Native Handshake: Identifying device...", "INFO") }
-                    val identified = try {
-                        NativeBridge.identifyDevice(nativeHandle)
-                    } catch (e: Exception) {
-                        runOnUiThread { log("[OTG-NATIVE] identifyDevice threw: ${e.message}","ERROR") }
-                        false
-                    }
-                    
-                    runOnUiThread {
-                        if (identified) {
-                            log("Connected: Handshake OK ($protocolLabel)", "SUCCESS")
-                        } else {
-                            NativeBridge.closeCore(nativeHandle)
-                            nativeHandle = 0L
-                            log("Handshake failed. Device rejected protocol $protocolLabel.", "ERROR")
-                        }
-                    }
-                } else {
-                    runOnUiThread { log("Native Init Failed (Handle=0). USB Config Error?", "ERROR") }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    log("Native Exception: ${e.message}", "ERROR")
-                    e.printStackTrace()
-                }
-            }
-        }.start()
+    override fun onDestroy() {
+        super.onDestroy()
+        runCatching { unregisterReceiver(usbReceiver) }
+        lifecycleManager.destroy()
+        appScope.cancel()
     }
 
     private fun loadDeviceDatabase() {
         try {
             val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
             val jsonArray = org.json.JSONArray(jsonString)
-            val models = (0 until jsonArray.length()).map { i ->
+            allModels = (0 until jsonArray.length()).map { i ->
                 val obj = jsonArray.getJSONObject(i)
                 DeviceModel(obj.getString("name"), obj.getString("chipset"), obj.getString("brand"))
             }
-            deviceDatabase = models.groupBy { it.brand }.mapValues { it.value.toMutableList() }.toMutableMap()
-            allModels = models
         } catch (e: Exception) {
-            log("DB Load Error: ${e.message}", "ERROR")
+            Log.e("OtgActivity", "DB Load Error: ${e.message}")
         }
     }
-
-    private fun showLicenseDialog() {
-        val current = LicenseManager.currentRole
-        val input = EditText(this).apply {
-            hint = "Enter license token..."
-            setPadding(48, 24, 48, 24)
-        }
-
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("🔑 License Manager")
-            .setView(input)
-            .setPositiveButton("Activate") { _, _ ->
-                val token = input.text.toString().trim()
-                if (token.isNotEmpty()) {
-                    lifecycleScope.launch {
-                        val result = LicenseManager.activateFromBackend(this@OtgActivity, token)
-                        if (result.isSuccess) {
-                            log("[AUTH] License activated", "SUCCESS")
-                        } else {
-                            log("[AUTH] Activation failed", "ERROR")
-                        }
-                    }
-                }
-            }
-            .setNegativeButton("Cancel", null)
-
-        if (current == com.deepeye.otg.policy.UserRole.DEV || !LicenseManager.isLicensed) {
-            builder.setNeutralButton("Dev Mode") { _, _ ->
-                LicenseManager.setRole(com.deepeye.otg.policy.UserRole.DEV)
-                log("[AUTH] Dev mode activated", "SUCCESS")
-            }
-        }
-        builder.show()
-    }
-
-    override fun onDestroy() {
-        if (nativeHandle != 0L && NativeBridge.isLoaded()) NativeBridge.closeCore(nativeHandle)
-        controller.unregister()
-        try { unregisterReceiver(usbReceiver) } catch (_: Exception) {}
-        sessionManager.destroy()
-        super.onDestroy()
-    }
-
-    private fun updateUiFromSession(session: UsbSessionState) {
-        log("[STATE] ${latestSession.state} → ${session.state}", "INFO")
-        when (session.state) {
-            ConnState.CONNECTED_READY -> {
-                val fd = session.connectionFd ?: -1
-                val vid = session.vid ?: 0
-                val pid = session.pid ?: 0
-                val deviceKey = session.deviceKey
-                if (deviceKey != null && deviceKey != lastInitializedDeviceKey && fd > 0) {
-                    lastInitializedDeviceKey = deviceKey
-                    initializeCore(fd, vid, pid, session.protocol.name)
-                }
-            }
-            ConnState.ERROR -> {
-                session.lastError?.let { log("[ERROR] $it", "ERROR") }
-            }
-            else -> {}
-        }
-    }
-
 }

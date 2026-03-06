@@ -5,59 +5,38 @@ import android.content.Context
 import android.content.Intent
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
-import android.os.Build
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-/**
- * Standalone BroadcastReceiver that delegates all USB events to [UsbSessionManager].
- *
- * Register from Activity/Service with the three actions:
- *   ACTION_USB_DEVICE_ATTACHED, ACTION_USB_DEVICE_DETACHED, ACTION_USB_PERMISSION
- */
 class UsbBroadcastReceiver(
-    private val manager: UsbSessionManager
+    private val lifecycleManager: UsbLifecycleManager,
+    private val scope: CoroutineScope
 ) : BroadcastReceiver() {
 
-    companion object {
-        private const val TAG = "DeepEye-UsbRx"
-    }
-
     override fun onReceive(context: Context, intent: Intent) {
-        val device = extractDevice(intent)
+        val device: android.hardware.usb.UsbDevice? = intent.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE)
 
         when (intent.action) {
-            UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
-                device?.let {
-                    Log.i(TAG, "[USB] Broadcast: ATTACHED ${it.deviceName}")
-                    manager.onDeviceAttached(it)
-                }
+
+            android.hardware.usb.UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
+                device ?: return
+                lifecycleManager.onDeviceAttached(device)
             }
 
-            UsbManager.ACTION_USB_DEVICE_DETACHED -> {
-                device?.let {
-                    Log.i(TAG, "[USB] Broadcast: DETACHED ${it.deviceName}")
-                    manager.onDeviceDetached(it)
-                }
+            android.hardware.usb.UsbManager.ACTION_USB_DEVICE_DETACHED -> {
+                device ?: return
+                lifecycleManager.onDeviceDetached(device)
             }
 
             UsbSessionManager.ACTION_USB_PERMISSION -> {
+                device ?: return
                 val granted = intent.getBooleanExtra(
-                    UsbManager.EXTRA_PERMISSION_GRANTED, false
+                    android.hardware.usb.UsbManager.EXTRA_PERMISSION_GRANTED, false
                 )
-                device?.let {
-                    Log.i(TAG, "[PERM] Broadcast: granted=$granted ${it.deviceName}")
-                    manager.onPermissionResult(it, granted)
-                }
+                lifecycleManager.onPermissionResult(device, granted)
             }
-        }
-    }
-
-    private fun extractDevice(intent: Intent): UsbDevice? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
         }
     }
 }

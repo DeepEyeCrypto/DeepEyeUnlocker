@@ -6,6 +6,17 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.14] — 2026-03-06
+
+### ✨ USB Stability God Patch
+
+- **SafeBulkTransfer Engine**: Implemented protocol-tuned timeouts, 16KB chunking, and automatic stall detection (CLEAR_FEATURE) to stabilize high-speed data transfers.
+- **USB Lifecycle Manager**: 10-state machine (Idle→Connected→Dead) to prevent race conditions during rapid cable flapping and activity recreation.
+- **OEM Compatibility Layer**: Hardened logic for Samsung (buffer padding), MIUI (50ms post-claim delay), Huawei/Honor (3x open retry), and Vivo (OTG settings link).
+- **USB Foreground Service**: Prevents Android battery-savers from killing long-running USB sessions like full firmware flashing.
+- **Connection Health UI**: Real-time health monitoring (Healthy/Degraded/Dead) integrated into top bar for visual assurance.
+- **Connection Test Screen**: Comprehensive 8-step diagnostic for testing phone-to-phone OTG connectivity without drivers.
+
 ## [2026.6] — 2026-03-06
 
 ### ✨ Liquid Glass UI Rebuild

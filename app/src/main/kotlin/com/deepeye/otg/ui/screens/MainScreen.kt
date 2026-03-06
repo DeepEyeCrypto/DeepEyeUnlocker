@@ -54,6 +54,9 @@ fun MainScreen(viewModel: UsbViewModel) {
     val selectedMode by viewModel.selectedMode.collectAsState()
     val availableIds by viewModel.availableFeatureIds.collectAsState()
     val brandFeatures by viewModel.activeBrandFeatures.collectAsState()
+    val activeUsbState by viewModel.activeUsbState.collectAsState()
+    val statusMsg by viewModel.statusMsg.collectAsState()
+    val health by viewModel.connectionHealth.collectAsState()
 
     Box(
         modifier = Modifier
@@ -82,36 +85,80 @@ fun MainScreen(viewModel: UsbViewModel) {
                 .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
             contentPadding = PaddingValues(top = 185.dp, bottom = 32.dp) // Adjusted for dual selector bars
         ) {
-            // Device Status Box
-            if (isConnected && deviceName != null) {
-                item {
-                    GlassCard(
-                        hazeState = hazeState,
-                        performanceMode = perfMode,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+            item {
+                com.deepeye.otg.ui.components.OemWarningBanner()
+            }
+            
+            // Device Status Box: Diagnostic or Connection
+            when (val usb = activeUsbState) {
+                is com.deepeye.otg.UsbSessionState.ConnectedReady -> {
+                    item {
+                        GlassCard(
+                            hazeState = hazeState,
+                            performanceMode = perfMode,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF22C55E))
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val pulse = rememberInfiniteTransition(label = "dot")
+                                val dotAlpha by pulse.animateFloat(
+                                    0.4f, 1f,
+                                    infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+                                    label = "dotAlpha"
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF22C55E).copy(alpha = dotAlpha))
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = usb.deviceName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = statusMsg,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                is com.deepeye.otg.UsbSessionState.Error -> {
+                    item {
+                        GlassCard(
+                            hazeState = hazeState,
+                            performanceMode = perfMode,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+                        ) {
                             Text(
-                                text = "Connected: $deviceName",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = usb.message,
+                                modifier = Modifier.padding(16.dp),
+                                color = Color(0xFFFCA5A5),
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
                 }
+                is com.deepeye.otg.UsbSessionState.Idle -> {
+                    item {
+                        ConnectionTestScreen(viewModel = viewModel)
+                    }
+                }
+                else -> Unit
             }
 
             // Connection Mode Bar
@@ -176,6 +223,49 @@ fun MainScreen(viewModel: UsbViewModel) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+
+                if (activeUsbState is com.deepeye.otg.UsbSessionState.ConnectedReady) {
+                    val healthBaseColor = when (health) {
+                        com.deepeye.otg.usb.ConnectionHealth.DEGRADED -> Color(0xFFF59E0B) // Amber
+                        com.deepeye.otg.usb.ConnectionHealth.DEAD -> Color(0xFFEF4444) // Red
+                        com.deepeye.otg.usb.ConnectionHealth.PAUSED -> Color(0xFF6B7280) // Gray
+                        else -> Color(0xFF059669) // Green
+                    }
+                    
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(healthBaseColor.copy(alpha = 0.12f))
+                            .border(
+                                1.dp, healthBaseColor.copy(0.40f),
+                                RoundedCornerShape(20.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        val pulse = rememberInfiniteTransition(label = "dot")
+                        val dotAlpha by pulse.animateFloat(
+                            0.5f, 1f,
+                            infiniteRepeatable(tween(800), RepeatMode.Reverse),
+                            label = "dotAlpha"
+                        )
+                        Box(
+                            Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(healthBaseColor.copy(dotAlpha))
+                        )
+                        Text(
+                            (activeUsbState as com.deepeye.otg.UsbSessionState.ConnectedReady).deviceName,
+                            fontSize = 10.sp, color = healthBaseColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (health == com.deepeye.otg.usb.ConnectionHealth.DEGRADED) {
+                            Text("UNSTABLE", fontSize = 8.sp, color = Color(0xFFF59E0B), fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RemoteBadge()

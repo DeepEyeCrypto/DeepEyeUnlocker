@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Qualcomm EDL 9008 -->
+    <usb-device vendor-id="1478" product-id="36872" />
+    <!-- 0x05C6, 0x9008 -->
+    <usb-device vendor-id="1478" product-id="36878" />
+    <!-- 0x05C6, 0x900E -->
+    <usb-device vendor-id="1478" product-id="36901" />
+    <!-- 0x05C6, 0x9025 -->
+    <usb-device vendor-id="1478" product-id="24576" />
+    <!-- 0x05C6, 0x6000 -->
+
+    <!-- MediaTek BROM/Preloader/META -->
+    <usb-device vendor-id="3725" product-id="3" />
+    <!-- 0x0E8D, 0x0003 -->
+    <usb-device vendor-id="3725" product-id="8192" />
+    <!-- 0x0E8D, 0x2000 -->
+    <usb-device vendor-id="3725" product-id="35" />
+    <!-- 0x0E8D, 0x0023 -->
+    <usb-device vendor-id="3725" product-id="23" />
+    <!-- 0x0E8D, 0x0017 -->
+
+    <!-- Google / AOSP ADB + Fastboot -->
+    <usb-device vendor-id="6353" product-id="20199" />
+    <!-- 0x18D1, 0x4EE7 -->
+    <usb-device vendor-id="6353" product-id="20192" />
+    <!-- 0x18D1, 0x4EE0 -->
+    <usb-device vendor-id="6353" product-id="3330" />
+    <!-- 0x18D1, 0x0D02 -->
+
+    <!-- Xiaomi -->
+    <usb-device vendor-id="10007" />
+    <!-- 0x2717 -->
+
+    <!-- Samsung -->
+    <usb-device vendor-id="1256" />
+    <!-- 0x04E8 -->
+
+    <!-- Oppo / Realme -->
+    <usb-device vendor-id="8921" />
+    <!-- 0x22D9 -->
+
+    <!-- Vivo -->
+    <usb-device vendor-id="11669" />
+    <!-- 0x2D95 -->
+
+    <!-- OnePlus -->
+    <usb-device vendor-id="10864" />
+    <!-- 0x2A70 -->
+
+    <!-- HTC -->
+    <usb-device vendor-id="3000" />
+    <!-- 0x0BB4 -->
+
+    <!-- Motorola -->
+    <usb-device vendor-id="8888" />
+    <!-- 0x22B8 -->
+
+    <!-- Sony -->
+    <usb-device vendor-id="4046" />
+    <!-- 0x0FCE -->
+</resources>
