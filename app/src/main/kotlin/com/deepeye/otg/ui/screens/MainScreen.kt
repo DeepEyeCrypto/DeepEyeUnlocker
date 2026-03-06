@@ -31,6 +31,8 @@ import com.deepeye.otg.ui.components.GlassTierBadge
 import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.data.ConnectionMode
+import com.deepeye.otg.data.BrandData
+import com.deepeye.otg.ui.components.BrandSelectorBar
 import com.deepeye.otg.ui.components.ConnectionModeBar
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -46,7 +48,7 @@ fun MainScreen(viewModel: UsbViewModel) {
     val perfMode by viewModel.performanceMode.collectAsState()
     
     val selectedBrandIndex by viewModel.selectedBrand.collectAsState()
-    val brands = FeatureData.brands
+    val brands = BrandData.brands
     val safeBrandIndex = selectedBrandIndex.coerceIn(0, brands.size - 1)
     
     val selectedMode by viewModel.selectedMode.collectAsState()
@@ -78,7 +80,7 @@ fun MainScreen(viewModel: UsbViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
-            contentPadding = PaddingValues(top = 165.dp, bottom = 32.dp) // Adjusted for ConnectionModeBar
+            contentPadding = PaddingValues(top = 185.dp, bottom = 32.dp) // Adjusted for dual selector bars
         ) {
             // Device Status Box
             if (isConnected && deviceName != null) {
@@ -157,7 +159,10 @@ fun MainScreen(viewModel: UsbViewModel) {
         }
 
         // Top Bar & Tabs (Layered above content)
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().background(
+            if (perfMode) MaterialTheme.colorScheme.background.copy(alpha = 0.95f)
+            else Color.Transparent
+        )) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -184,12 +189,10 @@ fun MainScreen(viewModel: UsbViewModel) {
                 }
             }
             
-            GlassTabRow(
-                tabs = brands,
+            BrandSelectorBar(
                 selectedIndex = safeBrandIndex,
-                onSelect = { viewModel.selectedBrand.value = it },
-                hazeState = hazeState,
-                performanceMode = perfMode
+                onBrandSelected = { viewModel.onBrandSelected(it) },
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

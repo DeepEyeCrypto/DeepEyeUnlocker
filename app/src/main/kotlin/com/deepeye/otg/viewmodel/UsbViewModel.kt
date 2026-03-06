@@ -32,7 +32,7 @@ class UsbViewModel(
 
     // List of feature IDs that are supported by the current ConnectionMode
     val availableFeatureIds: StateFlow<List<String>> = combine(activeBrandFeatures, selectedMode) { brandSet, mode ->
-        val supportedMode = SupportedMode.valueOf(mode.name)
+        val supportedMode = mode.toSupportedMode()
         brandSet.groups.flatMap { it.features }
             .filter { it.modes.contains(supportedMode) }
             .map { it.id }
@@ -41,6 +41,13 @@ class UsbViewModel(
     fun onModeSelected(mode: ConnectionMode) {
         _selectedMode.value = mode
     }
+
+    fun onBrandSelected(index: Int) {
+        selectedBrand.value = index
+    }
+
+    private fun ConnectionMode.toSupportedMode(): SupportedMode =
+        SupportedMode.valueOf(this.name)
     
     fun togglePerformance() {
         settings.togglePerformanceMode()
