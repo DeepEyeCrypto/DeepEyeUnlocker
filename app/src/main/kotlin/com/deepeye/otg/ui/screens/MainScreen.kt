@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +30,11 @@ import com.deepeye.otg.ui.components.GlassTabRow
 import com.deepeye.otg.ui.components.GlassTierBadge
 import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
+import com.deepeye.otg.data.ConnectionMode
+import com.deepeye.otg.data.availableFeatureIds
+import com.deepeye.otg.ui.components.ConnectionModeBar
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 
 @Composable
@@ -45,6 +50,9 @@ fun MainScreen(viewModel: UsbViewModel) {
     val brands = FeatureData.brands
     val safeBrandIndex = selectedBrandIndex.coerceIn(0, brands.size - 1)
     
+    val selectedMode by viewModel.selectedMode.collectAsState()
+    val availableIds by viewModel.availableFeatureIds.collectAsState()
+
     // For this UI version, groups are global categories shown for every brand
     val groups = FeatureData.groups
 
@@ -73,7 +81,7 @@ fun MainScreen(viewModel: UsbViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
-            contentPadding = PaddingValues(top = 130.dp, bottom = 32.dp)
+            contentPadding = PaddingValues(top = 165.dp, bottom = 32.dp) // Adjusted for ConnectionModeBar
         ) {
             // Device Status Box
             if (isConnected && deviceName != null) {
@@ -107,6 +115,15 @@ fun MainScreen(viewModel: UsbViewModel) {
                 }
             }
 
+            // Connection Mode Bar
+            item {
+                ConnectionModeBar(
+                    selectedMode = selectedMode,
+                    onModeSelected = { viewModel.onModeSelected(it) },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                )
+            }
+
             // Groups and Features
             groups.forEach { group ->
                 item {
@@ -122,12 +139,14 @@ fun MainScreen(viewModel: UsbViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         rowItems.forEach { feature ->
+                            val isAvailable = availableIds.contains(feature.id)
                             GlassFeatureCard(
                                 feature = feature,
                                 hazeState = hazeState,
                                 performanceMode = perfMode,
+                                enabled = isAvailable,
                                 modifier = Modifier.weight(1f),
-                                onRun = { viewModel.queueOperation(feature) }
+                                onRun = { if (isAvailable) viewModel.queueOperation(feature) }
                             )
                         }
                         if (rowItems.size == 1) {
@@ -140,7 +159,7 @@ fun MainScreen(viewModel: UsbViewModel) {
             }
         }
 
-        // Top Bar & Tabs
+        // Top Bar & Tabs (Layered above content)
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
@@ -242,19 +261,22 @@ private fun GlassFeatureCard(
     feature: FeatureItem,
     hazeState: HazeState,
     performanceMode: Boolean,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
     onRun: () -> Unit
 ) {
     GlassCard(
         hazeState = hazeState,
         performanceMode = performanceMode,
-        modifier = modifier.height(165.dp),
+        modifier = modifier
+            .height(165.dp)
+            .graphicsLayer { alpha = if (enabled) 1f else 0.4f },
         onClick = null
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp) // Requested internal padding
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -291,9 +313,9 @@ private fun GlassFeatureCard(
             
             GlassButton(
                 label = "RUN",
-                onClick = onRun,
+                onClick = if (enabled) onRun else ({}),
                 modifier = Modifier.fillMaxWidth().height(36.dp),
-                accent = true
+                accent = enabled
             )
         }
     }
