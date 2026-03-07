@@ -52,15 +52,19 @@ add_library(deepeye_core SHARED
     core/src/protocols/edl_manager.cpp
     core/src/protocols/brom_manager.cpp
     core/src/protocols/odin_manager.cpp
+    core/src/protocols/fastboot_manager.cpp
     core/src/protocols/fdl_manager.cpp
     core/src/protocols/firehose.cpp
     core/src/protocols/gpt_parser.cpp
     core/src/protocols/sparse_handler.cpp
     core/src/protocols/da_handler.cpp
     core/src/protocols/boot_patcher.cpp
+    core/src/forensics/forensic_engine.cpp
+    core/src/forensics/sqlite_handler.cpp
 )
 
 target_include_directories(deepeye_core PRIVATE
+    ${JNI_ROOT}
     ${JNI_ROOT}/core/include
     ${LIBUSB_ROOT}
     ${CMAKE_BINARY_DIR}

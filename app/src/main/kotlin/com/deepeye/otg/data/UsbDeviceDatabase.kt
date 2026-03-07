@@ -102,9 +102,9 @@ object UsbDeviceDatabase {
         UsbDeviceSignature(0x2717, 0xFF40, "Xiaomi", ConnectionMode.FASTBOOT,
             "Xiaomi Fastboot / Bootloader", "QC/MTK"),
         // Samsung Download Mode (Odin/Fastboot variant)
-        UsbDeviceSignature(0x04E8, 0x685E, "Samsung", ConnectionMode.FASTBOOT,
+        UsbDeviceSignature(0x04E8, 0x685E, "Samsung", ConnectionMode.ODIN,
             "Samsung Download Mode (Odin)", "EXYNOS/QC"),
-        UsbDeviceSignature(0x04E8, 0x6601, "Samsung", ConnectionMode.FASTBOOT,
+        UsbDeviceSignature(0x04E8, 0x6601, "Samsung", ConnectionMode.ODIN,
             "Samsung Odin Download Mode 2", "EXYNOS/QC"),
         // Oppo Fastboot
         UsbDeviceSignature(0x22D9, 0x276A, "Oppo", ConnectionMode.FASTBOOT,
@@ -115,6 +115,15 @@ object UsbDeviceDatabase {
         // Vivo Fastboot
         UsbDeviceSignature(0x2D95, 0x6000, "Vivo", ConnectionMode.FASTBOOT,
             "Vivo Fastboot Mode", "QC/MTK"),
+    )
+
+    // ── UniSoc FDL ────────────────────────────────────────────
+    val FDL_SIGNATURES = listOf(
+        // Spreadtrum/UniSoc Bootloader / FDL mode (usually 0x1782)
+        UsbDeviceSignature(0x1782, 0x4D00, "Spreadtrum", ConnectionMode.FDL,
+            "UniSoc FDL Download Mode", "UNISOC"),
+        UsbDeviceSignature(0x1782, 0x3D00, "Spreadtrum", ConnectionMode.FDL,
+            "UniSoc FDL / Diag", "UNISOC")
     )
 
     // ── MTP (normal USB) ──────────────────────────────────────
@@ -132,7 +141,7 @@ object UsbDeviceDatabase {
     // ── Master lookup ─────────────────────────────────────────
     private val ALL_SIGNATURES =
         EDL_SIGNATURES + MTK_SIGNATURES + ADB_SIGNATURES +
-        FASTBOOT_SIGNATURES + MTP_SIGNATURES
+        FASTBOOT_SIGNATURES + MTP_SIGNATURES + FDL_SIGNATURES
 
     fun detect(vendorId: Int, productId: Int): UsbDeviceSignature? =
         ALL_SIGNATURES.firstOrNull {
@@ -149,6 +158,7 @@ object UsbDeviceDatabase {
         0x22D9 -> ConnectionMode.ADB       // Oppo/Realme
         0x2D95 -> ConnectionMode.ADB       // Vivo
         0x2A70 -> ConnectionMode.ADB       // OnePlus
+        0x1782 -> ConnectionMode.FDL       // UniSoc / Spreadtrum
         else   -> ConnectionMode.MTP       // Unknown → assume MTP
     }
 }

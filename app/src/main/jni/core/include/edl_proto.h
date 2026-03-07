@@ -14,15 +14,56 @@ enum class SaharaCommand {
   Hello = 0x01,
   HelloResponse = 0x02,
   Read = 0x03,
-  Write = 0x04,
+  EndTransfer = 0x04,
   Done = 0x05,
-  Reset = 0x07
+  DoneResponse = 0x06,
+  Reset = 0x07,
+  Execute = 0x08,
+  ExecuteResponse = 0x09,
+  CommandSwitchMode = 0x0C,
+  CommandExecute = 0x0D,
+  CommandExecuteResponse = 0x0E
 };
+
+#pragma pack(push, 1)
 
 struct SaharaHeader {
   uint32_t command;
   uint32_t length;
 };
+
+struct SaharaHello {
+  uint32_t version;
+  uint32_t version_min;
+  uint32_t max_cmd_len;
+  uint32_t mode;
+  uint32_t reserved[6];
+};
+
+struct SaharaHelloResponse {
+  uint32_t version;
+  uint32_t version_min;
+  uint32_t status;
+  uint32_t mode;
+  uint32_t reserved[6];
+};
+
+struct SaharaReadData {
+  uint32_t image_id;
+  uint32_t data_offset;
+  uint32_t data_length;
+};
+
+struct SaharaEndTransfer {
+  uint32_t image_id;
+  uint32_t status;
+};
+
+struct SaharaDoneResponse {
+  uint32_t status;
+};
+
+#pragma pack(pop)
 
 class EdlManager {
 public:

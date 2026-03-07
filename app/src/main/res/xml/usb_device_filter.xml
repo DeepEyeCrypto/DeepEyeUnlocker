@@ -59,4 +59,10 @@
     <!-- Sony -->
     <usb-device vendor-id="4046" />
     <!-- 0x0FCE -->
+
+    <!-- UniSoc / Spreadtrum FDL -->
+    <usb-device vendor-id="6018" product-id="19712" />
+    <!-- 0x1782, 0x4D00 -->
+    <usb-device vendor-id="6018" product-id="15616" />
+    <!-- 0x1782, 0x3D00 -->
 </resources>

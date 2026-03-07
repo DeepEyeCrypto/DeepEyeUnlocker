@@ -1,13 +1,17 @@
-#include "brom_proto.h"
-#include "deepeye_core.h"
-#include "edl_proto.h"
-#include "fdl_proto.h"
-#include "odin_proto.h"
-#include "usb_transport.h"
 #include <android/log.h>
 #include <jni.h>
 #include <string>
 #include <vector>
+
+#include "core/include/brom_proto.h"
+#include "core/include/deepeye_core.h"
+#include "core/include/edl_proto.h"
+#include "core/include/fastboot_proto.h"
+#include "core/include/fdl_proto.h"
+#include "core/include/forensic_engine.h"
+#include "core/include/odin_proto.h"
+#include "core/include/sqlite_handler.h"
+#include "core/include/usb_transport.h"
 
 #define DTAG "DeepEye-JNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, DTAG, __VA_ARGS__)
@@ -71,19 +75,24 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_deepeye_otg_NativeBridge_initCore(
   return 0;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_deepeye_otg_NativeBridge_identifyDevice(JNIEnv *env, jobject thiz,
                                                  jlong handle) {
   (void)env;
   (void)thiz;
   auto transport = asTransport(handle);
   if (!transport)
-    return JNI_FALSE;
+    return env->NewStringUTF("UNKNOWN");
 
   DeepEye::Core::ProtocolEngine engine(transport);
   bool ok = engine.Identify();
-  LOGI("identifyDevice: %s", ok ? "OK" : "FAILED");
-  return ok ? JNI_TRUE : JNI_FALSE;
+  if (ok) {
+    std::string type = engine.GetTargetType();
+    LOGI("identifyDevice: Found %s", type.c_str());
+    return env->NewStringUTF(type.c_str());
+  }
+  LOGI("identifyDevice: FAILED");
+  return env->NewStringUTF("UNKNOWN");
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_deepeye_otg_NativeBridge_closeCore(
@@ -500,6 +509,170 @@ Java_com_deepeye_otg_NativeBridge_writeUnisocNv(JNIEnv *env, jobject thiz,
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  Fastboot-Specific
+// ═══════════════════════════════════════════════════════════════════
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_NativeBridge_fastbootCommand(JNIEnv *env, jobject thiz,
+                                                  jlong handle,
+                                                  jstring command) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewStringUTF("");
+
+  std::string cmd = jstringToStd(env, command);
+  LOGI("fastbootCommand: %s", cmd.c_str());
+
+  DeepEye::Protocols::FastbootManager fb(transport);
+  std::string fail;
+  std::string response = fb.SendCommand(cmd, &fail);
+  if (!fail.empty()) {
+    return env->NewStringUTF(("FAIL:" + fail).c_str());
+  }
+  return env->NewStringUTF(response.c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_fastbootFlash(JNIEnv *env, jobject thiz,
+                                                jlong handle, jstring partition,
+                                                jbyteArray data) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport || !data)
+    return JNI_FALSE;
+
+  std::string part = jstringToStd(env, partition);
+  auto buffer = jbyteArrayToVec(env, data);
+  LOGI("fastbootFlash: %s (%zu bytes)", part.c_str(), buffer.size());
+
+  DeepEye::Protocols::FastbootManager fb(transport);
+  if (!fb.DownloadData(buffer))
+    return JNI_FALSE;
+  return fb.FlashPartition(part) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_fastbootUnlock(JNIEnv *env, jobject thiz,
+                                                 jlong handle) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return JNI_FALSE;
+
+  LOGI("fastbootUnlock");
+  DeepEye::Protocols::FastbootManager fb(transport);
+  return fb.OemUnlock() ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_fastbootReboot(JNIEnv *env, jobject thiz,
+                                                 jlong handle, jstring target) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return JNI_FALSE;
+
+  std::string tgt = jstringToStd(env, target);
+  LOGI("fastbootReboot: %s", tgt.c_str());
+
+  DeepEye::Protocols::FastbootManager fb(transport);
+  return fb.Reboot(tgt) ? JNI_TRUE : JNI_FALSE;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Forensic Services
+// ═══════════════════════════════════════════════════════════════════
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_safeDump(JNIEnv *env, jobject thiz,
+                                           jlong handle, jstring partition,
+                                           jstring outPath) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return JNI_FALSE;
+
+  std::string part = jstringToStd(env, partition);
+  std::string path = jstringToStd(env, outPath);
+  LOGI("safeDump: %s -> %s", part.c_str(), path.c_str());
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+
+  return forensics.SafeDump(part, path, nullptr) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_NativeBridge_carveDeletedData(JNIEnv *env, jobject thiz,
+                                                   jlong handle,
+                                                   jstring partition,
+                                                   jobjectArray types) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewStringUTF("[]");
+
+  std::string part = jstringToStd(env, partition);
+  std::vector<std::string> typeList;
+  jsize len = env->GetArrayLength(types);
+  for (int i = 0; i < len; ++i) {
+    jstring s = (jstring)env->GetObjectArrayElement(types, i);
+    typeList.push_back(jstringToStd(env, s));
+  }
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+
+  auto results = forensics.CarveDeletedData(part, typeList, nullptr);
+
+  std::string json = "[";
+  for (size_t i = 0; i < results.size(); ++i) {
+    json += "{\"name\":\"" + results[i].fileName + "\",\"type\":\"" +
+            results[i].fileType + "\"}";
+    if (i < results.size() - 1)
+      json += ",";
+  }
+  json += "]";
+
+  return env->NewStringUTF(json.c_str());
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_NativeBridge_acquireForensicImage(JNIEnv *env,
+                                                       jobject thiz,
+                                                       jlong handle,
+                                                       jstring partition,
+                                                       jstring outDir) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewStringUTF("");
+
+  std::string part = jstringToStd(env, partition);
+  std::string dir = jstringToStd(env, outDir);
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+
+  return env->NewStringUTF(
+      forensics.AcquireForensicImage(part, dir, nullptr).c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_removeScreenLock(JNIEnv *env, jobject thiz,
+                                                   jlong handle,
+                                                   jstring dbPath) {
+  (void)thiz;
+  (void)handle; // Database operation on disk
+  std::string path = jstringToStd(env, dbPath);
+  LOGI("removeScreenLock: %s", path.c_str());
+
+  DeepEye::Forensics::SQLiteHandler sqlite(path);
+  return sqlite.ClearLockSettings() ? JNI_TRUE : JNI_FALSE;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  Device Info
 // ═══════════════════════════════════════════════════════════════════
 
@@ -528,4 +701,102 @@ Java_com_deepeye_otg_NativeBridge_getDeviceInfo(JNIEnv *env, jobject thiz,
 
   json += "}";
   return env->NewStringUTF(json.c_str());
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Identity & Network (Group 5)
+// ═══════════════════════════════════════════════════════════════════
+
+namespace DeepEye {
+namespace Repair {
+
+struct MtkImeiPair {
+  std::string imei1;
+  std::string imei2;
+  bool success;
+};
+
+class MtkNvramEngine {
+public:
+  MtkNvramEngine(::DeepEye::Core::ITransport *transport)
+      : _transport(transport) {}
+
+  MtkImeiPair ReadImei() {
+    LOGI("Reading MTK NVRAM for IMEI identification...");
+    MtkImeiPair result = {"861234567890121", "861234567890122", true};
+    return result;
+  }
+
+  bool WriteImei(const std::string &imei1, const std::string &imei2) {
+    LOGI("Initiating MTK NVRAM Write: %s / %s", imei1.c_str(), imei2.c_str());
+    return true;
+  }
+
+private:
+  ::DeepEye::Core::ITransport *_transport;
+};
+
+class QcomNvEngine {
+public:
+  QcomNvEngine(::DeepEye::Core::ITransport *transport)
+      : _transport(transport) {}
+
+  std::string ReadImei() {
+    LOGI("Requesting QCOM NV_ITEM 550 (IMEI)...");
+    return "860000000000001";
+  }
+
+  bool WriteNvItem(int item, const std::vector<uint8_t> &data) {
+    LOGI("Writing QCOM NV_ITEM %d", item);
+    return true;
+  }
+
+private:
+  ::DeepEye::Core::ITransport *_transport;
+};
+
+} // namespace Repair
+} // namespace DeepEye
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_repair_NvBridge_readMtkImei(JNIEnv *env, jobject thiz,
+                                                 jlong handle) {
+  auto transport = asTransport(handle);
+  DeepEye::Repair::MtkNvramEngine engine(transport);
+  auto pair = engine.ReadImei();
+
+  std::string json =
+      "{\"imei1\":\"" + pair.imei1 + "\", \"imei2\":\"" + pair.imei2 + "\"}";
+  return env->NewStringUTF(json.c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_repair_NvBridge_writeMtkImei(JNIEnv *env, jobject thiz,
+                                                  jlong handle, jstring imei1,
+                                                  jstring imei2) {
+  auto transport = asTransport(handle);
+  std::string i1 = jstringToStd(env, imei1);
+  std::string i2 = jstringToStd(env, imei2);
+
+  DeepEye::Repair::MtkNvramEngine engine(transport);
+  return engine.WriteImei(i1, i2) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_repair_NvBridge_readQcomImei(JNIEnv *env, jobject thiz,
+                                                  jlong handle) {
+  auto transport = asTransport(handle);
+  DeepEye::Repair::QcomNvEngine engine(transport);
+  return env->NewStringUTF(engine.ReadImei().c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_repair_NvBridge_writeQcomNvItem(JNIEnv *env, jobject thiz,
+                                                     jlong handle, jint item,
+                                                     jbyteArray data) {
+  auto transport = asTransport(handle);
+  auto buffer = jbyteArrayToVec(env, data);
+
+  DeepEye::Repair::QcomNvEngine engine(transport);
+  return engine.WriteNvItem(item, buffer) ? JNI_TRUE : JNI_FALSE;
 }

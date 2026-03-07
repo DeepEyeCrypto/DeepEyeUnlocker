@@ -29,5 +29,6 @@ sealed class SessionState {
     data class Error(val message: String, val queuedOp: DeepEyeOperation? = null) : SessionState()
     data class PermissionDenied(val queuedOp: DeepEyeOperation? = null) : SessionState()
     object ConnectedMtpOnly : SessionState()
+    object TestHarness : SessionState()
 }
 

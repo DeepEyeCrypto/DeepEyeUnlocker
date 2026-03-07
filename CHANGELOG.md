@@ -6,6 +6,15 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.16] — 2026-03-07
+
+### ✨ Identity Repair & Real-Device Integration Testing
+
+- **Professional Identity Repair (Group 5)**: Implemented native MTK NVRAM and Qualcomm NV_ITEM 550 (IMEI) repair engines. Added bit-level BCD encoding/decoding and checksum recalculation logic directly in `native-lib.cpp`.
+- **Stage T1 Test Harness**: Introduced a dedicated high-fidelity integration test screen. Features live USB attach/detach monitoring, VID:PID detection, and a raw IO bulk transfer console for debugging real device handshakes.
+- **Native Stability Hotfix**: Successfully merged external NV engines into the core JNI bridge to bypass subdirectory indexer limitations and resolve Clang type-visibility errors.
+- **UI Enhancements**: Added an "Integration Test" group to the main catalog and a quick-access "TEST" button in the glass top bar for immediate hardware validation.
+
 ## [2026.15] — 2026-03-07
 
 ### ✨ Unconditional UI Rendering & Domain Architecture

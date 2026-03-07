@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(DeepEyeCore)
+# Force reconfigure
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -23,6 +24,9 @@ set(CORE_SOURCES
     ${CORE_SRC_DIR}/protocols/protocol_engine.cpp
     ${CORE_SRC_DIR}/protocols/edl_manager.cpp
     ${CORE_SRC_DIR}/protocols/brom_manager.cpp
+    ${CORE_SRC_DIR}/protocols/odin_manager.cpp
+    ${CORE_SRC_DIR}/protocols/fastboot_manager.cpp
+    ${CORE_SRC_DIR}/protocols/fdl_manager.cpp
     ${CORE_SRC_DIR}/protocols/firehose.cpp
     ${CORE_SRC_DIR}/protocols/gpt_parser.cpp
     ${CORE_SRC_DIR}/protocols/sparse_handler.cpp

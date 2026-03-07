@@ -31,6 +31,7 @@ class UsbLifecycleManager(
 
     private val lifecycleMutex = Mutex()
 
+    private var activeDevice: UsbDevice? = null
     private var activeConnection: android.hardware.usb.UsbDeviceConnection? = null
     private var activeInterface: android.hardware.usb.UsbInterface? = null
     private var activeEndpoints: ResolvedEndpoints? = null
@@ -109,6 +110,7 @@ class UsbLifecycleManager(
         conn.claimInterface(usbInterface, true)
         OemCompatibilityLayer.postClaimInterfaceDelay()
 
+        activeDevice = device
         activeConnection = conn
         activeInterface = usbInterface
         activeEndpoints = endpoints
@@ -172,6 +174,7 @@ class UsbLifecycleManager(
             activeInterface?.let { activeConnection?.releaseInterface(it) }
             activeConnection?.close()
         } catch (e: Exception) { } finally {
+            activeDevice = null
             activeConnection = null
             activeInterface = null
             activeEndpoints = null
@@ -180,6 +183,8 @@ class UsbLifecycleManager(
 
     fun getTransferQueue() = transferQueue
     fun isConnected() = activeConnection != null
+    fun getActiveDevice() = activeDevice
+    fun getActiveConnection() = activeConnection
     fun getCurrentMode() = (state.value as? UsbLifecycleState.Connected)?.mode
     fun pauseWatchdog() { watchdogJob?.cancel() }
     fun resumeWatchdog() {

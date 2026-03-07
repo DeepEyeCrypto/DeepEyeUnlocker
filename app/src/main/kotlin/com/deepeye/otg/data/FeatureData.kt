@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 
 // ── Connection modes that unlock this feature ─────────────────
 enum class SupportedMode { ADB, FASTBOOT, EDL, TESTPOINT,
-                           BROM, PRELOADER, DIAG, MTP, ISP, META }
+                           BROM, PRELOADER, DIAG, MTP, ISP, META, ODIN, FDL }
 
 // ── Chipset families ──────────────────────────────────────────
 enum class Chipset { QUALCOMM, MTK, EXYNOS, UNISOC, KIRIN, ALL }
@@ -260,7 +260,7 @@ object FeatureData {
                     icon = "🔥",
                     label = "FRP Remove (Odin)",
                     tier = 2,
-                    modes = listOf(SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ODIN),
                     chipsets = listOf(Chipset.EXYNOS, Chipset.QUALCOMM),
                     description = "Flash FRP-clear package via Odin/Heimdall protocol"
                 ),
@@ -279,7 +279,7 @@ object FeatureData {
                     icon = "👤",
                     label = "Samsung Account Remove",
                     tier = 2,
-                    modes = listOf(SupportedMode.ADB, SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ADB, SupportedMode.ODIN, SupportedMode.FASTBOOT),
                     requiresAuth = true,
                     description = "Remove Samsung/Find My Mobile account lock"
                 )
@@ -291,7 +291,7 @@ object FeatureData {
                     icon = "⚙️",
                     label = "Odin Flash",
                     tier = 2,
-                    modes = listOf(SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ODIN),
                     description = "Flash via Samsung Odin/Heimdall download mode"
                 ),
                 FeatureItem(
@@ -299,7 +299,7 @@ object FeatureData {
                     icon = "💾",
                     label = "Write Firmware",
                     tier = 2,
-                    modes = listOf(SupportedMode.FASTBOOT, SupportedMode.EDL),
+                    modes = listOf(SupportedMode.ODIN, SupportedMode.EDL),
                     risk = RiskLevel.HIGH,
                     description = "Flash full firmware package via Odin protocol"
                 ),
@@ -308,7 +308,7 @@ object FeatureData {
                     icon = "📖",
                     label = "Read Firmware",
                     tier = 1,
-                    modes = listOf(SupportedMode.ADB, SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ADB, SupportedMode.ODIN),
                     description = "Read firmware info and backup partitions"
                 )
             )),
@@ -337,7 +337,7 @@ object FeatureData {
                     icon = "🔑",
                     label = "Remove Screen Lock",
                     tier = 2,
-                    modes = listOf(SupportedMode.ADB, SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ADB, SupportedMode.ODIN),
                     risk = RiskLevel.MODERATE,
                     description = "Wipe lock via ADB or Odin flash"
                 ),
@@ -355,7 +355,7 @@ object FeatureData {
                     icon = "🏭",
                     label = "Factory Reset",
                     tier = 1,
-                    modes = listOf(SupportedMode.ADB, SupportedMode.FASTBOOT),
+                    modes = listOf(SupportedMode.ADB, SupportedMode.ODIN),
                     warningMsg = "Wipes all user data",
                     description = "Full wipe via ADB or Odin"
                 ),

@@ -10,6 +10,18 @@ namespace Protocols {
 
 class BromManager {
 public:
+  enum class BromCommand : uint8_t {
+    START = 0xA0,
+    READ16 = 0xA2,
+    READ32 = 0xAA,
+    WRITE16 = 0xA4,
+    WRITE32 = 0xAE,
+    JUMP_DA = 0xD5,
+    SEND_DA = 0xD7,
+    GET_HW_SW_VER = 0xFC,
+    GET_TARGET_CONFIG = 0xD8
+  };
+
   BromManager(Core::ITransport *transport);
 
   bool Handshake();

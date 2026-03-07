@@ -220,6 +220,10 @@ class UsbViewModel(
     }
 
     fun queueOperation(featureId: String) {
+        if (featureId == "op_test_harness") {
+            enterTestHarness()
+            return
+        }
         val feature = activeBrandFeatures.value.groups.flatMap { it.features }.find { it.id == featureId } ?: return
         val op = DeepEyeOperation.values().find { it.name.equals(feature.id, ignoreCase = true) } 
             ?: DeepEyeOperation.values().find { it.label.equals(feature.label, ignoreCase = true) }
@@ -236,22 +240,83 @@ class UsbViewModel(
         }
     }
 
+    fun enterTestHarness() {
+        _queueStatus.value = SessionState.TestHarness
+    }
+
+    fun exitTestHarness() {
+        _queueStatus.value = SessionState.Idle
+    }
+
     private fun startOperation(op: DeepEyeOperation) {
         viewModelScope.launch {
-            _queueStatus.value = SessionState.ExecutingOperation(op, 0, "Starting...")
+            _queueStatus.value = SessionState.ExecutingOperation(op, 0, "Initializing Engine...")
             
-            // Simulation of operation for now
-            for (p in 10..100 step 10) {
-                delay(300)
-                if (_queueStatus.value is SessionState.ExecutingOperation) {
-                    _queueStatus.value = SessionState.ExecutingOperation(op, p, "Processing ${op.label}...")
-                } else {
-                    return@launch // Cancelled or reset
-                }
+            // Re-check connect state
+            val activeState = _usbStateValue.value
+            if (activeState !is SessionState.ConnectedReady) {
+                _queueStatus.value = SessionState.Error("Device not ready for operation")
+                return@launch
+            }
+
+            val connection = lifecycleManager.getActiveConnection()
+            val device = lifecycleManager.getActiveDevice()
+            
+            if (connection == null || device == null) {
+                _queueStatus.value = SessionState.Error("Lost USB connection")
+                return@launch
             }
             
-            _queueStatus.value = SessionState.OperationComplete(op, true, "${op.label} completed successfully")
+            try {
+                val fd = connection.fileDescriptor
+                val protocolMode = _selectedMode.value
+                val protocolFamily = when(protocolMode) {
+                    ConnectionMode.ADB -> com.deepeye.otg.domain.models.ProtocolFamily.ADB
+                    ConnectionMode.FASTBOOT -> com.deepeye.otg.domain.models.ProtocolFamily.FASTBOOT
+                    ConnectionMode.EDL -> com.deepeye.otg.domain.models.ProtocolFamily.QC
+                    ConnectionMode.BROM -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
+                    ConnectionMode.PRELOADER -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
+                    ConnectionMode.DIAG -> com.deepeye.otg.domain.models.ProtocolFamily.DIAG
+                    ConnectionMode.MTP -> com.deepeye.otg.domain.models.ProtocolFamily.MTP
+                    ConnectionMode.META -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
+                    ConnectionMode.ISP -> com.deepeye.otg.domain.models.ProtocolFamily.GENERIC
+                    ConnectionMode.TESTPOINT -> com.deepeye.otg.domain.models.ProtocolFamily.GENERIC
+                    ConnectionMode.ODIN -> com.deepeye.otg.domain.models.ProtocolFamily.SAMSUNG
+                    ConnectionMode.FDL -> com.deepeye.otg.domain.models.ProtocolFamily.UNISOC
+                }
+
+                val result = com.deepeye.otg.engine.EngineDispatcher.execute(
+                    op = op,
+                    device = device,
+                    protocol = protocolFamily,
+                    fd = fd,
+                    onProgress = { pct, msg ->
+                        if (_queueStatus.value is SessionState.ExecutingOperation) {
+                            _queueStatus.value = SessionState.ExecutingOperation(op, pct, msg)
+                            addLog("INFO", "[$pct%] $msg")
+                        }
+                    }
+                )
+
+                if (result.success) {
+                    _queueStatus.value = SessionState.OperationComplete(op, true, result.message)
+                    addLog("SUCCESS", result.message)
+                } else {
+                    _queueStatus.value = SessionState.Error(result.message)
+                    addLog("ERROR", result.message)
+                }
+            } catch (e: Exception) {
+                _queueStatus.value = SessionState.Error("Execution failed: ${e.message}")
+                addLog("ERROR", "Execution failed: ${e.message}")
+            }
         }
+    }
+
+    private fun addLog(type: String, msg: String) {
+        val list = _logLines.value.toMutableList()
+        val ts = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        list.add(LogEntry(ts, type, msg))
+        _logLines.value = list
     }
 
     override fun onCleared() {

@@ -8,14 +8,36 @@ namespace Protocols {
 BromManager::BromManager(Core::ITransport *transport) : _transport(transport) {}
 
 bool BromManager::Handshake() {
-  uint8_t handshake[] = {0xA1, 0xA2, 0xA3, 0xA4};
-  for (uint8_t b : handshake) {
+  std::cout << "[BROM] Initiating Start sequence..." << std::endl;
+
+  // MTK BROM standard START_CMD sequence: 0xA0
+  uint8_t startCmd = static_cast<uint8_t>(BromCommand::START);
+
+  // Device expects START_CMD and replies with its bitwise inverse
+  if (_transport->Send(&startCmd, 1, 100) != 1)
+    return false;
+
+  uint8_t echo = 0;
+  if (_transport->Receive(&echo, 1, 100) != 1)
+    return false;
+
+  if (echo != static_cast<uint8_t>(~startCmd)) {
+    std::cerr << "[BROM] Handshake mismatch, expected 0x5F, got " << std::hex
+              << (int)echo << std::endl;
+    return false;
+  }
+
+  // Additional typical START sequence bytes (0x0A, 0x50, 0x05)
+  uint8_t syncSeq[] = {0x0A, 0x50, 0x05};
+  for (uint8_t b : syncSeq) {
     if (_transport->Send(&b, 1, 100) != 1)
       return false;
-    uint8_t echo = 0;
-    if (_transport->Receive(&echo, 1, 100) != 1 || echo != (uint8_t)~b)
+    if (_transport->Receive(&echo, 1, 100) != 1 ||
+        echo != static_cast<uint8_t>(~b))
       return false;
   }
+
+  std::cout << "[BROM] Handshake verified!" << std::endl;
   return true;
 }
 

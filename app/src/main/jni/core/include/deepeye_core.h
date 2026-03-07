@@ -32,6 +32,7 @@ class ProtocolEngine {
 public:
   ProtocolEngine(ITransport *transport);
   bool Identify();
+  std::string GetTargetType() const { return _targetType; }
   std::vector<Protocols::PartitionInfo> GetPartitions();
   bool DumpPartition(const std::string &name, const std::string &outPath);
   bool FlashPartition(const std::string &name, const std::string &inPath);

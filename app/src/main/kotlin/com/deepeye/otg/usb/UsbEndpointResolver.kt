@@ -86,6 +86,8 @@ object UsbEndpointResolver {
             ConnectionMode.META      -> 512 to 3000
             ConnectionMode.ISP       -> 16384 to 15000 // Slow eMMC-style access
             ConnectionMode.TESTPOINT -> 512 to 5000
+            ConnectionMode.ODIN      -> 16384 to 10000 // Samsung flashing chunks
+            ConnectionMode.FDL       -> 4096 to 3000 // UniSoc FDL packets
         }
 
         return ResolvedEndpoints(

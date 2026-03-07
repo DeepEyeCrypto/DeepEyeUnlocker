@@ -78,6 +78,20 @@ enum class ConnectionMode(
         description = "MTK/Huawei factory META test mode",
         chipset = "MTK",
         requiresHardware = false
+    ),
+    ODIN(
+        label = "ODIN",
+        shortLabel = "ODIN",
+        description = "Samsung Download Mode (Odin/Heimdall)",
+        chipset = "EXYNOS/QC",
+        requiresHardware = false
+    ),
+    FDL(
+        label = "FDL",
+        shortLabel = "FDL",
+        description = "UniSoc Setup — Firmware Downloader",
+        chipset = "UNISOC",
+        requiresHardware = false
     );
 
     // Color per chipset for chip indicator dot

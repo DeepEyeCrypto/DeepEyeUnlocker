@@ -54,6 +54,9 @@ object DeepEyeCatalogs {
             DeepEyeOperation("op_diag_enable", "Diag / ADB Enabler", "Enable Diag/ADB", "Attempt auto-enable of debugging ports via exploits", tier = PolicyTier.POLICY),
             DeepEyeOperation("op_root_flow", "Root / Patch Workflow", "Root Manager", "Patch boot images for Magisk/KernelSU", tier = PolicyTier.POLICY),
             DeepEyeOperation("op_app_mgr", "ADB App Manager", "App Manager", "Uninstall bloatware over ADB connections", tier = PolicyTier.SAFE, requiredModes = listOf(DeviceMode.ADB))
+        )),
+        FeatureGroup("g7", "Testing & Development", listOf(
+            DeepEyeOperation("op_test_harness", "Integration Test Harness", "Test Harness", "Live USB monitoring and raw bulk transfer logs", tier = PolicyTier.SAFE)
         ))
     )
 }

@@ -106,6 +106,10 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
                 is SessionState.ConnectedMtpOnly -> MtpOnlyScreen(
                     onBack = { viewModel.resetToIdle() }
                 )
+                
+                is SessionState.TestHarness -> TestHarnessScreen(
+                    viewModel = viewModel
+                )
             }
         }
     }

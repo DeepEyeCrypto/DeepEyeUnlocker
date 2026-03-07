@@ -14,6 +14,7 @@ enum class DetectedProtocol {
     MTK_PRELOADER,
     FASTBOOT,
     SAMSUNG_ODIN,
+    UNISOC_FDL,
     ADB,
     MTP_ONLY
 }
@@ -69,6 +70,10 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
         // Xiaomi special VIDs for diag/ADB
         private const val XIAOMI_VID = 0x2717
+
+        // UniSoc / Spreadtrum FDL
+        private const val UNISOC_VID = 0x1782
+        private val UNISOC_FDL_PIDS = setOf(0x4D00, 0x3D00)
     }
 
     fun detect(): ProtocolDetectionResult {
@@ -212,6 +217,9 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
         // Google Fastboot
         if (vid == GOOGLE_VID && pid in FASTBOOT_PIDS) return DetectedProtocol.FASTBOOT
+
+        // UniSoc FDL
+        if (vid == UNISOC_VID && pid in UNISOC_FDL_PIDS) return DetectedProtocol.UNISOC_FDL
 
         // Google ADB
         if (vid == GOOGLE_VID && pid == ADB_PID) return DetectedProtocol.ADB

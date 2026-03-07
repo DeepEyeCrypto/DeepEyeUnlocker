@@ -232,7 +232,9 @@ fun MainScreen(viewModel: UsbViewModel) {
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RemoteBadge()
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    GlassButton(label = "TEST", onClick = { viewModel.enterTestHarness() }, modifier = Modifier.width(70.dp), accent = true)
+                    Spacer(modifier = Modifier.width(8.dp))
                     GlassButton(label = if (perfMode) "PERF: LOW" else "PERF: HIGH", onClick = { viewModel.togglePerformance() }, modifier = Modifier.width(90.dp), accent = !perfMode)
                 }
             }

@@ -1,0 +1,163 @@
+package com.deepeye.otg.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.deepeye.otg.ui.components.GlassButton
+import com.deepeye.otg.ui.components.GlassCard
+import com.deepeye.otg.usb.UsbLifecycleState
+import com.deepeye.otg.usb.UsbLogger
+import com.deepeye.otg.viewmodel.UsbViewModel
+import dev.chrisbanes.haze.HazeState
+
+@Composable
+fun TestHarnessScreen(
+    viewModel: UsbViewModel,
+    modifier: Modifier = Modifier
+) {
+    val lifecycleState by viewModel.lifecycleState.collectAsState()
+    val rawLogs by UsbLogger.logBuffer.collectAsState()
+    val highLevelLogs by viewModel.logLines.collectAsState()
+    val perfMode by viewModel.performanceMode.collectAsState()
+    val hazeState = remember { HazeState() }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "STAGE T1: REAL DEVICE INTEGRATION",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GlassButton(label = "Clear Logs", onClick = { UsbLogger.clear() }, modifier = Modifier.width(100.dp))
+                GlassButton(label = "Exit Harness", onClick = { viewModel.exitTestHarness() }, modifier = Modifier.width(120.dp), accent = true)
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // ── Device Info Card ──────────────────────────────────────
+            GlassCard(
+                hazeState = hazeState,
+                performanceMode = perfMode,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("USB DEVICE STATUS", color = Color(0xFF3B82F6), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    val deviceName = when(val s = lifecycleState) {
+                        is UsbLifecycleState.Connected -> s.deviceName
+                        is UsbLifecycleState.DeviceDetected -> s.device.productName ?: "Unknown"
+                        is UsbLifecycleState.PermissionPending -> s.device.productName ?: "Pending"
+                        else -> "No Device Detected"
+                    }
+                    
+                    val vidPid = when(val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> "0x${s.device.vendorId.toString(16)}:0x${s.device.productId.toString(16)}"
+                        is UsbLifecycleState.Connected -> "Active Handle"
+                        else -> "N/A"
+                    }
+
+                    val mode = when(val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.detectedMode.name
+                        is UsbLifecycleState.Connected -> s.mode.name
+                        else -> "IDLE"
+                    }
+
+                    InfoRow("Product", deviceName)
+                    InfoRow("VID:PID", vidPid)
+                    InfoRow("Mode", mode)
+                    
+                    val handshake = if (lifecycleState is UsbLifecycleState.Connected) "PASS" else if (lifecycleState is UsbLifecycleState.Error) "FAIL" else "WAITING"
+                    InfoRow("Handshake", handshake, color = if (handshake == "PASS") Color.Green else Color.Yellow)
+                }
+            }
+
+            // ── Session Metrics ───────────────────────────────────────
+            GlassCard(
+                hazeState = hazeState,
+                performanceMode = perfMode,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("LIFECYCLE EVENTS", color = Color(0xFFF59E0B), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    val currentStateName = lifecycleState::class.simpleName ?: "Unknown"
+                    InfoRow("State", currentStateName)
+                    InfoRow("Events", highLevelLogs.size.toString())
+                    
+                    val health = if (lifecycleState is UsbLifecycleState.Connected) "STABLE" else "OFFLINE"
+                    InfoRow("Health", health, color = if (health == "STABLE") Color.Green else Color.Red)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ── Raw Bulk Logs (Terminal Style) ──────────────────────────
+        Text("RAW BULK TRANSFER LOGS (IO)", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                .padding(8.dp)
+        ) {
+            LazyColumn(
+                reverseLayout = true,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(rawLogs.asReversed()) { line ->
+                    Text(
+                        text = line,
+                        color = if (line.contains("E/")) Color.Red else if (line.contains("W/")) Color.Yellow else Color.Cyan,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(vertical = 1.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String, color: Color = Color.White) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+        Text(value, color = color, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+    }
+}

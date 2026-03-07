@@ -44,7 +44,7 @@ class UsbForegroundService : Service() {
         val stopPending = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth) // Use better icon if available
+            .setSmallIcon(android.R.drawable.ic_dialog_info) // Safe generic icon
             .setContentTitle("DeepEye Unlocker")
             .setContentText("Active USB session: Maintaining connection stability.")
             .setPriority(NotificationCompat.PRIORITY_LOW)
