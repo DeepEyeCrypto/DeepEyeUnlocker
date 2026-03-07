@@ -1,5 +1,6 @@
 package com.deepeye.otg.usb
 
+import android.util.Log
 import android.hardware.usb.*
 import android.content.Context
 import com.deepeye.otg.data.ConnectionMode

@@ -51,11 +51,11 @@ object PolicyEngine {
 
     // ── Tier → minimum role mapping ─────────────────────────────
 
-    private val tierMinRole: Map<Int, UserRole> = mapOf(
-        1 to UserRole.CONSUMER,      // anyone
-        2 to UserRole.TECHNICIAN,    // needs proof of ownership
-        3 to UserRole.ENTERPRISE,    // needs KYC / enterprise role
-        // tier 4 → no role can access (handled separately)
+    private val tierMinRole: Map<com.deepeye.otg.domain.models.PolicyTier, UserRole> = mapOf(
+        com.deepeye.otg.domain.models.PolicyTier.SAFE to UserRole.CONSUMER,      // anyone
+        com.deepeye.otg.domain.models.PolicyTier.POLICY to UserRole.TECHNICIAN,    // needs proof of ownership
+        com.deepeye.otg.domain.models.PolicyTier.RESTRICTED to UserRole.ENTERPRISE    // needs KYC / enterprise role
+        // NEVER -> always blocked
     )
 
     // ── Public API ──────────────────────────────────────────────
@@ -65,10 +65,10 @@ object PolicyEngine {
      * Must be called before every engine dispatch.
      */
     fun check(op: DeepEyeOperation, role: UserRole): PolicyDecision {
-        // TIER 4 — always blocked
-        if (op.tier >= 4) {
-            log("[POLICY] DENIED: ${op.name} is TIER ${op.tier} (EXPLOIT) — no role has access")
-            return PolicyDecision(false, "Tier ${op.tier} operations are permanently blocked")
+        // TIER NEVER — always blocked
+        if (op.tier == com.deepeye.otg.domain.models.PolicyTier.NEVER) {
+            log("[POLICY] DENIED: ${op.name} is TIER NEVER (EXPLOIT) — no role has access")
+            return PolicyDecision(false, "NEVER tier operations are permanently blocked")
         }
 
         // Tier → minimum role
@@ -108,14 +108,14 @@ object PolicyEngine {
 
     /**
      * Get the required minimum role for an operation tier.
-     * Returns null for TIER 4 (always blocked).
+     * Returns null for NEVER (always blocked).
      */
-    fun requiredRole(tier: Int): UserRole? = tierMinRole[tier]
+    fun requiredRole(tier: com.deepeye.otg.domain.models.PolicyTier): UserRole? = tierMinRole[tier]
 
     /**
-     * Returns true if the operation is TIER 1 (no auth required).
+     * Returns true if the operation is SAFE (no auth required).
      */
-    fun isSafe(op: DeepEyeOperation): Boolean = op.tier == 1
+    fun isSafe(op: DeepEyeOperation): Boolean = op.tier == com.deepeye.otg.domain.models.PolicyTier.SAFE
 
     // ── Abuse detection ─────────────────────────────────────────
 

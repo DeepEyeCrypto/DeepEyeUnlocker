@@ -78,13 +78,18 @@ fun GlassBadge(
 }
 
 @Composable
-fun GlassTierBadge(tier: Int) {
-    val tokens = GlassTokens.tierColors(tier)
+fun GlassPolicyBadge(tier: com.deepeye.otg.domain.models.PolicyTier) {
+    val (fill, border, text) = when (tier) {
+        com.deepeye.otg.domain.models.PolicyTier.SAFE -> listOf(Color(0xFFDCFCE7), Color(0xFF86EFAC), Color(0xFF166534))
+        com.deepeye.otg.domain.models.PolicyTier.POLICY -> listOf(Color(0xFFFEF9C3), Color(0xFFFDE047), Color(0xFF854D0E))
+        com.deepeye.otg.domain.models.PolicyTier.RESTRICTED -> listOf(Color(0xFFFFEDD5), Color(0xFFFDBA74), Color(0xFF9A3412))
+        com.deepeye.otg.domain.models.PolicyTier.NEVER -> listOf(Color(0xFFFEE2E2), Color(0xFFFCA5A5), Color(0xFF991B1B))
+    }
     GlassBadge(
-        label = "TIER $tier",
-        fillColor = tokens.fill,
-        borderColor = tokens.border,
-        textColor = tokens.text
+        label = tier.name,
+        fillColor = fill,
+        borderColor = border,
+        textColor = text
     )
 }
 

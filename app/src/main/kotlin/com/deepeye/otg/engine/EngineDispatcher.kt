@@ -95,7 +95,7 @@ object EngineDispatcher {
                     onProgress(100, "MTP mode detected. Switch to File Transfer/Service mode")
                     EngineResult(false, "Protocol MTP_ONLY is not service-capable")
                 }
-                ProtocolFamily.UNKNOWN -> {
+                else -> {
                     onProgress(100, "Unsupported or unknown protocol")
                     EngineResult(false, "No engine for protocol: $protocol")
                 }
@@ -348,6 +348,7 @@ object EngineDispatcher {
                 onProgress(100, "App manager requires ADB — use ADB mode")
                 EngineResult(true, "ADB app manager session ready")
             }
+            else -> executeGeneric(op, onProgress)
         }
     }
 

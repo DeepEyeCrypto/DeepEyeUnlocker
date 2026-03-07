@@ -6,6 +6,19 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.15] — 2026-03-07
+
+### ✨ Unconditional UI Rendering & Domain Architecture
+
+- **Domain Model Source of Truth**: Completely migrated the core state engine to `DomainModels.kt`. Introducing `ProtocolFamily`, `DeviceMode`, `PolicyTier`, `OperationAvailability`, and `DeepEyeOperation` as unified application states.
+- **Unconditional UI Generation**: Decommissioned legacy map-based conditional rendering in `MainScreen.kt`. Replaced with immutable `DeepEyeCatalogs` assuring 100% of Modes and Features are visually accessible immediately on launch.
+- **Availability Engine**: Implemented `AvailabilityEngine` to dynamically calculate `OperationAvailability`, handling alpha dimming and precise visual explanation (e.g. "Requires FASTBOOT") without destroying layout integrity.
+- **PolicyEngine Upgrades**: Standardized enforcement pipelines to exclusively use semantic `PolicyTier` rules (SAFE, POLICY, RESTRICTED, NEVER) over ambiguous integers.
+- **Legacy Bridging**: Maintained backward-compatibility for native `EngineDispatcher` by implementing seamless `DeepEyeOperation` companion object shims spanning to the C++ NDK boundary.
+- **Build System**: Resolved NDK deprecation warnings by eliminating static `ndk.dir` bindings, fully yielding to `android.ndkVersion`.
+
+---
+
 ## [2026.14] — 2026-03-06
 
 ### ✨ USB Stability God Patch

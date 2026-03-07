@@ -86,6 +86,12 @@ object OemCompatibilityLayer {
             else -> null
         }
 
+    fun isBatteryOptimized(context: android.content.Context): Boolean {
+        if (currentOem != OemType.XIAOMI) return false
+        val pm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+        return !pm.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
     fun getCompatReport(): String = buildString {
         appendLine("OEM: $currentOem (${Build.MANUFACTURER}/${Build.BRAND})")
         appendLine("API: ${Build.VERSION.SDK_INT}")

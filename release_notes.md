@@ -1,22 +1,18 @@
-### ✨ DeepEye Stability God Release (v2026.14)
+### ✨ DeepEye Unconditional Architecture (v2026.15)
 
 ---
 
-#### 🛡️ USB / OTG Hardening
+#### 🏛️ Domain Models & Data Integrity
 
-- **SafeBulkTransfer Engine**: Implemented protocol-tuned timeouts, 16KB chunking, and automatic stall detection (CLEAR_FEATURE) to stabilize high-speed data transfers.
-- **USB Lifecycle Manager**: 10-state machine (Idle→Connected→Dead) to prevent race conditions during rapid cable flapping and activity recreation.
-- **OEM Compatibility Layer**: Hardened logic for Samsung (buffer padding), MIUI (50ms post-claim delay), Huawei/Honor (3x open retry), and Vivo (OTG settings link).
-- **USB Foreground Service**: Prevents Android battery-savers from killing long-running USB sessions like full firmware flashing.
+- **Unified Truth Source**: Established `DomainModels.kt` to house robust definitions for `ProtocolFamily`, `DeviceMode`, `PolicyTier`, `OperationAvailability`, and `DeepEyeOperation` to replace fragile ad-hoc primitives and strings.
+- **DeepEyeCatalogs Source Tree**: Implemented `DeepEyeCatalogs` ensuring the `MODE_CATALOG` and `FEATURE_GROUPS` definitions act as the strict foundational layout elements across the entire lifespan of the application context.
 
-#### 📊 Live Diagnostics & UI
+#### 👁️ Unconditional UI Generation
 
-- **Connection Health UI**: Real-time health monitoring (Healthy, Degraded, Dead) integrated into the top bar.
-- **Connection Test Screen**: Comprehensive 8-step diagnostic for testing phone-to-phone OTG connectivity without drivers.
-- **OemWarningBanner**: Context-aware instructions for brand-specific USB settings (Vivo OTG, MIUI Power Saver, etc.).
+- **Full Transparency Engine**: Scrapped legacy dynamically disappearing maps. The `MainScreen` is now 100% unconditional. All known modes and features remain visually present regardless of detected state.
+- **Availability Calculations**: Designed `AvailabilityEngine` to run live state resolutions returning `OperationAvailability`, allowing unfulfilled prerequisites (wrong mode, missing permissions, lower policy tier) to naturally gray out cards and label *why* the restriction exists instead of invisibly rendering.
 
-#### 🛠️ Internal Refinements
+#### 🛠️ Security Enforcement Upgrades
 
-- **Version Bump**: Migrated to `versionCode 20274`.
-- **Logic Sync**: All USB logic now flows through the central `UsbLifecycleManager` for 100% thread-safety.
-- **Cleanup**: Removed deprecated `UsbConnectionController` in favor of the new Lifecycle architecture.
+- **Strict Enums for PolicyTier**: `PolicyEngine` enforces exact policy compliance via immutable definitions (`SAFE`, `POLICY`, `RESTRICTED`, `NEVER`). The `NEVER` flag strictly blocks system-exploit or unstable routes natively up to the C++ NDK boundary.
+- **NDK Warnings Repaired**: Re-mapped system `local.properties` to fully drop `ndk.dir` bindings, eliminating noisy Gradle deprecation alerts in favor of pure `android.ndkVersion` alignment.

@@ -1,4 +1,4 @@
-package com.deepeye.otg.ui
+package com.deepeye.otg.ui.viewmodel
 
 data class LogEntry(
     val message: String,

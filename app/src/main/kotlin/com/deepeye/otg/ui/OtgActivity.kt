@@ -1,44 +1,21 @@
 package com.deepeye.otg.ui
 
-import android.content.Context
-import android.content.IntentFilter
+import android.content.*
 import android.hardware.usb.UsbManager
-import android.os.Build
-import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-
-import androidx.lifecycle.lifecycleScope
-import com.deepeye.otg.ConnState
-import com.deepeye.otg.DeviceModel
-import com.deepeye.otg.NativeBridge
-import com.deepeye.otg.RemoteShareActivity
-import com.deepeye.otg.UsbConnectionController
-import com.deepeye.otg.UsbSessionState
-import com.deepeye.otg.auth.LicenseManager
-import com.deepeye.otg.usb.DeepEyeOperation
-import com.deepeye.otg.usb.SessionState
-import com.deepeye.otg.usb.UsbBroadcastReceiver
-import com.deepeye.otg.usb.UsbSessionManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import android.os.*
 import android.util.Log
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.*
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import com.deepeye.otg.DeviceModel
+import com.deepeye.otg.auth.LicenseManager
+import com.deepeye.otg.ui.viewmodel.LogEntry
+import com.deepeye.otg.usb.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 class OtgActivity : AppCompatActivity() {
     
@@ -46,8 +23,8 @@ class OtgActivity : AppCompatActivity() {
     private var selectedBrand = "Xiaomi"
     private var selectedModelName = "Auto-Detect"
     private var nativeHandle: Long = 0
-    private var deviceDatabase: MutableMap<String, List<DeviceModel>> = mutableMapOf()
-    private var allModels: List<DeviceModel> = emptyList()
+    private var deviceDatabase: MutableMap<String, List<com.deepeye.otg.DeviceModel>> = mutableMapOf()
+    private var allModels: List<com.deepeye.otg.DeviceModel> = emptyList()
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -69,7 +46,7 @@ class OtgActivity : AppCompatActivity() {
 
     // Log State for Compose
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
-    val logs = _logs.asStateFlow()
+    val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
 
     // ── Engine loading state ────────────────────────────────────
     private val _engineLoaded = MutableStateFlow(false)
@@ -84,7 +61,7 @@ class OtgActivity : AppCompatActivity() {
             context = this,
             lifecycleManager = lifecycleManager,
             settings = settingsManager,
-            usbState = kotlinx.coroutines.flow.MutableStateFlow(com.deepeye.otg.UsbSessionState.Idle).asStateFlow(),
+            usbState = kotlinx.coroutines.flow.MutableStateFlow(SessionState.Idle).asStateFlow(),
             logs = logs
         )
 
@@ -98,10 +75,10 @@ class OtgActivity : AppCompatActivity() {
                 
                 LaunchedEffect(activeState) {
                     val serviceIntent = Intent(context, com.deepeye.otg.service.UsbForegroundService::class.java)
-                    if (activeState is com.deepeye.otg.UsbSessionState.ConnectedReady) {
+                    if (activeState is SessionState.ConnectedReady) {
                         serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_START
                         context.startForegroundService(serviceIntent)
-                    } else if (activeState is com.deepeye.otg.UsbSessionState.Idle || activeState is com.deepeye.otg.UsbSessionState.Error) {
+                    } else if (activeState is SessionState.Idle || activeState is SessionState.Error) {
                         serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_STOP
                         context.startService(serviceIntent)
                     }
