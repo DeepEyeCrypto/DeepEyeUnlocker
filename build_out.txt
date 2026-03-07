@@ -1,0 +1,18 @@
+Initialized native services in: /Users/enayat/.gradle/native
+Initialized jansi services in: /Users/enayat/.gradle/native
+Found daemon DaemonInfo{pid=35395, address=[cdef7978-bcbc-4f70-9f70-e95edb0f22bb port:51553, addresses:[/127.0.0.1]], state=Idle, lastBusy=1772864657152, context=DefaultDaemonContext[uid=e9861540-2889-4d64-8e8d-0acafaf7fa95,javaHome=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home,javaVersion=17,javaVendor=Eclipse Adoptium,daemonRegistryDir=/Users/enayat/.gradle/daemon,pid=35395,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home (no JDK specified, using current Java home), daemonOpts=[-Xmx4096m, -Dfile.encoding=UTF-8, -Duser.country=US, -Duser.language=en, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=e9861540-2889-4d64-8e8d-0acafaf7fa95,javaHome=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home,javaVersion=17,javaVendor=Eclipse Adoptium,daemonRegistryDir=/Users/enayat/.gradle/daemon,pid=35395,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-Xmx4096m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 35400). The daemon log file: /Users/enayat/.gradle/daemon/8.12/daemon-35400.out.log
+Starting 17th build in daemon [uptime: 3 hrs 49 mins 21.378 secs, performance: 96%, GC rate: 0.00/s, heap usage: 0% of 4 GiB]
+Using 4 worker leases.
+Now considering [/Users/enayat/Documents/DeepEyeUnlocker] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Caching disabled for Kotlin DSL script compilation (Settings/TopLevel/stage1) because:
+  Build cache is disabled
+Watched directory hierarchies: []

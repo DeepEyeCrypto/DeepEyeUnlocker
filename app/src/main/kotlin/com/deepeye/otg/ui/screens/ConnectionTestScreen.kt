@@ -35,12 +35,13 @@ fun ConnectionTestScreen(
         7 to "I/O Endpoint Handshake"
     )
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item {
+        Column {
             Text(
                 "OTG Connection Diagnostic",
                 fontSize = 22.sp,
@@ -59,21 +60,17 @@ fun ConnectionTestScreen(
             }
         }
 
-        items(steps) { step ->
+        steps.forEach { step ->
             val (stepNum, name) = step
             val status = diagnosticSteps[stepNum] ?: DiagnosticStatus.Idle
             DiagnosticStepCard(stepNum, name, status)
         }
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            ConnectionGuideCard()
-        }
+        Spacer(modifier = Modifier.height(4.dp))
+        ConnectionGuideCard()
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            NoDriverNeededCard()
-        }
+        Spacer(modifier = Modifier.height(4.dp))
+        NoDriverNeededCard()
     }
 }
 

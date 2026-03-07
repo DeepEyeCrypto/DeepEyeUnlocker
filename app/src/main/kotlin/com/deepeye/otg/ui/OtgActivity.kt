@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.deepeye.otg.DeviceModel
-import com.deepeye.otg.auth.LicenseManager
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.usb.*
 import kotlinx.coroutines.*
@@ -110,7 +109,6 @@ class OtgActivity : AppCompatActivity() {
             com.deepeye.otg.NativeBridge.loadAsync()
             loadDeviceDatabase()
             withContext(Dispatchers.Main) {
-                com.deepeye.otg.auth.LicenseManager.init(this@OtgActivity)
                 _engineLoaded.value = true
             }
         }

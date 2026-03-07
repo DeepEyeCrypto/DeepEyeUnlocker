@@ -3,7 +3,6 @@ package com.deepeye.otg.engine
 import android.hardware.usb.UsbDevice
 import android.util.Log
 import com.deepeye.otg.NativeBridge
-import com.deepeye.otg.auth.LicenseManager
 import com.deepeye.otg.policy.PolicyDeniedException
 import com.deepeye.otg.policy.PolicyEngine
 import com.deepeye.otg.policy.UserRole
@@ -56,7 +55,7 @@ object EngineDispatcher {
         device: UsbDevice,
         protocol: ProtocolFamily,
         fd: Int,
-        role: UserRole = LicenseManager.currentRole,
+        role: UserRole = UserRole.DEV,
         onProgress: ProgressCallback
     ): EngineResult = withContext(Dispatchers.IO) {
 
@@ -66,7 +65,7 @@ object EngineDispatcher {
 
         // ── Step 2: Initialize native handle if needed ──────────
         onProgress(5, "Initializing protocol bridge...")
-        val handle = NativeBridge.initCore(fd, device.vendorId, device.productId)
+        val handle = com.deepeye.otg.NativeBridge.initCore(fd, device.vendorId, device.productId)
         if (handle == 0L) {
             return@withContext EngineResult(false, "Native init failed (handle=0). Check USB config.")
         }
@@ -75,7 +74,7 @@ object EngineDispatcher {
             // ── Step 3: Identify device ─────────────────────────
             onProgress(10, "Identifying device...")
             val identifiedType = try {
-                NativeBridge.identifyDevice(handle)
+                com.deepeye.otg.NativeBridge.identifyDevice(handle)
             } catch (e: Exception) {
                 log("[ENGINE] identifyDevice threw: ${e.message}")
                 "UNKNOWN"
