@@ -225,9 +225,9 @@ fun MainScreen(viewModel: UsbViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RemoteBadge()
                     Spacer(modifier = Modifier.width(8.dp))
-                    GlassButton(label = "TEST", onClick = { viewModel.enterTestHarness() }, modifier = Modifier.width(70.dp), accent = true)
+                    GlassButton(label = "TEST", onClick = { viewModel.enterTestHarness() }, modifier = Modifier.width(85.dp), accent = true)
                     Spacer(modifier = Modifier.width(8.dp))
-                    GlassButton(label = if (perfMode) "PERF: LOW" else "PERF: HIGH", onClick = { viewModel.togglePerformance() }, modifier = Modifier.width(90.dp), accent = !perfMode)
+                    GlassButton(label = if (perfMode) "PERF: LOW" else "PERF: HIGH", onClick = { viewModel.togglePerformance() }, modifier = Modifier.width(105.dp), accent = !perfMode)
                 }
             }
              BrandSelectorBar(
@@ -447,9 +447,10 @@ private fun StatusStrip(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(24.dp)
-            .background(Color.Black.copy(alpha = 0.4f))
-            .padding(horizontal = 16.dp),
+            .height(26.dp)
+            .background(Color.Black.copy(alpha = 0.6f))
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -469,7 +470,7 @@ private fun StatusStrip(
                 modifier = if (licenseStatus != com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Modifier.clickable { onActivateClick() } else Modifier
             )
         }
-        Text("ENGINE v2026.18 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
+        Text("ENGINE v2026.19 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
     }
 }
 

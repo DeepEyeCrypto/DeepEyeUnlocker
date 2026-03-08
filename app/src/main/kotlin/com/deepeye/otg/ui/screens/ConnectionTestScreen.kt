@@ -46,14 +46,14 @@ fun ConnectionTestScreen(
                 "OTG Connection Diagnostic",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Color(0xFF4C1D95), // Dark Violet
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             GlassCard(hazeState = null, performanceMode = false) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = otgResult?.recommendation ?: "Checking OTG capability...",
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = Color(0xFF1D1B20).copy(alpha = 0.8f),
                         fontSize = 14.sp
                     )
                 }
@@ -89,18 +89,18 @@ fun DiagnosticStepCard(stepNum: Int, name: String, status: DiagnosticStatus) {
             ) {
                 Text(
                     "#$stepNum",
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = Color(0xFF4C1D95).copy(alpha = 0.5f),
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 )
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(name, color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(name, color = Color(0xFF1D1B20), fontWeight = FontWeight.SemiBold)
                 if (status is DiagnosticStatus.Pass) {
-                    Text(status.msg, color = Color.Green.copy(alpha = 0.7f), fontSize = 12.sp)
+                    Text(status.msg, color = Color(0xFF059669), fontSize = 12.sp) // Darker Green
                 } else if (status is DiagnosticStatus.Fail) {
-                    Text(status.msg, color = Color.Red.copy(alpha = 0.7f), fontSize = 12.sp)
+                    Text(status.msg, color = Color(0xFFDC2626), fontSize = 12.sp) // Darker Red
                 }
             }
 
@@ -138,7 +138,7 @@ fun ConnectionGuideCard() {
             Text(
                 "Note: EDL and BROM modes do NOT require USB Debugging.",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.6f)
+                color = Color(0xFF1D1B20).copy(alpha = 0.6f)
             )
         }
     }
@@ -166,7 +166,7 @@ fun NoDriverNeededCard() {
                 "DeepEye uses Android's native USB Host API to speak directly to device hardware. " +
                 "Unlike a PC, no Qualcomm/MTK/Samsung drivers are needed. The app is the driver.",
                 fontSize = 13.sp,
-                color = Color.White.copy(alpha = 0.7f)
+                color = Color(0xFF1D1B20).copy(alpha = 0.7f)
             )
         }
     }
