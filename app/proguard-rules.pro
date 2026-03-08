@@ -13,22 +13,26 @@
     native <methods>;
 }
 
-# ── USB + Protocol classes (used via reflection) ────────────
+# ── USB + Protocol core ─────────────────────────────────────
 -keep class com.deepeye.otg.usb.** { *; }
 -keep class com.deepeye.otg.engine.** { *; }
 
-# ── Sealed class — exhaustive when() matching ───────────────
+# ── Domain Models — CRITICAL for state-driven UI ──────────
+-keep class com.deepeye.otg.domain.models.** { *; }
+-keep class com.deepeye.otg.policy.** { *; }
+
+# ── Service / Auth Infrastructure (Stage C) ───────────────
+-keep class com.deepeye.otg.service.** { *; }
+-keep class com.deepeye.otg.data.** { *; }
+
+# ── Sealed class & Enums ────────────────────────────────────
 -keep class com.deepeye.otg.usb.SessionState { *; }
 -keep class com.deepeye.otg.usb.SessionState$* { *; }
--keep class com.deepeye.otg.usb.DeepEyeOperation { *; }
--keep class com.deepeye.otg.usb.ProtocolFamily { *; }
-
-# ── ViewModel — keep for ViewModelProvider ──────────────────
--keep class * extends androidx.lifecycle.ViewModel { *; }
 
 # ── Protocol probe + detected protocol enums ────────────────
 -keep class com.deepeye.otg.ProtocolProbe { *; }
 -keep class com.deepeye.otg.DetectedProtocol { *; }
+-keep class com.deepeye.otg.data.ConnectionMode { *; }
 
 # ── Compose — required for reflection-based tooling ─────────
 -keep class androidx.compose.** { *; }

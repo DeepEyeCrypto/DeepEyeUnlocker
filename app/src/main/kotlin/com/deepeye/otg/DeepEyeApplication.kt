@@ -28,6 +28,9 @@ class DeepEyeApplication : Application() {
             NativeBridge.loadAsync()
         }
 
+        // ── Initialize Secure Licensing (Stage C) ───────────────
+        com.deepeye.otg.service.LicenseManager.initialize(this)
+
         // ── Crash handler for diagnostics ───────────────────────
         setupCrashHandler()
 

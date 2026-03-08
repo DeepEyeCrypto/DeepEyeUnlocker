@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.deepeye.otg.ui.RemoteShareScreen
+import androidx.compose.runtime.collectAsState
 import java.util.UUID
 
 class RemoteShareActivity : AppCompatActivity() {
@@ -30,13 +31,39 @@ class RemoteShareActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+        
+        val tunnel = com.deepeye.otg.service.TunnelManager
 
         setContent {
+            val tunnelStatus by tunnel.status.collectAsState()
+            val tunnelCode by tunnel.sessionCode.collectAsState()
+            
             var status by remember { mutableStateOf("WAITING FOR DEVICE") }
             var subStatus by remember { mutableStateOf("Connect USB device via OTG...") }
             var usbDevice by remember { mutableStateOf<UsbDevice?>(null) }
-            var sessionCode by remember { mutableStateOf<String?>(null) }
             var isDetected by remember { mutableStateOf(false) }
+
+            // Sync UI with Tunnel State
+            LaunchedEffect(tunnelStatus, tunnelCode) {
+                when (tunnelStatus) {
+                    com.deepeye.otg.service.TunnelManager.TunnelStatus.ACTIVE -> {
+                        status = "SHARING ACTIVE"
+                        subStatus = "Relay Tunnel Established via WebSocket"
+                    }
+                    com.deepeye.otg.service.TunnelManager.TunnelStatus.CONNECTING -> {
+                        status = "CONNECTING..."
+                        subStatus = "Establishing secure handshake..."
+                    }
+                    com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED -> {
+                        status = "TUNNEL FAILED"
+                        subStatus = "Relay server unreachable."
+                    }
+                    else -> if (isDetected) {
+                        status = "DEVICE DETECTED"
+                        subStatus = "Ready to share."
+                    }
+                }
+            }
 
             LaunchedEffect(Unit) {
                 val deviceList = usbManager.deviceList
@@ -52,35 +79,20 @@ class RemoteShareActivity : AppCompatActivity() {
             RemoteShareScreen(
                 status = status,
                 subStatus = subStatus,
-                sessionCode = sessionCode,
+                sessionCode = tunnelCode,
                 isDeviceDetected = isDetected,
                 onStartSharing = {
-                    if (sessionCode == null) {
+                    if (tunnelCode == null) {
                         val device = usbDevice
-                        if (device == null) {
-                            Toast.makeText(
-                                this@RemoteShareActivity,
-                                "No USB Device Connected!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@RemoteShareScreen
-                        }
+                        if (device == null) return@RemoteShareScreen
 
                         if (usbManager.hasPermission(device)) {
-                            sessionCode = UUID.randomUUID().toString()
-                                .substring(0, 8)
-                                .uppercase()
-                            status = "SHARING ACTIVE"
-                            subStatus = "Relay Tunnel Established via TCP"
+                            tunnel.startSharing(device)
                         } else {
                             requestUsbPermission(device)
-                            status = "WAITING PERMISSION"
-                            subStatus = "Approve USB permission dialog"
                         }
                     } else {
-                        sessionCode = null
-                        status = "DEVICE DETECTED"
-                        subStatus = "Sharing stopped"
+                        tunnel.stopSharing()
                     }
                 },
                 onConnectRemote = { id ->

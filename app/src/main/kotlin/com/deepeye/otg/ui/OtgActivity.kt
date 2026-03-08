@@ -56,6 +56,10 @@ class OtgActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsManager = com.deepeye.otg.data.SettingsManager(this)
+        
+        // Initialize Tunnel Service
+        com.deepeye.otg.service.TunnelManager.initialize(lifecycleManager)
+        
         val viewModel = com.deepeye.otg.viewmodel.UsbViewModel(
             context = this,
             lifecycleManager = lifecycleManager,
@@ -105,8 +109,18 @@ class OtgActivity : AppCompatActivity() {
             lifecycleManager.onDeviceAttached(device)
         }
 
+        // Handle Remote Session (Stage H)
+        val remoteSession = intent?.getStringExtra("REMOTE_SESSION")
+        remoteSession?.let { code ->
+            com.deepeye.otg.service.TunnelManager.joinSession(code)
+        }
+
         lifecycleScope.launch(Dispatchers.IO) {
             com.deepeye.otg.NativeBridge.loadAsync()
+            
+            // Initiate Cloud Model Sync (Stage I)
+            com.deepeye.otg.service.ModelSyncManager.sync(this@OtgActivity)
+            
             loadDeviceDatabase()
             withContext(Dispatchers.Main) {
                 _engineLoaded.value = true
@@ -135,15 +149,7 @@ class OtgActivity : AppCompatActivity() {
     }
 
     private fun loadDeviceDatabase() {
-        try {
-            val jsonString = assets.open("models.json").bufferedReader().use { it.readText() }
-            val jsonArray = org.json.JSONArray(jsonString)
-            allModels = (0 until jsonArray.length()).map { i ->
-                val obj = jsonArray.getJSONObject(i)
-                DeviceModel(obj.getString("name"), obj.getString("chipset"), obj.getString("brand"))
-            }
-        } catch (e: Exception) {
-            Log.e("OtgActivity", "DB Load Error: ${e.message}")
-        }
+        allModels = com.deepeye.otg.service.ModelSyncManager.load(this)
+        Log.i("OtgActivity", "DB Loaded: ${allModels.size} device models.")
     }
 }

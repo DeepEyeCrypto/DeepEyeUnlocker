@@ -4,6 +4,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -56,6 +57,13 @@ fun MainScreen(viewModel: UsbViewModel) {
     
     val virtualSessionState by viewModel.domainSessionState.collectAsState()
     val userRole by viewModel.currentUserPolicyTier.collectAsState()
+    
+    val showActivation by viewModel.showActivation.collectAsState()
+    val licenseStatus by viewModel.licenseStatus.collectAsState()
+    val activeLicense by viewModel.currentLicense.collectAsState()
+    val updateInfo by viewModel.updateState.collectAsState()
+
+    var currentNav by remember { mutableStateOf(NavTarget.HOME) }
 
     Box(
         modifier = Modifier
@@ -70,12 +78,15 @@ fun MainScreen(viewModel: UsbViewModel) {
             }
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
-            contentPadding = PaddingValues(top = 185.dp, bottom = 32.dp)
-        ) {
+        if (currentNav == NavTarget.SETTINGS) {
+            SettingsScreen(viewModel = viewModel)
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
+                contentPadding = PaddingValues(top = 185.dp, bottom = 32.dp)
+            ) {
             item {
                 com.deepeye.otg.ui.components.OemWarningBanner()
             }
@@ -180,6 +191,7 @@ fun MainScreen(viewModel: UsbViewModel) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
+    }
 
         // Top Bar & Tabs (Layered above content)
         Column(modifier = Modifier.fillMaxWidth().background(
@@ -227,7 +239,37 @@ fun MainScreen(viewModel: UsbViewModel) {
 
         // Status Strip at the very bottom
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            StatusStrip()
+            StatusStrip(
+                licenseStatus = licenseStatus,
+                onActivateClick = { viewModel.setActivationVisibility(true) }
+            )
+        }
+
+        if (showActivation) {
+            com.deepeye.otg.ui.components.ActivationOverlay(
+                onDismiss = { viewModel.setActivationVisibility(false) },
+                onActivate = { key -> 
+                    viewModel.activateLicense(key)
+                    viewModel.setActivationVisibility(false)
+                }
+            )
+        }
+
+        // Update Notification (Stage F)
+        updateInfo?.let { info ->
+            if (info.hasUpdate) {
+                Box(modifier = Modifier.align(Alignment.TopCenter)) {
+                    UpdateBannerOverlay(info, onUpgrade = { viewModel.launchUpdate() })
+                }
+            }
+        }
+
+        // Bottom Navigation Bar (Stage G)
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            GlassBottomBar(
+                currentTarget = currentNav,
+                onTargetSelected = { currentNav = it }
+            )
         }
     }
 }
@@ -398,7 +440,10 @@ private fun LegalPolicyBanner() {
 }
 
 @Composable
-private fun StatusStrip() {
+private fun StatusStrip(
+    licenseStatus: com.deepeye.otg.domain.models.LicenseStatus,
+    onActivateClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -408,7 +453,118 @@ private fun StatusStrip() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("SYSTEM HEALTH: OPTIMAL", fontSize = 8.sp, color = Color(0xFF34D399), fontWeight = FontWeight.Bold)
-        Text("ENGINE v2026.17 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
+        val licenseLabel = when (licenseStatus) {
+            com.deepeye.otg.domain.models.LicenseStatus.ACTIVE -> "LICENSE: ACTIVE"
+            com.deepeye.otg.domain.models.LicenseStatus.TRIAL -> "LICENSE: TRIAL"
+            else -> "LICENSE: UNREGISTERED"
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("SYSTEM HEALTH: OPTIMAL", fontSize = 8.sp, color = Color(0xFF34D399), fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = licenseLabel, 
+                fontSize = 8.sp, 
+                color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color.Cyan else Color.White.copy(alpha = 0.6f),
+                modifier = if (licenseStatus != com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Modifier.clickable { onActivateClick() } else Modifier
+            )
+        }
+        Text("ENGINE v2026.18 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
+    }
+}
+
+@Composable
+private fun UpdateBannerOverlay(
+    info: com.deepeye.otg.service.UpdateManager.UpdateInfo,
+    onUpgrade: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 32.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF6D28D9))
+            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+            .padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("🚀", fontSize = 24.sp)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "UPDATE AVAILABLE: v${info.latestVersion}",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+                Text(
+                    "Stability enhancements and model updates.",
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 10.sp,
+                    maxLines = 1
+                )
+            }
+            GlassButton(
+                label = "UPGRADE",
+                onClick = onUpgrade,
+                modifier = Modifier.width(90.dp).height(32.dp),
+                accent = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun GlassBottomBar(
+    currentTarget: NavTarget,
+    onTargetSelected: (NavTarget) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .padding(bottom = 32.dp)
+            .width(260.dp)
+            .height(64.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.08f))
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(32.dp))
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            NavIcon(label = "HOME", selected = currentTarget == NavTarget.HOME, icon = "🏠") { onTargetSelected(NavTarget.HOME) }
+            NavIcon(label = "DEVICES", selected = currentTarget == NavTarget.DEVICES, icon = "📱") { onTargetSelected(NavTarget.DEVICES) }
+            NavIcon(label = "SETTINGS", selected = currentTarget == NavTarget.SETTINGS, icon = "⚙️") { onTargetSelected(NavTarget.SETTINGS) }
+        }
+    }
+}
+
+@Composable
+private fun NavIcon(label: String, selected: Boolean, icon: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = icon,
+            fontSize = 18.sp,
+            color = if (selected) Color.White else Color.White.copy(alpha = 0.5f)
+        )
+        Text(
+            text = label,
+            fontSize = 7.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (selected) Color.Cyan else Color.White.copy(alpha = 0.4f)
+        )
+        if (selected) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Box(Modifier.size(3.dp).clip(CircleShape).background(Color.Cyan))
+        }
     }
 }

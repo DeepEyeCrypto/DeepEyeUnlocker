@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.otg.usb.*
 import com.deepeye.otg.usb.SessionState
+import com.deepeye.otg.service.LicenseManager
+import com.deepeye.otg.service.UpdateManager
+import com.deepeye.otg.domain.models.LicenseStatus
 import com.deepeye.otg.ui.UsbUiState
 import com.deepeye.otg.ui.toUiState
 import com.deepeye.otg.ui.viewmodel.LogEntry
@@ -32,6 +35,22 @@ class UsbViewModel(
     private val _diagnosticSteps = MutableStateFlow<Map<Int, DiagnosticStatus>>(emptyMap())
     val diagnosticSteps: StateFlow<Map<Int, DiagnosticStatus>> = _diagnosticSteps.asStateFlow()
 
+    val licenseStatus = LicenseManager.licenseState
+    val currentLicense = LicenseManager.currentLicense
+
+    private val _showActivation = MutableStateFlow(false)
+    val showActivation = _showActivation.asStateFlow()
+
+    fun setActivationVisibility(visible: Boolean) {
+        _showActivation.value = visible
+    }
+
+    fun activateLicense(key: String) {
+        viewModelScope.launch {
+            LicenseManager.activate(key)
+        }
+    }
+
     sealed class DiagnosticStatus {
         object Idle : DiagnosticStatus()
         object Loading : DiagnosticStatus()
@@ -40,6 +59,23 @@ class UsbViewModel(
     }
 
     val performanceMode: StateFlow<Boolean> = settings.performanceMode
+
+    val updateState = UpdateManager.updateState
+
+    init {
+        viewModelScope.launch {
+            // Check for updates delayed so as not to block initial JNI load
+            delay(3000)
+            UpdateManager.checkForUpdates()
+        }
+    }
+
+    fun launchUpdate() {
+        val url = updateState.value?.downloadUrl ?: return
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
     private val _selectedBrand = MutableStateFlow(0)
     val selectedBrand: StateFlow<Int> = _selectedBrand.asStateFlow()
     
@@ -56,8 +92,9 @@ class UsbViewModel(
     private val _domainSessionState = MutableStateFlow(com.deepeye.otg.domain.models.SessionState())
     val domainSessionState: StateFlow<com.deepeye.otg.domain.models.SessionState> = _domainSessionState.asStateFlow()
 
-    private val _policyTier = MutableStateFlow(PolicyTier.RESTRICTED) // Default to high access for researcher mode
-    val currentUserPolicyTier: StateFlow<PolicyTier> = _policyTier.asStateFlow()
+    val currentUserPolicyTier: StateFlow<PolicyTier> = LicenseManager.currentLicense
+        .map { it?.tier ?: PolicyTier.SAFE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), PolicyTier.SAFE)
 
     // Deprecated legacy feature properties
     val activeBrandFeatures: StateFlow<BrandFeatureSet> = _selectedBrand
