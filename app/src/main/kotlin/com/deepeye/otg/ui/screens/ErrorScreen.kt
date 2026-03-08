@@ -38,8 +38,7 @@ fun ErrorScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(GlassTokens.backgroundBrush)
-            .hazeSource(hazeState)
+            .background(Color.Black.copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier

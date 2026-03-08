@@ -34,10 +34,10 @@ object UsbDeviceDatabase {
     val MTK_SIGNATURES = listOf(
         UsbDeviceSignature(0x0E8D, 0x0003, "MediaTek", ConnectionMode.BROM,
             "MTK Boot ROM (BROM) mode", "MTK"),
-        UsbDeviceSignature(0x0E8D, 0x2000, "MediaTek", ConnectionMode.BROM,
-            "MTK BROM — DA loader mode", "MTK"),
-        UsbDeviceSignature(0x0E8D, 0x2001, "MediaTek", ConnectionMode.BROM,
-            "MTK BROM — secured boot", "MTK"),
+        UsbDeviceSignature(0x0E8D, 0x2000, "MediaTek", ConnectionMode.PRELOADER,
+            "MTK Preloader mode (primary)", "MTK"),
+        UsbDeviceSignature(0x0E8D, 0x2001, "MediaTek", ConnectionMode.META,
+            "MTK Meta mode (secured boot variant)", "MTK"),
         UsbDeviceSignature(0x0E8D, 0x0023, "MediaTek", ConnectionMode.PRELOADER,
             "MTK Preloader mode", "MTK"),
         UsbDeviceSignature(0x0E8D, 0x0017, "MediaTek", ConnectionMode.META,
@@ -63,8 +63,6 @@ object UsbDeviceDatabase {
         // Samsung ADB
         UsbDeviceSignature(0x04E8, 0x6860, "Samsung", ConnectionMode.ADB,
             "Samsung Android ADB", "EXYNOS/QC"),
-        UsbDeviceSignature(0x04E8, 0x685D, "Samsung", ConnectionMode.ADB,
-            "Samsung ADB + MTP", "EXYNOS/QC"),
         // Oppo / Realme ADB
         UsbDeviceSignature(0x22D9, 0x2773, "Oppo", ConnectionMode.ADB,
             "Oppo/Realme ADB Interface", "QC/MTK"),
@@ -102,6 +100,8 @@ object UsbDeviceDatabase {
         UsbDeviceSignature(0x2717, 0xFF40, "Xiaomi", ConnectionMode.FASTBOOT,
             "Xiaomi Fastboot / Bootloader", "QC/MTK"),
         // Samsung Download Mode (Odin/Fastboot variant)
+        UsbDeviceSignature(0x04E8, 0x685D, "Samsung", ConnectionMode.ODIN,
+            "Samsung Download Mode (Odin)", "EXYNOS/QC"),
         UsbDeviceSignature(0x04E8, 0x685E, "Samsung", ConnectionMode.ODIN,
             "Samsung Download Mode (Odin)", "EXYNOS/QC"),
         UsbDeviceSignature(0x04E8, 0x6601, "Samsung", ConnectionMode.ODIN,
@@ -148,16 +148,12 @@ object UsbDeviceDatabase {
             it.vendorId == vendorId && it.productId == productId
         }
 
-    // Fallback — VID-only detection when PID unknown
+    // Conservative fallback — VID-only detection when PID unknown.
+    // MUST NEVER coerce unknown Android-like devices into ADB.
+    // If explicit ADB VID:PID is not matched above, fallback stays non-ADB.
     fun detectByVendor(vendorId: Int): ConnectionMode = when (vendorId) {
         0x05C6 -> ConnectionMode.EDL       // Qualcomm
         0x0E8D -> ConnectionMode.BROM      // MediaTek
-        0x18D1 -> ConnectionMode.ADB       // Google/AOSP
-        0x2717 -> ConnectionMode.ADB       // Xiaomi
-        0x04E8 -> ConnectionMode.ADB       // Samsung
-        0x22D9 -> ConnectionMode.ADB       // Oppo/Realme
-        0x2D95 -> ConnectionMode.ADB       // Vivo
-        0x2A70 -> ConnectionMode.ADB       // OnePlus
         0x1782 -> ConnectionMode.FDL       // UniSoc / Spreadtrum
         else   -> ConnectionMode.MTP       // Unknown → assume MTP
     }

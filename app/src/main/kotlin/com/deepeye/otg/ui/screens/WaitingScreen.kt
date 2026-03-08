@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.usb.DeepEyeOperation
+import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.components.UsbTypeCIcon
@@ -42,8 +42,7 @@ fun WaitingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(GlassTokens.backgroundBrush)
-            .hazeSource(hazeState)
+            .background(Color.Black.copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier
@@ -73,7 +72,7 @@ fun WaitingScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    op?.let {
+                    if (op != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
@@ -83,7 +82,7 @@ fun WaitingScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Queue: ${it.label}",
+                                text = "Queue: ${op.label}",
                                 fontSize = 16.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

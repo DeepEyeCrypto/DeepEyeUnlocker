@@ -1,7 +1,7 @@
 package com.deepeye.otg.policy
 
 import android.util.Log
-import com.deepeye.otg.usb.DeepEyeOperation
+import com.deepeye.otg.domain.models.DeepEyeOperation
 
 // ═══════════════════════════════════════════════════════════════════
 //  PolicyEngine — 4-tier × 5-role enforcement matrix
@@ -66,17 +66,17 @@ object PolicyEngine {
      */
     fun check(op: DeepEyeOperation, role: UserRole): PolicyDecision {
         // TIER NEVER — always blocked
-        if (op.tier == com.deepeye.otg.domain.models.PolicyTier.NEVER) {
-            log("[POLICY] DENIED: ${op.name} is TIER NEVER (EXPLOIT) — no role has access")
+        if (op.policyTier == com.deepeye.otg.domain.models.PolicyTier.NEVER) {
+            log("[POLICY] DENIED: ${op.id} is TIER NEVER (EXPLOIT) — no role has access")
             return PolicyDecision(false, "NEVER tier operations are permanently blocked")
         }
 
         // Tier → minimum role
-        val minRole = tierMinRole[op.tier]
-            ?: return PolicyDecision(false, "Unknown tier ${op.tier}")
+        val minRole = tierMinRole[op.policyTier]
+            ?: return PolicyDecision(false, "Unknown tier ${op.policyTier}")
 
         if (role.level < minRole.level) {
-            log("[POLICY] DENIED: ${op.name} requires ${minRole.label} (have: ${role.label})")
+            log("[POLICY] DENIED: ${op.id} requires ${minRole.label} (have: ${role.label})")
             return PolicyDecision(
                 false,
                 "${op.label} requires ${minRole.label} role or higher (current: ${role.label})"
@@ -91,7 +91,7 @@ object PolicyEngine {
 
         // Record invocation for audit
         recordInvocation(op)
-        log("[POLICY] ALLOWED: ${op.name} (tier=${op.tier}, role=${role.label})")
+        log("[POLICY] ALLOWED: ${op.id} (tier=${op.policyTier}, role=${role.label})")
         return PolicyDecision(true, "OK")
     }
 
@@ -115,7 +115,7 @@ object PolicyEngine {
     /**
      * Returns true if the operation is SAFE (no auth required).
      */
-    fun isSafe(op: DeepEyeOperation): Boolean = op.tier == com.deepeye.otg.domain.models.PolicyTier.SAFE
+    fun isSafe(op: DeepEyeOperation): Boolean = op.policyTier == com.deepeye.otg.domain.models.PolicyTier.SAFE
 
     // ── Abuse detection ─────────────────────────────────────────
 
@@ -129,7 +129,7 @@ object PolicyEngine {
         timestamps.removeAll { now - it > RATE_WINDOW_MS }
 
         if (timestamps.size >= IMEI_CHECK_LIMIT) {
-            log("[POLICY] ABUSE: ${op.name} invoked ${timestamps.size}x in last 24h (limit=$IMEI_CHECK_LIMIT)")
+            log("[POLICY] ABUSE: ${op.id} invoked ${timestamps.size}x in last 24h (limit=$IMEI_CHECK_LIMIT)")
             return PolicyDecision(
                 false,
                 "Rate limit: ${op.label} exceeded ${IMEI_CHECK_LIMIT} checks in 24 hours"

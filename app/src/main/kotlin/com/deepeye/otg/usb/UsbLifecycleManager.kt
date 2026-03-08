@@ -5,7 +5,7 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.util.Log
 import com.deepeye.otg.data.ConnectionMode
-import com.deepeye.otg.data.UsbDeviceDatabase
+import com.deepeye.otg.domain.models.ProtocolFamily
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
@@ -37,27 +37,63 @@ class UsbLifecycleManager(
     private var activeEndpoints: ResolvedEndpoints? = null
     private var transferQueue: UsbTransferQueue? = null
     private var watchdogJob: Job? = null
+
+    private val detector = ProtocolDetector()
     private var missedPings = 0
+    private var activeDeviceKey: String? = null
+    private var activeDetection: DetectionResult? = null
+    private var activeSnapshot: UsbDescriptorSnapshot? = null
+
+    private fun deviceKey(device: UsbDevice): String =
+        "${device.vendorId}:${device.productId}:${device.deviceId}"
 
     fun onDeviceAttached(device: UsbDevice) {
         scope.launch {
             lifecycleMutex.withLock {
+                val newKey = deviceKey(device)
+                val previousKey = activeDeviceKey
+
+                if (previousKey != null && previousKey != newKey) {
+                    Log.i(TAG, "[MODE] re-enumeration oldKey=$previousKey newKey=$newKey -> reset")
+                } else if (previousKey == newKey) {
+                    Log.i(TAG, "[MODE] attach same-key=$newKey -> fresh reclassify")
+                }
+
                 closeInternal()
 
-                val sig = UsbDeviceDatabase.detect(device.vendorId, device.productId)
-                val mode = sig?.mode ?: UsbDeviceDatabase.detectByVendor(device.vendorId)
+                val snapshot = UsbSnapshotFactory.from(device)
+                val detection = detector.detect(snapshot)
+                val mode = detection.toConnectionMode()
 
-                Log.i(TAG, "Device attached: ${device.productName} VID=0x${device.vendorId.toString(16)} mode=$mode")
+                Log.i(
+                    TAG,
+                    "[MODE] attach-session key=$newKey mode=${detection.deviceMode} family=${detection.protocolFamily} reason=\"${detection.reason}\""
+                )
 
                 _state.value = UsbLifecycleState.DeviceDetected(
                     device = device,
                     detectedMode = mode,
-                    brand = sig?.brand ?: "Unknown",
-                    chipset = sig?.chipset ?: "Unknown"
+                    protocolFamily = detection.protocolFamily,
+                    detectedDeviceMode = detection.deviceMode,
+                    detectionReason = detection.reason,
+                    confidence = detection.confidence,
+                    vendorId = device.vendorId,
+                    productId = device.productId,
+                    deviceId = device.deviceId,
+                    deviceKey = newKey,
+                    descriptorSnapshot = snapshot,
+                    brand = snapshot.manufacturerName ?: "Unknown",
+                    chipset = snapshot.productName ?: "Generic"
                 )
 
                 if (usbManager.hasPermission(device)) {
-                    openConnection(device, mode)
+                    openConnection(
+                        device = device,
+                        mode = mode,
+                        detection = detection,
+                        snapshot = snapshot,
+                        deviceKey = newKey
+                    )
                 } else {
                     _state.value = UsbLifecycleState.PermissionPending(device)
                     UsbPermissionGuard.requestPermission(
@@ -72,11 +108,29 @@ class UsbLifecycleManager(
     fun onPermissionResult(device: UsbDevice, granted: Boolean) {
         scope.launch {
             lifecycleMutex.withLock {
+                val permissionKey = deviceKey(device)
+
+                val pending = _state.value as? UsbLifecycleState.PermissionPending
+                if (pending != null && pending.device.deviceId != device.deviceId) {
+                    Log.w(
+                        TAG,
+                        "[MODE] permission result ignored for stale deviceId=${device.deviceId} expected=${pending.device.deviceId}"
+                    )
+                    return@withLock
+                }
+
                 if (granted) {
-                    val sig = UsbDeviceDatabase.detect(device.vendorId, device.productId)
-                    val mode = sig?.mode ?: UsbDeviceDatabase.detectByVendor(device.vendorId)
-                    openConnection(device, mode)
+                    val snapshot = UsbSnapshotFactory.from(device)
+                    val detection = detector.detect(snapshot)
+                    openConnection(
+                        device = device,
+                        mode = detection.toConnectionMode(),
+                        detection = detection,
+                        snapshot = snapshot,
+                        deviceKey = permissionKey
+                    )
                 } else {
+                    Log.w(TAG, "[MODE] permission denied key=$permissionKey")
                     _state.value = UsbLifecycleState.PermissionDenied(device, device.productName ?: "Unknown")
                 }
             }
@@ -86,14 +140,26 @@ class UsbLifecycleManager(
     fun onDeviceDetached(device: UsbDevice) {
         scope.launch {
             lifecycleMutex.withLock {
+                Log.i(TAG, "[MODE] detach key=${deviceKey(device)}")
                 closeInternal()
                 _state.value = UsbLifecycleState.Idle
             }
         }
     }
 
-    private suspend fun openConnection(device: UsbDevice, mode: ConnectionMode) = withContext(Dispatchers.IO) {
-        _state.value = UsbLifecycleState.Connecting(device, mode)
+    private suspend fun openConnection(
+        device: UsbDevice,
+        mode: ConnectionMode,
+        detection: DetectionResult,
+        snapshot: UsbDescriptorSnapshot,
+        deviceKey: String
+    ) = withContext(Dispatchers.IO) {
+        _state.value = UsbLifecycleState.Connecting(
+            device = device,
+            mode = mode,
+            protocolFamily = detection.protocolFamily,
+            deviceKey = deviceKey
+        )
 
         val conn = OemCompatibilityLayer.openDeviceWithRetry(usbManager, device) ?: run {
             _state.value = UsbLifecycleState.Error("Cannot open device", true)
@@ -115,48 +181,82 @@ class UsbLifecycleManager(
         activeInterface = usbInterface
         activeEndpoints = endpoints
         transferQueue = UsbTransferQueue(conn, endpoints)
-
-        val sig = UsbDeviceDatabase.detect(device.vendorId, device.productId)
+        activeDeviceKey = deviceKey
+        activeDetection = detection
+        activeSnapshot = snapshot
 
         _state.value = UsbLifecycleState.Connected(
-            deviceName = device.productName ?: "Unknown",
+            deviceName = device.productName ?: device.deviceName ?: "Unknown",
             mode = mode,
-            brand = sig?.brand ?: "Unknown",
+            protocolFamily = detection.protocolFamily,
+            detectedDeviceMode = detection.deviceMode,
+            detectionReason = detection.reason,
+            confidence = detection.confidence,
+            vendorId = device.vendorId,
+            productId = device.productId,
+            deviceId = device.deviceId,
+            deviceKey = deviceKey,
+            descriptorSnapshot = snapshot,
+            brand = device.manufacturerName ?: "Unknown",
             endpoints = endpoints
         )
 
-        startWatchdog(device.productName ?: "Unknown", mode)
+        startWatchdog()
     }
 
-    private fun startWatchdog(deviceName: String, mode: ConnectionMode) {
+    private fun startWatchdog() {
         watchdogJob?.cancel()
         missedPings = 0
+
         watchdogJob = scope.launch(Dispatchers.IO) {
             while (isActive) {
                 delay(WATCHDOG_INTERVAL_MS)
                 val conn = activeConnection ?: break
+
                 if (pingDevice(conn)) {
                     missedPings = 0
                     if (_state.value is UsbLifecycleState.Degraded) {
-                        _state.value = UsbLifecycleState.Connected(
-                            deviceName = deviceName,
-                            mode = mode,
-                            brand = "Unknown",
-                            endpoints = activeEndpoints!!
-                        )
+                        restoreConnectedState(overrideBrand = "Healthy")
                     }
                 } else {
                     missedPings++
+
+                    val activeName = activeDevice?.productName ?: activeDevice?.deviceName ?: "Unknown"
+                    val activeMode = activeDetection?.toConnectionMode() ?: ConnectionMode.MTP
+
                     if (missedPings >= MAX_MISSED_PINGS) {
                         closeInternal()
-                        _state.value = UsbLifecycleState.Dead(deviceName, "No response")
+                        _state.value = UsbLifecycleState.Dead(activeName, "No response")
                         break
                     } else {
-                        _state.value = UsbLifecycleState.Degraded(deviceName, mode, missedPings, MAX_MISSED_PINGS)
+                        _state.value = UsbLifecycleState.Degraded(activeName, activeMode, missedPings, MAX_MISSED_PINGS)
                     }
                 }
             }
         }
+    }
+
+    private fun restoreConnectedState(overrideBrand: String? = null) {
+        val device = activeDevice ?: return
+        val detection = activeDetection ?: return
+        val snapshot = activeSnapshot ?: return
+        val endpoints = activeEndpoints ?: return
+
+        _state.value = UsbLifecycleState.Connected(
+            deviceName = device.productName ?: device.deviceName ?: "Unknown",
+            mode = detection.toConnectionMode(),
+            protocolFamily = detection.protocolFamily,
+            detectedDeviceMode = detection.deviceMode,
+            detectionReason = detection.reason,
+            confidence = detection.confidence,
+            vendorId = device.vendorId,
+            productId = device.productId,
+            deviceId = device.deviceId,
+            deviceKey = activeDeviceKey ?: deviceKey(device),
+            descriptorSnapshot = snapshot,
+            brand = overrideBrand ?: device.manufacturerName ?: "Unknown",
+            endpoints = endpoints
+        )
     }
 
     private fun pingDevice(conn: android.hardware.usb.UsbDeviceConnection): Boolean = try {
@@ -177,6 +277,9 @@ class UsbLifecycleManager(
             activeDevice = null
             activeConnection = null
             activeInterface = null
+            activeDeviceKey = null
+            activeDetection = null
+            activeSnapshot = null
             activeEndpoints = null
         }
     }
@@ -187,9 +290,9 @@ class UsbLifecycleManager(
     fun getActiveConnection() = activeConnection
     fun getCurrentMode() = (state.value as? UsbLifecycleState.Connected)?.mode
     fun pauseWatchdog() { watchdogJob?.cancel() }
+
     fun resumeWatchdog() {
-        val s = state.value
-        if (s is UsbLifecycleState.Connected) startWatchdog(s.deviceName, s.mode)
+        if (state.value is UsbLifecycleState.Connected) startWatchdog()
     }
 
     fun destroy() {

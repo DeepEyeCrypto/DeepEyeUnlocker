@@ -1,9 +1,8 @@
 package com.deepeye.otg.usb
 
 import com.deepeye.otg.domain.models.DeviceMode
-
-typealias ProtocolFamily = com.deepeye.otg.domain.models.ProtocolFamily
-typealias DeepEyeOperation = com.deepeye.otg.domain.models.DeepEyeOperation
+import com.deepeye.otg.domain.models.ProtocolFamily
+import com.deepeye.otg.domain.models.DeepEyeOperation
 
 /**
  * High-level operation states for UI flow and queuing.

@@ -55,6 +55,7 @@ class UsbSessionManager(
     
     private var transferQueue: UsbTransferQueue? = null
     private var watchdog: UsbConnectionWatchdog? = null
+    private val protocolDetector = ProtocolDetector()
 
     @Volatile private var isInitialized = false
 
@@ -81,7 +82,7 @@ class UsbSessionManager(
         val vid = device.vendorId
         val pid = device.productId
         val signature = UsbDeviceDatabase.detect(vid, pid)
-        val detectedMode = signature?.mode ?: UsbDeviceDatabase.detectByVendor(vid)
+        val detectedMode = detectModeFromDescriptors(device)
 
         _events.emit(UsbConnectionEvent.DeviceDetected(device, signature, detectedMode))
 
@@ -95,12 +96,17 @@ class UsbSessionManager(
     suspend fun onPermissionResult(device: UsbDevice, granted: Boolean) = withContext(Dispatchers.IO) {
         if (granted) {
             _events.emit(UsbConnectionEvent.DevicePermissionGranted(device))
-            val mode = UsbDeviceDatabase.detect(device.vendorId, device.productId)?.mode 
-                ?: UsbDeviceDatabase.detectByVendor(device.vendorId)
+            val mode = detectModeFromDescriptors(device)
             openConnection(device, mode)
         } else {
             _events.emit(UsbConnectionEvent.DevicePermissionDenied(device))
         }
+    }
+
+    private fun detectModeFromDescriptors(device: UsbDevice): ConnectionMode {
+        val snapshot = UsbSnapshotFactory.from(device)
+        val detection = protocolDetector.detect(snapshot)
+        return detection.toConnectionMode()
     }
 
     // ── Safe Lifecycle Management ──────────────────────────────

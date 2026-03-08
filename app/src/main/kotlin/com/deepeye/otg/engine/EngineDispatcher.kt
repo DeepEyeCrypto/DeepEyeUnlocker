@@ -6,8 +6,8 @@ import com.deepeye.otg.NativeBridge
 import com.deepeye.otg.policy.PolicyDeniedException
 import com.deepeye.otg.policy.PolicyEngine
 import com.deepeye.otg.policy.UserRole
-import com.deepeye.otg.usb.DeepEyeOperation
-import com.deepeye.otg.usb.ProtocolFamily
+import com.deepeye.otg.domain.models.DeepEyeOperation
+import com.deepeye.otg.domain.models.ProtocolFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -60,7 +60,7 @@ object EngineDispatcher {
     ): EngineResult = withContext(Dispatchers.IO) {
 
         // ── Step 1: Policy gate ─────────────────────────────────
-        log("[ENGINE] Dispatch: ${op.name} | proto=$protocol | tier=${op.tier} | FD=$fd")
+        log("[ENGINE] Dispatch: ${op.id} | proto=$protocol | tier=${op.policyTier} | FD=$fd")
         PolicyEngine.enforce(op, role)
 
         // ── Step 2: Initialize native handle if needed ──────────
@@ -86,12 +86,21 @@ object EngineDispatcher {
             // ── Step 4: Route to engine ─────────────────────────
             onProgress(15, "Routing to ${protocol.name} engine...")
             when (protocol) {
-                ProtocolFamily.MTK     -> executeMtk(op, handle, onProgress)
-                ProtocolFamily.QC      -> executeQualcomm(op, handle, onProgress)
+                // Canonical families
+                ProtocolFamily.BROM,
+                ProtocolFamily.PRELOADER,
+                ProtocolFamily.MTK -> executeMtk(op, handle, onProgress)
+
+                ProtocolFamily.EDL,
+                ProtocolFamily.DIAG,
+                ProtocolFamily.QC -> executeQualcomm(op, handle, onProgress)
+
+                ProtocolFamily.ODIN,
                 ProtocolFamily.SAMSUNG -> executeSamsung(op, handle, onProgress)
+
                 ProtocolFamily.UNISOC  -> executeUnisoc(op, handle, onProgress)
-                ProtocolFamily.ODIN    -> executeSamsung(op, handle, onProgress)
-                ProtocolFamily.FASTBOOT-> executeFastboot(op, handle, onProgress)
+                ProtocolFamily.FASTBOOT -> executeFastboot(op, handle, onProgress)
+
                 else -> {
                     // Check for forensic or identity repair operations
                     when {
@@ -118,7 +127,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[MTK] Dispatching: ${op.name}")
+        log("[MTK] Dispatching: ${op.id}")
         return when (op) {
             // ═══ Category A — Flashing & Firmware ═══
             DeepEyeOperation.WRITE_FIRMWARE -> {
@@ -373,7 +382,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[QC] Dispatching: ${op.name}")
+        log("[QC] Dispatching: ${op.id}")
         return when (op) {
             DeepEyeOperation.WRITE_FIRMWARE -> {
                 onProgress(10, "Sahara handshake...")
@@ -503,7 +512,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[SAMSUNG] Dispatching: ${op.name}")
+        log("[SAMSUNG] Dispatching: ${op.id}")
         return when (op) {
             DeepEyeOperation.WRITE_FIRMWARE -> {
                 onProgress(10, "Odin handshake...")
@@ -586,7 +595,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[UNISOC] Dispatching: ${op.name}")
+        log("[UNISOC] Dispatching: ${op.id}")
         return when (op) {
             DeepEyeOperation.WRITE_FIRMWARE -> {
                 onProgress(10, "FDL handshake...")
@@ -645,7 +654,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[FASTBOOT] Dispatching: ${op.name}")
+        log("[FASTBOOT] Dispatching: ${op.id}")
         return when (op) {
             DeepEyeOperation.UNLOCK_BOOTLOADER -> {
                 onProgress(50, "Executing fastboot OEM unlock...")
@@ -695,7 +704,7 @@ object EngineDispatcher {
         op: DeepEyeOperation,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[GENERIC] Fallback dispatch: ${op.name}")
+        log("[GENERIC] Fallback dispatch: ${op.id}")
         return when (op) {
             DeepEyeOperation.SAFE_WIPE -> {
                 onProgress(30, "Backing up critical data...")
@@ -747,7 +756,7 @@ object EngineDispatcher {
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[FORENSICS] Dispatching: ${op.name}")
+        log("[FORENSICS] Dispatching: ${op.id}")
         return when (op) {
             DeepEyeOperation.SAFE_DUMP -> {
                 onProgress(20, "Analyzing partition boundaries...")
@@ -782,14 +791,18 @@ object EngineDispatcher {
         protocol: ProtocolFamily,
         onProgress: ProgressCallback
     ): EngineResult {
-        log("[IDENTITY] Dispatching: ${op.name} for $protocol")
+        log("[IDENTITY] Dispatching: ${op.id} for $protocol")
         
         return when (op) {
             DeepEyeOperation.IMEI_CHECK -> {
                 onProgress(30, "Querying active identity items...")
                 val result = when (protocol) {
-                    ProtocolFamily.MTK, ProtocolFamily.BROM -> com.deepeye.otg.repair.NvBridge.readMtkImei(handle)
-                    ProtocolFamily.QC, ProtocolFamily.EDL, ProtocolFamily.DIAG -> com.deepeye.otg.repair.NvBridge.readQcomImei(handle)
+                    com.deepeye.otg.domain.models.ProtocolFamily.MTK,
+                    com.deepeye.otg.domain.models.ProtocolFamily.BROM,
+                    com.deepeye.otg.domain.models.ProtocolFamily.PRELOADER -> com.deepeye.otg.repair.NvBridge.readMtkImei(handle)
+                    com.deepeye.otg.domain.models.ProtocolFamily.QC, 
+                    com.deepeye.otg.domain.models.ProtocolFamily.EDL, 
+                    com.deepeye.otg.domain.models.ProtocolFamily.DIAG -> com.deepeye.otg.repair.NvBridge.readQcomImei(handle)
                     else -> "{\"imei1\":\"N/A\", \"imei2\":\"N/A\"}"
                 }
                 onProgress(100, "Identity read finished")
@@ -808,7 +821,9 @@ object EngineDispatcher {
                 
                 onProgress(60, "PATCHING: Identity blobs in NVRAM...")
                 val ok = when (protocol) {
-                    ProtocolFamily.MTK, ProtocolFamily.BROM -> com.deepeye.otg.repair.NvBridge.writeMtkImei(handle, mockNewImei, mockNewImei)
+                    com.deepeye.otg.domain.models.ProtocolFamily.MTK,
+                    com.deepeye.otg.domain.models.ProtocolFamily.BROM,
+                    com.deepeye.otg.domain.models.ProtocolFamily.PRELOADER -> com.deepeye.otg.repair.NvBridge.writeMtkImei(handle, mockNewImei, mockNewImei)
                     else -> false
                 }
                 

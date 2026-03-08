@@ -21,7 +21,7 @@ fun UsbLifecycleState.toUiState(): UsbUiState = when (this) {
         null, "[IDLE]"
     )
     is UsbLifecycleState.DeviceDetected -> UsbUiState(
-        "Detected: $brand [$detectedMode]", 0xFF3B82F6, false,
+        "Detected: $brand [$detectedDeviceMode/${protocolFamily}]", 0xFF3B82F6, false,
         false, true, "Requesting permission...", "[DETECT]"
     )
     is UsbLifecycleState.PermissionPending -> UsbUiState(
@@ -33,11 +33,11 @@ fun UsbLifecycleState.toUiState(): UsbUiState = when (this) {
         true, false, "Reconnect & Allow", "[DENIED]"
     )
     is UsbLifecycleState.Connecting -> UsbUiState(
-        "Connecting to ${device.productName}...", 0xFF8B5CF6,
+        "Connecting to ${device.productName}... (${protocolFamily})", 0xFF8B5CF6,
         true, false, true, null, "[CONNECT]"
     )
     is UsbLifecycleState.Connected -> UsbUiState(
-        "$deviceName • $mode", 0xFF059669, false, false, true,
+        "$deviceName • $detectedDeviceMode/${protocolFamily}", 0xFF059669, false, false, true,
         null, "[CONNECTED]"
     )
     is UsbLifecycleState.Degraded -> UsbUiState(

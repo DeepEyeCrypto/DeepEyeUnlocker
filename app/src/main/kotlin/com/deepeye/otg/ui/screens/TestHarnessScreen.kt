@@ -80,20 +80,63 @@ fun TestHarnessScreen(
                     }
                     
                     val vidPid = when(val s = lifecycleState) {
-                        is UsbLifecycleState.DeviceDetected -> "0x${s.device.vendorId.toString(16)}:0x${s.device.productId.toString(16)}"
-                        is UsbLifecycleState.Connected -> "Active Handle"
+                        is UsbLifecycleState.DeviceDetected -> "0x${s.vendorId.toString(16)}:0x${s.productId.toString(16)}"
+                        is UsbLifecycleState.Connected -> "0x${s.vendorId.toString(16)}:0x${s.productId.toString(16)}"
                         else -> "N/A"
                     }
 
                     val mode = when(val s = lifecycleState) {
-                        is UsbLifecycleState.DeviceDetected -> s.detectedMode.name
-                        is UsbLifecycleState.Connected -> s.mode.name
+                        is UsbLifecycleState.DeviceDetected -> s.detectedDeviceMode.name
+                        is UsbLifecycleState.Connected -> s.detectedDeviceMode.name
                         else -> "IDLE"
+                    }
+
+                    val family = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.protocolFamily.name
+                        is UsbLifecycleState.Connected -> s.protocolFamily.name
+                        else -> "UNKNOWN"
+                    }
+
+                    val reason = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.detectionReason
+                        is UsbLifecycleState.Connected -> s.detectionReason
+                        else -> "N/A"
+                    }
+
+                    val key = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.deviceKey
+                        is UsbLifecycleState.Connected -> s.deviceKey
+                        else -> "N/A"
+                    }
+
+                    val confidence = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> "${s.confidence}%"
+                        is UsbLifecycleState.Connected -> "${s.confidence}%"
+                        else -> "N/A"
+                    }
+
+                    val interfaces = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.descriptorSnapshot.interfaces
+                        is UsbLifecycleState.Connected -> s.descriptorSnapshot.interfaces
+                        else -> emptyList()
+                    }
+
+                    val interfaceTuples = if (interfaces.isEmpty()) {
+                        "N/A"
+                    } else {
+                        interfaces.joinToString(" | ") {
+                            "${"%02X".format(it.interfaceClass)}/${"%02X".format(it.interfaceSubclass)}/${"%02X".format(it.interfaceProtocol)}"
+                        }
                     }
 
                     InfoRow("Product", deviceName)
                     InfoRow("VID:PID", vidPid)
                     InfoRow("Mode", mode)
+                    InfoRow("Family", family)
+                    InfoRow("Confidence", confidence)
+                    InfoRow("DeviceKey", key)
+                    InfoRow("Reason", reason)
+                    InfoRow("Ifaces", interfaceTuples)
                     
                     val handshake = if (lifecycleState is UsbLifecycleState.Connected) "PASS" else if (lifecycleState is UsbLifecycleState.Error) "FAIL" else "WAITING"
                     InfoRow("Handshake", handshake, color = if (handshake == "PASS") Color.Green else Color.Yellow)

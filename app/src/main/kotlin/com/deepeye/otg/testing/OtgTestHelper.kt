@@ -65,7 +65,7 @@ object OtgTestHelper {
             Triple(0x05C6, 0x9008, ConnectionMode.EDL),
             Triple(0x0E8D, 0x0003, ConnectionMode.BROM),
             Triple(0x2717, 0xFF48, ConnectionMode.ADB),
-            Triple(0x04E8, 0x685E, ConnectionMode.FASTBOOT), // ODIN
+            Triple(0x04E8, 0x685E, ConnectionMode.ODIN),
             Triple(0x18D1, 0x4EE0, ConnectionMode.FASTBOOT)  // Google
         )
 

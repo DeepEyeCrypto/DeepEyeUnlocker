@@ -2,6 +2,8 @@ package com.deepeye.otg.usb
 
 import android.hardware.usb.UsbDevice
 import com.deepeye.otg.data.ConnectionMode
+import com.deepeye.otg.domain.models.DeviceMode
+import com.deepeye.otg.domain.models.ProtocolFamily
 
 /**
  * Complete USB session state machine.
@@ -14,6 +16,15 @@ sealed class UsbLifecycleState {
     data class DeviceDetected(
         val device: UsbDevice,
         val detectedMode: ConnectionMode,
+        val protocolFamily: ProtocolFamily,
+        val detectedDeviceMode: DeviceMode,
+        val detectionReason: String,
+        val confidence: Int,
+        val vendorId: Int,
+        val productId: Int,
+        val deviceId: Int,
+        val deviceKey: String,
+        val descriptorSnapshot: UsbDescriptorSnapshot,
         val brand: String,
         val chipset: String
     ) : UsbLifecycleState()
@@ -29,13 +40,24 @@ sealed class UsbLifecycleState {
 
     data class Connecting(
         val device: UsbDevice,
-        val mode: ConnectionMode
+        val mode: ConnectionMode,
+        val protocolFamily: ProtocolFamily,
+        val deviceKey: String
     ) : UsbLifecycleState()
 
     // ── Active session ───────────────────────────────────────
     data class Connected(
         val deviceName: String,
         val mode: ConnectionMode,
+        val protocolFamily: ProtocolFamily,
+        val detectedDeviceMode: DeviceMode,
+        val detectionReason: String,
+        val confidence: Int,
+        val vendorId: Int,
+        val productId: Int,
+        val deviceId: Int,
+        val deviceKey: String,
+        val descriptorSnapshot: UsbDescriptorSnapshot,
         val brand: String,
         val endpoints: ResolvedEndpoints,
         val sessionId: String = java.util.UUID.randomUUID().toString()

@@ -22,47 +22,24 @@ import com.deepeye.otg.viewmodel.UsbViewModel
 fun DeepEyeApp(viewModel: UsbViewModel) {
     val state by viewModel.queueState.collectAsState()
 
-    // Base padding for safe geometry
+    // Base layer: Main UI is ALWAYS visible
     Box(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
+        MainScreen(viewModel = viewModel)
+
+        // Overlay Layer for Active Operations/States
         AnimatedContent(
             targetState = state,
             transitionSpec = {
                 fadeIn(animationSpec = tween(400)) togetherWith 
                 fadeOut(animationSpec = tween(400))
             },
-            label = "ScreenTransition"
+            label = "OverlayTransition"
         ) { targetState ->
             when (targetState) {
-                is SessionState.Idle -> MainScreen(viewModel = viewModel)
-                
-                is SessionState.WaitingForDevice -> WaitingScreen(
-                    op = targetState.queuedOp,
-                    onCancel = { viewModel.cancelWaiting() }
-                )
-                
-                is SessionState.PermissionPending,
-                is SessionState.DeviceFound,
-                is SessionState.ProtocolDetect,
-                is SessionState.ReenumerationWait -> WaitingScreen(
-                    op = targetState.let { 
-                        // Safe extraction for all intermediate states
-                        when(it) {
-                            is SessionState.DeviceFound -> it.queuedOp
-                            is SessionState.PermissionPending -> it.queuedOp
-                            is SessionState.ProtocolDetect -> it.queuedOp
-                            is SessionState.ReenumerationWait -> it.queuedOp
-                            else -> null
-                        }
-                    },
-                    onCancel = { viewModel.cancelWaiting() }
-                )
-                
-                is SessionState.ConnectedReady -> MainScreen(viewModel = viewModel)
-                
                 is SessionState.ExecutingOperation -> {
                     val logs by viewModel.logs.collectAsState()
                     ExecutingScreen(
@@ -70,9 +47,14 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
                         progress = targetState.progress,
                         statusMsg = targetState.statusMsg,
                         logs = logs,
-                        onCancel = { viewModel.resetToIdle() } // Real stop logic needed depending on backend
+                        onCancel = { viewModel.resetToIdle() }
                     )
                 }
+                
+                is SessionState.WaitingForDevice -> WaitingScreen(
+                    op = targetState.queuedOp,
+                    onCancel = { viewModel.cancelWaiting() }
+                )
                 
                 is SessionState.OperationComplete -> CompleteScreen(
                     op = targetState.op,
@@ -93,7 +75,7 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
                 )
                 
                 is SessionState.PermissionDenied -> ErrorScreen(
-                    message = "USB permission denied by user. Request again?",
+                    message = "USB permission denied. Request again?",
                     onRetry = {
                         if (targetState.queuedOp != null) {
                             viewModel.queueOperation(targetState.queuedOp)
@@ -102,14 +84,12 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
                         }
                     }
                 )
+
+                is SessionState.TestHarness -> TestHarnessScreen(viewModel = viewModel)
                 
-                is SessionState.ConnectedMtpOnly -> MtpOnlyScreen(
-                    onBack = { viewModel.resetToIdle() }
-                )
-                
-                is SessionState.TestHarness -> TestHarnessScreen(
-                    viewModel = viewModel
-                )
+                // Idle and ConnectedReady show nothing on top, 
+                // but MainScreen reacts to them natively
+                else -> Unit 
             }
         }
     }

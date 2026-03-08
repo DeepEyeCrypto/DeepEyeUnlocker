@@ -54,27 +54,8 @@ fun MainScreen(viewModel: UsbViewModel) {
     val otgResult by viewModel.otgResult.collectAsState()
     val diagnosticSteps by viewModel.diagnosticSteps.collectAsState()
     
-    // Convert to target Domain SessionState to feed the engine
-    // In future versions, UsbViewModel will natively maintain domainSessionState
-    val connected = lifecycleState is com.deepeye.otg.usb.UsbLifecycleState.Connected
-    val activeDeviceMode = when (viewModel.selectedMode.value) {
-        com.deepeye.otg.data.ConnectionMode.ADB -> DeviceMode.ADB
-        com.deepeye.otg.data.ConnectionMode.FASTBOOT -> DeviceMode.FASTBOOT
-        com.deepeye.otg.data.ConnectionMode.EDL -> DeviceMode.QC_EDL
-        com.deepeye.otg.data.ConnectionMode.BROM -> DeviceMode.MTK_BROM
-        com.deepeye.otg.data.ConnectionMode.PRELOADER -> DeviceMode.MTK_PRELOADER
-        com.deepeye.otg.data.ConnectionMode.META -> DeviceMode.MTK_META
-        com.deepeye.otg.data.ConnectionMode.DIAG -> DeviceMode.QC_DIAG
-        com.deepeye.otg.data.ConnectionMode.MTP -> DeviceMode.MTP_ONLY
-        else -> DeviceMode.UNKNOWN
-    }
-    
-    val virtualSessionState = SessionState(
-        connected = connected,
-        selectedBrand = selectedBrandString?.name,
-        selectedModel = selectedBrandString?.name, // Fallback to brand simulating a selected target
-        deviceMode = activeDeviceMode
-    )
+    val virtualSessionState by viewModel.domainSessionState.collectAsState()
+    val userRole by viewModel.currentUserPolicyTier.collectAsState()
 
     Box(
         modifier = Modifier
@@ -99,10 +80,15 @@ fun MainScreen(viewModel: UsbViewModel) {
                 com.deepeye.otg.ui.components.OemWarningBanner()
             }
             
-            // Device Status Box -> ModesPanel -> FeatureGroupsSection
-            when (val ls = lifecycleState) {
-                is com.deepeye.otg.usb.UsbLifecycleState.Connected -> {
-                    item {
+            // 1. Legal / Policy Banner (Unconditional)
+            item {
+                LegalPolicyBanner()
+            }
+
+            // 2. Connection Summary Card (Conditional Content, Unconditional Surface)
+            item {
+                when (val ls = lifecycleState) {
+                    is com.deepeye.otg.usb.UsbLifecycleState.Connected -> {
                         GlassCard(
                             hazeState = hazeState, performanceMode = perfMode,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
@@ -119,24 +105,18 @@ fun MainScreen(viewModel: UsbViewModel) {
                             }
                         }
                     }
-                }
-                is com.deepeye.otg.usb.UsbLifecycleState.Idle -> {
-                    item {
+                    is com.deepeye.otg.usb.UsbLifecycleState.Idle -> {
                         com.deepeye.otg.ui.screens.ConnectionTestScreen(
                             otgResult = otgResult,
                             diagnosticSteps = diagnosticSteps
                         )
                     }
-                }
-                is com.deepeye.otg.usb.UsbLifecycleState.Error -> {
-                    item {
+                    is com.deepeye.otg.usb.UsbLifecycleState.Error -> {
                         GlassCard(hazeState = hazeState, performanceMode = perfMode, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                              Text(text = ls.message, modifier = Modifier.padding(16.dp), color = Color(0xFFFCA5A5))
                         }
                     }
-                }
-                else -> {
-                    item {
+                    else -> {
                         GlassCard(hazeState = hazeState, performanceMode = perfMode, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(uiState.statusLabel, color = Color(uiState.statusColor))
@@ -180,7 +160,7 @@ fun MainScreen(viewModel: UsbViewModel) {
                             val availability = AvailabilityEngine.availabilityFor(
                                 operation = op,
                                 sessionState = virtualSessionState,
-                                userRole = PolicyTier.POLICY // Assuming current user operates at POLICY level
+                                userRole = userRole
                             )
                             
                             GlassFeatureCard(
@@ -238,11 +218,16 @@ fun MainScreen(viewModel: UsbViewModel) {
                     GlassButton(label = if (perfMode) "PERF: LOW" else "PERF: HIGH", onClick = { viewModel.togglePerformance() }, modifier = Modifier.width(90.dp), accent = !perfMode)
                 }
             }
-            BrandSelectorBar(
+             BrandSelectorBar(
                 selectedIndex = safeBrandIndex,
                 onBrandSelected = { viewModel.onBrandSelected(it) },
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+
+        // Status Strip at the very bottom
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            StatusStrip()
         }
     }
 }
@@ -337,7 +322,7 @@ private fun GlassFeatureCard(
                 verticalAlignment = Alignment.Top
             ) {
                 // Tier Badge
-                GlassPolicyBadge(tier = operation.tier)
+                GlassPolicyBadge(tier = operation.policyTier)
                 
                 // Dangerous indicator
                 if (operation.dangerous) {
@@ -378,5 +363,52 @@ private fun GlassFeatureCard(
                 accent = availability.enabled
             )
         }
+    }
+}
+
+@Composable
+private fun LegalPolicyBanner() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFFFEF2F2).copy(alpha = 0.5f))
+            .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+            .padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("📜", fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    "LEGAL COMPLIANCE MODE ACTIVE", 
+                    fontSize = 11.sp, 
+                    fontWeight = FontWeight.Bold, 
+                    color = Color(0xFF991B1B)
+                )
+                Text(
+                    "This tool is for security research & forensic use only. All operations are logged locally for accountability.",
+                    fontSize = 9.sp,
+                    color = Color(0xFF991B1B).copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusStrip() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .background(Color.Black.copy(alpha = 0.4f))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("SYSTEM HEALTH: OPTIMAL", fontSize = 8.sp, color = Color(0xFF34D399), fontWeight = FontWeight.Bold)
+        Text("ENGINE v2026.17 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
     }
 }

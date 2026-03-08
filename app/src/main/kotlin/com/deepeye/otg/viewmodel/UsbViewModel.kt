@@ -9,6 +9,7 @@ import com.deepeye.otg.ui.UsbUiState
 import com.deepeye.otg.ui.toUiState
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.data.*
+import com.deepeye.otg.domain.models.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -19,6 +20,8 @@ class UsbViewModel(
     val usbState: StateFlow<SessionState>,
     val logs: StateFlow<List<LogEntry>>
 ) : ViewModel() {
+
+    private val defaultSessionState = com.deepeye.otg.domain.models.SessionState()
 
     private val _statusMsg = MutableStateFlow("Disconnected")
     val statusMsg: StateFlow<String> = _statusMsg.asStateFlow()
@@ -53,6 +56,9 @@ class UsbViewModel(
     private val _domainSessionState = MutableStateFlow(com.deepeye.otg.domain.models.SessionState())
     val domainSessionState: StateFlow<com.deepeye.otg.domain.models.SessionState> = _domainSessionState.asStateFlow()
 
+    private val _policyTier = MutableStateFlow(PolicyTier.RESTRICTED) // Default to high access for researcher mode
+    val currentUserPolicyTier: StateFlow<PolicyTier> = _policyTier.asStateFlow()
+
     // Deprecated legacy feature properties
     val activeBrandFeatures: StateFlow<BrandFeatureSet> = _selectedBrand
         .map { FeatureData.forBrand(it) }
@@ -78,6 +84,9 @@ class UsbViewModel(
     // Internal mutable state for compatibility with foreground service
     private val _usbStateValue = MutableStateFlow<SessionState>(SessionState.Idle) 
     val activeUsbState: StateFlow<SessionState> = _usbStateValue.asStateFlow()
+
+    private val _activeProtocolFamily = MutableStateFlow(ProtocolFamily.UNKNOWN)
+    val activeProtocolFamily: StateFlow<ProtocolFamily> = _activeProtocolFamily.asStateFlow()
 
     init {
         checkOtgCapability()
@@ -140,14 +149,45 @@ class UsbViewModel(
             is UsbLifecycleState.DeviceDetected -> {
                 _selectedMode.value = state.detectedMode
                 updateDiagnosticStep(3, DiagnosticStatus.Pass("Device recognized: ${state.brand}"))
-                updateDiagnosticStep(4, DiagnosticStatus.Pass("Mode: ${state.detectedMode.name}"))
+                updateDiagnosticStep(
+                    4,
+                    DiagnosticStatus.Pass(
+                        "Mode: ${state.detectedDeviceMode.name} (${state.protocolFamily})"
+                    )
+                )
+
+                _activeProtocolFamily.value = state.protocolFamily
+                
+                _domainSessionState.value = _domainSessionState.value.copy(
+                    connected = true,
+                    deviceName = state.device.productName ?: state.device.deviceName ?: "Unknown",
+                    protocolFamily = state.protocolFamily,
+                    deviceMode = state.detectedDeviceMode,
+                    statusMessage = "Detected ${state.detectedDeviceMode}: ${state.detectionReason}"
+                )
             }
             is UsbLifecycleState.Connected -> {
                 _usbStateValue.value = SessionState.ConnectedReady(state.deviceName)
                 updateDiagnosticStep(5, DiagnosticStatus.Pass("Permission granted"))
                 updateDiagnosticStep(6, DiagnosticStatus.Pass("Interface claimed"))
-                updateDiagnosticStep(7, DiagnosticStatus.Pass("Endpoints resolved"))
+                updateDiagnosticStep(
+                    7,
+                    DiagnosticStatus.Pass(
+                        "Endpoints resolved (${state.confidence}% ${state.protocolFamily})"
+                    )
+                )
                 _statusMsg.value = "Connected: ${state.deviceName}"
+
+                _activeProtocolFamily.value = state.protocolFamily
+                
+                _domainSessionState.value = _domainSessionState.value.copy(
+                    connected = true,
+                    deviceName = state.deviceName,
+                    protocolFamily = state.protocolFamily,
+                    hasPermission = true,
+                    deviceMode = state.detectedDeviceMode,
+                    statusMessage = "Detected ${state.detectedDeviceMode}: ${state.detectionReason}"
+                )
             }
             is UsbLifecycleState.PermissionDenied -> {
                 _usbStateValue.value = SessionState.Error("Permission denied")
@@ -156,19 +196,34 @@ class UsbViewModel(
                 if (current is SessionState.PermissionPending) {
                     _queueStatus.value = SessionState.PermissionDenied(current.queuedOp)
                 }
+                _domainSessionState.value = _domainSessionState.value.copy(
+                    hasPermission = false,
+                    statusMessage = "Permission denied"
+                )
             }
             is UsbLifecycleState.Dead -> {
                 _usbStateValue.value = SessionState.Error(state.reason)
                 updateDiagnosticStep(6, DiagnosticStatus.Fail(state.reason))
+                _activeProtocolFamily.value = ProtocolFamily.UNKNOWN
+                _domainSessionState.value = defaultSessionState.copy(
+                    statusMessage = "Disconnected: ${state.reason}",
+                    currentError = state.reason
+                )
             }
             is UsbLifecycleState.Idle -> {
                 _usbStateValue.value = SessionState.Idle
                 resetDiagnostics()
                 _statusMsg.value = "Disconnected"
+                _activeProtocolFamily.value = ProtocolFamily.UNKNOWN
+                _domainSessionState.value = defaultSessionState.copy(statusMessage = "No device connected")
             }
             is UsbLifecycleState.Error -> {
                 _usbStateValue.value = SessionState.Error(state.message)
                 _statusMsg.value = "Error: ${state.message}"
+                _domainSessionState.value = _domainSessionState.value.copy(
+                    currentError = state.message,
+                    statusMessage = state.message
+                )
             }
             else -> Unit
         }
@@ -225,7 +280,7 @@ class UsbViewModel(
             return
         }
         val feature = activeBrandFeatures.value.groups.flatMap { it.features }.find { it.id == featureId } ?: return
-        val op = DeepEyeOperation.values().find { it.name.equals(feature.id, ignoreCase = true) } 
+        val op = DeepEyeOperation.values().find { it.id.equals(feature.id, ignoreCase = true) } 
             ?: DeepEyeOperation.values().find { it.label.equals(feature.label, ignoreCase = true) }
             ?: DeepEyeOperation.DEEP_DEVICE_INFO // Fallback
             
@@ -269,20 +324,19 @@ class UsbViewModel(
             
             try {
                 val fd = connection.fileDescriptor
-                val protocolMode = _selectedMode.value
-                val protocolFamily = when(protocolMode) {
-                    ConnectionMode.ADB -> com.deepeye.otg.domain.models.ProtocolFamily.ADB
-                    ConnectionMode.FASTBOOT -> com.deepeye.otg.domain.models.ProtocolFamily.FASTBOOT
-                    ConnectionMode.EDL -> com.deepeye.otg.domain.models.ProtocolFamily.QC
-                    ConnectionMode.BROM -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
-                    ConnectionMode.PRELOADER -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
-                    ConnectionMode.DIAG -> com.deepeye.otg.domain.models.ProtocolFamily.DIAG
-                    ConnectionMode.MTP -> com.deepeye.otg.domain.models.ProtocolFamily.MTP
-                    ConnectionMode.META -> com.deepeye.otg.domain.models.ProtocolFamily.MTK
-                    ConnectionMode.ISP -> com.deepeye.otg.domain.models.ProtocolFamily.GENERIC
-                    ConnectionMode.TESTPOINT -> com.deepeye.otg.domain.models.ProtocolFamily.GENERIC
-                    ConnectionMode.ODIN -> com.deepeye.otg.domain.models.ProtocolFamily.SAMSUNG
-                    ConnectionMode.FDL -> com.deepeye.otg.domain.models.ProtocolFamily.UNISOC
+                val protocolFamily = when (val detected = _activeProtocolFamily.value) {
+                    ProtocolFamily.PRELOADER -> ProtocolFamily.BROM
+                    ProtocolFamily.MTK -> ProtocolFamily.BROM
+                    ProtocolFamily.SAMSUNG -> ProtocolFamily.ODIN
+                    ProtocolFamily.QC -> ProtocolFamily.EDL
+                    ProtocolFamily.UNKNOWN -> _domainSessionState.value.protocolFamily
+                    else -> detected
+                }
+
+                if (protocolFamily == ProtocolFamily.UNKNOWN) {
+                    _queueStatus.value = SessionState.Error("Cannot execute: protocol family is UNKNOWN")
+                    addLog("ERROR", "Blocked operation: UNKNOWN protocol family")
+                    return@launch
                 }
 
                 val result = com.deepeye.otg.engine.EngineDispatcher.execute(

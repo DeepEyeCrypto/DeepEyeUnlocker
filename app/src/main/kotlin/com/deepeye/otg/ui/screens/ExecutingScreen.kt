@@ -3,6 +3,7 @@ package com.deepeye.otg.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +17,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.usb.DeepEyeOperation
+import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
@@ -46,8 +47,7 @@ fun ExecutingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(GlassTokens.backgroundBrush)
-            .hazeSource(hazeState)
+            .background(Color.Black.copy(alpha = 0.6f)) // Dim background
     ) {
         Column(
             modifier = Modifier

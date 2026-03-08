@@ -14,12 +14,12 @@ object AvailabilityEngine {
 
         // 1. Connection Requirement
         if (operation.requiresConnection && !sessionState.connected) {
-            return OperationAvailability(enabled = false, reason = "Device disconnected")
+            return OperationAvailability(enabled = false, reason = "Device disconnected", missingConnection = true)
         }
 
         // 2. Model Selection Requirement
         if (operation.requiresModel && sessionState.selectedModel == null) {
-            return OperationAvailability(enabled = false, reason = "Requires target model selection")
+            return OperationAvailability(enabled = false, reason = "Requires target model selection", missingModel = true)
         }
 
         // 3. Exact Mode Match (if applicable)
@@ -33,7 +33,7 @@ object AvailabilityEngine {
         }
 
         // 4. Policy Tiers Evaluation
-        when (operation.tier) {
+        when (operation.policyTier) {
             PolicyTier.NEVER -> {
                 return OperationAvailability(enabled = false, reason = "Operation administratively disabled", policyBlocked = true)
             }
