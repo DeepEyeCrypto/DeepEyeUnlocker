@@ -25,6 +25,9 @@ data class DetectionResult(
         DeviceMode.TESTPOINT -> com.deepeye.otg.data.ConnectionMode.TESTPOINT
         DeviceMode.RECOVERY -> com.deepeye.otg.data.ConnectionMode.ADB
         DeviceMode.FASTBOOTD -> com.deepeye.otg.data.ConnectionMode.FASTBOOT
+        DeviceMode.APPLE_DFU -> com.deepeye.otg.data.ConnectionMode.APPLE_DFU
+        DeviceMode.APPLE_RECOVERY -> com.deepeye.otg.data.ConnectionMode.APPLE_RECOVERY
+        DeviceMode.APPLE_NORMAL -> com.deepeye.otg.data.ConnectionMode.APPLE_NORMAL
         DeviceMode.DISCONNECTED -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
         DeviceMode.UNKNOWN -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
         else -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
@@ -39,10 +42,12 @@ class ProtocolDetector {
     fun detect(snapshot: UsbDescriptorSnapshot): DetectionResult {
         logSnapshot(snapshot)
 
-        // Strict precedence:
-        // BROM / PRELOADER / EDL / ODIN / FASTBOOT / ADB / MTP / UNKNOWN
-        val result = detectMtk(snapshot)
+        // Strict precedence (spec Stage 1.4):
+        // Apple > MTK > Qualcomm > Unisoc > Samsung > Fastboot > ADB > MTP > UNKNOWN
+        val result = detectApple(snapshot)
+            ?: detectMtk(snapshot)
             ?: detectQualcomm(snapshot)
+            ?: detectUnisoc(snapshot)
             ?: detectOdin(snapshot)
             ?: detectFastboot(snapshot)
             ?: detectAdb(snapshot)
@@ -56,6 +61,45 @@ class ProtocolDetector {
 
         logResult(snapshot, result)
         return result
+    }
+
+    private fun detectApple(snapshot: UsbDescriptorSnapshot): DetectionResult? {
+        if (snapshot.vendorId != 0x05AC) return null
+        val pid = snapshot.productId
+        val dfuPids = setOf(0x1227)
+        val recoveryPids = setOf(0x1281, 0x1282, 0x12A0, 0x12A8, 0x12AB)
+        return when {
+            pid in dfuPids -> DetectionResult(
+                DeviceMode.APPLE_DFU,
+                ProtocolFamily.APPLE_DFU,
+                100,
+                "Matched Apple DFU VID/PID 0x05AC:${"%04X".format(pid)}"
+            )
+            pid in recoveryPids -> DetectionResult(
+                DeviceMode.APPLE_RECOVERY,
+                ProtocolFamily.APPLE_RECOVERY,
+                100,
+                "Matched Apple Recovery VID/PID 0x05AC:${"%04X".format(pid)}"
+            )
+            pid in 0x12A0..0x12FF -> DetectionResult(
+                DeviceMode.APPLE_NORMAL,
+                ProtocolFamily.APPLE_NORMAL,
+                60,
+                "Matched Apple normal-mode VID/PID 0x05AC:${"%04X".format(pid)}"
+            )
+            else -> {
+                Log.w(
+                    TAG,
+                    "[MODE] known-vendor-unknown-pid vendor=APPLE vid=0x05AC pid=0x${"%04X".format(pid)} reason=\"Unknown Apple PID\""
+                )
+                DetectionResult(
+                    DeviceMode.UNKNOWN,
+                    ProtocolFamily.UNKNOWN,
+                    0,
+                    "Known Apple VID 0x05AC but unknown PID 0x${"%04X".format(pid)}"
+                )
+            }
+        }
     }
 
     private fun detectMtk(snapshot: UsbDescriptorSnapshot): DetectionResult? {
@@ -81,6 +125,19 @@ class ProtocolDetector {
                 90,
                 "Matched MTK Meta VID/PID 0x0E8D:0x2001"
             )
+            vid == 0x0E8D -> {
+                // Known MTK vendor VID with an unknown PID – explicitly log and return UNKNOWN
+                Log.w(
+                    TAG,
+                    "[MODE] known-vendor-unknown-pid vendor=MTK vid=0x${"%04X".format(vid)} pid=0x${"%04X".format(pid)} reason=\"Unknown MTK PID\""
+                )
+                DetectionResult(
+                    deviceMode = DeviceMode.UNKNOWN,
+                    protocolFamily = ProtocolFamily.UNKNOWN,
+                    confidence = 0,
+                    reason = "Known MTK VID 0x0E8D but unknown PID 0x${"%04X".format(pid)}"
+                )
+            }
             else -> null
         }
     }
@@ -103,7 +160,44 @@ class ProtocolDetector {
                 90,
                 "Matched Qualcomm DIAG VID/PID 0x05C6:${"%04X".format(pid)}"
             )
+        } else if (vid == 0x05C6) {
+            // Known Qualcomm vendor VID with an unknown PID – explicitly log and return UNKNOWN
+            Log.w(
+                TAG,
+                "[MODE] known-vendor-unknown-pid vendor=QUALCOMM vid=0x${"%04X".format(vid)} pid=0x${"%04X".format(pid)} reason=\"Unknown Qualcomm PID\""
+            )
+            DetectionResult(
+                deviceMode = DeviceMode.UNKNOWN,
+                protocolFamily = ProtocolFamily.UNKNOWN,
+                confidence = 0,
+                reason = "Known Qualcomm VID 0x05C6 but unknown PID 0x${"%04X".format(pid)}"
+            )
         } else null
+    }
+
+    private fun detectUnisoc(snapshot: UsbDescriptorSnapshot): DetectionResult? {
+        if (snapshot.vendorId != 0x1782) return null
+        val pid = snapshot.productId
+        return when (pid) {
+            0x4D00, 0x3D00 -> DetectionResult(
+                DeviceMode.UNISOC_FDL,
+                ProtocolFamily.UNISOC,
+                100,
+                "Matched UniSoc FDL VID/PID 0x1782:${"%04X".format(pid)}"
+            )
+            else -> {
+                Log.w(
+                    TAG,
+                    "[MODE] known-vendor-unknown-pid vendor=UNISOC vid=0x1782 pid=0x${"%04X".format(pid)} reason=\"Unknown UniSoc PID\""
+                )
+                DetectionResult(
+                    DeviceMode.UNKNOWN,
+                    ProtocolFamily.UNKNOWN,
+                    0,
+                    "Known UniSoc VID 0x1782 but unknown PID 0x${"%04X".format(pid)}"
+                )
+            }
+        }
     }
 
     private fun detectOdin(snapshot: UsbDescriptorSnapshot): DetectionResult? {
@@ -119,14 +213,28 @@ class ProtocolDetector {
         val text = listOfNotNull(snapshot.manufacturerName, snapshot.productName)
             .joinToString(" ").lowercase()
 
-        return if ("samsung" in text && ("download" in text || "odin" in text)) {
-            DetectionResult(
+        // Text heuristic is allowed only as a supplementary signal when we already know this is a Samsung device.
+        if (snapshot.vendorId == 0x04E8 && "samsung" in text && ("download" in text || "odin" in text)) {
+            return DetectionResult(
                 DeviceMode.SAMSUNG_ODIN,
                 ProtocolFamily.ODIN,
                 70,
                 "Matched Samsung download-mode text heuristic"
             )
-        } else null
+        } else if (snapshot.vendorId == 0x04E8) {
+            Log.w(
+                TAG,
+                "[MODE] known-vendor-unknown-pid vendor=SAMSUNG vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)}"
+            )
+            return DetectionResult(
+                DeviceMode.UNKNOWN,
+                ProtocolFamily.UNKNOWN,
+                0,
+                "Known Samsung VID but unknown PID"
+            )
+        } else {
+            return null
+        }
     }
 
     private fun detectFastboot(snapshot: UsbDescriptorSnapshot): DetectionResult? {
@@ -144,14 +252,21 @@ class ProtocolDetector {
                 100,
                 "Matched explicit fastboot interface signature (FF/42/03)"
             )
-        } else if ("fastboot" in text) {
-            DetectionResult(
-                DeviceMode.FASTBOOT,
-                ProtocolFamily.FASTBOOT,
-                70,
-                "Matched fastboot product/manufacturer text"
-            )
-        } else null
+        } else {
+            // Allow a softer text heuristic only when we have vendor-specific USB structure hints.
+            val hasVendorSpecificInterface = snapshot.interfaces.any {
+                it.interfaceClass == 0xFF
+            }
+
+            if ("fastboot" in text && hasVendorSpecificInterface) {
+                return DetectionResult(
+                    DeviceMode.FASTBOOT,
+                    ProtocolFamily.FASTBOOT,
+                    70,
+                    "Matched fastboot product/manufacturer text"
+                )
+            } else null
+        }
     }
 
     private fun detectAdb(snapshot: UsbDescriptorSnapshot): DetectionResult? {

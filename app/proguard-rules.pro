@@ -1,6 +1,5 @@
-# ═══════════════════════════════════════════════════════════════
-# DeepEye Unlocker — ProGuard / R8 Rules
-# ═══════════════════════════════════════════════════════════════
+# ── Optimization — DISABLE if hanging ─────────────────────────
+-dontoptimize
 
 # ── JNI Bridge — CRITICAL: keep all native methods ──────────
 -keep class com.deepeye.otg.NativeBridge { *; }

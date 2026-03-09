@@ -93,6 +93,27 @@ enum class ConnectionMode(
         chipset = "UNISOC",
         requiresHardware = false
     ),
+    APPLE_DFU(
+        label = "Apple DFU",
+        shortLabel = "DFU",
+        description = "Device Firmware Upgrade — no pairing required",
+        chipset = "APPLE",
+        requiresHardware = false
+    ),
+    APPLE_RECOVERY(
+        label = "Apple Recovery",
+        shortLabel = "iREC",
+        description = "iOS Recovery mode — iBEC/iBSS",
+        chipset = "APPLE",
+        requiresHardware = false
+    ),
+    APPLE_NORMAL(
+        label = "Apple Normal",
+        shortLabel = "iOS",
+        description = "iOS normal mode — libimobiledevice",
+        chipset = "APPLE",
+        requiresHardware = false
+    ),
     UNKNOWN(
         label = "Unknown",
         shortLabel = "UNK",
@@ -103,11 +124,12 @@ enum class ConnectionMode(
 
     // Color per chipset for chip indicator dot
     fun chipsetColor(): Color = when (chipset) {
-        "QC"  -> Color(0xFF6750A4)   // purple = Qualcomm
-        "MTK" -> Color(0xFF0891B2)   // cyan = MediaTek
-        "HW"  -> Color(0xFFD97706)   // amber = Huawei
-        "UNK" -> Color(0xFF64748B)   // slate = Unknown
-        else  -> Color(0xFF059669)   // green = Universal
+        "QC"    -> Color(0xFF6750A4)   // purple = Qualcomm
+        "MTK"   -> Color(0xFF0891B2)   // cyan = MediaTek
+        "HW"    -> Color(0xFFD97706)   // amber = Huawei
+        "APPLE" -> Color(0xFFBDBDBD)   // silver = Apple
+        "UNK"   -> Color(0xFF64748B)   // slate = Unknown
+        else    -> Color(0xFF059669)   // green = Universal
     }
 
     fun hardwareWarning(): String? = if (requiresHardware)

@@ -60,6 +60,16 @@
     <usb-device vendor-id="4046" />
     <!-- 0x0FCE -->
 
+    <!-- Apple DFU / Recovery -->
+    <usb-device vendor-id="1452" product-id="4647" />
+    <!-- 0x05AC, 0x1227 DFU -->
+    <usb-device vendor-id="1452" product-id="4737" />
+    <!-- 0x05AC, 0x1281 Recovery -->
+    <usb-device vendor-id="1452" product-id="4736" />
+    <!-- 0x05AC, 0x1282 Recovery -->
+    <usb-device vendor-id="1452" product-id="4800" />
+    <!-- 0x05AC, 0x12A0 Recovery -->
+
     <!-- UniSoc / Spreadtrum FDL -->
     <usb-device vendor-id="6018" product-id="19712" />
     <!-- 0x1782, 0x4D00 -->

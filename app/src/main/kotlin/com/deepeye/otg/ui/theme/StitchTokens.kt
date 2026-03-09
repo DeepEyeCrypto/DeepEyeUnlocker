@@ -34,6 +34,7 @@ object StitchTokens {
     val AccentEdl         = Color(0xFFFF1744) // EDL Red
     val AccentError       = Color(0xFFFF1744) // Alias for theme error color
     val AccentFastboot    = Color(0xFF2979FF) // Fastboot Blue
+    val AccentApple       = Color(0xFFE0E0E0) // Apple DFU/Recovery Silver (spec Stage 20)
     val AccentSuccess     = Color(0xFF4ADE80) // Success Green
     val AccentWarning     = Color(0xFFFFD740) // Amber Warning
     

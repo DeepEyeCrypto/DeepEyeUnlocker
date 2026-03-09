@@ -81,13 +81,48 @@ fun MainScreen(
                             is UsbLifecycleState.Idle -> {
                                 DisconnectedView(hazeState)
                             }
+                            is UsbLifecycleState.DeviceDetected -> {
+                                // Waiting for permission / connection – show a focused waiting overlay.
+                                WaitingScreen(op = sessionState.queuedOperation) {
+                                    viewModel.resetToIdle()
+                                }
+                            }
+                            is UsbLifecycleState.PermissionPending -> {
+                                WaitingScreen(op = sessionState.queuedOperation) {
+                                    viewModel.resetToIdle()
+                                }
+                            }
+                            is UsbLifecycleState.NoOtgSupport -> {
+                                // Dedicated OTG unsupported UI
+                                ConnectionTestScreen(
+                                    otgResult = null,
+                                    diagnosticSteps = emptyMap()
+                                )
+                            }
                             is UsbLifecycleState.Connected -> {
-                                ActiveSessionView(
-                                    state = state,
-                                    sessionState = sessionState,
-                                    viewModel = viewModel,
-                                    hazeState = hazeState,
-                                    perfMode = perfMode
+                                // Special handling for MTP-only connections
+                                if (sessionState.deviceMode == DeviceMode.MTP_ONLY) {
+                                    MtpOnlyScreen(onBack = { viewModel.resetToIdle() })
+                                } else {
+                                    ActiveSessionView(
+                                        state = state,
+                                        sessionState = sessionState,
+                                        viewModel = viewModel,
+                                        hazeState = hazeState,
+                                        perfMode = perfMode
+                                    )
+                                }
+                            }
+                            is UsbLifecycleState.Degraded -> {
+                                ErrorScreen(
+                                    message = "Connection degraded: missed ${state.missedPings}/${state.maxPings} health checks.",
+                                    onRetry = { viewModel.resetToIdle() }
+                                )
+                            }
+                            is UsbLifecycleState.Dead -> {
+                                ErrorScreen(
+                                    message = "Connection lost: ${state.reason}",
+                                    onRetry = { viewModel.resetToIdle() }
                                 )
                             }
                             is UsbLifecycleState.Error -> {
@@ -224,7 +259,7 @@ private fun ActiveSessionView(
             }
         }
 
-        // 2. Feature Groups (Mode Sensitive)
+        // 2. Feature Groups (Mode + Policy Sensitive)
         DeepEyeCatalogs.FEATURE_GROUPS.forEach { group ->
             item {
                 Text(
@@ -238,8 +273,11 @@ private fun ActiveSessionView(
             items(group.operations.chunked(2)) { pair ->
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                     pair.forEach { op ->
-                        // Fallback: Default to enabled if AvailabilityEngine is having issues
-                        val availability = OperationAvailability(enabled = true)
+                        val availability = AvailabilityEngine.availabilityFor(
+                            operation = op,
+                            sessionState = sessionState,
+                            userRole = userRole
+                        )
                         FeatureActionCard(
                             op = op,
                             availability = availability,
@@ -401,5 +439,6 @@ private fun accentColorForMode(mode: DeviceMode): Color = when (mode) {
     DeviceMode.ADB -> StitchTokens.AccentAdb
     DeviceMode.QC_EDL -> StitchTokens.AccentEdl
     DeviceMode.FASTBOOT -> StitchTokens.AccentFastboot
+    DeviceMode.APPLE_DFU, DeviceMode.APPLE_RECOVERY, DeviceMode.APPLE_NORMAL -> StitchTokens.AccentApple
     else -> StitchTokens.Primary
 }

@@ -44,6 +44,7 @@ class UsbLifecycleManager(
     private var pendingPermissionDeviceKey: String? = null
     private var activeDetection: DetectionResult? = null
     private var activeSnapshot: UsbDescriptorSnapshot? = null
+    private var permissionTimeoutJob: Job? = null
 
     private fun deviceKey(device: UsbDevice): String =
         "${device.vendorId}:${device.productId}:${device.deviceId}"
@@ -100,6 +101,8 @@ class UsbLifecycleManager(
 
                 if (usbManager.hasPermission(device)) {
                     pendingPermissionDeviceKey = null
+                    permissionTimeoutJob?.cancel()
+                    permissionTimeoutJob = null
                     openConnection(
                         device = device,
                         mode = mode,
@@ -114,6 +117,24 @@ class UsbLifecycleManager(
                         context, usbManager, device,
                         UsbPermissionGuard.ACTION_USB_PERMISSION
                     )
+                    // Start permission timeout watchdog (10s)
+                    permissionTimeoutJob?.cancel()
+                    permissionTimeoutJob = scope.launch {
+                        delay(10_000L)
+                        lifecycleMutex.withLock {
+                            val currentState = _state.value
+                            if (currentState is UsbLifecycleState.PermissionPending &&
+                                pendingPermissionDeviceKey == newKey
+                            ) {
+                                Log.w(TAG, "[MODE] permission-timeout key=$newKey")
+                                closeInternal()
+                                _state.value = UsbLifecycleState.Error(
+                                    message = "USB permission request timed out",
+                                    recoverable = true
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -149,6 +170,8 @@ class UsbLifecycleManager(
 
                 if (granted) {
                     pendingPermissionDeviceKey = null
+                    permissionTimeoutJob?.cancel()
+                    permissionTimeoutJob = null
                     val snapshot = UsbSnapshotFactory.from(device)
                     val detection = detector.detect(snapshot)
                     openConnection(
@@ -160,6 +183,8 @@ class UsbLifecycleManager(
                     )
                 } else {
                     pendingPermissionDeviceKey = null
+                    permissionTimeoutJob?.cancel()
+                    permissionTimeoutJob = null
                     Log.w(TAG, "[MODE] permission denied key=$permissionKey")
                     _state.value = UsbLifecycleState.PermissionDenied(device, device.productName ?: "Unknown")
                 }
@@ -330,6 +355,8 @@ class UsbLifecycleManager(
         watchdogJob = null
         missedPings = 0
         transferQueue = null
+        permissionTimeoutJob?.cancel()
+        permissionTimeoutJob = null
         try {
             activeInterface?.let { activeConnection?.releaseInterface(it) }
             activeConnection?.close()

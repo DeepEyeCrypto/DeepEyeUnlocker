@@ -51,6 +51,7 @@ class UsbSessionManager(
     private var activeDevice: UsbDevice? = null
     private var activeConnection: UsbDeviceConnection? = null
     private var activeEndpoints: ResolvedEndpoints? = null
+    private var activeDeviceKey: String? = null
     
     private var transferQueue: UsbTransferQueue? = null
     private var watchdog: UsbConnectionWatchdog? = null
@@ -61,7 +62,7 @@ class UsbSessionManager(
     // ── Init ──────────────────────────────────────────────────
     suspend fun initAsync() = withContext(Dispatchers.IO) {
         if (!context.packageManager.hasSystemFeature("android.hardware.usb.host")) {
-            UsbLogger.error(TAG, "USB host NOT supported on this device")
+            UsbLogger.error(TAG, "[MODE] otg-unsupported reason=\"USB host NOT supported on this device\"")
             _events.emit(UsbConnectionEvent.NoOtgSupport)
             return@withContext
         }
@@ -73,9 +74,12 @@ class UsbSessionManager(
     }
 
     suspend fun onDeviceAttached(device: UsbDevice) = withContext(Dispatchers.IO) {
-        UsbLogger.info(TAG, "USB Phys Attached: ${device.productName}")
+        UsbLogger.info(TAG, "[MODE] phys-attach product=\"${device.productName}\" vid=0x${"%04X".format(device.vendorId)} pid=0x${"%04X".format(device.productId)}")
         processDetectedDevice(device)
     }
+
+    private fun deviceKey(device: UsbDevice): String =
+        "${device.vendorId}:${device.productId}:${device.deviceId}"
 
     private suspend fun processDetectedDevice(device: UsbDevice) {
         val vid = device.vendorId
@@ -139,6 +143,7 @@ class UsbSessionManager(
                 activeDevice = device
                 activeConnection = connection
                 activeEndpoints = endpoints
+                activeDeviceKey = deviceKey(device)
                 
                 // Initialize Serial Transfer Queue
                 val queue = UsbTransferQueue(connection, endpoints)
@@ -154,7 +159,10 @@ class UsbSessionManager(
                 dog.start()
                 watchdog = dog
 
-                UsbLogger.info(TAG, "SESSION ACTIVE: ${device.productName} via $mode")
+        UsbLogger.info(
+            TAG,
+            "[MODE] session-opened key=${deviceKey(device)} mode=$mode product=\"${device.productName}\""
+        )
                 _events.emit(UsbConnectionEvent.ConnectionOpened(device, connection, mode))
 
             } catch (e: Exception) {
@@ -173,9 +181,13 @@ class UsbSessionManager(
     }
 
     suspend fun onDeviceDetached(device: UsbDevice) = withContext(Dispatchers.IO) {
-        if (activeDevice?.deviceId == device.deviceId) {
+        val detachedKey = deviceKey(device)
+        if (activeDeviceKey == detachedKey) {
+            UsbLogger.info(TAG, "[MODE] phys-detach key=$detachedKey")
             closeDevice()
             _events.emit(UsbConnectionEvent.DeviceDisconnected(device.productName ?: "Generic Device"))
+        } else {
+            UsbLogger.info(TAG, "[MODE] phys-detach-ignored key=$detachedKey active=$activeDeviceKey")
         }
     }
 
@@ -203,6 +215,7 @@ class UsbSessionManager(
             activeEndpoints = null
             transferQueue = null
             watchdog = null
+            activeDeviceKey = null
         }
     }
 
