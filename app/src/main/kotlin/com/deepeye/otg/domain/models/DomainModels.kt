@@ -112,3 +112,11 @@ data class SessionState(
     val queuedOperation: DeepEyeOperation? = null,
     val progress: Float = 0f
 )
+
+data class PartitionItem(
+    val id: String,
+    val name: String,
+    val sizeMb: String,
+    val startAddress: String? = null,
+    val type: String? = null
+)

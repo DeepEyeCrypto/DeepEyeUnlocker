@@ -92,6 +92,13 @@ enum class ConnectionMode(
         description = "UniSoc Setup — Firmware Downloader",
         chipset = "UNISOC",
         requiresHardware = false
+    ),
+    UNKNOWN(
+        label = "Unknown",
+        shortLabel = "UNK",
+        description = "Unidentified device — Check cable or device state",
+        chipset = "UNK",
+        requiresHardware = false
     );
 
     // Color per chipset for chip indicator dot
@@ -99,6 +106,7 @@ enum class ConnectionMode(
         "QC"  -> Color(0xFF6750A4)   // purple = Qualcomm
         "MTK" -> Color(0xFF0891B2)   // cyan = MediaTek
         "HW"  -> Color(0xFFD97706)   // amber = Huawei
+        "UNK" -> Color(0xFF64748B)   // slate = Unknown
         else  -> Color(0xFF059669)   // green = Universal
     }
 

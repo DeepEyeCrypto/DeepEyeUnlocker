@@ -57,6 +57,38 @@ object OtgTestHelper {
     }
 
     /**
+     * STAGE 10 — Acceptance Test Matrix (Validation)
+     */
+    fun validateProtocolClassification(
+        detector: com.deepeye.otg.usb.ProtocolDetector,
+        snapshot: com.deepeye.otg.usb.UsbDescriptorSnapshot
+    ) {
+        val result = detector.detect(snapshot)
+        val mode = result.toConnectionMode()
+        
+        Log.i(TAG, "Acceptance Test: vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)} -> Detected: $mode ($result)")
+
+        // Verification logic per Case 4 & 7
+        if (snapshot.vendorId == 0x1234 && snapshot.productId == 0x5678) {
+            // Case 4: Unknown device
+            if (mode != ConnectionMode.UNKNOWN) {
+                Log.e(TAG, "VERIFICATION FAILURE: Unknown device coerced to $mode")
+            } else {
+                Log.i(TAG, "VERIFICATION PASS: Unknown device correctly classified as UNKNOWN")
+            }
+        }
+
+        if (snapshot.vendorId == 0x0E8D && snapshot.productId == 0xFFFF) {
+            // Case 7: MTK Vendor, Unknown PID
+            if (mode != ConnectionMode.UNKNOWN) {
+                Log.e(TAG, "VERIFICATION FAILURE: Known Vendor / Unknown PID coerced to $mode")
+            } else {
+                Log.i(TAG, "VERIFICATION PASS: Known Vendor / Unknown PID correctly classified as UNKNOWN")
+            }
+        }
+    }
+
+    /**
      * Mode Matrix Validation:
      * Validates that VID:PID database correctly maps to the modes chosen by the pro tools.
      */
@@ -65,8 +97,10 @@ object OtgTestHelper {
             Triple(0x05C6, 0x9008, ConnectionMode.EDL),
             Triple(0x0E8D, 0x0003, ConnectionMode.BROM),
             Triple(0x2717, 0xFF48, ConnectionMode.ADB),
-            Triple(0x04E8, 0x685E, ConnectionMode.ODIN),
-            Triple(0x18D1, 0x4EE0, ConnectionMode.FASTBOOT)  // Google
+            Triple(0x04E8, 0x685D, ConnectionMode.ODIN),
+            Triple(0x18D1, 0x4EE0, ConnectionMode.FASTBOOT),
+            Triple(0x1234, 0x5678, ConnectionMode.UNKNOWN), // Negative Case 4
+            Triple(0x05C6, 0xFFFF, ConnectionMode.UNKNOWN)  // Negative Case 7
         )
 
         testCases.forEach { (vid, pid, expected) ->

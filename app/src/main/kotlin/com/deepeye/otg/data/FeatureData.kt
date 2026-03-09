@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 
 // ── Connection modes that unlock this feature ─────────────────
 enum class SupportedMode { ADB, FASTBOOT, EDL, TESTPOINT,
-                           BROM, PRELOADER, DIAG, MTP, ISP, META, ODIN, FDL }
+                           BROM, PRELOADER, DIAG, MTP, ISP, META, ODIN, FDL, UNKNOWN }
 
 // ── Chipset families ──────────────────────────────────────────
 enum class Chipset { QUALCOMM, MTK, EXYNOS, UNISOC, KIRIN, ALL }

@@ -30,7 +30,7 @@ class UsbBroadcastReceiver(
                 lifecycleManager.onDeviceDetached(device)
             }
 
-            UsbSessionManager.ACTION_USB_PERMISSION -> {
+            UsbPermissionGuard.ACTION_USB_PERMISSION -> {
                 device ?: return
                 val granted = intent.getBooleanExtra(
                     android.hardware.usb.UsbManager.EXTRA_PERMISSION_GRANTED, false

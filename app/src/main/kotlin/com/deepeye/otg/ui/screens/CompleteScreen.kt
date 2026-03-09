@@ -1,20 +1,16 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,78 +22,91 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.ui.theme.StitchTokens
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun CompleteScreen(
     op: DeepEyeOperation?,
     success: Boolean,
     message: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onViewAudit: () -> Unit
 ) {
     val hazeState = remember { HazeState() }
-    val color = if (success) Color(0xFF4ADE80) else Color(0xFFF87171)
-    val iconStr = if (success) "✓" else "✕"
+    val accentColor = if (success) Color(0xFF4ADE80) else StitchTokens.AccentEdl
+    val icon = if (success) Icons.Default.CheckCircle else Icons.Default.Error
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(Color.Black.copy(alpha = 0.9f))
+            .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            GlassCard(
-                hazeState = hazeState,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(color.copy(alpha = 0.2f))
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = iconStr, fontSize = 36.sp, color = color, fontWeight = FontWeight.Bold)
-                    }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Text(
-                        text = if (success) "Operation Successful" else "Operation Failed",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    
-                    Spacer(modifier = Modifier.height(32.dp))
-                    
-                    GlassButton(
-                        label = "DONE",
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+            // Success Halo
+            Box(contentAlignment = Alignment.Center) {
+                val infiniteTransition = rememberInfiniteTransition(label = "finishPulse")
+                val alpha by infiniteTransition.animateFloat(0.1f, 0.4f, infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "alpha")
+                
+                Box(Modifier.size(120.dp).background(accentColor.copy(alpha), CircleShape))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = accentColor
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Text(
+                text = if (success) "EXECUTION COMPLETE" else "EXECUTION FAILED",
+                style = StitchTokens.LabelSmall,
+                color = accentColor,
+                letterSpacing = 2.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = message,
+                style = StitchTokens.TitleLarge,
+                color = StitchTokens.TextPrimary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            if (op != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "ID: ${op.id.uppercase()}",
+                    style = StitchTokens.MonoCode.copy(fontSize = 11.sp),
+                    color = StitchTokens.TextSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(64.dp))
+
+            // Action Cluster
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                GlassButton(
+                    label = "DISMISS",
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    accent = !success
+                )
+                
+                GlassButton(
+                    label = "SHARE AUDIT REPORT",
+                    onClick = onViewAudit,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    accent = success
+                )
             }
         }
     }

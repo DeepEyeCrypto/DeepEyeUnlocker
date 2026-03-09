@@ -24,7 +24,7 @@ import java.util.UUID
 class RemoteShareActivity : AppCompatActivity() {
 
     private lateinit var usbManager: UsbManager
-    private val actionUsbPermission = "com.deepeye.otg.USB_PERMISSION"
+    private val actionUsbPermission = com.deepeye.otg.usb.UsbPermissionGuard.ACTION_USB_PERMISSION
     private var pendingPermissionDeviceId: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

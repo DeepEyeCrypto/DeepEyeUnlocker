@@ -3,8 +3,7 @@ package com.deepeye.otg.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.IBinder
+import android.os.*
 import androidx.core.app.NotificationCompat
 import com.deepeye.otg.ui.OtgActivity
 
@@ -21,6 +20,8 @@ class UsbForegroundService : Service() {
         const val ACTION_STOP  = "ACTION_STOP_USB_PERSIST"
     }
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> startUsbPersist()
@@ -30,6 +31,12 @@ class UsbForegroundService : Service() {
     }
 
     private fun startUsbPersist() {
+        // High-assurance: Keep CPU awake during potentially destructive flashes
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DeepEye:UsbSessionWakeLock").apply {
+            acquire(120 * 60 * 1000L) // 2 hours max for huge dumps
+        }
+
         createNotificationChannel()
         
         val mainIntent = Intent(this, OtgActivity::class.java)
@@ -66,6 +73,14 @@ class UsbForegroundService : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        wakeLock?.let {
+            if (it.isHeld) it.release()
+        }
+        wakeLock = null
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

@@ -1,196 +1,221 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.BuildConfig
-import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.ui.theme.StitchTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
 fun SettingsScreen(viewModel: UsbViewModel) {
+    val scrollState = rememberScrollState()
+    
+    // Collecting states from VM
     val perfMode by viewModel.performanceMode.collectAsState()
+    val adbSig by viewModel.adbSignatureRequired.collectAsState()
+    val debounce by viewModel.debounceAttach.collectAsState()
+    val showDebug by viewModel.showDebugPanel.collectAsState()
+    val showReason by viewModel.showDetectionReason.collectAsState()
+    val forceReclass by viewModel.forceReclassify.collectAsState()
+    val logToFile by viewModel.logUsbToFile.collectAsState()
+    
     val licenseStatus by viewModel.licenseStatus.collectAsState()
     val activeLicense by viewModel.currentLicense.collectAsState()
-    
-    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .background(StitchTokens.BackgroundDark)
+            .statusBarsPadding()
             .verticalScroll(scrollState)
+            .padding(horizontal = 20.dp, vertical = 24.dp)
     ) {
-        Spacer(modifier = Modifier.height(100.dp)) // Headroom for TopBar
-        
-        Text(
-            "SETTINGS",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Black,
-            color = Color.White,
-            letterSpacing = 1.sp
-        )
-        
+        // Section header
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { viewModel.setNav(NavTarget.HOME) }) {
+                Icon(Icons.Default.ArrowBack, "Back", tint = StitchTokens.TextPrimary)
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("ENGINE SETTINGS", style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp))
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 1. Detection Preferences
+        SettingsGroup(title = "DETECTION PREFERENCES") {
+            ToggleRow(
+                icon = Icons.Default.GppGood,
+                title = "Require Explicit ADB Signature",
+                subtitle = "Refuse ADB if vendor public key is missing.",
+                checked = adbSig,
+                onToggle = { viewModel.toggleAdbSignature() }
+            )
+            DividerLine()
+            ToggleRow(
+                icon = Icons.Default.Deblur,
+                title = "Debounce Attach Events",
+                subtitle = "Filter flaky USB cables (200ms grace).",
+                checked = debounce,
+                onToggle = { viewModel.toggleDebounceAttach() }
+            )
+            DividerLine()
+            ToggleRow(
+                icon = Icons.Default.Speed,
+                title = "Performance Mode",
+                subtitle = "Enables advanced GPU blurs and Haze effects.",
+                checked = !perfMode,
+                onToggle = { viewModel.togglePerformance() }
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        // ── System Configuration ────────────────────────────────
-        SettingsSection(title = "SYSTEM CONFIGURATION") {
-            SettingsToggle(
-                title = "High-Performance Mode",
-                subtitle = "Enables advanced GPU rasterization and Haze blurring.",
-                checked = !perfMode, // Toggle logic is reversed in ViewModel (togglePerformance)
-                onCheckedChange = { viewModel.togglePerformance() }
+        // 2. Display & Feedback
+        SettingsGroup(title = "DISPLAY & FEEDBACK") {
+            ToggleRow(
+                icon = Icons.Default.BugReport,
+                title = "Show Debug Panel",
+                subtitle = "Floating overlay with real-time descriptor data.",
+                checked = showDebug,
+                onToggle = { viewModel.toggleDebugPanel() }
             )
-            
-            HorizontalDivider(color = Color.White.copy(alpha = 0.05f), modifier = Modifier.padding(vertical = 12.dp))
-            
-            SettingsToggle(
-                title = "Deep Log Collection",
-                subtitle = "Verbose logging for JNI bridge and USB transport.",
-                checked = true,
-                onCheckedChange = {}
+            DividerLine()
+            ToggleRow(
+                icon = Icons.Default.Info,
+                title = "Show Detection Reason",
+                subtitle = "Expose heuristic details on identification.",
+                checked = showReason,
+                onToggle = { viewModel.toggleShowDetectionReason() }
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // ── Authentication & License ──────────────────────────
-        SettingsSection(title = "IDENTITY & LICENSING") {
+        // 3. Application Engine
+        SettingsGroup(title = "APPLICATION ENGINE") {
+            ToggleRow(
+                icon = Icons.Default.Refresh,
+                title = "Force Reclassify on Wake",
+                subtitle = "Always re-probe device when app enters foreground.",
+                checked = forceReclass,
+                onToggle = { viewModel.toggleForceReclassify() }
+            )
+            DividerLine()
+            ToggleRow(
+                icon = Icons.Default.Save,
+                title = "Log USB Packets to File",
+                subtitle = "Internal forensics log (Pcap format compatible).",
+                checked = logToFile,
+                onToggle = { viewModel.toggleLogUsbToFile() }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 4. Licensing & About
+        SettingsGroup(title = "IDENTITY & LICENSING") {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "License Status",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        licenseStatus.name,
-                        color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color.Cyan else Color.Gray,
-                        fontSize = 12.sp
-                    )
+                Box(Modifier.size(40.dp).clip(CircleShape).background(StitchTokens.Primary.copy(0.1f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.VerifiedUser, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
                 }
-                
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Current License Plan", style = StitchTokens.BodyMedium, fontWeight = FontWeight.Bold, color = StitchTokens.TextPrimary)
+                    Text(licenseStatus.name, style = StitchTokens.LabelSmall, color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color(0xFF4ADE80) else Color.Gray)
+                }
                 if (licenseStatus != com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) {
-                    com.deepeye.otg.ui.components.GlassButton(
-                        label = "ACTIVATE",
-                        onClick = { viewModel.setActivationVisibility(true) },
-                        modifier = Modifier.width(100.dp),
-                        accent = true
+                    Text(
+                        "UPGRADE",
+                        style = StitchTokens.LabelSmall,
+                        color = StitchTokens.Primary,
+                        modifier = Modifier.clickable { viewModel.setActivationVisibility(true) }
                     )
                 }
             }
-            
-            if (activeLicense != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Black.copy(alpha = 0.2f))
-                        .padding(12.dp)
-                ) {
-                    Text("ACTIVE TIER", color = Color.Gray, fontSize = 9.sp)
-                    Text(activeLicense?.tier?.name ?: "UNKNOWN", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text("LICENSE KEY", color = Color.Gray, fontSize = 9.sp)
-                    Text(activeLicense?.key?.chunked(4)?.joinToString("-") ?: "N/A", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                }
-            }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // ── About ───────────────────────────────────────────────
-        SettingsSection(title = "ABOUT DEEPEYE") {
-            InfoRow("Version", "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-            InfoRow("Engine", "Native Core v2026.18")
-            InfoRow("Architecture", "arm64-v8a / armeabi-v7a")
-            InfoRow("Build Date", "2026-03-08")
+        Spacer(Modifier.height(40.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Text("DeepEye OTG Universal v${BuildConfig.VERSION_NAME}", style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
+            Text("Engine: NativeCore x64/arm64 2.5.0", style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary.copy(0.5f))
         }
-
-        Spacer(modifier = Modifier.height(120.dp)) // Space for Bottom nav
+        
+        Spacer(modifier = Modifier.height(100.dp)) // Nav bar space
     }
 }
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(GlassTokens.GlassSurface)
-            .border(1.dp, GlassTokens.cardBorderColor, RoundedCornerShape(20.dp))
-            .padding(20.dp)
-    ) {
-        Text(
-            title,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Cyan.copy(alpha = 0.6f),
-            letterSpacing = 1.sp
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        content()
+private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column {
+        Text(title, style = StitchTokens.LabelSmall, color = StitchTokens.Primary, modifier = Modifier.padding(start = 12.dp, bottom = 8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(StitchTokens.SurfaceDark)
+                .border(1.dp, StitchTokens.GlassBorder, RoundedCornerShape(20.dp))
+                .padding(16.dp)
+        ) {
+            content()
+        }
     }
 }
 
 @Composable
-private fun SettingsToggle(
+private fun ToggleRow(
+    icon: ImageVector,
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onToggle: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth().clickable { onToggle() }.padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = Color.Gray, fontSize = 11.sp)
+        Icon(icon, null, modifier = Modifier.size(24.dp), tint = StitchTokens.TextSecondary)
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = StitchTokens.BodyMedium, fontWeight = FontWeight.Bold, color = StitchTokens.TextPrimary)
+            Text(subtitle, style = StitchTokens.BodyMedium.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = { onToggle() },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.Cyan,
-                checkedTrackColor = Color.Cyan.copy(alpha = 0.3f),
+                checkedThumbColor = StitchTokens.Primary,
+                checkedTrackColor = StitchTokens.Primary.copy(0.2f),
                 uncheckedThumbColor = Color.Gray,
                 uncheckedTrackColor = Color.Transparent,
-                uncheckedBorderColor = Color.Gray.copy(alpha = 0.5f)
+                uncheckedBorderColor = Color.White.copy(0.2f)
             )
         )
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, color = Color.Gray, fontSize = 12.sp)
-        Text(value, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-    }
+private fun DividerLine() {
+    HorizontalDivider(color = Color.White.copy(0.05f), modifier = Modifier.padding(vertical = 4.dp))
 }

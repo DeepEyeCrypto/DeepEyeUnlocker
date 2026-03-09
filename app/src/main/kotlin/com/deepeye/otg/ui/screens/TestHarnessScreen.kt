@@ -53,6 +53,7 @@ fun TestHarnessScreen(
             )
             
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GlassButton(label = "Run Validation", onClick = { viewModel.runHardenValidation() }, modifier = Modifier.width(140.dp))
                 GlassButton(label = "Clear Logs", onClick = { UsbLogger.clear() }, modifier = Modifier.width(100.dp))
                 GlassButton(label = "Exit Harness", onClick = { viewModel.exitTestHarness() }, modifier = Modifier.width(120.dp), accent = true)
             }

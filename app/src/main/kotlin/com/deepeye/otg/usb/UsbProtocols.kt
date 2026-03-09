@@ -29,5 +29,7 @@ sealed class SessionState {
     data class PermissionDenied(val queuedOp: DeepEyeOperation? = null) : SessionState()
     object ConnectedMtpOnly : SessionState()
     object TestHarness : SessionState()
+    data class Reporting(val reportFile: java.io.File?) : SessionState()
+    data class PartitionPreview(val partitions: List<com.deepeye.otg.domain.models.PartitionItem>) : SessionState()
 }
 

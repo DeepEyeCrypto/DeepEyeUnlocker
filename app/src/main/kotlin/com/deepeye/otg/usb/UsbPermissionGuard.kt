@@ -12,6 +12,7 @@ import android.util.Log
  * Safety wrapper for USB permissions to avoid SecurityExceptions and notification issues.
  */
 object UsbPermissionGuard {
+    const val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION"
     private const val TAG = "DeepEye-PermGuard"
 
     fun requestPermission(

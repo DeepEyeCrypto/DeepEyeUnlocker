@@ -32,6 +32,7 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 20.dp,
     performanceMode: Boolean = false,
+    accentColor: Color = Color.Transparent, // Added for mode accents
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -76,7 +77,7 @@ fun GlassCard(
             )
             .border(
                 width = 1.dp,
-                color = GlassTokens.cardBorderColor,
+                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.4f) else GlassTokens.cardBorderColor,
                 shape = shape
             )
             .then(
@@ -85,7 +86,26 @@ fun GlassCard(
                     indication = null,
                     onClick = onClick
                 ) else Modifier
-            ),
-        content = content
-    )
+            )
+    ) {
+        // Accent glow at top edge
+        if (accentColor != Color.Transparent) {
+            androidx.compose.foundation.Canvas(
+                modifier = Modifier
+                    .matchParentSize()
+            ) {
+                // Subtle top edge glow
+                drawRect(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(accentColor.copy(alpha = 0.3f), Color.Transparent),
+                        startY = 0f,
+                        endY = 20f
+                    ),
+                    size = androidx.compose.ui.geometry.Size(size.width, 20f)
+                )
+            }
+        }
+        
+        content()
+    }
 }

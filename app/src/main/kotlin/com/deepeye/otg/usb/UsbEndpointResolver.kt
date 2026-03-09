@@ -88,6 +88,7 @@ object UsbEndpointResolver {
             ConnectionMode.TESTPOINT -> 512 to 5000
             ConnectionMode.ODIN      -> 16384 to 10000 // Samsung flashing chunks
             ConnectionMode.FDL       -> 4096 to 3000 // UniSoc FDL packets
+            ConnectionMode.UNKNOWN   -> 512 to 1000  // Minimal defaults for unknown detection
         }
 
         return ResolvedEndpoints(

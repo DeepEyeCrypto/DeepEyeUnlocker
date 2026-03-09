@@ -166,4 +166,10 @@ object NativeBridge {
     // ── Device Info ──────────────────────────────────────────────
     /** Get a JSON string containing all device info (SoC, security, FRP, etc.) */
     external fun getDeviceInfo(handle: Long): String
+
+    /** Calculate SHA256 of a file on disk for audit verification. */
+    external fun calculateFileHash(path: String): String
+
+    /** Peek first N bytes of a partition. Returns hex string or null. */
+    external fun peekPartition(handle: Long, name: String, bytes: Int): String?
 }

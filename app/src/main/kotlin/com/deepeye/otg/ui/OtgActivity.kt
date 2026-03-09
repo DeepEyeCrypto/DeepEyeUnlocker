@@ -1,155 +1,119 @@
 package com.deepeye.otg.ui
 
-import android.content.*
+import android.content.Intent
+import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
-import android.os.*
-import android.util.Log
+import android.os.Build
+import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.deepeye.otg.DeviceModel
-import com.deepeye.otg.ui.viewmodel.LogEntry
-import com.deepeye.otg.usb.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import com.deepeye.otg.DeepEyeApplication
+import com.deepeye.otg.service.ModelSyncManager
+import com.deepeye.otg.service.TunnelManager
+import com.deepeye.otg.service.UsbForegroundService
+import com.deepeye.otg.ui.screens.LoadingScreen
+import com.deepeye.otg.ui.theme.DeepEyeTheme
+import com.deepeye.otg.usb.SessionState
+import com.deepeye.otg.viewmodel.UsbViewModel
+import com.deepeye.otg.viewmodel.UsbViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OtgActivity : AppCompatActivity() {
-    
-    // Logic Variables
-    private var selectedBrand = "Xiaomi"
-    private var selectedModelName = "Auto-Detect"
-    private var nativeHandle: Long = 0
-    private var deviceDatabase: MutableMap<String, List<com.deepeye.otg.DeviceModel>> = mutableMapOf()
-    private var allModels: List<com.deepeye.otg.DeviceModel> = emptyList()
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val app by lazy { application as DeepEyeApplication }
 
-    // Lifecycle Manager
-    private val lifecycleManager by lazy { 
-        com.deepeye.otg.usb.UsbLifecycleManager(
-            this, 
-            getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager,
-            appScope
-        ) 
-    }
-
-    private val usbReceiver by lazy {
-        com.deepeye.otg.usb.UsbBroadcastReceiver(
-            lifecycleManager = lifecycleManager,
-            scope = appScope
+    private val viewModel: UsbViewModel by viewModels {
+        UsbViewModelFactory(
+            appContext = applicationContext,
+            lifecycleManager = app.usbLifecycleManager,
+            settings = com.deepeye.otg.data.SettingsManager(applicationContext)
         )
     }
 
-    // Log State for Compose
-    private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
-    val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
-
     // ── Engine loading state ────────────────────────────────────
-    private val _engineLoaded = MutableStateFlow(false)
+    private val engineLoaded = MutableStateFlow(false)
+    private val loadingStatus = MutableStateFlow("Initializing...")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val settingsManager = com.deepeye.otg.data.SettingsManager(this)
-        
-        // Initialize Tunnel Service
-        com.deepeye.otg.service.TunnelManager.initialize(lifecycleManager)
-        
-        val viewModel = com.deepeye.otg.viewmodel.UsbViewModel(
-            context = this,
-            lifecycleManager = lifecycleManager,
-            settings = settingsManager,
-            usbState = kotlinx.coroutines.flow.MutableStateFlow(SessionState.Idle).asStateFlow(),
-            logs = logs
-        )
+        TunnelManager.initialize(app.usbLifecycleManager)
 
         setContent {
-            com.deepeye.otg.ui.theme.DeepEyeTheme {
-                val engineReady by _engineLoaded.collectAsState()
-                
-                // Foreground Service Orchestrator
-                val activeState by viewModel.activeUsbState.collectAsState()
+            DeepEyeTheme {
+                val ready = engineLoaded.collectAsStateWithLifecycle().value
+                val status = loadingStatus.collectAsStateWithLifecycle().value
+                val activeState = viewModel.activeUsbState.collectAsStateWithLifecycle().value
                 val context = androidx.compose.ui.platform.LocalContext.current
-                
+
                 LaunchedEffect(activeState) {
-                    val serviceIntent = Intent(context, com.deepeye.otg.service.UsbForegroundService::class.java)
+                    val serviceIntent = Intent(context, UsbForegroundService::class.java)
                     if (activeState is SessionState.ConnectedReady) {
-                        serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_START
+                        serviceIntent.action = UsbForegroundService.ACTION_START
                         context.startForegroundService(serviceIntent)
                     } else if (activeState is SessionState.Idle || activeState is SessionState.Error) {
-                        serviceIntent.action = com.deepeye.otg.service.UsbForegroundService.ACTION_STOP
+                        serviceIntent.action = UsbForegroundService.ACTION_STOP
                         context.startService(serviceIntent)
                     }
                 }
 
-                if (!engineReady) {
-                    com.deepeye.otg.ui.screens.LoadingScreen()
+                if (!ready) {
+                    LoadingScreen(status = status)
                 } else {
-                    com.deepeye.otg.ui.DeepEyeApp(viewModel = viewModel)
+                    DeepEyeApp(viewModel = viewModel)
                 }
             }
         }
-        
-        registerUsbReceiver()
 
-        // Handle device that was already connected when app launched
-        val deviceFromIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent?.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE, android.hardware.usb.UsbDevice::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent?.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE)
-        }
-        
-        deviceFromIntent?.let { device ->
-            lifecycleManager.onDeviceAttached(device)
+        // Handle device already connected when app launched from USB attach intent.
+        extractDeviceFromIntent(intent)?.let { device ->
+            app.usbLifecycleManager.onDeviceAttached(device)
         }
 
         // Handle Remote Session (Stage H)
-        val remoteSession = intent?.getStringExtra("REMOTE_SESSION")
-        remoteSession?.let { code ->
-            com.deepeye.otg.service.TunnelManager.joinSession(code)
+        intent?.getStringExtra("REMOTE_SESSION")?.let { code ->
+            TunnelManager.joinSession(code)
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
+            loadingStatus.value = "Loading native bridge..."
             com.deepeye.otg.NativeBridge.loadAsync()
-            
-            // Initiate Cloud Model Sync (Stage I)
-            com.deepeye.otg.service.ModelSyncManager.sync(this@OtgActivity)
-            
-            loadDeviceDatabase()
-            withContext(Dispatchers.Main) {
-                _engineLoaded.value = true
-            }
-        }
-    }
 
-    private fun registerUsbReceiver() {
-        val filter = IntentFilter().apply {
-            addAction(android.hardware.usb.UsbManager.ACTION_USB_DEVICE_ATTACHED)
-            addAction(android.hardware.usb.UsbManager.ACTION_USB_DEVICE_DETACHED)
-            addAction(com.deepeye.otg.usb.UsbSessionManager.ACTION_USB_PERMISSION)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(usbReceiver, filter)
+            loadingStatus.value = "Syncing cloud models..."
+            ModelSyncManager.sync(this@OtgActivity)
+
+            loadingStatus.value = "Initializing database..."
+            ModelSyncManager.load(this@OtgActivity)
+
+            loadingStatus.value = "Ready"
+            withContext(Dispatchers.Main) {
+                engineLoaded.value = true
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        runCatching { unregisterReceiver(usbReceiver) }
-        lifecycleManager.destroy()
-        appScope.cancel()
+        // Process-scoped manager is owned by Application, not Activity.
     }
 
-    private fun loadDeviceDatabase() {
-        allModels = com.deepeye.otg.service.ModelSyncManager.load(this)
-        Log.i("OtgActivity", "DB Loaded: ${allModels.size} device models.")
+    private fun extractDeviceFromIntent(intent: Intent?): UsbDevice? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent?.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent?.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+        }
     }
 }

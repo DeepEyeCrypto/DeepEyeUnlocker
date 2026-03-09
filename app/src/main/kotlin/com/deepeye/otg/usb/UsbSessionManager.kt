@@ -38,7 +38,6 @@ class UsbSessionManager(
     private val usbManager: UsbManager
 ) {
     companion object {
-        const val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION"
         private const val TAG = "DeepEye-UsbMgr"
     }
 
@@ -87,7 +86,12 @@ class UsbSessionManager(
         _events.emit(UsbConnectionEvent.DeviceDetected(device, signature, detectedMode))
 
         if (!usbManager.hasPermission(device)) {
-            UsbPermissionGuard.requestPermission(context, usbManager, device, ACTION_USB_PERMISSION)
+            UsbPermissionGuard.requestPermission(
+                context,
+                usbManager,
+                device,
+                UsbPermissionGuard.ACTION_USB_PERMISSION
+            )
         } else {
             openConnection(device, detectedMode)
         }

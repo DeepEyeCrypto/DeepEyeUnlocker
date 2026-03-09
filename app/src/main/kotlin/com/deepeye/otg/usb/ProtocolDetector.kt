@@ -25,9 +25,9 @@ data class DetectionResult(
         DeviceMode.TESTPOINT -> com.deepeye.otg.data.ConnectionMode.TESTPOINT
         DeviceMode.RECOVERY -> com.deepeye.otg.data.ConnectionMode.ADB
         DeviceMode.FASTBOOTD -> com.deepeye.otg.data.ConnectionMode.FASTBOOT
-        DeviceMode.DISCONNECTED -> com.deepeye.otg.data.ConnectionMode.MTP
-        // Transport fallback only. UI mode/family still remain UNKNOWN.
-        else -> com.deepeye.otg.data.ConnectionMode.MTP
+        DeviceMode.DISCONNECTED -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
+        DeviceMode.UNKNOWN -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
+        else -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
     }
 }
 
@@ -209,18 +209,18 @@ class ProtocolDetector {
         Log.i(
             TAG,
             "[MODE] attach vid=0x${"%04X".format(s.vendorId)} pid=0x${"%04X".format(s.productId)} " +
-                "deviceClass=0x${"%02X".format(s.deviceClass)} deviceSubclass=0x${"%02X".format(s.deviceSubclass)} " +
-                "deviceProtocol=0x${"%02X".format(s.deviceProtocol)} ifCount=${s.interfaceCount}"
+                "devClass=0x${"%02X".format(s.deviceClass)} devSubclass=0x${"%02X".format(s.deviceSubclass)} " +
+                "proto=0x${"%02X".format(s.deviceProtocol)} intfCount=${s.interfaceCount}"
         )
         s.interfaces.forEachIndexed { idx, intf ->
-            val endpointSummary = intf.endpoints.joinToString(",") { ep ->
-                "addr=0x${"%02X".format(ep.address)}:type=${ep.type}:dir=${ep.direction}:mps=${ep.maxPacketSize}"
+            val epSummary = intf.endpoints.joinToString(",") { ep ->
+                "addr=0x${"%02X".format(ep.address)}:type=${ep.type}:dir=${ep.direction}"
             }
             Log.i(
                 TAG,
-                "[MODE] intf idx=$idx class=0x${"%02X".format(intf.interfaceClass)} " +
+                "[MODE] intf[$idx] class=0x${"%02X".format(intf.interfaceClass)} " +
                     "subclass=0x${"%02X".format(intf.interfaceSubclass)} " +
-                    "protocol=0x${"%02X".format(intf.interfaceProtocol)} eps=${intf.endpointCount} [$endpointSummary]"
+                    "proto=0x${"%02X".format(intf.interfaceProtocol)} eps=${intf.endpointCount} [$epSummary]"
             )
         }
     }
@@ -228,7 +228,7 @@ class ProtocolDetector {
     private fun logResult(snapshot: UsbDescriptorSnapshot, result: DetectionResult) {
         Log.i(
             TAG,
-            "[MODE] classify result=${result.deviceMode} family=${result.protocolFamily} confidence=${result.confidence} reason=\"${result.reason}\""
+            "[MODE] classify mode=${result.deviceMode} family=${result.protocolFamily} confidence=${result.confidence} reason=\"${result.reason}\""
         )
 
         if (result.deviceMode == DeviceMode.UNKNOWN) {
@@ -237,7 +237,7 @@ class ProtocolDetector {
             }
             Log.w(
                 TAG,
-                "[MODE] unknown-summary vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)} ifTuples=$summary"
+                "[MODE] unknown-summary vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)} intfTuples=\"$summary\""
             )
         }
     }

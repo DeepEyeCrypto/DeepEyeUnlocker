@@ -1,0 +1,113 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0D0D1A",
+                        "surface-dark": "#13132B",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-screen max-w-md mx-auto flex-col overflow-hidden bg-gradient-to-b from-background-dark to-surface-dark shadow-2xl">
+<!-- Header -->
+<header class="flex items-center justify-between p-6 pt-8">
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined text-2xl">bug_report</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-100">DeepEye OTG</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800/50 text-slate-300 border border-white/5 hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<!-- Main Content (Disconnected State) -->
+<main class="flex-1 flex flex-col items-center justify-center px-8 text-center">
+<!-- Central Glowing Visual -->
+<div class="relative mb-12">
+<!-- Halo Effect -->
+<div class="absolute inset-0 bg-primary/20 blur-3xl rounded-full transform scale-150"></div>
+<div class="relative w-48 h-48 rounded-full border border-primary/30 flex items-center justify-center bg-background-dark/80 backdrop-blur-sm">
+<div class="w-40 h-40 rounded-full border border-primary/50 flex items-center justify-center shadow-[inset_0_0_20px_rgba(19,91,236,0.3)]">
+<span class="material-symbols-outlined text-7xl text-primary font-light">usb</span>
+</div>
+</div>
+</div>
+<!-- Text Content -->
+<div class="space-y-4 max-w-xs">
+<h2 class="text-2xl font-bold text-slate-100 tracking-tight">Connect a device via OTG</h2>
+<p class="text-slate-400 text-sm leading-relaxed">
+                    Ready for secure device interaction. Supported modes: <span class="text-primary/80">MTK BROM, EDL, ADB, Fastboot</span>
+</p>
+</div>
+<!-- Primary Action -->
+<button class="mt-10 px-8 py-4 bg-primary text-white rounded-full font-bold flex items-center gap-3 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-xl">refresh</span>
+                Refresh Connection
+            </button>
+</main>
+<!-- Info Chips (Glassmorphic) -->
+<section class="px-6 pb-12">
+<div class="flex flex-wrap justify-center gap-2">
+<div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full">
+<span class="material-symbols-outlined text-sm text-green-400">check_circle</span>
+<span class="text-xs font-medium text-slate-300">USB Host Mode</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full">
+<span class="material-symbols-outlined text-sm text-primary">info</span>
+<span class="text-xs font-medium text-slate-300">Root Optional</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full">
+<span class="material-symbols-outlined text-sm text-amber-400">cable</span>
+<span class="text-xs font-medium text-slate-300">OTG Cable Required</span>
+</div>
+</div>
+</section>
+<!-- Bottom Navigation Bar -->
+<nav class="border-t border-white/5 bg-background-dark/80 backdrop-blur-xl px-6 py-4 pb-8">
+<div class="flex items-center justify-between">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined font-variation-fill">usb</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Connect</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Console</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Safety</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Logs</span>
+</a>
+</div>
+</nav>
+<!-- Decorative Background Gradient Element -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+</div>
+</body></html>

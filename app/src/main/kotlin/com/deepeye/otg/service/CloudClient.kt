@@ -75,9 +75,9 @@ object CloudClient {
         }
     }
 
-    suspend fun fetchModelDatabase(): String? = withContext(Dispatchers.IO) {
+    suspend fun fetchModelDatabase(currentVersion: Long): String? = withContext(Dispatchers.IO) {
         try {
-            val url = URL("$API_BASE/models")
+            val url = URL("$API_BASE/models?current=$currentVersion")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
             conn.connectTimeout = 10000
@@ -85,6 +85,8 @@ object CloudClient {
             
             if (conn.responseCode == 200) {
                 conn.inputStream.bufferedReader().use { it.readText() }
+            } else if (conn.responseCode == 304) {
+                "NOT_MODIFIED"
             } else null
         } catch (e: Exception) {
             Log.e(TAG, "[SYNC] Failed to fetch model DB: ${e.message}")

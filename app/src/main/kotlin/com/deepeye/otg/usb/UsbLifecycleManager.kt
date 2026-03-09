@@ -41,6 +41,7 @@ class UsbLifecycleManager(
     private val detector = ProtocolDetector()
     private var missedPings = 0
     private var activeDeviceKey: String? = null
+    private var pendingPermissionDeviceKey: String? = null
     private var activeDetection: DetectionResult? = null
     private var activeSnapshot: UsbDescriptorSnapshot? = null
 
@@ -53,12 +54,23 @@ class UsbLifecycleManager(
                 val newKey = deviceKey(device)
                 val previousKey = activeDeviceKey
 
-                if (previousKey != null && previousKey != newKey) {
-                    Log.i(TAG, "[MODE] re-enumeration oldKey=$previousKey newKey=$newKey -> reset")
-                } else if (previousKey == newKey) {
-                    Log.i(TAG, "[MODE] attach same-key=$newKey -> fresh reclassify")
+                if (_state.value is UsbLifecycleState.PermissionPending && pendingPermissionDeviceKey == newKey) {
+                    Log.i(TAG, "[MODE] attach ignored; permission already pending key=$newKey")
+                    return@withLock
                 }
 
+                if (previousKey == newKey && activeConnection != null) {
+                    Log.i(TAG, "[MODE] attach ignored; session already active key=$newKey")
+                    return@withLock
+                }
+
+                if (previousKey != null && previousKey != newKey) {
+                    Log.i(TAG, "[MODE] re-enumeration oldKey=$previousKey newKey=$newKey action=reset")
+                } else if (previousKey == newKey) {
+                    Log.i(TAG, "[MODE] attach same-key=$newKey action=reclassify")
+                }
+
+                // Stage 6 Rule 1: Reset session to DISCONNECTED / empty
                 closeInternal()
 
                 val snapshot = UsbSnapshotFactory.from(device)
@@ -87,6 +99,7 @@ class UsbLifecycleManager(
                 )
 
                 if (usbManager.hasPermission(device)) {
+                    pendingPermissionDeviceKey = null
                     openConnection(
                         device = device,
                         mode = mode,
@@ -95,10 +108,11 @@ class UsbLifecycleManager(
                         deviceKey = newKey
                     )
                 } else {
+                    pendingPermissionDeviceKey = newKey
                     _state.value = UsbLifecycleState.PermissionPending(device)
                     UsbPermissionGuard.requestPermission(
                         context, usbManager, device,
-                        UsbSessionManager.ACTION_USB_PERMISSION
+                        UsbPermissionGuard.ACTION_USB_PERMISSION
                     )
                 }
             }
@@ -109,6 +123,7 @@ class UsbLifecycleManager(
         scope.launch {
             lifecycleMutex.withLock {
                 val permissionKey = deviceKey(device)
+                val expectedPendingKey = pendingPermissionDeviceKey
 
                 val pending = _state.value as? UsbLifecycleState.PermissionPending
                 if (pending != null && pending.device.deviceId != device.deviceId) {
@@ -119,7 +134,21 @@ class UsbLifecycleManager(
                     return@withLock
                 }
 
+                if (expectedPendingKey == null) {
+                    Log.w(TAG, "[MODE] permission result ignored; no pending request key=$permissionKey granted=$granted")
+                    return@withLock
+                }
+
+                if (expectedPendingKey != permissionKey) {
+                    Log.w(
+                        TAG,
+                        "[MODE] permission result ignored for stale key=$permissionKey expected=$expectedPendingKey"
+                    )
+                    return@withLock
+                }
+
                 if (granted) {
+                    pendingPermissionDeviceKey = null
                     val snapshot = UsbSnapshotFactory.from(device)
                     val detection = detector.detect(snapshot)
                     openConnection(
@@ -130,6 +159,7 @@ class UsbLifecycleManager(
                         deviceKey = permissionKey
                     )
                 } else {
+                    pendingPermissionDeviceKey = null
                     Log.w(TAG, "[MODE] permission denied key=$permissionKey")
                     _state.value = UsbLifecycleState.PermissionDenied(device, device.productName ?: "Unknown")
                 }
@@ -140,7 +170,22 @@ class UsbLifecycleManager(
     fun onDeviceDetached(device: UsbDevice) {
         scope.launch {
             lifecycleMutex.withLock {
-                Log.i(TAG, "[MODE] detach key=${deviceKey(device)}")
+                val detachedKey = deviceKey(device)
+                val activeKey = activeDeviceKey
+                val pendingKey = pendingPermissionDeviceKey
+
+                if (activeKey != null && activeKey != detachedKey && pendingKey != detachedKey) {
+                    Log.i(TAG, "[MODE] detach ignored for non-active key=$detachedKey active=$activeKey pending=$pendingKey")
+                    return@withLock
+                }
+
+                if (activeKey == null && pendingKey != null && pendingKey != detachedKey) {
+                    Log.i(TAG, "[MODE] detach ignored for non-pending key=$detachedKey pending=$pendingKey")
+                    return@withLock
+                }
+
+                Log.i(TAG, "[MODE] detach key=$detachedKey")
+                // Stage 6 Rule 1 & 2: Clear cached mode, protocol, and error fields
                 closeInternal()
                 _state.value = UsbLifecycleState.Idle
             }
@@ -173,7 +218,18 @@ class UsbLifecycleManager(
         }
 
         val usbInterface = endpoints.usbInterface
-        conn.claimInterface(usbInterface, true)
+        val claimed = try {
+            conn.claimInterface(usbInterface, true)
+        } catch (_: Exception) {
+            false
+        }
+
+        if (!claimed) {
+            conn.close()
+            _state.value = UsbLifecycleState.Error("Cannot claim USB interface", true)
+            return@withContext
+        }
+
         OemCompatibilityLayer.postClaimInterfaceDelay()
 
         activeDevice = device
@@ -222,7 +278,7 @@ class UsbLifecycleManager(
                     missedPings++
 
                     val activeName = activeDevice?.productName ?: activeDevice?.deviceName ?: "Unknown"
-                    val activeMode = activeDetection?.toConnectionMode() ?: ConnectionMode.MTP
+                    val activeMode = activeDetection?.toConnectionMode() ?: ConnectionMode.UNKNOWN
 
                     if (missedPings >= MAX_MISSED_PINGS) {
                         closeInternal()
@@ -260,10 +316,14 @@ class UsbLifecycleManager(
     }
 
     private fun pingDevice(conn: android.hardware.usb.UsbDeviceConnection): Boolean = try {
+        // GET_STATUS (Standard Request) to check if device is still alive
         val buf = ByteArray(2)
-        val result = conn.controlTransfer(0x80, 0x00, 0, 0, buf, 2, 1000)
+        val result = conn.controlTransfer(0x80, 0x00, 0, 0, buf, 2, 500)
         result >= 0
-    } catch (e: Exception) { false }
+    } catch (e: Exception) {
+        Log.d(TAG, "[MODE] ping-failure key=$activeDeviceKey reason=\"${e.message}\"")
+        false
+    }
 
     private fun closeInternal() {
         watchdogJob?.cancel()
@@ -278,6 +338,7 @@ class UsbLifecycleManager(
             activeConnection = null
             activeInterface = null
             activeDeviceKey = null
+            pendingPermissionDeviceKey = null
             activeDetection = null
             activeSnapshot = null
             activeEndpoints = null

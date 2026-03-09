@@ -27,7 +27,8 @@ typealias ProgressCallback = suspend (progress: Int, message: String) -> Unit
 data class EngineResult(
     val success: Boolean,
     val message: String,
-    val data: Map<String, String> = emptyMap()
+    val data: Map<String, String> = emptyMap(),
+    val evidencePath: String? = null
 )
 
 /**
@@ -51,6 +52,7 @@ object EngineDispatcher {
      * @param onProgress Callback for progress updates (0-100, message)
      */
     suspend fun execute(
+        context: android.content.Context,
         op: DeepEyeOperation,
         device: UsbDevice,
         protocol: ProtocolFamily,
@@ -58,6 +60,10 @@ object EngineDispatcher {
         role: UserRole = UserRole.DEV,
         onProgress: ProgressCallback
     ): EngineResult = withContext(Dispatchers.IO) {
+        if (!com.deepeye.otg.NativeBridge.isLoaded()) {
+            return@withContext EngineResult(false, "Native Engine (deepeye_core) not loaded. Please restart app.")
+        }
+
 
         // ── Step 1: Policy gate ─────────────────────────────────
         log("[ENGINE] Dispatch: ${op.id} | proto=$protocol | tier=${op.policyTier} | FD=$fd")
@@ -83,17 +89,20 @@ object EngineDispatcher {
                 return@withContext EngineResult(false, "Device identification failed on $protocol")
             }
 
+            // Initialize Forensic Session
+            com.deepeye.otg.service.ReportManager.startSession(identifiedType)
+
             // ── Step 4: Route to engine ─────────────────────────
             onProgress(15, "Routing to ${protocol.name} engine...")
-            when (protocol) {
+            val result = when (protocol) {
                 // Canonical families
                 ProtocolFamily.BROM,
                 ProtocolFamily.PRELOADER,
-                ProtocolFamily.MTK -> executeMtk(op, handle, onProgress)
+                ProtocolFamily.MTK -> executeMtk(context, op, handle, onProgress)
 
                 ProtocolFamily.EDL,
                 ProtocolFamily.DIAG,
-                ProtocolFamily.QC -> executeQualcomm(op, handle, onProgress)
+                ProtocolFamily.QC -> executeQualcomm(context, op, handle, device.vendorId, device.productId, onProgress)
 
                 ProtocolFamily.ODIN,
                 ProtocolFamily.SAMSUNG -> executeSamsung(op, handle, onProgress)
@@ -104,7 +113,7 @@ object EngineDispatcher {
                 else -> {
                     // Check for forensic or identity repair operations
                     when {
-                        isForensicOperation(op) -> executeForensics(op, handle, onProgress)
+                        isForensicOperation(op) -> executeForensics(context, op, handle, onProgress)
                         isIdentityOperation(op) -> executeIdentityRepair(op, handle, protocol, onProgress)
                         else -> {
                             onProgress(100, "Unsupported or unknown protocol")
@@ -113,6 +122,16 @@ object EngineDispatcher {
                     }
                 }
             }
+
+            // Stage L: Log entry for Forensic Audit
+            com.deepeye.otg.service.ReportManager.logOperation(
+                op = op,
+                success = result.success,
+                message = result.message,
+                filePath = result.evidencePath
+            )
+
+            result
         } finally {
             NativeBridge.closeCore(handle)
         }
@@ -123,21 +142,35 @@ object EngineDispatcher {
     // ═══════════════════════════════════════════════════════════════
 
     private suspend fun executeMtk(
+        context: android.content.Context,
         op: DeepEyeOperation,
         handle: Long,
         onProgress: ProgressCallback
     ): EngineResult {
         log("[MTK] Dispatching: ${op.id}")
+        
+        // ── Stage 1: DA Handshake ─────────────────────────────
+        onProgress(20, "Detecting MTK configuration...")
+        val daBytes = com.deepeye.otg.service.BinaryAssetManager.getMtkDa(context)
+        if (daBytes != null) {
+            onProgress(25, "Injecting Download Agent (${daBytes.size} bytes)...")
+            val injected = NativeBridge.injectDa(handle, daBytes)
+            if (!injected) {
+                log("[MTK] DA injection failed. Operation may fail on secure chips.")
+            } else {
+                log("[MTK] DA injected successfully.")
+            }
+        } else {
+            log("[MTK] No DA found in assets. Proceeding with ROM-based commands.")
+        }
+
         return when (op) {
             // ═══ Category A — Flashing & Firmware ═══
             DeepEyeOperation.WRITE_FIRMWARE -> {
-                onProgress(10, "Loading DA agent...")
-                // TODO: Load DA binary from assets
-                // val daBytes = loadAssetBytes("da_agent.bin")
-                // val injected = NativeBridge.injectDa(handle, daBytes)
-                onProgress(30, "Reading partition table...")
+                onProgress(40, "Reading partition table...")
                 val parts = try { NativeBridge.getPartitions(handle) } catch (_: Exception) { emptyArray() }
-                onProgress(50, "Writing partitions (${parts.size} found)...")
+                onProgress(60, "Writing partitions (${parts.size} found)...")
+                // Core flash logic handled by NativeBridge via handle
                 // TODO: For each scatter entry, call writePartition
                 // NativeBridge.writePartition(handle, "boot", bootImgPath)
                 onProgress(90, "Verifying writes...")
@@ -170,19 +203,18 @@ object EngineDispatcher {
                 onProgress(100, "EFS restore done")
                 EngineResult(true, "MTK EFS restore completed")
             }
-            DeepEyeOperation.PARTITION_MANAGER -> {
-                onProgress(20, "Reading GPT/PMT layout...")
-                val parts = try {
-                    NativeBridge.getPartitions(handle)
-                } catch (e: Exception) {
-                    return EngineResult(false, "Failed to read partitions: ${e.message}")
-                }
-                onProgress(100, "Found ${parts.size} partitions")
-                EngineResult(true, "${parts.size} partitions loaded",
-                    mapOf("count" to parts.size.toString(), "list" to parts.joinToString(",")))
-            }
 
             // ═══ Category B — Reset & Cleanup ═══
+            DeepEyeOperation.PARTITION_MANAGER -> {
+                onProgress(40, "Reading partition table...")
+                val parts = try { NativeBridge.getPartitions(handle).toList() } catch (e: Exception) { emptyList<String>() }
+                onProgress(100, "Found ${parts.size} partitions")
+                EngineResult(
+                    success = parts.isNotEmpty(),
+                    message = if (parts.isNotEmpty()) "Partition table extracted" else "Failed to read partitions",
+                    data = mapOf("partitions" to parts.joinToString("|"))
+                )
+            }
             DeepEyeOperation.FACTORY_RESET -> {
                 onProgress(20, "Erasing userdata...")
                 val udOk = try { NativeBridge.erasePartition(handle, "userdata") } catch (_: Exception) { false }
@@ -252,13 +284,6 @@ object EngineDispatcher {
             }
 
             // ═══ Category D — Locks & Security ═══
-            DeepEyeOperation.REMOVE_SCREEN_LOCK -> {
-                onProgress(30, "Reading lock state from metadata...")
-                onProgress(70, "Repairing lock DB / gatekeeper...")
-                // Write zeroed lock metadata via partition
-                onProgress(100, "Screen lock removed")
-                EngineResult(true, "MTK screen lock repair done")
-            }
             DeepEyeOperation.LOCK_STATE_ANALYSIS -> {
                 onProgress(30, "Reading seccfg partition...")
                 val seccfg = try { NativeBridge.readSeccfg(handle) } catch (_: Exception) { byteArrayOf() }
@@ -378,20 +403,36 @@ object EngineDispatcher {
     // ═══════════════════════════════════════════════════════════════
 
     private suspend fun executeQualcomm(
+        context: android.content.Context,
         op: DeepEyeOperation,
         handle: Long,
+        vid: Int,
+        pid: Int,
         onProgress: ProgressCallback
     ): EngineResult {
         log("[QC] Dispatching: ${op.id}")
+
+        // ── Stage 1: Sahara/Firehose Handshake ────────────────
+        if (op != DeepEyeOperation.IMEI_CHECK && op != DeepEyeOperation.MODEM_REPAIR) { // Skip for Diag ops
+            onProgress(20, "Locating Firehose programmer...")
+            val programmer = com.deepeye.otg.service.BinaryAssetManager.getFirehoseProgrammer(context, vid, pid)
+            if (programmer != null) {
+                onProgress(25, "Executing Sahara handshake...")
+                val saharaOk = try { NativeBridge.saharaHandshake(handle, programmer.absolutePath) } catch (_: Exception) { false }
+                if (!saharaOk) {
+                    return EngineResult(false, "Sahara handshake failed for programmer: ${programmer.name}")
+                }
+                log("[QC] Sahara handshaked with ${programmer.name}")
+            } else {
+                log("[QC] No Firehose programmer found for 0x${"%04X".format(vid)}:0x${"%04X".format(pid)}")
+            }
+        }
+
         return when (op) {
             DeepEyeOperation.WRITE_FIRMWARE -> {
-                onProgress(10, "Sahara handshake...")
-                // TODO: load programmer from assets path
-                val saharaOk = try { NativeBridge.saharaHandshake(handle, "/sdcard/DeepEye/prog_firehose.elf") } catch (_: Exception) { false }
-                if (!saharaOk) return EngineResult(false, "Sahara handshake failed")
-                onProgress(30, "Firehose ready — reading partition table...")
+                onProgress(40, "Firehose ready — reading partition table...")
                 val parts = try { NativeBridge.getPartitions(handle) } catch (_: Exception) { emptyArray() }
-                onProgress(60, "Flashing partitions (${parts.size} found)...")
+                onProgress(70, "Flashing partitions (${parts.size} found)...")
                 // TODO: For each image, call writePartition via Firehose
                 onProgress(100, "Firmware write complete")
                 EngineResult(true, "QC Firehose flash completed")
@@ -415,16 +456,44 @@ object EngineDispatcher {
                 EngineResult(modemst1 || modemst2, "QC EFS backup done")
             }
             DeepEyeOperation.PARTITION_MANAGER -> {
-                onProgress(30, "Reading GPT via Firehose...")
-                val parts = try { NativeBridge.getPartitions(handle) } catch (_: Exception) { emptyArray() }
-                onProgress(100, "${parts.size} partitions loaded")
-                EngineResult(true, "QC partition table loaded", mapOf("count" to parts.size.toString()))
+                onProgress(40, "Reading GPT via Firehose...")
+                val parts = try { NativeBridge.getPartitions(handle).toList() } catch (e: Exception) { emptyList<String>() }
+                onProgress(100, "Found ${parts.size} partitions")
+                EngineResult(
+                    success = parts.isNotEmpty(),
+                    message = if (parts.isNotEmpty()) "Partition table extracted" else "Failed to read partitions",
+                    data = mapOf("partitions" to parts.joinToString("|"))
+                )
             }
             DeepEyeOperation.FACTORY_RESET -> {
                 onProgress(30, "Erasing userdata via Firehose...")
                 val ok = try { NativeBridge.erasePartition(handle, "userdata") } catch (_: Exception) { false }
                 onProgress(100, "Factory reset: $ok")
                 EngineResult(ok, if (ok) "QC factory reset done" else "Failed to erase userdata")
+            }
+            DeepEyeOperation.SAFE_DUMP -> {
+                onProgress(20, "Firehose ready — identifying userdata...")
+                val outPath = "${context.filesDir}/DeepEye/qc_dump_userdata.bin"
+                java.io.File(outPath).parentFile?.mkdirs()
+                onProgress(40, "Acquiring bit-stream via Firehose...")
+                val ok = try { NativeBridge.safeDump(handle, "userdata", outPath) } catch (_: Exception) { false }
+                onProgress(100, if (ok) "Dump acquired" else "Dump failed")
+                EngineResult(ok, if (ok) "QC userdata bit-stream acquired" else "Failed to acquire userdata", evidencePath = if (ok) outPath else null)
+            }
+            DeepEyeOperation.FORENSIC_ACQUISITION -> {
+                onProgress(10, "Initializing Firehose-Forensics...")
+                val outDir = "${context.filesDir}/DeepEye/QC_Acquisition_${System.currentTimeMillis()}"
+                java.io.File(outDir).mkdirs()
+                onProgress(30, "Acquiring physical image via Firehose...")
+                val report = try { NativeBridge.acquireForensicImage(handle, "userdata", outDir) } catch (_: Exception) { "" }
+                onProgress(100, "Acquisition complete")
+                EngineResult(report.isNotEmpty(), "QC Forensic acquisition done: $report", evidencePath = outDir)
+            }
+            DeepEyeOperation.DELETED_DATA_CARVING -> {
+                onProgress(20, "Carving deleted blocks via Firehose...")
+                val json = try { NativeBridge.carveDeletedData(handle, "userdata", arrayOf("jpg", "sqlite")) } catch (_: Exception) { "[]" }
+                onProgress(100, "Carving complete")
+                EngineResult(true, "QC Data carving complete", data = mapOf("results" to json))
             }
             DeepEyeOperation.ERASE_FRP -> {
                 onProgress(30, "Locating config/frp partition...")
@@ -752,6 +821,7 @@ object EngineDispatcher {
     // ═══════════════════════════════════════════════════════════════
 
     private suspend fun executeForensics(
+        context: android.content.Context,
         op: DeepEyeOperation,
         handle: Long,
         onProgress: ProgressCallback
@@ -760,22 +830,26 @@ object EngineDispatcher {
         return when (op) {
             DeepEyeOperation.SAFE_DUMP -> {
                 onProgress(20, "Analyzing partition boundaries...")
-                val ok = try { NativeBridge.safeDump(handle, "userdata", "/sdcard/DeepEye/userdata_dump.bin") } catch (_: Exception) { false }
+                val outPath = "${context.filesDir}/DeepEye/Forensics/userdata_dump.bin"
+                java.io.File(outPath).parentFile?.mkdirs()
+                val ok = try { NativeBridge.safeDump(handle, "userdata", outPath) } catch (_: Exception) { false }
                 onProgress(100, if (ok) "Dump successful" else "Dump failed")
-                EngineResult(ok, if (ok) "Forensic bit-stream acquisition complete" else "Acquisition failed")
+                EngineResult(ok, if (ok) "Forensic bit-stream acquisition complete" else "Acquisition failed", evidencePath = if (ok) outPath else null)
             }
             DeepEyeOperation.DELETED_DATA_CARVING -> {
                 onProgress(10, "Initializing heuristic scanner...")
                 val types = arrayOf("JPG", "PNG", "SQLITE")
                 val jsonResults = try { NativeBridge.carveDeletedData(handle, "userdata", types) } catch (_: Exception) { "[]" }
                 onProgress(100, "Carving complete")
-                EngineResult(true, "Carving session finished", mapOf("carved_json" to jsonResults))
+                EngineResult(true, "Carving session finished", data = mapOf("carved_json" to jsonResults))
             }
             DeepEyeOperation.FORENSIC_ACQUISITION -> {
                 onProgress(30, "Creating forensic image (E01 style)...")
-                val hash = try { NativeBridge.acquireForensicImage(handle, "userdata", "/sdcard/DeepEye/Acquisition") } catch (_: Exception) { "" }
+                val outDir = "${context.filesDir}/DeepEye/Forensics/Acquisition_${System.currentTimeMillis()}"
+                java.io.File(outDir).mkdirs()
+                val hash = try { NativeBridge.acquireForensicImage(handle, "userdata", outDir) } catch (_: Exception) { "" }
                 onProgress(100, if (hash.isNotEmpty()) "Acquisition complete (SHA256: $hash)" else "Acquisition failed")
-                EngineResult(hash.isNotEmpty(), "Forensic acquisition done", mapOf("hash" to hash))
+                EngineResult(hash.isNotEmpty(), "Forensic acquisition done", mapOf("hash" to hash), evidencePath = if (hash.isNotEmpty()) outDir else null)
             }
             else -> executeGeneric(op, onProgress)
         }

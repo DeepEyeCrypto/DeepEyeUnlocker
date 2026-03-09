@@ -6,6 +6,19 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2026.20] — 2026-03-09
+
+### ✨ Stitch UI Overhaul & Design DNA Integration
+
+- **Stitch Design DNA**: Completely refactored the design system to use Google Stitch MCP tokens (`StitchTokens.kt`). Implemented a Dark-First, high-assurance security aesthetic with neon accents and premium glassmorphism.
+- **Main Portal Redesign**: Overhauled `MainScreen` with an animated "Security Grid" background, mode-sensitive neon glowing edges, and streamlined layout for Disconnected vs. Active states.
+- **Professional Settings Engine**: Introduced a comprehensive settings architecture in `SettingsScreen.kt`. Includes fine-grained control over ADB signatures, USB debounce timing, and UI performance modes.
+- **Hardware Debug Overlay**: Implemented a real-time `DebugOverlayPanel` providing live USB descriptor snapshots and hardware-level telemetry without leaving the home dashboard.
+- **Premium Operation Feedback**: Redesigned `ExecutingScreen`, `WaitingScreen`, and `CompleteScreen` with pulsing animations, professional terminal logs, and state-aware action clusters.
+- **Edge-to-Edge Synergy**: Enforced consistent transparent system bar styling across all screens for a truly immersive console experience.
+
+---
+
 ## [2026.19] — 2026-03-08
 
 ### ✨ Remote Relay & Cloud Ecosystem (Stage C–J)
@@ -322,6 +335,8 @@ security research on personal/lab devices.
 
 ---
 
+[2026.20]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.20
+[2026.19]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.19
 [2026.3]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.3
 [2026.2]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.2
 [2026.1]: https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/tag/v2026.1

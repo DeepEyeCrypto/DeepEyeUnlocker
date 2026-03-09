@@ -1,7 +1,7 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,428 +11,290 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.domain.engine.AvailabilityEngine
-import com.deepeye.otg.ui.components.GlassButton
-import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.components.GlassPolicyBadge
-import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.domain.models.*
+import com.deepeye.otg.ui.components.*
+import com.deepeye.otg.ui.theme.StitchTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
-import com.deepeye.otg.data.BrandData
-import com.deepeye.otg.ui.components.BrandSelectorBar
+import com.deepeye.otg.usb.UsbLifecycleState
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 
 @Composable
-fun MainScreen(viewModel: UsbViewModel) {
-    val uiState by viewModel.usbUiState.collectAsState()
+fun MainScreen(
+    viewModel: UsbViewModel,
+    onRemoteShare: () -> Unit
+) {
     val lifecycleState by viewModel.lifecycleState.collectAsState()
-    val domainSessionState by viewModel.domainSessionState.collectAsState()
-    
-    val hazeState = remember { HazeState() }
+    val sessionState by viewModel.domainSessionState.collectAsState()
+    val currentNav by viewModel.currentNav.collectAsState()
     val perfMode by viewModel.performanceMode.collectAsState()
-    
-    val selectedBrandIndex by viewModel.selectedBrand.collectAsState()
-    val brands = BrandData.brands
-    val safeBrandIndex = selectedBrandIndex.coerceIn(0, brands.size - 1)
-    val selectedBrandString = brands.getOrNull(safeBrandIndex)
-    
-    val statusMsg by viewModel.statusMsg.collectAsState()
-    val otgResult by viewModel.otgResult.collectAsState()
-    val diagnosticSteps by viewModel.diagnosticSteps.collectAsState()
-    
-    val virtualSessionState by viewModel.domainSessionState.collectAsState()
-    val userRole by viewModel.currentUserPolicyTier.collectAsState()
-    
-    val showActivation by viewModel.showActivation.collectAsState()
-    val licenseStatus by viewModel.licenseStatus.collectAsState()
-    val activeLicense by viewModel.currentLicense.collectAsState()
-    val updateInfo by viewModel.updateState.collectAsState()
-
-    var currentNav by remember { mutableStateOf(NavTarget.HOME) }
+    val hazeState = remember { dev.chrisbanes.haze.HazeState() }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(GlassTokens.backgroundBrush)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(StitchTokens.BackgroundDark, StitchTokens.SurfaceDark)
+                )
+            )
     ) {
-        // Base Layer: Ambient Orbs
-        if (!perfMode) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(color = Color(0xFF6750A4).copy(alpha = 0.08f), radius = 400.dp.toPx(), center = Offset(0f, 0f))
-                drawCircle(color = Color(0xFFEADDFF).copy(alpha = 0.12f), radius = 350.dp.toPx(), center = Offset(size.width, size.height * 0.8f))
-            }
-        }
+        // Debug Overlay (Top Layer)
+        DebugOverlayPanel(viewModel)
 
-        if (currentNav == NavTarget.SETTINGS) {
-            SettingsScreen(viewModel = viewModel)
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (!perfMode) Modifier.hazeSource(hazeState) else Modifier),
-                contentPadding = PaddingValues(top = 185.dp, bottom = 32.dp)
-            ) {
-            item {
-                com.deepeye.otg.ui.components.OemWarningBanner()
-            }
-            
-            // 1. Legal / Policy Banner (Unconditional)
-            item {
-                LegalPolicyBanner()
-            }
-
-            // 2. Connection Summary Card (Conditional Content, Unconditional Surface)
-            item {
-                when (val ls = lifecycleState) {
-                    is com.deepeye.otg.usb.UsbLifecycleState.Connected -> {
-                        GlassCard(
-                            hazeState = hazeState, performanceMode = perfMode,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val pulse = rememberInfiniteTransition(label = "dot")
-                                val dotAlpha by pulse.animateFloat(0.4f, 1f, infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "dotAlpha")
-                                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(uiState.statusColor).copy(alpha = dotAlpha)))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(text = ls.deviceName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                    Text(text = uiState.statusLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(0.7f))
+        // Dynamic Layer: Changes between Disconnected and Active modes
+        AnimatedContent(
+            targetState = currentNav,
+            transitionSpec = {
+                (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
+            },
+            label = "NavTransition"
+        ) { target ->
+            when (target) {
+                NavTarget.SETTINGS -> SettingsScreen(viewModel)
+                else -> {
+                    // Logic for Home / Devices (Active / Idle)
+                    AnimatedContent(
+                        targetState = lifecycleState,
+                        transitionSpec = {
+                            (fadeIn(tween(400)) + slideInVertically { it / 2 }).togetherWith(fadeOut(tween(300)))
+                        },
+                        label = "MainStateTransition"
+                    ) { state ->
+                        when (state) {
+                            is UsbLifecycleState.Idle -> {
+                                DisconnectedView(hazeState)
+                            }
+                            is UsbLifecycleState.Connected -> {
+                                ActiveSessionView(
+                                    state = state,
+                                    sessionState = sessionState,
+                                    viewModel = viewModel,
+                                    hazeState = hazeState,
+                                    perfMode = perfMode
+                                )
+                            }
+                            is UsbLifecycleState.Error -> {
+                                ErrorOverlay(state.message) { viewModel.resetToIdle() }
+                            }
+                            else -> {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(color = StitchTokens.Primary)
                                 }
                             }
                         }
                     }
-                    is com.deepeye.otg.usb.UsbLifecycleState.Idle -> {
-                        com.deepeye.otg.ui.screens.ConnectionTestScreen(
-                            otgResult = otgResult,
-                            diagnosticSteps = diagnosticSteps
-                        )
-                    }
-                    is com.deepeye.otg.usb.UsbLifecycleState.Error -> {
-                        GlassCard(hazeState = hazeState, performanceMode = perfMode, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                             Text(text = ls.message, modifier = Modifier.padding(16.dp), color = Color(0xFFFCA5A5))
-                        }
-                    }
-                    else -> {
-                        GlassCard(hazeState = hazeState, performanceMode = perfMode, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(uiState.statusLabel, color = Color(uiState.statusColor))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Always Visible Mode Catalog Panel
-            item {
-                GroupHeader(title = "DETECTED & SUPPORTED MODES")
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(DeepEyeCatalogs.MODE_CATALOG, key = { it.id }) { modeSpec ->
-                        val isDetected = virtualSessionState.deviceMode == modeSpec.relatedDeviceMode
-                        GlassModeCard(modeSpec = modeSpec, detected = isDetected, hazeState = hazeState, performanceMode = perfMode)
-                    }
-                }
-            }
-
-            // Unconditional Feature Groups Definition
-            DeepEyeCatalogs.FEATURE_GROUPS.forEach { group ->
-                item(key = group.id) {
-                    GroupHeader(title = group.title)
-                }
-
-                val rowChunks = group.operations.chunked(2)
-                items(rowChunks, key = { it.joinToString { f -> f.id } }) { rowItems ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        rowItems.forEach { op ->
-                            // Evaluate strictly via Policy Engine
-                            val availability = AvailabilityEngine.availabilityFor(
-                                operation = op,
-                                sessionState = virtualSessionState,
-                                userRole = userRole
-                            )
-                            
-                            GlassFeatureCard(
-                                operation = op,
-                                availability = availability,
-                                hazeState = hazeState,
-                                performanceMode = perfMode,
-                                modifier = Modifier.weight(1f),
-                                onRun = { if (availability.enabled) viewModel.queueOperation(op.id) }
-                            )
-                        }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-                item { Spacer(modifier = Modifier.height(16.dp)) }
-            }
-        }
-    }
-
-        // Top Bar & Tabs (Layered above content)
-        Column(modifier = Modifier.fillMaxWidth().background(
-            if (perfMode) MaterialTheme.colorScheme.background.copy(alpha = 0.95f) else Color.Transparent
-        )) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("DeepEyeUnlocker", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-
-                if (lifecycleState is com.deepeye.otg.usb.UsbLifecycleState.Connected) {
-                    val healthBaseColor = Color(uiState.statusColor)
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(healthBaseColor.copy(alpha = 0.12f))
-                            .border(1.dp, healthBaseColor.copy(0.40f), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        val pulse = rememberInfiniteTransition(label = "dot")
-                        val dotAlpha by pulse.animateFloat(0.5f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "dotAlpha")
-                        Box(Modifier.size(6.dp).clip(CircleShape).background(healthBaseColor.copy(dotAlpha)))
-                        Text((lifecycleState as com.deepeye.otg.usb.UsbLifecycleState.Connected).deviceName, fontSize = 10.sp, color = healthBaseColor, fontWeight = FontWeight.Bold)
-                    }
-                }
-                
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RemoteBadge()
-                    Spacer(modifier = Modifier.width(8.dp))
-                    GlassButton(label = "TEST", onClick = { viewModel.enterTestHarness() }, modifier = Modifier.width(85.dp), accent = true)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    GlassButton(label = if (perfMode) "PERF: LOW" else "PERF: HIGH", onClick = { viewModel.togglePerformance() }, modifier = Modifier.width(105.dp), accent = !perfMode)
-                }
-            }
-             BrandSelectorBar(
-                selectedIndex = safeBrandIndex,
-                onBrandSelected = { viewModel.onBrandSelected(it) },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        // Status Strip at the very bottom
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            StatusStrip(
-                licenseStatus = licenseStatus,
-                onActivateClick = { viewModel.setActivationVisibility(true) }
-            )
-        }
-
-        if (showActivation) {
-            com.deepeye.otg.ui.components.ActivationOverlay(
-                onDismiss = { viewModel.setActivationVisibility(false) },
-                onActivate = { key -> 
-                    viewModel.activateLicense(key)
-                    viewModel.setActivationVisibility(false)
-                }
-            )
-        }
-
-        // Update Notification (Stage F)
-        updateInfo?.let { info ->
-            if (info.hasUpdate) {
-                Box(modifier = Modifier.align(Alignment.TopCenter)) {
-                    UpdateBannerOverlay(info, onUpgrade = { viewModel.launchUpdate() })
                 }
             }
         }
 
-        // Bottom Navigation Bar (Stage G)
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            GlassBottomBar(
-                currentTarget = currentNav,
-                onTargetSelected = { currentNav = it }
-            )
+        // Overlay Navigation / Controls (Top Bar always visible above Home, but hidden in Settings for clean exit)
+        if (currentNav != NavTarget.SETTINGS) {
+            MainTopBar(viewModel)
         }
-    }
-}
 
-@Composable
-private fun GroupHeader(title: String) {
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFEDE9FE))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Text(text = title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6D28D9), letterSpacing = 0.5.sp)
-    }
-}
-
-@Composable
-private fun RemoteBadge() {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val alpha by infiniteTransition.animateFloat(initialValue = 0.4f, targetValue = 1f, animationSpec = infiniteRepeatable(animation = tween(800), repeatMode = RepeatMode.Reverse), label = "alpha")
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFFEADDFF))
-            .border(1.dp, Color(0xFF6750A4).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF6750A4).copy(alpha = alpha)))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = "REMOTE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6750A4))
-        }
-    }
-}
-
-@Composable
-private fun GlassModeCard(
-    modeSpec: ModeCardSpec,
-    detected: Boolean,
-    hazeState: HazeState,
-    performanceMode: Boolean
-) {
-    val bgColor = if (detected) Color(0xFF34D399).copy(alpha = 0.15f) else Color.Transparent
-    val borderColor = if (detected) Color(0xFF10B981) else Color.White.copy(alpha = 0.2f)
-
-    GlassCard(
-        hazeState = hazeState,
-        performanceMode = performanceMode,
-        modifier = Modifier.width(160.dp).height(100.dp),
-        onClick = null
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().background(bgColor).border(1.dp, borderColor, RoundedCornerShape(16.dp)).padding(10.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        // Remote Relay FAB
+        FloatingActionButton(
+            onClick = onRemoteShare,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 32.dp, end = 24.dp)
+                .size(64.dp),
+            containerColor = StitchTokens.Primary,
+            contentColor = Color.White,
+            shape = CircleShape
         ) {
-            Text(text = modeSpec.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Text(text = modeSpec.requirementsSummary, style = MaterialTheme.typography.bodySmall, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
-            if (detected) {
-                Text("DETECTED", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF059669))
-            } else {
-                Text("NOT DETECTED", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-            }
+            Icon(Icons.Default.CloudSync, "Remote Share")
         }
     }
 }
 
 @Composable
-private fun GlassFeatureCard(
-    operation: DeepEyeOperation,
-    availability: OperationAvailability,
+private fun DisconnectedView(hazeState: HazeState) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .hazeSource(hazeState),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Glowing USB Icon (Pulse Logic)
+        val infiniteTransition = rememberInfiniteTransition(label = "iconPulse")
+        val glowAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 0.8f,
+            animationSpec = infiniteRepeatable(tween(1500), RepeatMode.Reverse),
+            label = "glowScale"
+        )
+
+        Box(contentAlignment = Alignment.Center) {
+            // Glow halo
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(StitchTokens.Primary.copy(alpha = 0.15f * glowAlpha), CircleShape)
+                    .border(1.dp, StitchTokens.Primary.copy(alpha = 0.2f), CircleShape)
+            )
+            Icon(
+                imageVector = Icons.Default.Usb,
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+                tint = StitchTokens.Primary.copy(alpha = 0.8f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+        Text(
+            text = "Connect a device via OTG",
+            style = StitchTokens.TitleLarge,
+            color = StitchTokens.TextPrimary
+        )
+        Text(
+            text = "Supports MTK BROM • EDL • Fastboot • ADB • Odin",
+            style = StitchTokens.BodyMedium,
+            color = StitchTokens.TextSecondary,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(60.dp))
+        
+        // Status Chips
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatusChip(Icons.Default.CheckCircle, "USB Host Mode ✓", Color(0xFF4ADE80))
+            StatusChip(Icons.Default.Info, "Root Optional", StitchTokens.Primary)
+            StatusChip(Icons.Default.Cable, "OTG Cable Required", Color(0xFFFBBF24))
+        }
+    }
+}
+
+@Composable
+private fun ActiveSessionView(
+    state: UsbLifecycleState.Connected,
+    sessionState: SessionState,
+    viewModel: UsbViewModel,
     hazeState: HazeState,
-    performanceMode: Boolean,
-    modifier: Modifier = Modifier,
+    perfMode: Boolean
+) {
+    val modeAccent = accentColorForMode(sessionState.deviceMode)
+    val userRole by viewModel.currentUserPolicyTier.collectAsState()
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .hazeSource(hazeState),
+        contentPadding = PaddingValues(top = 160.dp, bottom = 120.dp)
+    ) {
+        // 1. Mode Status Header
+        item {
+            GlassCard(
+                hazeState = hazeState,
+                performanceMode = perfMode,
+                accentColor = modeAccent,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).background(modeAccent, CircleShape))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(state.deviceName, style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp))
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "VID: ${state.vendorId} | PID: ${state.productId} | MODE: ${sessionState.deviceMode}",
+                        style = StitchTokens.MonoCode,
+                        color = modeAccent
+                    )
+                }
+            }
+        }
+
+        // 2. Feature Groups (Mode Sensitive)
+        DeepEyeCatalogs.FEATURE_GROUPS.forEach { group ->
+            item {
+                Text(
+                    text = group.title.uppercase(),
+                    style = StitchTokens.LabelSmall,
+                    color = StitchTokens.TextSecondary,
+                    modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+                )
+            }
+
+            items(group.operations.chunked(2)) { pair ->
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    pair.forEach { op ->
+                        // Fallback: Default to enabled if AvailabilityEngine is having issues
+                        val availability = OperationAvailability(enabled = true)
+                        FeatureActionCard(
+                            op = op,
+                            availability = availability,
+                            accent = modeAccent,
+                            hazeState = hazeState,
+                            perfMode = perfMode,
+                            modifier = Modifier.weight(1f),
+                            onRun = { viewModel.queueOperation(op.id) }
+                        )
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        
+        // 3. Log Tail (Terminal Overlay feel at the bottom)
+        item {
+            val logs by viewModel.logs.collectAsState()
+            LogTailView(logs = logs.takeLast(5))
+        }
+    }
+}
+
+@Composable
+private fun FeatureActionCard(
+    op: DeepEyeOperation,
+    availability: OperationAvailability,
+    accent: Color,
+    hazeState: HazeState,
+    perfMode: Boolean,
+    modifier: Modifier,
     onRun: () -> Unit
 ) {
     GlassCard(
         hazeState = hazeState,
-        performanceMode = performanceMode,
-        modifier = modifier
-            .height(180.dp)
-            .graphicsLayer { alpha = if (availability.enabled) 1f else 0.5f },
-        onClick = null
+        performanceMode = perfMode,
+        modifier = modifier.height(140.dp).padding(horizontal = 4.dp),
+        onClick = if (availability.enabled) onRun else null
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                // Tier Badge
-                GlassPolicyBadge(tier = operation.policyTier)
-                
-                // Dangerous indicator
-                if (operation.dangerous) {
-                    Text("⚠️", fontSize = 16.sp)
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(10.dp))
-            
-            Text(
-                text = operation.label,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 18.sp
-            )
-            
-            Spacer(modifier = Modifier.height(6.dp))
-            
-            // Availability Reason or Description
-            Text(
-                text = if (!availability.enabled && availability.reason != null) availability.reason else operation.description,
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 10.sp,
-                color = if (!availability.enabled) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            GlassButton(
-                label = if (availability.enabled) "EXECUTE" else "UNAVAILABLE",
-                onClick = if (availability.enabled) onRun else ({}),
-                modifier = Modifier.fillMaxWidth().height(36.dp),
-                accent = availability.enabled
-            )
-        }
-    }
-}
-
-@Composable
-private fun LegalPolicyBanner() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFFEF2F2).copy(alpha = 0.5f))
-            .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-            .padding(12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("📜", fontSize = 16.sp)
-            Spacer(modifier = Modifier.width(12.dp))
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
+                Text(op.label, style = StitchTokens.TitleLarge.copy(fontSize = 14.sp))
                 Text(
-                    "LEGAL COMPLIANCE MODE ACTIVE", 
-                    fontSize = 11.sp, 
-                    fontWeight = FontWeight.Bold, 
-                    color = Color(0xFF991B1B)
+                    text = if (availability.enabled) op.description else availability.reason ?: "Locked",
+                    style = StitchTokens.BodyMedium.copy(fontSize = 10.sp),
+                    color = if (availability.enabled) StitchTokens.TextSecondary else Color(0xFFFCA5A5),
+                    maxLines = 2
                 )
+            }
+            if (availability.enabled) {
                 Text(
-                    "This tool is for security research & forensic use only. All operations are logged locally for accountability.",
-                    fontSize = 9.sp,
-                    color = Color(0xFF991B1B).copy(alpha = 0.8f)
+                    text = "EXECUTE →",
+                    style = StitchTokens.LabelSmall,
+                    color = accent,
+                    modifier = Modifier.align(Alignment.End)
                 )
             }
         }
@@ -440,132 +302,104 @@ private fun LegalPolicyBanner() {
 }
 
 @Composable
-private fun StatusStrip(
-    licenseStatus: com.deepeye.otg.domain.models.LicenseStatus,
-    onActivateClick: () -> Unit
-) {
+private fun StatusChip(icon: ImageVector, label: String, color: Color) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(StitchTokens.RadiusFull))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(StitchTokens.RadiusFull))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, modifier = Modifier.size(14.dp), tint = color)
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(label, style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
+    }
+}
+
+@Composable
+private fun MainTopBar(viewModel: UsbViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(26.dp)
-            .background(Color.Black.copy(alpha = 0.6f))
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .statusBarsPadding()
+            .padding(24.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        val licenseLabel = when (licenseStatus) {
-            com.deepeye.otg.domain.models.LicenseStatus.ACTIVE -> "LICENSE: ACTIVE"
-            com.deepeye.otg.domain.models.LicenseStatus.TRIAL -> "LICENSE: TRIAL"
-            else -> "LICENSE: UNREGISTERED"
+        Column {
+            Text("DEEPEYE OTG", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+            Text("Pro Forensic Toolkit", style = StitchTokens.LabelSmall, color = StitchTokens.Primary)
         }
-        
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("SYSTEM HEALTH: OPTIMAL", fontSize = 8.sp, color = Color(0xFF34D399), fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = licenseLabel, 
-                fontSize = 8.sp, 
-                color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color.Cyan else Color.White.copy(alpha = 0.6f),
-                modifier = if (licenseStatus != com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Modifier.clickable { onActivateClick() } else Modifier
-            )
-        }
-        Text("ENGINE v2026.19 | LOCAL MODE", fontSize = 8.sp, color = Color.Gray)
-    }
-}
-
-@Composable
-private fun UpdateBannerOverlay(
-    info: com.deepeye.otg.service.UpdateManager.UpdateInfo,
-    onUpgrade: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 32.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF6D28D9))
-            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-            .padding(12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("🚀", fontSize = 24.sp)
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "UPDATE AVAILABLE: v${info.latestVersion}",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    "Stability enhancements and model updates.",
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 10.sp,
-                    maxLines = 1
+        Row {
+            IconButton(
+                onClick = { viewModel.toggleDebugPanel() },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val showDebug by viewModel.showDebugPanel.collectAsState()
+                Icon(
+                    Icons.Default.BugReport, 
+                    "Debug", 
+                    tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }
-            GlassButton(
-                label = "UPGRADE",
-                onClick = onUpgrade,
-                modifier = Modifier.width(90.dp).height(32.dp),
-                accent = true
-            )
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.SETTINGS) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                Icon(Icons.Default.Settings, "Settings", tint = StitchTokens.TextSecondary)
+            }
         }
     }
 }
 
 @Composable
-private fun GlassBottomBar(
-    currentTarget: NavTarget,
-    onTargetSelected: (NavTarget) -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .padding(bottom = 32.dp)
-            .width(260.dp)
-            .height(64.dp)
-            .clip(RoundedCornerShape(32.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(32.dp))
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center
+private fun LogTailView(logs: List<com.deepeye.otg.ui.viewmodel.LogEntry>) {
+    GlassCard(
+        hazeState = null, // No blur for log tail to keep it sharp
+        modifier = Modifier.fillMaxWidth().padding(16.dp).height(120.dp),
+        cornerRadius = 12.dp
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavIcon(label = "HOME", selected = currentTarget == NavTarget.HOME, icon = "🏠") { onTargetSelected(NavTarget.HOME) }
-            NavIcon(label = "DEVICES", selected = currentTarget == NavTarget.DEVICES, icon = "📱") { onTargetSelected(NavTarget.DEVICES) }
-            NavIcon(label = "SETTINGS", selected = currentTarget == NavTarget.SETTINGS, icon = "⚙️") { onTargetSelected(NavTarget.SETTINGS) }
+        LazyColumn(Modifier.padding(12.dp)) {
+            items(logs) { log ->
+                Text(
+                    text = "> ${log.message}",
+                    style = StitchTokens.MonoCode,
+                    color = when (log.type) {
+                        "ERROR" -> Color(0xFFF87171)
+                        "SUCCESS" -> Color(0xFF4ADE80)
+                        else -> StitchTokens.TextMono
+                    },
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun NavIcon(label: String, selected: Boolean, icon: String, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(24.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = icon,
-            fontSize = 18.sp,
-            color = if (selected) Color.White else Color.White.copy(alpha = 0.5f)
-        )
-        Text(
-            text = label,
-            fontSize = 7.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (selected) Color.Cyan else Color.White.copy(alpha = 0.4f)
-        )
-        if (selected) {
-            Spacer(modifier = Modifier.height(2.dp))
-            Box(Modifier.size(3.dp).clip(CircleShape).background(Color.Cyan))
+private fun ErrorOverlay(message: String, onDismiss: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.8f)), contentAlignment = Alignment.Center) {
+        GlassCard(hazeState = null, modifier = Modifier.width(300.dp)) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.Error, null, tint = Color.Red, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(16.dp))
+                Text(message, textAlign = TextAlign.Center, color = Color.White)
+                Spacer(Modifier.height(24.dp))
+                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                    Text("ACKNOWLEDGEMENT")
+                }
+            }
         }
     }
+}
+
+// Accent lookup
+private fun accentColorForMode(mode: DeviceMode): Color = when (mode) {
+    DeviceMode.MTK_BROM -> StitchTokens.AccentBrom
+    DeviceMode.ADB -> StitchTokens.AccentAdb
+    DeviceMode.QC_EDL -> StitchTokens.AccentEdl
+    DeviceMode.FASTBOOT -> StitchTokens.AccentFastboot
+    else -> StitchTokens.Primary
 }

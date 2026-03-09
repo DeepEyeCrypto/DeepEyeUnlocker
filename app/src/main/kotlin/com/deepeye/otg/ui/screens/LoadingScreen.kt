@@ -18,7 +18,7 @@ import com.deepeye.otg.ui.components.UsbTypeCIcon
 import com.deepeye.otg.ui.theme.GlassTokens
 
 @Composable
-fun LoadingScreen() {
+fun LoadingScreen(status: String = "Initializing engine...") {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +44,7 @@ fun LoadingScreen() {
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "Initializing engine...",
+            text = status,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium

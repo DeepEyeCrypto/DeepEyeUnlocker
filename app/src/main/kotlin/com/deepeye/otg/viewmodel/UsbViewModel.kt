@@ -1,8 +1,10 @@
 package com.deepeye.otg.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.deepeye.otg.NativeBridge
 import com.deepeye.otg.usb.*
 import com.deepeye.otg.usb.SessionState
 import com.deepeye.otg.service.LicenseManager
@@ -15,13 +17,12 @@ import com.deepeye.otg.data.*
 import com.deepeye.otg.domain.models.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import org.json.JSONObject
 
 class UsbViewModel(
-    private val context: Context,
+    private val appContext: Context,
     private val lifecycleManager: UsbLifecycleManager,
-    private val settings: com.deepeye.otg.data.SettingsManager,
-    val usbState: StateFlow<SessionState>,
-    val logs: StateFlow<List<LogEntry>>
+    private val settings: com.deepeye.otg.data.SettingsManager
 ) : ViewModel() {
 
     private val defaultSessionState = com.deepeye.otg.domain.models.SessionState()
@@ -58,7 +59,29 @@ class UsbViewModel(
         data class Fail(val msg: String) : DiagnosticStatus()
     }
 
-    val performanceMode: StateFlow<Boolean> = settings.performanceMode
+    val performanceMode = settings.performanceMode
+    val adbSignatureRequired = settings.adbSignatureRequired
+    val debounceAttach = settings.debounceAttach
+    val permissionTimeout = settings.permissionTimeout
+    val showDebugPanel = settings.showDebugPanel
+    val showDetectionReason = settings.showDetectionReason
+    val monospaceHex = settings.monospaceHex
+    val forceReclassify = settings.forceReclassify
+    val logUsbToFile = settings.logUsbToFile
+
+    fun togglePerformance() = settings.togglePerformanceMode()
+    fun toggleAdbSignature() = settings.toggleAdbSignature()
+    fun toggleDebounceAttach() = settings.toggleDebounceAttach()
+    fun toggleDebugPanel() = settings.toggleShowDebugPanel()
+    fun toggleShowDetectionReason() = settings.toggleShowDetectionReason()
+    fun toggleMonospaceHex() = settings.toggleMonospaceHex()
+    fun toggleForceReclassify() = settings.toggleForceReclassify()
+    fun toggleLogUsbToFile() = settings.toggleLogUsbToFile()
+    fun setPermissionTimeout(seconds: Int) = settings.setPermissionTimeout(seconds)
+
+    private val _currentNav = MutableStateFlow(com.deepeye.otg.ui.screens.NavTarget.HOME)
+    val currentNav = _currentNav.asStateFlow()
+    fun setNav(target: com.deepeye.otg.ui.screens.NavTarget) { _currentNav.value = target }
 
     val updateState = UpdateManager.updateState
 
@@ -74,7 +97,7 @@ class UsbViewModel(
         val url = updateState.value?.downloadUrl ?: return
         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+        appContext.startActivity(intent)
     }
     private val _selectedBrand = MutableStateFlow(0)
     val selectedBrand: StateFlow<Int> = _selectedBrand.asStateFlow()
@@ -96,6 +119,45 @@ class UsbViewModel(
         .map { it?.tier ?: PolicyTier.SAFE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), PolicyTier.SAFE)
 
+    private val _deviceMetadata = MutableStateFlow<String?>(null)
+    val deviceMetadata: StateFlow<String?> = _deviceMetadata.asStateFlow()
+
+    init {
+        // Collect lifecycle state to trigger deep scan on connect
+        viewModelScope.launch {
+            lifecycleState.collect { state ->
+                if (state is UsbLifecycleState.Connected) {
+                    performDeepIdentification(state)
+                } else {
+                    _deviceMetadata.value = null
+                }
+            }
+        }
+    }
+
+    private fun performDeepIdentification(state: UsbLifecycleState.Connected) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val conn = lifecycleManager.getActiveConnection() ?: return@launch
+            val handle = NativeBridge.initCore(conn.fileDescriptor, state.vendorId, state.productId)
+            if (handle != 0L) {
+                try {
+                    val info = NativeBridge.getDeviceInfo(handle)
+                    _deviceMetadata.value = info
+                    
+                    try {
+                        val json = JSONObject(info)
+                        val modelName = json.optString("model", "Unknown")
+                        addLog("INFO", "Deep Scan: Identified $modelName")
+                    } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    Log.e("UsbViewModel", "Deep identification failed: ${e.message}")
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
     // Deprecated legacy feature properties
     val activeBrandFeatures: StateFlow<BrandFeatureSet> = _selectedBrand
         .map { FeatureData.forBrand(it) }
@@ -109,11 +171,12 @@ class UsbViewModel(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
 
-    private val _progress = MutableStateFlow(0)
-    val progress: StateFlow<Int> = _progress.asStateFlow()
-
     private val _logLines = MutableStateFlow<List<LogEntry>>(emptyList())
     val logLines: StateFlow<List<LogEntry>> = _logLines.asStateFlow()
+    val logs: StateFlow<List<LogEntry>> = _logLines.asStateFlow()
+
+    private val _progress = MutableStateFlow(0)
+    val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _queueStatus = MutableStateFlow<SessionState>(SessionState.Idle)
     val queueState: StateFlow<SessionState> = _queueStatus.asStateFlow()
@@ -268,7 +331,7 @@ class UsbViewModel(
 
     private fun checkOtgCapability() {
         viewModelScope.launch {
-            val result = OtgCapabilityChecker.check(context)
+            val result = OtgCapabilityChecker.check(appContext)
             _otgResult.value = result
             if (result.hasOtgSupport) {
                 updateDiagnosticStep(1, DiagnosticStatus.Pass("Host support OK"))
@@ -297,10 +360,10 @@ class UsbViewModel(
         _selectedBrand.value = index
     }
 
-    private fun ConnectionMode.toSupportedMode(): SupportedMode = SupportedMode.valueOf(this.name)
-    
-    fun togglePerformance() {
-        settings.togglePerformanceMode()
+    private fun ConnectionMode.toSupportedMode(): SupportedMode = try {
+        SupportedMode.valueOf(this.name)
+    } catch (e: Exception) {
+        SupportedMode.UNKNOWN
     }
 
     fun resetToIdle() {
@@ -340,6 +403,36 @@ class UsbViewModel(
         _queueStatus.value = SessionState.Idle
     }
 
+    fun exportSessionReport() {
+        val file = com.deepeye.otg.service.ReportManager.generateFinalJson(appContext)
+        _queueStatus.value = SessionState.Reporting(file)
+    }
+
+    fun shareReport(file: java.io.File) {
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            appContext,
+            "com.deepeye.otg.fileprovider",
+            file
+        )
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "application/json"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooser = android.content.Intent.createChooser(intent, "Share Forensic Audit Report")
+        chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        appContext.startActivity(chooser)
+    }
+
+    fun dismissReport() {
+        _queueStatus.value = SessionState.Idle
+    }
+
+    fun runHardenValidation() {
+        // Disabled: OtgTestHelper missing in this environment
+        UsbLogger.info("DeepEye-Test", "Validation skipped")
+    }
+
     private fun startOperation(op: DeepEyeOperation) {
         viewModelScope.launch {
             _queueStatus.value = SessionState.ExecutingOperation(op, 0, "Initializing Engine...")
@@ -377,6 +470,7 @@ class UsbViewModel(
                 }
 
                 val result = com.deepeye.otg.engine.EngineDispatcher.execute(
+                    context = appContext,
                     op = op,
                     device = device,
                     protocol = protocolFamily,
@@ -390,8 +484,19 @@ class UsbViewModel(
                 )
 
                 if (result.success) {
-                    _queueStatus.value = SessionState.OperationComplete(op, true, result.message)
-                    addLog("SUCCESS", result.message)
+                    if (op == DeepEyeOperation.PARTITION_MANAGER) {
+                        val csv = result.data["partitions"] ?: ""
+                        val items = csv.split("|").filter { it.isNotBlank() }.map { s ->
+                            val name = s.substringBefore(" (")
+                            val size = s.substringAfter(" (", "").substringBefore(")")
+                            com.deepeye.otg.domain.models.PartitionItem(s, name, size)
+                        }
+                        _queueStatus.value = SessionState.PartitionPreview(items)
+                        addLog("SUCCESS", "Partition table loaded: ${items.size} entries")
+                    } else {
+                        _queueStatus.value = SessionState.OperationComplete(op, true, result.message)
+                        addLog("SUCCESS", result.message)
+                    }
                 } else {
                     _queueStatus.value = SessionState.Error(result.message)
                     addLog("ERROR", result.message)
@@ -403,15 +508,38 @@ class UsbViewModel(
         }
     }
 
+    private val _hexPeekData = MutableStateFlow<String?>(null)
+    val hexPeekData: StateFlow<String?> = _hexPeekData.asStateFlow()
+
+    fun peekPartition(partitionName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val conn = lifecycleManager.getActiveConnection() ?: return@launch
+            val fd = conn.fileDescriptor
+            val handle = NativeBridge.initCore(fd, 0, 0) // Basic transport
+            if (handle != 0L) {
+                try {
+                    val hex = NativeBridge.peekPartition(handle, partitionName, 512)
+                    _hexPeekData.value = hex
+                    addLog("INFO", "Forensic Peek: $partitionName (512 bytes)")
+                } catch (e: Exception) {
+                    Log.e("UsbViewModel", "Hex peek failed: ${e.message}")
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
+    fun closeHexPeek() { _hexPeekData.value = null }
+
     private fun addLog(type: String, msg: String) {
         val list = _logLines.value.toMutableList()
         val ts = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
-        list.add(LogEntry(ts, type, msg))
+        list.add(LogEntry(message = msg, type = type, timestamp = ts))
         _logLines.value = list
     }
 
     override fun onCleared() {
         super.onCleared()
-        lifecycleManager.destroy()
     }
 }

@@ -148,13 +148,12 @@ object UsbDeviceDatabase {
             it.vendorId == vendorId && it.productId == productId
         }
 
-    // Conservative fallback — VID-only detection when PID unknown.
-    // MUST NEVER coerce unknown Android-like devices into ADB.
-    // If explicit ADB VID:PID is not matched above, fallback stays non-ADB.
+    // STAGE 5 RULE 1 & 7: No silent fallback to "probably this".
+    // If explicit VID:PID is not matched, we stay UNKNOWN unless VID is a hard-gate.
     fun detectByVendor(vendorId: Int): ConnectionMode = when (vendorId) {
-        0x05C6 -> ConnectionMode.EDL       // Qualcomm
-        0x0E8D -> ConnectionMode.BROM      // MediaTek
-        0x1782 -> ConnectionMode.FDL       // UniSoc / Spreadtrum
-        else   -> ConnectionMode.MTP       // Unknown → assume MTP
+        0x05C6 -> ConnectionMode.UNKNOWN // Qualcomm vendor only is not enough for EDL
+        0x0E8D -> ConnectionMode.UNKNOWN // MTK vendor only is not enough for BROM
+        0x1782 -> ConnectionMode.UNKNOWN // UniSoc vendor only is not enough for FDL
+        else   -> ConnectionMode.UNKNOWN // Unknown -> UNKNOWN
     }
 }
