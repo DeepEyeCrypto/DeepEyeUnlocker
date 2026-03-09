@@ -16,6 +16,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - **Hardware Debug Overlay**: Implemented a real-time `DebugOverlayPanel` providing live USB descriptor snapshots and hardware-level telemetry without leaving the home dashboard.
 - **Premium Operation Feedback**: Redesigned `ExecutingScreen`, `WaitingScreen`, and `CompleteScreen` with pulsing animations, professional terminal logs, and state-aware action clusters.
 - **Edge-to-Edge Synergy**: Enforced consistent transparent system bar styling across all screens for a truly immersive console experience.
+- **Engine Recovery**: Fixed critical syntax/logic errors in `ProtocolDetector.kt` and stabilized `UsbViewModel` execution path.
+- **R8 Build Optimization**: Resolved release-build hangs by fine-tuning ProGuard rules and disabling problematic bytecode optimizations (`-dontoptimize`).
 
 ---
 
