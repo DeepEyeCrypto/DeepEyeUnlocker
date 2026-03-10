@@ -1,16 +1,22 @@
 package com.deepeye.otg.domain.models
 
 enum class ProtocolFamily {
-    UNKNOWN, ADB, FASTBOOT, EDL, BROM, PRELOADER, DIAG, MTP, TESTPOINT, ODIN, RECOVERY, GENERIC,
-    QC, SAMSUNG, UNISOC, MTP_ONLY, MTK,
-    APPLE_DFU, APPLE_RECOVERY, APPLE_NORMAL, CDC_SERIAL
+    UNKNOWN, ADB, FASTBOOT, EDL, BROM, PRELOADER, META,
+    DIAG, MTP, ODIN, RECOVERY, APPLE_DFU, APPLE_RECOVERY,
+    APPLE_NORMAL, FDL, CDC_SERIAL, GENERIC, ROUTER, ARDUINO,
+    QC, SAMSUNG, UNISOC, MTK, TESTPOINT // Keep existing ones for compatibility
 }
 
 enum class DeviceMode {
-    DISCONNECTED, MTP_ONLY, ADB, FASTBOOT, FASTBOOTD, RECOVERY,
-    MTK_BROM, MTK_PRELOADER, MTK_META, QC_EDL, QC_DIAG,
-    SAMSUNG_ODIN, UNISOC_FDL, TESTPOINT, UNKNOWN,
-    APPLE_DFU, APPLE_RECOVERY, APPLE_NORMAL, CDC_SERIAL
+    DISCONNECTED, UNKNOWN,
+    MTP_ONLY, ADB, FASTBOOT, FASTBOOTD, RECOVERY,
+    MTK_BROM, MTK_PRELOADER, MTK_META,
+    QC_EDL, QC_DIAG,
+    SAMSUNG_ODIN,
+    UNISOC_FDL,
+    APPLE_DFU, APPLE_RECOVERY, APPLE_NORMAL,
+    CDC_SERIAL, ROUTER_EDL, ARDUINO,
+    TESTPOINT // Keep existing for compatibility
 }
 
 enum class PolicyTier {
@@ -71,16 +77,19 @@ data class DeepEyeOperation(
         val SAFE_DUMP = DeepEyeOperation("op_safe_dump", "Safe Dump", "Safe Dump", "Bit-stream acquisition", policyTier = PolicyTier.SAFE)
         val DELETED_DATA_CARVING = DeepEyeOperation("op_carve", "Carve Deleted Data", "Carve", "Signature-based carving", policyTier = PolicyTier.POLICY)
         val FORENSIC_ACQUISITION = DeepEyeOperation("op_forensic", "Forensic Acquisition", "Acquire", "Full acquisition with hash", policyTier = PolicyTier.RESTRICTED)
+        val BROWSE_FS = DeepEyeOperation("op_browse_fs", "Browse Decrypted FS", "Browse FS", "Live evidence exploration", policyTier = PolicyTier.POLICY)
+        val RAM_IMAGING = DeepEyeOperation("op_ram_imaging", "RAM Forensics", "RAM Image", "Volatile memory imaging", policyTier = PolicyTier.RESTRICTED)
         
         // Testing Harness
         val TEST_HARNESS = DeepEyeOperation("op_test_harness", "Test Harness", "Test", "Integration testing", policyTier = PolicyTier.SAFE)
 
-        fun values(): Array<DeepEyeOperation> = arrayOf(            WRITE_FIRMWARE, READ_FIRMWARE, BACKUP_EFS, RESTORE_EFS, PARTITION_MANAGER,
+        fun values(): Array<DeepEyeOperation> = arrayOf(
+            WRITE_FIRMWARE, READ_FIRMWARE, BACKUP_EFS, RESTORE_EFS, PARTITION_MANAGER,
             FACTORY_RESET, DEMO_UNLOCK, SAFE_WIPE, ERASE_FRP, MTK_METAMODE_FRP,
             REMOVE_MI_CLOUD, EFRP_MDM_HOOK, REMOVE_SCREEN_LOCK, LOCK_STATE_ANALYSIS,
             UNLOCK_BOOTLOADER, MDM_REMOVE, IMEI_CHECK, IMEI_RESTORE, MODEM_REPAIR,
             NETWORK_UNLOCK, DEEP_DEVICE_INFO, ADB_ENABLE, ONE_CLICK_ROOT, APP_MANAGER,
-            SAFE_DUMP, DELETED_DATA_CARVING, FORENSIC_ACQUISITION, TEST_HARNESS
+            SAFE_DUMP, DELETED_DATA_CARVING, FORENSIC_ACQUISITION, BROWSE_FS, RAM_IMAGING, TEST_HARNESS
         )
     }
 }
@@ -106,6 +115,8 @@ data class SessionState(
     val deviceName: String? = null,
     val selectedBrand: String? = null,
     val selectedModel: String? = null,
+    val chipset: String? = null,
+    val secureBoot: String? = null,
     val protocolFamily: ProtocolFamily = ProtocolFamily.UNKNOWN,
     val deviceMode: DeviceMode = DeviceMode.DISCONNECTED,
     val statusMessage: String = "Waiting for device...",

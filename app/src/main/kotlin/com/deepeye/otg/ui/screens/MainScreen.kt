@@ -41,6 +41,8 @@ fun MainScreen(
     onRemoteShare: () -> Unit
 ) {
     val lifecycleState by viewModel.lifecycleState.collectAsState()
+    val sessions by viewModel.sessions.collectAsState()
+    val selectedKey by viewModel.selectedDeviceKey.collectAsState()
     val sessionState by viewModel.domainSessionState.collectAsState()
     val currentNav by viewModel.currentNav.collectAsState()
     val perfMode by viewModel.performanceMode.collectAsState()
@@ -55,82 +57,91 @@ fun MainScreen(
                 )
             )
     ) {
-        // Debug Overlay (Top Layer)
-        DebugOverlayPanel(viewModel)
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Multi-Device Rail (Stage 200.1)
+            if (sessions.size > 1) {
+                MultiDeviceRail(
+                    sessions = sessions,
+                    selectedKey = selectedKey,
+                    onSelect = { viewModel.selectDevice(it) }
+                )
+            }
 
-        // Dynamic Layer: Changes between Disconnected and Active modes
-        AnimatedContent(
-            targetState = currentNav,
-            transitionSpec = {
-                (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
-            },
-            label = "NavTransition"
-        ) { target ->
-            when (target) {
-                NavTarget.SETTINGS -> SettingsScreen(viewModel)
-                else -> {
-                    // Logic for Home / Devices (Active / Idle)
-                    AnimatedContent(
-                        targetState = lifecycleState,
-                        transitionSpec = {
-                            (fadeIn(tween(400)) + slideInVertically { it / 2 }).togetherWith(fadeOut(tween(300)))
-                        },
-                        label = "MainStateTransition"
-                    ) { state ->
-                        when (state) {
-                            is UsbLifecycleState.Idle -> {
-                                DisconnectedView(hazeState)
-                            }
-                            is UsbLifecycleState.DeviceDetected -> {
-                                // Waiting for permission / connection – show a focused waiting overlay.
-                                WaitingScreen(op = sessionState.queuedOperation) {
-                                    viewModel.resetToIdle()
+            // Debug Overlay (Top Layer)
+            DebugOverlayPanel(viewModel)
+
+            // Dynamic Layer: Changes between Disconnected and Active modes
+            AnimatedContent(
+                targetState = currentNav,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
+                },
+                label = "NavTransition"
+            ) { target ->
+                when (target) {
+                    NavTarget.SETTINGS -> SettingsScreen(viewModel)
+                    NavTarget.DASHBOARD -> ForensicDashboardScreen(viewModel)
+                    NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
+                    NavTarget.IMEI_REPAIR -> {
+                        val aiAnalysis by viewModel.aiAnalysis.collectAsState()
+                        val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
+                        val ci1 by viewModel.currentImei1.collectAsState()
+                        val ci2 by viewModel.currentImei2.collectAsState()
+                        
+                        ImeiRepairScreen(
+                            onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
+                            onRead = { viewModel.readImei() },
+                            currentImei1 = ci1,
+                            currentImei2 = ci2,
+                            hazeState = hazeState,
+                            perfMode = perfMode,
+                            aiAnalysis = aiAnalysis,
+                            isAiProcessing = aiIsProcessing
+                        )
+                    }
+                    else -> {
+                        // Logic for Home / Devices (Active / Idle)
+                        val effectiveState = if (selectedKey != null) sessions[selectedKey] ?: lifecycleState else lifecycleState
+                        
+                        AnimatedContent(
+                            targetState = effectiveState,
+                            transitionSpec = {
+                                (fadeIn(tween(400)) + slideInVertically { it / 2 }).togetherWith(fadeOut(tween(300)))
+                            },
+                            label = "MainStateTransition"
+                        ) { state ->
+                            when (state) {
+                                is UsbLifecycleState.Idle -> DisconnectedView(hazeState)
+                                is UsbLifecycleState.DeviceDetected -> {
+                                    WaitingScreen(op = sessionState.queuedOperation) { viewModel.resetToIdle() }
                                 }
-                            }
-                            is UsbLifecycleState.PermissionPending -> {
-                                WaitingScreen(op = sessionState.queuedOperation) {
-                                    viewModel.resetToIdle()
+                                is UsbLifecycleState.PermissionPending -> {
+                                    WaitingScreen(op = sessionState.queuedOperation) { viewModel.resetToIdle() }
                                 }
-                            }
-                            is UsbLifecycleState.NoOtgSupport -> {
-                                // Dedicated OTG unsupported UI
-                                ConnectionTestScreen(
-                                    otgResult = null,
-                                    diagnosticSteps = emptyMap()
-                                )
-                            }
-                            is UsbLifecycleState.Connected -> {
-                                // Special handling for MTP-only connections
-                                if (sessionState.deviceMode == DeviceMode.MTP_ONLY) {
-                                    MtpOnlyScreen(onBack = { viewModel.resetToIdle() })
-                                } else {
-                                    ActiveSessionView(
-                                        state = state,
-                                        sessionState = sessionState,
-                                        viewModel = viewModel,
-                                        hazeState = hazeState,
-                                        perfMode = perfMode
-                                    )
+                                is UsbLifecycleState.Connected -> {
+                                    if (sessionState.deviceMode == DeviceMode.MTP_ONLY) {
+                                        MtpOnlyScreen(onBack = { viewModel.resetToIdle() })
+                                    } else {
+                                        ActiveSessionView(
+                                            state = state,
+                                            sessionState = sessionState,
+                                            viewModel = viewModel,
+                                            hazeState = hazeState,
+                                            perfMode = perfMode
+                                        )
+                                    }
                                 }
-                            }
-                            is UsbLifecycleState.Degraded -> {
-                                ErrorScreen(
-                                    message = "Connection degraded: missed ${state.missedPings}/${state.maxPings} health checks.",
-                                    onRetry = { viewModel.resetToIdle() }
-                                )
-                            }
-                            is UsbLifecycleState.Dead -> {
-                                ErrorScreen(
-                                    message = "Connection lost: ${state.reason}",
-                                    onRetry = { viewModel.resetToIdle() }
-                                )
-                            }
-                            is UsbLifecycleState.Error -> {
-                                ErrorOverlay(state.message) { viewModel.resetToIdle() }
-                            }
-                            else -> {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(color = StitchTokens.Primary)
+                                is UsbLifecycleState.Dead -> {
+                                    ErrorScreen(message = "Connection lost: ${state.reason}", onRetry = { viewModel.resetToIdle() })
+                                }
+                                is UsbLifecycleState.Error -> {
+                                    ErrorOverlay(state.message) { viewModel.resetToIdle() }
+                                }
+                                else -> {
+                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(color = StitchTokens.Primary)
+                                    }
                                 }
                             }
                         }
@@ -156,6 +167,62 @@ fun MainScreen(
             shape = CircleShape
         ) {
             Icon(Icons.Default.CloudSync, "Remote Share")
+        }
+    }
+}
+
+@Composable
+fun MultiDeviceRail(
+    sessions: Map<String, UsbLifecycleState>,
+    selectedKey: String?,
+    onSelect: (String) -> Unit
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(StitchTokens.SurfaceDark.copy(alpha = 0.5f))
+            .padding(vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(sessions.toList()) { (key, state) ->
+            val isSelected = key == selectedKey
+            val deviceName = when (state) {
+                is UsbLifecycleState.Connected -> state.deviceName
+                is UsbLifecycleState.DeviceDetected -> "Detecting..."
+                else -> "Unknown"
+            }
+
+            Surface(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onSelect(key) }
+                    .border(
+                        width = 1.dp,
+                        color = if (isSelected) StitchTokens.Primary else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                color = if (isSelected) StitchTokens.Primary.copy(alpha = 0.1f) else StitchTokens.GlassSurface,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Usb,
+                        contentDescription = null,
+                        tint = if (isSelected) StitchTokens.Primary else StitchTokens.TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = deviceName,
+                        style = StitchTokens.LabelSmall,
+                        color = if (isSelected) StitchTokens.TextPrimary else StitchTokens.TextSecondary
+                    )
+                }
+            }
         }
     }
 }
@@ -228,11 +295,56 @@ private fun ActiveSessionView(
 ) {
     val modeAccent = accentColorForMode(sessionState.deviceMode)
     val userRole by viewModel.currentUserPolicyTier.collectAsState()
+    val isSplitActive by viewModel.splitViewActive.collectAsState()
 
+    if (isSplitActive) {
+        Column(Modifier.fillMaxSize()) {
+            // Top Window: Operation Catalog
+            Box(Modifier.weight(0.55f).hazeSource(hazeState)) {
+                OperationCatalog(
+                    state = state,
+                    sessionState = sessionState,
+                    viewModel = viewModel,
+                    hazeState = hazeState,
+                    perfMode = perfMode,
+                    modeAccent = modeAccent,
+                    userRole = userRole
+                )
+            }
+            
+            // Divider
+            Box(Modifier.fillMaxWidth().height(1.dp).background(modeAccent.copy(alpha = 0.2f)))
+            
+            // Bottom Window: Forensic Intel & Logs
+            Box(Modifier.weight(0.45f).background(StitchTokens.BackgroundDark)) {
+                ForensicWorkspace(viewModel, modeAccent)
+            }
+        }
+    } else {
+        OperationCatalog(
+            state = state,
+            sessionState = sessionState,
+            viewModel = viewModel,
+            hazeState = hazeState,
+            perfMode = perfMode,
+            modeAccent = modeAccent,
+            userRole = userRole
+        )
+    }
+}
+
+@Composable
+private fun OperationCatalog(
+    state: UsbLifecycleState.Connected,
+    sessionState: SessionState,
+    viewModel: UsbViewModel,
+    hazeState: HazeState,
+    perfMode: Boolean,
+    modeAccent: Color,
+    userRole: PolicyTier
+) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .hazeSource(hazeState),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 160.dp, bottom = 120.dp)
     ) {
         // 1. Mode Status Header
@@ -292,11 +404,56 @@ private fun ActiveSessionView(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
+    val logs by viewModel.logs.collectAsState()
+    val aiAnalysis by viewModel.aiAnalysis.collectAsState()
+    
+    Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("FORENSIC WORKSPACE", style = StitchTokens.LabelSmall, color = accent)
+            Text(
+                text = "EXPORT REPORT",
+                style = StitchTokens.LabelSmall,
+                color = StitchTokens.Primary,
+                modifier = Modifier.clickable { viewModel.generateForensicPdf() }
+            )
+        }
+        Spacer(Modifier.height(12.dp))
         
-        // 3. Log Tail (Terminal Overlay feel at the bottom)
-        item {
-            val logs by viewModel.logs.collectAsState()
-            LogTailView(logs = logs.takeLast(5))
+        // AI Intel Snippet
+        GlassCard(hazeState = null, modifier = Modifier.fillMaxWidth().height(80.dp), accentColor = accent.copy(0.2f)) {
+            Column(Modifier.padding(8.dp)) {
+                Text("AI INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = accent)
+                Text(
+                    text = aiAnalysis.ifEmpty { "Waiting for session telemetry..." },
+                    style = StitchTokens.BodyMedium,
+                    color = Color.LightGray,
+                    maxLines = 3
+                )
+            }
+        }
+        
+        Spacer(Modifier.height(12.dp))
+        
+        // Terminal Logs
+        Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(0.3f))) {
+            LazyColumn(Modifier.fillMaxSize().padding(8.dp)) {
+                items(logs) { log ->
+                    Text(
+                        text = "> ${log.message}",
+                        style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
+                        color = when (log.type) {
+                            "ERROR" -> Color(0xFFF87171)
+                            "SUCCESS" -> Color(0xFF4ADE80)
+                            else -> StitchTokens.TextMono
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -369,7 +526,19 @@ private fun MainTopBar(viewModel: UsbViewModel) {
             Text("DEEPEYE OTG", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
             Text("Pro Forensic Toolkit", style = StitchTokens.LabelSmall, color = StitchTokens.Primary)
         }
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.DASHBOARD) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Dashboard,
+                    contentDescription = "Dashboard",
+                    tint = if (currentNav == NavTarget.DASHBOARD) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
             IconButton(
                 onClick = { viewModel.toggleDebugPanel() },
                 modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
@@ -379,6 +548,18 @@ private fun MainTopBar(viewModel: UsbViewModel) {
                     Icons.Default.BugReport, 
                     "Debug", 
                     tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.toggleSplitView() },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val splitActive by viewModel.splitViewActive.collectAsState()
+                Icon(
+                    imageVector = if (splitActive) Icons.Default.VerticalSplit else Icons.Default.ViewAgenda,
+                    contentDescription = "Split View",
+                    tint = if (splitActive) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }
             Spacer(Modifier.width(8.dp))

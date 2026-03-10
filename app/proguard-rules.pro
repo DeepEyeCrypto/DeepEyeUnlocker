@@ -3,7 +3,11 @@
 
 # ── JNI Bridge — CRITICAL: keep all native methods ──────────
 -keep class com.deepeye.otg.NativeBridge { *; }
+-keep class com.deepeye.otg.repair.NvBridge { *; }
 -keepclassmembers class com.deepeye.otg.NativeBridge {
+    native <methods>;
+}
+-keepclassmembers class com.deepeye.otg.repair.NvBridge {
     native <methods>;
 }
 
@@ -14,7 +18,9 @@
 
 # ── USB + Protocol core ─────────────────────────────────────
 -keep class com.deepeye.otg.usb.** { *; }
+-keep class com.deepeye.otg.protocol.** { *; }
 -keep class com.deepeye.otg.engine.** { *; }
+-keep class com.deepeye.otg.repair.** { *; }
 
 # ── Domain Models — CRITICAL for state-driven UI ──────────
 -keep class com.deepeye.otg.domain.models.** { *; }

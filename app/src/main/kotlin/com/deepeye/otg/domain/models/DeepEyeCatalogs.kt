@@ -54,6 +54,12 @@ object DeepEyeCatalogs {
             DeepEyeOperation("op_diag_enable", "Diag / ADB Enabler", "Enable Diag/ADB", "Attempt auto-enable of debugging ports via exploits", policyTier = PolicyTier.POLICY),
             DeepEyeOperation("op_root_flow", "Root / Patch Workflow", "Root Manager", "Patch boot images for Magisk/KernelSU", policyTier = PolicyTier.POLICY),
             DeepEyeOperation("op_app_mgr", "ADB App Manager", "App Manager", "Uninstall bloatware over ADB connections", policyTier = PolicyTier.SAFE, requiredModes = setOf(DeviceMode.ADB))
+        )),
+        FeatureGroup("g7", "Forensics & Data Extraction", listOf(
+            DeepEyeOperation("op_browse_fs", "Browse Decrypted Files", "Browse FS", "Live exploration of userdata partitions", policyTier = PolicyTier.POLICY),
+            DeepEyeOperation("op_safe_dump", "Safe Dump (Bit-stream)", "Safe Dump", "Physical acquisition with hash verification", policyTier = PolicyTier.SAFE),
+            DeepEyeOperation("op_carve", "Carve Deleted Data", "Carve Data", "Recover deleted files via signature analysis", policyTier = PolicyTier.RESTRICTED),
+            DeepEyeOperation("op_ram_imaging", "RAM Forensics (Volatile)", "RAM Image", "Capture raw device memory for malware analysis", policyTier = PolicyTier.RESTRICTED)
         ))
     )
 }

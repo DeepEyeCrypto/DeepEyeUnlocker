@@ -1,8 +1,27 @@
-# Changelog
+## [2026.25] — 2026-03-10
 
-All notable changes to DeepEye Unlocker are documented here.
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-Versioning: [Semantic Versioning](https://semver.org/)
+### ✨ Multi-Device Forensic Laboratory & Fleet Management
+
+- **Forensic Multi-Device Dashboard (Stage 500.1)**: Introduced a professional cockpit grid for managing multiple concurrent forensic sessions. Includes real-time per-node telemetry for SoC, mode, and connection health.
+- **AI-Driven Global Prioritization**: Integrated `ForensicAiAssistant` to analyze the entire connected fleet. The engine automatically identifies chipset clusters and prioritizes forensic targets based on forensic value and exploitability.
+- **Batch Forensic Operations (Stage 200.2)**: Implemented collective command execution. Technicians can now perform "Identify All", "Sahara Handshake", and "Mass Extraction" across the entire fleet with atomic precision.
+- **Safety-First Batch Guard**: Added Material3 confirmation dialogs for all batch actions to prevent accidental mass triggers on investigative evidence.
+- **Forensic File System Explorer (Stage 50.2)**: Launched a native browser for decrypted userdata partitions. Supports directory traversal, file metadata inspection, and integrated real-time MTK decryption path.
+- **Mass Evidence Extraction (Stage 50.3)**: New high-speed parallel extraction engine. Allows recursive folder pulling from all selected nodes in the cockpit directly to centralized forensic storage.
+- **Fleet-Wide Live Expert Sharing (Stage 20.2)**: Upgraded the DeepEye Tunnel to support full fleet broadcasting. Remote experts can now synchronize with the entire multiple-device dashboard for collaborative joint analysis.
+- **Consolidated Fleet Audit (Stage 100.1)**: Enhanced `ReportManager` to generate a unified, multi-node forensic report (JSON/PDF), including hardware metadata and atomic operation logs for every device in the lab.
+
+---
+
+## [2026.19-RC] — 2026-03-10
+
+### ✨ Multi-Window Forensic Workspace & Official Reporting
+
+- **Forensic Workspace (Stage 50.1)**: Introduced a split-screen "Forensic Workspace" mode. Allows technicians to view live AI Intel and terminal logs simultaneously alongside the operation catalog for true real-time feedback.
+- **Official PDF Documentation (Stage 100.2)**: Implemented a native PDF report generator. Every investigative session can now be exported as a professional, forensically-sound PDF audit trail including Evidence Hashes (SHA256).
+- **High-Assurance Identity Repair (Stage 11.2)**: Finalized the "Magic Repair" commit logic. Enforced a mandatory bit-level `SafeDump` of NVRAM partitions before any restoration sequence to ensure zero-risk research.
+- **Secure Enclave Stubs (Stage 30.1)**: Integrated low-level JNI hooks for TEE (Trusted Execution Environment) and RPMB interaction, enabling deep security analysis of Keystore blobs.
+- **Universal JNI Hardening**: Updated ProGuard rules to protect native boundaries (MTK/Qualcomm/Apple) and enforced Java 17 toolchain stability.
 
 ---
 

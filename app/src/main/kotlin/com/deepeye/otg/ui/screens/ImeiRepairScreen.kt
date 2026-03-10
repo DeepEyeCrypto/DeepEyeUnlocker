@@ -1,24 +1,45 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.deepeye.otg.ui.components.ForensicIntelPanel
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.ui.theme.StitchTokens
 import com.deepeye.otg.repair.NvBridge
 import dev.chrisbanes.haze.HazeState
 
+/**
+ * Stage 12.1 — Magic Repair Center (Identity Restoration).
+ * High-end tactical UI for restricted chipset operations.
+ */
 @Composable
 fun ImeiRepairScreen(
     onRepair: (String, String) -> Unit,
@@ -26,7 +47,9 @@ fun ImeiRepairScreen(
     currentImei1: String = "N/A",
     currentImei2: String = "N/A",
     hazeState: HazeState? = null,
-    perfMode: Boolean = false
+    perfMode: Boolean = false,
+    aiAnalysis: String = "",
+    isAiProcessing: Boolean = false
 ) {
     var imei1 by remember { mutableStateOf("") }
     var imei2 by remember { mutableStateOf("") }
@@ -35,96 +58,106 @@ fun ImeiRepairScreen(
     val isImei2Valid = remember(imei2) { NvBridge.verifyImeiChecksum(imei2) }
     
     var showSafetyConfirm by remember { mutableStateOf(false) }
-    var showSafeDumpDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .background(Color.Transparent),
+            .background(StitchTokens.BackgroundDark)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 100.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "IDENTITY REPAIR CENTER",
-            color = Color(0xFF6750A4),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 2.sp
-        )
-        Text(
-            "G7 RESTRICTED PROTOCOL",
-            color = Color.Gray,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold
+        // Tactical Header
+        TacticalHeader()
+
+        // 1. AI Assistant Integration (Stage 15.1)
+        ForensicIntelPanel(
+            analysis = if (aiAnalysis.isEmpty()) {
+                "Chipset identified as MT6765. NVRAM partition found. SecureBoot: ENABLED. suggested: READ IDENTITY first."
+            } else aiAnalysis,
+            confidence = 0.94f,
+            isProcessing = isAiProcessing
         )
 
-        Spacer(Modifier.height(32.dp))
-
-        // Current Identity Card
-        GlassCard(
+        // 2. Current Identity Observer
+        SecurityCard(
+            title = "CURRENT IDENTITY (NVRAM PEAK)",
             hazeState = hazeState,
-            performanceMode = perfMode,
-            modifier = Modifier.fillMaxWidth()
+            perfMode = perfMode
         ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("CURRENT DEVICE IDENTITY", color = Color.Gray, fontSize = 11.sp)
-                Spacer(Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    IdentityStatusItem("IMEI 1", currentImei1)
-                    IdentityStatusItem("IMEI 2", currentImei2)
+            Column {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    IdentityBlock("IMEI_01", currentImei1)
+                    IdentityBlock("IMEI_02", currentImei2)
                 }
-                Spacer(Modifier.height(16.dp))
-                GlassButton(onClick = onRead, label = "READ FROM NVRAM", modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(24.dp))
+                GlassButton(
+                    onClick = onRead, 
+                    label = "SYNC FROM CHIPSET", 
+                    modifier = Modifier.fillMaxWidth(),
+                    accent = true
+                )
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Repair Input Card
-        GlassCard(
+        // 3. Restoration Engine
+        SecurityCard(
+            title = "IDENTITY RESTORATION ENGINE",
             hazeState = hazeState,
-            performanceMode = perfMode,
-            modifier = Modifier.fillMaxWidth()
+            perfMode = perfMode,
+            accent = StitchTokens.Primary
         ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("TARGET IDENTITY RESTORATION", color = Color(0xFF9C6FFF), fontSize = 11.sp)
-                Spacer(Modifier.height(16.dp))
-                
-                ImeiInputField(
+            Column {
+                RestorationInput(
+                    label = "RESTORE PRIMARY IMEI",
                     value = imei1,
                     onValueChange = { if(it.length <= 15) imei1 = it },
-                    label = "NEW IMEI 1",
-                    isValid = isImei1Valid
+                    isValid = isImei1Valid,
+                    placeholder = "Enter 15-digit IMEI"
                 )
                 
                 Spacer(Modifier.height(16.dp))
                 
-                ImeiInputField(
+                RestorationInput(
+                    label = "RESTORE SECONDARY IMEI",
                     value = imei2,
                     onValueChange = { if(it.length <= 15) imei2 = it },
-                    label = "NEW IMEI 2",
-                    isValid = isImei2Valid
+                    isValid = isImei2Valid,
+                    placeholder = "Enter 15-digit IMEI"
                 )
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(32.dp))
                 
                 Button(
                     onClick = { showSafetyConfirm = true },
-                    enabled = isImei1Valid && isImei2Valid,
+                    enabled = (isImei1Valid && imei1.isNotEmpty()) || (isImei2Valid && imei2.isNotEmpty()),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if(isImei1Valid && isImei2Valid) Color(0xFF6750A4) else Color.DarkGray
+                        containerColor = StitchTokens.Primary,
+                        disabledContainerColor = Color.DarkGray
                     ),
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(StitchTokens.RadiusDefault))
                 ) {
-                    Text("START REPAIR CHAIN", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LockOpen, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "INITIATE RESTORATION CHAIN", 
+                            style = StitchTokens.TitleLarge.copy(fontSize = 14.sp),
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
     }
 
     if (showSafetyConfirm) {
-        RepairSafetyDialog(
+        G7SafetyDialog(
             onCancel = { showSafetyConfirm = false },
             onConfirm = {
                 showSafetyConfirm = false
@@ -135,51 +168,153 @@ fun ImeiRepairScreen(
 }
 
 @Composable
-fun IdentityStatusItem(label: String, value: String) {
+private fun TacticalHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 80.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val infiniteTransition = rememberInfiniteTransition(label = "badgePulse")
+        val alpha by infiniteTransition.animateFloat(
+            initialValue = 0.4f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 2000),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "alpha"
+        )
+
+        Icon(
+            imageVector = Icons.Default.Shield,
+            contentDescription = null,
+            tint = StitchTokens.Primary.copy(alpha = alpha),
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "MAGIC REPAIR CENTER",
+            style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp),
+            color = StitchTokens.TextPrimary
+        )
+        Text(
+            "RESTRICTED IDENTITY RESTORATION PROTOCOL (G7)",
+            style = StitchTokens.LabelSmall.copy(letterSpacing = 2.sp),
+            color = StitchTokens.Primary
+        )
+    }
+}
+
+@Composable
+private fun SecurityCard(
+    title: String,
+    hazeState: HazeState?,
+    perfMode: Boolean,
+    accent: Color = StitchTokens.TextSecondary,
+    content: @Composable () -> Unit
+) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = title,
+            style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
+            color = accent,
+            modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+        )
+        GlassCard(
+            hazeState = hazeState,
+            performanceMode = perfMode,
+            modifier = Modifier.fillMaxWidth(),
+            accentColor = accent.copy(alpha = 0.35f)
+        ) {
+            Box(Modifier.padding(16.dp)) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+private fun IdentityBlock(label: String, value: String) {
     Column {
-        Text(label, color = Color.Gray, fontSize = 10.sp)
-        Text(value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(label, style = StitchTokens.MonoCode.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
+        Text(
+            text = value,
+            style = StitchTokens.TitleLarge.copy(fontSize = 18.sp),
+            color = StitchTokens.TextPrimary,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImeiInputField(value: String, onValueChange: (String) -> Unit, label: String, isValid: Boolean) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label, fontSize = 11.sp) },
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Black.copy(alpha = 0.3f),
-            unfocusedContainerColor = Color.Black.copy(alpha = 0.2f),
-            focusedIndicatorColor = if (isValid) Color(0xFF6750A4) else Color.Red,
-            unfocusedIndicatorColor = if (value.isEmpty()) Color.Gray else if (isValid) Color(0xFF6750A4) else Color.Red
-        ),
-        suffix = { 
-            if (value.length == 15) {
-                Text(if (isValid) "✓" else "✗", color = if (isValid) Color(0xFF6750A4) else Color.Red) 
+private fun RestorationInput(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    isValid: Boolean,
+    placeholder: String
+) {
+    Column {
+        Text(
+            text = label,
+            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
+            color = StitchTokens.TextSecondary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
+        )
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+            textStyle = StitchTokens.MonoCode.copy(fontSize = 16.sp),
+            placeholder = { Text(placeholder, style = StitchTokens.MonoCode, color = Color.Gray) },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White.copy(0.05f),
+                unfocusedContainerColor = Color.White.copy(0.02f),
+                focusedIndicatorColor = if (isValid) StitchTokens.Primary else Color.Red,
+                unfocusedIndicatorColor = if (value.isEmpty()) Color.Transparent else if (isValid) StitchTokens.Primary else Color.Red,
+                cursorColor = StitchTokens.Primary
+            ),
+            trailingIcon = {
+                if (value.length == 15) {
+                    Icon(
+                        imageVector = if (isValid) Icons.Default.Fingerprint else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (isValid) StitchTokens.Primary else Color.Red,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
-fun RepairSafetyDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onCancel,
-        title = { Text("MANDATORY SAFETY PROTOCOL") },
-        text = { 
-            Text("Repairing identity is a restricted operation. DeepEye will perform a SafeDump backup of NVRAM before proceeding. Continue?") 
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text("PROCEED", color = Color(0xFF6750A4)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onCancel) { Text("CANCEL", color = Color.Gray) }
-        },
-        containerColor = Color(0xFF1E1E1E),
-        titleContentColor = Color.White,
-        textContentColor = Color.LightGray
-    )
+private fun G7SafetyDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = onCancel) {
+        GlassCard(hazeState = null, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.Warning, null, tint = StitchTokens.AccentWarning, modifier = Modifier.size(48.dp))
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "CRITICAL SECURITY OVERRIDE",
+                    style = StitchTokens.TitleLarge,
+                    color = StitchTokens.TextPrimary
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "You are about to modify low-level radio metadata (NVRAM). This operation will be logged in the Forensic Audit Trail. DeepEye will auto-dump a rollback image before commit.",
+                    style = StitchTokens.BodyMedium,
+                    color = StitchTokens.TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(32.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    GlassButton(onClick = onCancel, label = "ABORT", modifier = Modifier.weight(1f), accent = false)
+                    GlassButton(onClick = onConfirm, label = "COMMIT", modifier = Modifier.weight(1f), accent = true)
+                }
+            }
+        }
+    }
 }

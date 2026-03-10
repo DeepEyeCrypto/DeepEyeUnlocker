@@ -26,9 +26,26 @@ class UsbViewModel(
 ) : ViewModel() {
 
     private val defaultSessionState = com.deepeye.otg.domain.models.SessionState()
+    private val adbManager = AdbManager(lifecycleManager)
+    private val hardwareManager = HardwareManager(appContext, lifecycleManager)
+    private val forensicEngine = com.deepeye.otg.engine.ForensicEngine(appContext)
+    private val aiAssistant = com.deepeye.otg.engine.ForensicAiAssistant()
+    private val massExtractor = com.deepeye.otg.service.MassExtractor(appContext, lifecycleManager)
 
     private val _statusMsg = MutableStateFlow("Disconnected")
     val statusMsg: StateFlow<String> = _statusMsg.asStateFlow()
+
+    val aiAnalysis = aiAssistant.analysis
+    val aiIsProcessing = aiAssistant.isProcessing
+    val aiConfidence = aiAssistant.confidence
+
+    private val _forensicStatus = forensicEngine.status
+    val forensicStatus = _forensicStatus
+    
+    private val _forensicProgress = forensicEngine.progress
+    val forensicProgress = _forensicProgress
+
+    val hardwareStatus = hardwareManager.status
 
     private val _otgResult = MutableStateFlow<OtgCapabilityResult?>(null)
     val otgResult: StateFlow<OtgCapabilityResult?> = _otgResult.asStateFlow()
@@ -80,8 +97,12 @@ class UsbViewModel(
     fun setPermissionTimeout(seconds: Int) = settings.setPermissionTimeout(seconds)
 
     private val _currentNav = MutableStateFlow(com.deepeye.otg.ui.screens.NavTarget.HOME)
-    val currentNav = _currentNav.asStateFlow()
+    val currentNav: StateFlow<com.deepeye.otg.ui.screens.NavTarget> = _currentNav.asStateFlow()
     fun setNav(target: com.deepeye.otg.ui.screens.NavTarget) { _currentNav.value = target }
+
+    // Remote Shared Context (Stage 20.2)
+    val tunnelStatus = com.deepeye.otg.service.TunnelManager.status
+    val tunnelCode = com.deepeye.otg.service.TunnelManager.sessionCode
 
     val updateState = UpdateManager.updateState
 
@@ -106,8 +127,19 @@ class UsbViewModel(
     val selectedMode: StateFlow<ConnectionMode> = _selectedMode.asStateFlow()
 
     val lifecycleState: StateFlow<UsbLifecycleState> = lifecycleManager.state
+    val sessions: StateFlow<Map<String, UsbLifecycleState>> = lifecycleManager.sessions
     
+    private val _selectedDeviceKey = MutableStateFlow<String?>(null)
+    val selectedDeviceKey = _selectedDeviceKey.asStateFlow()
+
+    fun selectDevice(key: String) {
+        _selectedDeviceKey.value = key
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
+    private val _fileContentHex = MutableStateFlow<String?>(null)
+    val fileContentHex = _fileContentHex.asStateFlow()
+
     val usbUiState: StateFlow<UsbUiState> = lifecycleState
         .map { it.toUiState() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, UsbLifecycleState.Idle.toUiState())
@@ -122,14 +154,394 @@ class UsbViewModel(
     private val _deviceMetadata = MutableStateFlow<String?>(null)
     val deviceMetadata: StateFlow<String?> = _deviceMetadata.asStateFlow()
 
+    private val _globalInsights = MutableStateFlow<String>("")
+    val globalInsights = _globalInsights.asStateFlow()
+
+    private val _batchSelectedKeys = MutableStateFlow<Set<String>>(emptySet())
+    val batchSelectedKeys = _batchSelectedKeys.asStateFlow()
+
+    fun toggleBatchSelection(key: String) {
+        val current = _batchSelectedKeys.value.toMutableSet()
+        if (current.contains(key)) current.remove(key) else current.add(key)
+        _batchSelectedKeys.value = current
+    }
+
+    fun clearBatchSelection() { _batchSelectedKeys.value = emptySet() }
+
+    fun selectAllBatch() {
+        val keys = sessions.value.associate { it.deviceKey to it }.keys
+        _batchSelectedKeys.value = keys
+    }
+
+    private val _fleetHealth = MutableStateFlow<Map<String, String>>(emptyMap())
+    val fleetHealth = _fleetHealth.asStateFlow()
+
+    /**
+     * Stage J - Environment Pre-flight.
+     * Checks NDK availability, hardware descriptor integrity, and socket health.
+     */
+    fun runFleetHealthCheck() {
+        viewModelScope.launch {
+            val results = mutableMapOf<String, String>()
+            results["JVM"] = System.getProperty("java.version") ?: "UNKNOWN"
+            results["NDK"] = if (NativeBridge.calculateFileHash("") != "ERROR") "READY" else "FAULT"
+            results["TUNNEL"] = if (com.deepeye.otg.service.TunnelManager.status.value != com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED) "NOMINAL" else "ERROR"
+            
+            _fleetHealth.value = results
+            addLog("SECURITY", "Environmental Pre-flight complete: ${results["NDK"]}")
+        }
+    }
+
+    fun performBatchOperation(op: String) {
+        val targets = _batchSelectedKeys.value
+        if (targets.isEmpty()) return
+        
+        addLog("BATCH", "Executing $op on ${targets.size} devices...")
+        targets.forEach { key ->
+            viewModelScope.launch {
+                when (op) {
+                    "IDENTIFY" -> hardwareManager.performMtkIdentification(key) { addLog("BATCH-$key", it) }
+                    "SAHARA" -> hardwareManager.performQcomHandshake(key) { success -> 
+                        addLog("BATCH-$key", "Sahara: ${if(success) "OK" else "FAIL"}") 
+                    }
+                    "EXTRACT" -> {
+                        addLog("BATCH-$key", "Starting Massive Decrypted Pull...")
+                        massExtractor.extractFromFleet(
+                            setOf(key), 
+                            listOf("/data/media/0/DCIM", "/data/system/users/0")
+                        ) { node, msg -> addLog("BATCH-$node", msg) }
+                        addLog("BATCH-$key", "Forensic extraction finished.")
+                    }
+                }
+            }
+        }
+    }
+
     init {
         // Collect lifecycle state to trigger deep scan on connect
         viewModelScope.launch {
             lifecycleState.collect { state ->
                 if (state is UsbLifecycleState.Connected) {
+                    if (_selectedDeviceKey.value == null) {
+                        _selectedDeviceKey.value = state.deviceKey
+                    }
                     performDeepIdentification(state)
-                } else {
+                } else if (state is UsbLifecycleState.Idle) {
+                    _selectedDeviceKey.value = null
                     _deviceMetadata.value = null
+                }
+            }
+        }
+
+        // Global Situation Analysis (Stage 500.2)
+        viewModelScope.launch {
+            sessions.collect { currentSessions ->
+                if (currentSessions.size > 1) {
+                    val devices = currentSessions.values.map { 
+                        (it as? UsbLifecycleState.Connected)?.deviceName ?: "Unknown" 
+                    }
+                    val protocols = currentSessions.values.map { 
+                        (it as? UsbLifecycleState.Connected)?.protocolFamily ?: com.deepeye.otg.domain.models.ProtocolFamily.UNKNOWN 
+                    }
+                    aiAssistant.analyzeGlobalSituation(devices, protocols)
+                }
+            }
+        }
+    }
+
+    val adbBusy = adbManager.isBusy
+    val adbLog = adbManager.lastLog
+
+    fun runAdbCommand(command: String) {
+        adbManager.runShellCommand(command) { result ->
+            addLog("ADB", result)
+        }
+    }
+
+    fun performMtkIdentification() {
+        hardwareManager.performMtkIdentification(_selectedDeviceKey.value) { result ->
+            addLog("HW-MTK", result)
+        }
+    }
+
+    fun performMtkDaInjection() {
+        hardwareManager.performMtkDaInjection(_selectedDeviceKey.value) { success, msg ->
+            addLog("HW-MTK-DA", msg)
+        }
+    }
+
+    fun performQcomHandshake() {
+        hardwareManager.performQcomHandshake(_selectedDeviceKey.value) { success ->
+            addLog("HW-QC", if (success) "Sahara Handshake Success" else "Sahara Handshake Failed")
+        }
+    }
+
+    fun performFastbootUnlock() {
+        hardwareManager.performFastbootUnlock(_selectedDeviceKey.value) { success ->
+            addLog("HW-FASTBOOT", if (success) "Bootloader Unlock sequence accepted" else "Unlock sequence rejected")
+        }
+    }
+
+    fun performAppleDfuHandshake() {
+        hardwareManager.performAppleDfuHandshake(_selectedDeviceKey.value) { success ->
+            addLog("HW-APPLE", if (success) "Apple DFU Handshake Success" else "Apple DFU Handshake Failed")
+        }
+    }
+
+    private val _currentPath = MutableStateFlow("/")
+    val currentPath = _currentPath.asStateFlow()
+
+    private val _directoryFiles = MutableStateFlow<String>("[]")
+    val directoryFiles = _directoryFiles.asStateFlow()
+
+    fun browsePath(path: String) {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            val dev = lifecycleManager.getActiveDevice(key) ?: return@launch
+
+            _currentPath.value = path
+            val handle = NativeBridge.initCore(conn.fileDescriptor, dev.vendorId, dev.productId)
+            if (handle != 0L) {
+                try {
+                    val json = com.deepeye.otg.service.MtkFsDecryptor.listFolder(handle, path)
+                    _directoryFiles.value = json
+                } catch (e: Exception) {
+                    addLog("FS", "Failed to list $path: ${e.message}")
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
+    fun openFile(path: String) {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            val device = lifecycleManager.getActiveDevice(key) ?: return@launch
+            
+            addLog("FS", "Opening Sector: $path")
+            val handle = NativeBridge.initCore(conn.fileDescriptor, device.vendorId, device.productId)
+            if (handle != 0L) {
+                try {
+                    val bytes = NativeBridge.fsReadFile(handle, "userdata", path)
+                    if (bytes.isNotEmpty()) {
+                        // Limit to first 4KB for preview
+                        val preview = bytes.take(4096).toByteArray()
+                        _fileContentHex.value = preview.joinToString(" ") { "%02X".format(it) }
+                            .chunked(48).joinToString("\n")
+                    }
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
+    fun closeFilePreview() {
+        _fileContentHex.value = null
+    }
+
+    fun performMtkFsDecryption() {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            val device = lifecycleManager.getActiveDevice(key) ?: return@launch
+
+            _statusMsg.value = "Decrypting MTK FS..."
+            val handle = NativeBridge.initCore(conn.fileDescriptor, device.vendorId, device.productId)
+            if (handle != 0L) {
+                try {
+                    val success = com.deepeye.otg.service.MtkFsDecryptor.decryptUserdata(handle)
+                    if (success) {
+                        addLog("DECRYPT", "MTK Real-time Decryption layer ACTIVE")
+                        _statusMsg.value = "Userdata Accessible"
+                    } else {
+                        addLog("DECRYPT", "Failed to initialize MTK Decryption")
+                    }
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
+    fun performForensicAcquisition(partition: String) {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val device = lifecycleManager.getActiveDevice(key) ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            
+            _queueStatus.value = SessionState.ExecutingOperation(
+                DeepEyeOperation.FORENSIC_ACQUISITION, 
+                0, 
+                "Initializing Acquisition...", 
+                device.productName ?: "Unknown"
+            )
+
+            val file = java.io.File(appContext.filesDir, "forensics/${partition}_${System.currentTimeMillis()}.bin")
+            file.parentFile?.mkdirs()
+
+            val handle = NativeBridge.initCore(conn.fileDescriptor, device.vendorId, device.productId)
+            if (handle != 0L) {
+                try {
+                    val result = forensicEngine.acquirePartition(handle, partition, file) { p ->
+                        _progress.value = (p * 100).toInt()
+                    }
+                    _queueStatus.value = SessionState.OperationComplete(DeepEyeOperation.FORENSIC_ACQUISITION, result.success, result.message)
+                    addLog("FORENSIC", "Acquired $partition: ${result.sha256}")
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            } else {
+                _queueStatus.value = SessionState.Error("Failed to init core for forensics")
+            }
+        }
+    }
+
+    fun performDeletedDataCarving(partition: String, types: List<String>) {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val device = lifecycleManager.getActiveDevice(key) ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            
+            _queueStatus.value = SessionState.ExecutingOperation(
+                DeepEyeOperation.DELETED_DATA_CARVING, 
+                0, 
+                "Scanning for signatures...", 
+                device.productName ?: "Unknown"
+            )
+
+            val handle = NativeBridge.initCore(conn.fileDescriptor, device.vendorId, device.productId)
+            if (handle != 0L) {
+                try {
+                    val json = forensicEngine.carveData(handle, partition, types)
+                    _queueStatus.value = SessionState.OperationComplete(DeepEyeOperation.DELETED_DATA_CARVING, true, "Carving complete")
+                    addLog("CARVE", "Results available in report")
+                } finally {
+                    NativeBridge.closeCore(handle)
+                }
+            }
+        }
+    }
+
+    fun triggerAiAnalysis() {
+        val chipset = (lifecycleState.value as? UsbLifecycleState.Connected)?.chipset ?: "Generic"
+        val protocol = _activeProtocolFamily.value
+        val metadata = _deviceMetadata.value
+        
+        viewModelScope.launch {
+            aiAssistant.analyzeSession(chipset, protocol, metadata)
+        }
+    }
+
+    fun performImeiRepair(imei1: String, imei2: String) {
+        hardwareManager.performIdentityRepair(imei1, imei2, _selectedDeviceKey.value) { success, msg ->
+            if (success) {
+                addLog("REPAIR", msg)
+                _queueStatus.value = SessionState.OperationComplete(DeepEyeOperation.IMEI_RESTORE, true, msg)
+            } else {
+                addLog("ERROR", "Repair failed: $msg")
+                _queueStatus.value = SessionState.Error(msg)
+            }
+        }
+    }
+
+    private val _currentImei1 = MutableStateFlow("N/A")
+    val currentImei1 = _currentImei1.asStateFlow()
+    private val _currentImei2 = MutableStateFlow("N/A")
+    val currentImei2 = _currentImei2.asStateFlow()
+
+    private val _splitViewActive = MutableStateFlow(false)
+    val splitViewActive = _splitViewActive.asStateFlow()
+
+    fun toggleSplitView() {
+        _splitViewActive.value = !_splitViewActive.value
+    }
+
+    fun startRemoteTunnel() {
+        viewModelScope.launch {
+            val sessionsMap = sessions.value.associateBy { it.deviceKey }
+            if (sessionsMap.isNotEmpty()) {
+                addLog("CLOUD", "Broadcasting Forensic Fleet to Relay Server...")
+                com.deepeye.otg.service.TunnelManager.startFleetSharing(sessionsMap)
+            } else {
+                val dev = lifecycleManager.getActiveDevice()
+                if (dev != null) {
+                    addLog("CLOUD", "Initiating Single-Device Tunnel...")
+                    com.deepeye.otg.service.TunnelManager.startSharing(dev)
+                } else {
+                    addLog("ERROR", "No active connection to share.")
+                }
+            }
+        }
+    }
+
+    fun performCloudSync() {
+        viewModelScope.launch {
+            val report = com.deepeye.otg.service.ReportManager.generateFinalJson(appContext)
+            if (report != null) {
+                addLog("SYNC", "Uploading audit trail to Cloud...")
+                val success = com.deepeye.otg.service.CloudSyncService.syncReport(report, "LICENSE-TEMP-KEY")
+                if (success) {
+                    addLog("SYNC", "Audit trail synchronized successfully.")
+                } else {
+                    addLog("ERROR", "Cloud Sync failed (license invalid or server offline)")
+                }
+            } else {
+                addLog("ERROR", "No report available for sync")
+            }
+        }
+    }
+
+    fun generateForensicPdf() {
+        viewModelScope.launch {
+            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
+            if (report != null) {
+                addLog("REPORT", "Generating official Fleet Forensic documentation...")
+                val pdf = com.deepeye.otg.service.ForensicReportGenerator.generatePdfReport(appContext, report.absolutePath)
+                if (pdf != null) {
+                    addLog("SUCCESS", "Forensic Audit Trail saved: ${pdf.name}")
+                    _queueStatus.value = SessionState.Reporting(pdf)
+                } else {
+                    addLog("ERROR", "PDF rendering failed.")
+                }
+            } else {
+                addLog("ERROR", "No fleet data available for report.")
+            }
+        }
+    }
+
+    fun readImei() {
+        viewModelScope.launch {
+            val key = _selectedDeviceKey.value ?: return@launch
+            val conn = lifecycleManager.getActiveConnection(key) ?: return@launch
+            val device = lifecycleManager.getActiveDevice(key) ?: return@launch
+            addLog("REPAIR", "Reading persistent identity...")
+            
+            withContext(Dispatchers.IO) {
+                val handle = com.deepeye.otg.NativeBridge.initCore(conn.fileDescriptor, device.vendorId, device.productId)
+                if (handle != 0L) {
+                    try {
+                        val jsonStr = com.deepeye.otg.repair.NvBridge.readMtkImei(handle)
+                        withContext(Dispatchers.Main) {
+                            val json = JSONObject(jsonStr)
+                            _currentImei1.value = json.optString("imei1", "N/A")
+                            _currentImei2.value = json.optString("imei2", "N/A")
+                            addLog("SUCCESS", "Identity synced from NVRAM")
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            addLog("ERROR", "Failed to parse identity: ${e.message}")
+                        }
+                    } finally {
+                        com.deepeye.otg.NativeBridge.closeCore(handle)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        addLog("ERROR", "Native core initialization failed.")
+                    }
                 }
             }
         }
@@ -148,6 +560,9 @@ class UsbViewModel(
                         val json = JSONObject(info)
                         val modelName = json.optString("model", "Unknown")
                         addLog("INFO", "Deep Scan: Identified $modelName")
+                        
+                        // Automatically trigger AI analysis after deep identification
+                        aiAssistant.analyzeSession(state.chipset, _activeProtocolFamily.value, info)
                     } catch (e: Exception) {}
                 } catch (e: Exception) {
                     Log.e("UsbViewModel", "Deep identification failed: ${e.message}")
@@ -221,10 +636,20 @@ class UsbViewModel(
                     if (op != null) {
                         startOperation(op)
                     } else {
-                        _queueStatus.value = SessionState.ConnectedReady(ls.deviceName)
+                        _queueStatus.value = SessionState.ConnectedReady(
+                            deviceName = ls.deviceName,
+                            brand = ls.brand,
+                            chipset = ls.chipset,
+                            secureBoot = ls.secureBootStatus
+                        )
                     }
                 } else {
-                    _queueStatus.value = SessionState.ConnectedReady(ls.deviceName)
+                    _queueStatus.value = SessionState.ConnectedReady(
+                        deviceName = ls.deviceName,
+                        brand = ls.brand,
+                        chipset = ls.chipset,
+                        secureBoot = ls.secureBootStatus
+                    )
                 }
             }
             is UsbLifecycleState.DeviceDetected -> {
@@ -267,7 +692,12 @@ class UsbViewModel(
                 )
             }
             is UsbLifecycleState.Connected -> {
-                _usbStateValue.value = SessionState.ConnectedReady(state.deviceName)
+                _usbStateValue.value = SessionState.ConnectedReady(
+                    deviceName = state.deviceName,
+                    brand = state.brand,
+                    chipset = state.chipset,
+                    secureBoot = state.secureBootStatus
+                )
                 updateDiagnosticStep(5, DiagnosticStatus.Pass("Permission granted"))
                 updateDiagnosticStep(6, DiagnosticStatus.Pass("Interface claimed"))
                 updateDiagnosticStep(
@@ -283,11 +713,23 @@ class UsbViewModel(
                 _domainSessionState.value = _domainSessionState.value.copy(
                     connected = true,
                     deviceName = state.deviceName,
+                    selectedBrand = state.brand,
+                    chipset = state.chipset,
+                    secureBoot = state.secureBootStatus,
                     protocolFamily = state.protocolFamily,
                     hasPermission = true,
                     deviceMode = state.detectedDeviceMode,
                     statusMessage = "Detected ${state.detectedDeviceMode}: ${state.detectionReason}"
                 )
+
+                // Initialize Forensic Audit for this device
+                val deviceJson = JSONObject().apply {
+                    put("model", state.deviceName)
+                    put("vid", state.vendorId)
+                    put("pid", state.productId)
+                    put("chipset", state.chipset)
+                }.toString()
+                com.deepeye.otg.service.ReportManager.initDevice(state.deviceKey, deviceJson)
             }
             is UsbLifecycleState.PermissionDenied -> {
                 _usbStateValue.value = SessionState.Error("Permission denied")
@@ -435,8 +877,40 @@ class UsbViewModel(
 
     private fun startOperation(op: DeepEyeOperation) {
         viewModelScope.launch {
-            _queueStatus.value = SessionState.ExecutingOperation(op, 0, "Initializing Engine...")
+            val deviceName = (lifecycleState.value as? UsbLifecycleState.Connected)?.deviceName ?: "Unknown"
+            _queueStatus.value = SessionState.ExecutingOperation(op, 0, "Initializing Engine...", deviceName)
             
+            if (op == DeepEyeOperation.BROWSE_FS) {
+                browsePath("/")
+                setNav(com.deepeye.otg.ui.screens.NavTarget.FILE_EXPLORER)
+                _queueStatus.value = SessionState.Idle
+                return@launch
+            }
+
+            if (op == DeepEyeOperation.SAFE_DUMP) {
+                hardwareManager.performSafeDump("userdata", _selectedDeviceKey.value) { success, msg ->
+                    _queueStatus.value = if (success) SessionState.OperationComplete(op, true, msg) else SessionState.Error(msg)
+                    addLog(if (success) "SUCCESS" else "ERROR", msg)
+                }
+                return@launch
+            }
+
+            if (op == DeepEyeOperation.RAM_IMAGING) {
+                hardwareManager.performRamImaging(_selectedDeviceKey.value) { success, msg ->
+                    _queueStatus.value = if (success) SessionState.OperationComplete(op, true, msg) else SessionState.Error(msg)
+                    addLog(if (success) "SUCCESS" else "ERROR", msg)
+                }
+                return@launch
+            }
+
+            if (op == DeepEyeOperation.DELETED_DATA_CARVING) {
+                hardwareManager.performDeletedDataCarving("userdata", _selectedDeviceKey.value) { success, msg ->
+                    _queueStatus.value = if (success) SessionState.OperationComplete(op, true, msg) else SessionState.Error(msg)
+                    addLog(if (success) "SUCCESS" else "ERROR", msg)
+                }
+                return@launch
+            }
+
             // Re-check connect state
             val activeState = _usbStateValue.value
             if (activeState !is SessionState.ConnectedReady) {
@@ -484,6 +958,12 @@ class UsbViewModel(
                 )
 
                 if (result.success) {
+                    com.deepeye.otg.service.ReportManager.logOperation(
+                        deviceKey = _selectedDeviceKey.value, 
+                        op = op, 
+                        success = true, 
+                        message = result.message
+                    )
                     if (op == DeepEyeOperation.PARTITION_MANAGER) {
                         val csv = result.data["partitions"] ?: ""
                         val items = csv.split("|").filter { it.isNotBlank() }.map { s ->
@@ -498,10 +978,22 @@ class UsbViewModel(
                         addLog("SUCCESS", result.message)
                     }
                 } else {
+                    com.deepeye.otg.service.ReportManager.logOperation(
+                        deviceKey = _selectedDeviceKey.value, 
+                        op = op, 
+                        success = false, 
+                        message = result.message
+                    )
                     _queueStatus.value = SessionState.Error(result.message)
                     addLog("ERROR", result.message)
                 }
             } catch (e: Exception) {
+                com.deepeye.otg.service.ReportManager.logOperation(
+                    deviceKey = _selectedDeviceKey.value, 
+                    op = op, 
+                    success = false, 
+                    message = e.message ?: "Unknown Error"
+                )
                 _queueStatus.value = SessionState.Error("Execution failed: ${e.message}")
                 addLog("ERROR", "Execution failed: ${e.message}")
             }

@@ -59,6 +59,8 @@ sealed class UsbLifecycleState {
         val deviceKey: String,
         val descriptorSnapshot: UsbDescriptorSnapshot,
         val brand: String,
+        val chipset: String,
+        val secureBootStatus: String = "UNKNOWN",
         val endpoints: ResolvedEndpoints,
         val sessionId: String = java.util.UUID.randomUUID().toString()
     ) : UsbLifecycleState()

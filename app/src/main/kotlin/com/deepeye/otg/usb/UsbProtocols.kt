@@ -14,20 +14,27 @@ sealed class SessionState {
     data class PermissionPending(val queuedOp: DeepEyeOperation) : SessionState()
     data class ProtocolDetect(val queuedOp: DeepEyeOperation) : SessionState()
     data class ReenumerationWait(val queuedOp: DeepEyeOperation) : SessionState()
-    data class ConnectedReady(val deviceName: String) : SessionState()
+    data class ConnectedReady(
+        val deviceName: String,
+        val brand: String = "Unknown",
+        val chipset: String = "Generic",
+        val secureBoot: String = "UNKNOWN"
+    ) : SessionState()
     data class ExecutingOperation(
         val op: DeepEyeOperation,
         val progress: Int,
-        val statusMsg: String
+        val statusMsg: String,
+        val deviceName: String = "Unknown"
     ) : SessionState()
     data class OperationComplete(
         val op: DeepEyeOperation,
         val success: Boolean,
-        val message: String
+        val message: String,
+        val reportPath: String? = null
     ) : SessionState()
     data class Error(val message: String, val queuedOp: DeepEyeOperation? = null) : SessionState()
     data class PermissionDenied(val queuedOp: DeepEyeOperation? = null) : SessionState()
-    object ConnectedMtpOnly : SessionState()
+    data class ConnectedMtpOnly(val deviceName: String) : SessionState()
     object TestHarness : SessionState()
     data class Reporting(val reportFile: java.io.File?) : SessionState()
     data class PartitionPreview(val partitions: List<com.deepeye.otg.domain.models.PartitionItem>) : SessionState()

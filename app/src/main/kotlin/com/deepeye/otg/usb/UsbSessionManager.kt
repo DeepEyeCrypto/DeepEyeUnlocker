@@ -53,7 +53,7 @@ class UsbSessionManager(
     private var activeEndpoints: ResolvedEndpoints? = null
     private var activeDeviceKey: String? = null
     
-    private var transferQueue: UsbTransferQueue? = null
+    private var activeTransport: BulkTransport? = null
     private var watchdog: UsbConnectionWatchdog? = null
     private val protocolDetector = ProtocolDetector()
 
@@ -146,8 +146,7 @@ class UsbSessionManager(
                 activeDeviceKey = deviceKey(device)
                 
                 // Initialize Serial Transfer Queue
-                val queue = UsbTransferQueue(connection, endpoints)
-                transferQueue = queue
+                activeTransport = BulkTransport(connection, endpoints)
 
                 // Setup Health Watchdog
                 watchdog?.stop()
@@ -213,21 +212,21 @@ class UsbSessionManager(
             activeDevice = null
             activeConnection = null
             activeEndpoints = null
-            transferQueue = null
+            activeTransport = null
             watchdog = null
             activeDeviceKey = null
         }
     }
 
     // ── Data API (Queue Aware) ────────────────────────────────
-    suspend fun write(data: ByteArray) = transferQueue?.write(data) 
-        ?: TransferResult(false, 0, null, "Not connected")
-
-    suspend fun read(size: Int = 512) = transferQueue?.read(size)
-        ?: TransferResult(false, 0, null, "Not connected")
-
-    suspend fun exchange(cmd: ByteArray, respSize: Int = 512) = transferQueue?.exchange(cmd, respSize)
-        ?: Pair(TransferResult(false, 0, null, "Not connected"), TransferResult(false, 0, null, "Not connected"))
+    suspend fun write(data: ByteArray) = activeTransport?.write(data) 
+        ?: TransferResult.IOError("Not connected")
+ 
+    suspend fun read(size: Int = 512) = activeTransport?.read(size)
+        ?: TransferResult.IOError("Not connected")
+ 
+    suspend fun exchange(cmd: ByteArray, respSize: Int = 512) = activeTransport?.exchange(cmd, respSize)
+        ?: Pair(TransferResult.IOError("Not connected"), TransferResult.IOError("Not connected"))
 
     fun getConnectionHealth(): StateFlow<ConnectionHealth>? = watchdog?.health
 

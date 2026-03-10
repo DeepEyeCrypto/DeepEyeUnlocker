@@ -2,6 +2,7 @@ package com.deepeye.otg.service
 
 import android.hardware.usb.UsbDevice
 import android.util.Log
+import com.deepeye.otg.usb.TransferResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -37,25 +38,32 @@ object TunnelManager {
     val sessionCode: StateFlow<String?> = _sessionCode
 
     /**
-     * Provider Mode: Share a local USB device to the cloud.
+     * Provider Mode: Share the entire forensic fleet to the cloud for expert collaboration.
      */
-    fun startSharing(device: UsbDevice) {
+    fun startFleetSharing(sessions: Map<String, com.deepeye.otg.usb.DeviceSession>) {
         _status.value = TunnelStatus.CONNECTING
         val request = Request.Builder().url(RELAY_ENDPOINT).build()
         
         socket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 _status.value = TunnelStatus.ACTIVE
-                Log.i(TAG, "[TUNNEL] Pipe established.")
+                Log.i(TAG, "[TUNNEL] Fleet broadcast active.")
                 
-                // 1. Send Handshake with Device Info
-                val handshake = JSONObject().apply {
-                    put("type", "PROVIDER_HANDSHAKE")
-                    put("deviceName", device.productName ?: "Generic Device")
-                    put("vid", device.vendorId)
-                    put("pid", device.productId)
+                val fleetStatus = JSONObject().apply {
+                    put("type", "FLEET_HANDSHAKE")
+                    put("nodeCount", sessions.size)
+                    val nodes = org.json.JSONArray()
+                    sessions.forEach { (key, session) ->
+                        nodes.put(JSONObject().apply {
+                            put("key", key)
+                            put("name", session.deviceName)
+                            put("chipset", session.chipset)
+                            put("mode", session.detectedDeviceMode.name)
+                        })
+                    }
+                    put("nodes", nodes)
                 }
-                webSocket.send(handshake.toString())
+                webSocket.send(fleetStatus.toString())
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -63,16 +71,20 @@ object TunnelManager {
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e(TAG, "[TUNNEL] Critical failure: ${t.message}")
+                Log.e(TAG, "[TUNNEL] Fleet sync failure: ${t.message}")
                 _status.value = TunnelStatus.FAILED
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                Log.i(TAG, "[TUNNEL] Closing: $reason")
                 _status.value = TunnelStatus.IDLE
             }
         })
     }
+
+    /**
+     * Legacy Provider Mode: Share a local USB device to the cloud.
+     */
+    fun startSharing(device: UsbDevice) {
 
     /**
      * Operator Mode: Connect to a shared device.
@@ -128,10 +140,13 @@ object TunnelManager {
 
     private fun handleRemoteRequest(json: JSONObject) {
         val lm = lifecycleManager ?: return
-        val tq = lm.getTransferQueue() ?: return
+        val transport = lm.getTransport() ?: run {
+            Log.w(TAG, "[TUNNEL] Ignoring REMOTE_USB_REQ: no active USB transport")
+            return
+        }
         
-        val reqId = json.getString("reqId")
-        val op = json.getString("op") // "READ" or "WRITE"
+        val reqId = json.optString("reqId", "")
+        val op = json.optString("op", "").uppercase() // "READ" or "WRITE"
         
         tunnelScope.launch {
             val response = JSONObject().apply {
@@ -140,19 +155,53 @@ object TunnelManager {
             }
 
             try {
-                if (op == "WRITE") {
-                    val dataHex = json.getString("data")
-                    val data = dataHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-                    val result = tq.write(data, 5000)
-                    response.put("success", result.success)
-                } else if (op == "READ") {
-                    val length = json.getInt("length")
-                    val result = tq.read(length, 5000)
-                    if (result.success) {
-                        response.put("success", true)
-                        response.put("data", result.data?.joinToString("") { "%02x".format(it) } ?: "")
-                    } else {
+                when (op) {
+                    "WRITE" -> {
+                        val dataHex = json.optString("data", "")
+                        val data = parseHexPayload(dataHex)
+                        when (val result = transport.write(data, 5_000)) {
+                            is TransferResult.Success -> {
+                                response.put("success", true)
+                                response.put("bytes", result.bytes)
+                            }
+                            is TransferResult.Partial -> {
+                                response.put("success", false)
+                                response.put("bytes", result.bytes)
+                                response.put("expected", result.expected)
+                                response.put("error", "Partial transfer")
+                            }
+                            else -> {
+                                response.put("success", false)
+                                response.put("error", result.toErrorMessage())
+                            }
+                        }
+                    }
+
+                    "READ" -> {
+                        val length = json.optInt("length", 512).coerceAtLeast(1)
+                        when (val result = transport.read(length, 5_000)) {
+                            is TransferResult.Success -> {
+                                response.put("success", true)
+                                response.put("bytes", result.bytes)
+                                response.put("data", result.data?.toHexString() ?: "")
+                            }
+                            is TransferResult.Partial -> {
+                                response.put("success", false)
+                                response.put("bytes", result.bytes)
+                                response.put("expected", result.expected)
+                                response.put("data", result.data.toHexString())
+                                response.put("error", "Partial transfer")
+                            }
+                            else -> {
+                                response.put("success", false)
+                                response.put("error", result.toErrorMessage())
+                            }
+                        }
+                    }
+
+                    else -> {
                         response.put("success", false)
+                        response.put("error", "Unsupported op: $op")
                     }
                 }
                 socket?.send(response.toString())
@@ -162,6 +211,26 @@ object TunnelManager {
                 socket?.send(response.toString())
             }
         }
+    }
+
+    private fun parseHexPayload(hex: String): ByteArray {
+        val cleaned = hex.filterNot { it.isWhitespace() }
+        if (cleaned.isEmpty()) return ByteArray(0)
+        val normalized = if (cleaned.length % 2 == 0) cleaned else "0$cleaned"
+        return normalized.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    }
+
+    private fun ByteArray.toHexString(): String =
+        joinToString(separator = "") { byte -> "%02x".format(byte) }
+
+    private fun TransferResult.toErrorMessage(): String = when (this) {
+        TransferResult.Timeout -> "USB transfer timeout"
+        TransferResult.DeviceGone -> "USB device disconnected"
+        TransferResult.Stall -> "USB endpoint stalled"
+        is TransferResult.IOError -> msg
+        is TransferResult.ProtocolError -> msg
+        is TransferResult.Success -> ""
+        is TransferResult.Partial -> "Partial transfer"
     }
 
     fun stopSharing() {

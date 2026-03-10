@@ -25,16 +25,19 @@ object ReportManager {
         val evidencePath: String? = null
     )
 
-    private val sessionLogs = mutableListOf<AuditEntry>()
-    private var currentDevice: JSONObject? = null
+    private val fleetLogs = mutableMapOf<String, MutableList<AuditEntry>>()
+    private val fleetDevices = mutableMapOf<String, JSONObject>()
 
-    fun startSession(deviceInfoJson: String) {
-        sessionLogs.clear()
-        currentDevice = try { JSONObject(deviceInfoJson) } catch (e: Exception) { null }
-        Log.i(TAG, "[REPORT] Session started for ${currentDevice?.optString("model", "Unknown")}")
+    fun initDevice(deviceKey: String, infoJson: String) {
+        fleetDevices[deviceKey] = try { JSONObject(infoJson) } catch (e: Exception) { JSONObject() }
+        if (!fleetLogs.containsKey(deviceKey)) {
+            fleetLogs[deviceKey] = mutableListOf()
+        }
+        Log.i(TAG, "[FLEET] Audit initialized for device: $deviceKey")
     }
 
-    fun logOperation(op: DeepEyeOperation, success: Boolean, message: String, filePath: String? = null) {
+    fun logOperation(deviceKey: String?, op: DeepEyeOperation, success: Boolean, message: String, filePath: String? = null) {
+        val key = deviceKey ?: "GLOBAL"
         val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
         val hash = if (filePath != null && File(filePath).exists()) {
             NativeBridge.calculateFileHash(filePath)
@@ -48,43 +51,58 @@ object ReportManager {
             evidencePath = filePath
         )
         
-        sessionLogs.add(entry)
-        Log.d(TAG, "[REPORT] Added entry: ${entry.operation} | Hash=${hash?.take(8)}")
+        fleetLogs.getOrPut(key) { mutableListOf() }.add(entry)
+        Log.d(TAG, "[FLEET] Added entry for $key: ${entry.operation} | Result=${if(success) "OK" else "FAIL"}")
     }
 
     /**
-     * Generates a final JSON audit report for the session.
+     * Generates a consolidated JSON report for ALL active and recently seen devices.
      */
-    fun generateFinalJson(context: Context): File? {
+    fun generateFleetReport(context: Context): File? {
         val root = JSONObject().apply {
-            put("version", "v2026.19")
+            put("report_type", "FORENSIC_FLEET_AUDIT")
             put("report_id", UUID.randomUUID().toString())
             put("timestamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
-            put("device", currentDevice ?: JSONObject().put("status", "unknown"))
+            put("engine_version", "v2026.19-MULTI")
             
-            val logsArray = JSONArray()
-            sessionLogs.forEach { entry ->
-                logsArray.put(JSONObject().apply {
-                    put("ts", entry.timestamp)
-                    put("op", entry.operation)
-                    put("res", entry.result)
-                    put("sha256", entry.evidenceHash ?: "N/A")
-                    put("path", entry.evidencePath ?: "N/A")
-                })
+            val nodesArray = JSONArray()
+            fleetLogs.forEach { (deviceKey, logs) ->
+                val nodeObj = JSONObject().apply {
+                    put("device_key", deviceKey)
+                    put("device_info", fleetDevices[deviceKey] ?: JSONObject().put("status", "unknown"))
+                    
+                    val logsArray = JSONArray()
+                    logs.forEach { entry ->
+                        logsArray.put(JSONObject().apply {
+                            put("ts", entry.timestamp)
+                            put("op", entry.operation)
+                            put("res", entry.result)
+                            put("sha256", entry.evidenceHash ?: "N/A")
+                            put("path", entry.evidencePath ?: "N/A")
+                        })
+                    }
+                    put("audit_trail", logsArray)
+                }
+                nodesArray.put(nodeObj)
             }
-            put("audit_trail", logsArray)
+            put("forensic_nodes", nodesArray)
         }
 
         return try {
             val dir = File(context.filesDir, "reports")
             if (!dir.exists()) dir.mkdirs()
-            val file = File(dir, "Report_${System.currentTimeMillis()}.json")
+            val file = File(dir, "FleetReport_${System.currentTimeMillis()}.json")
             file.writeText(root.toString(4))
-            Log.i(TAG, "[REPORT] Final report saved: ${file.absolutePath}")
+            Log.i(TAG, "[FLEET] Consolidated report saved: ${file.absolutePath}")
             file
         } catch (e: Exception) {
-            Log.e(TAG, "[REPORT] Failed to save report: ${e.message}")
+            Log.e(TAG, "[FLEET] Failed to save report: ${e.message}")
             null
         }
+    }
+
+    fun clearFleet() {
+        fleetLogs.clear()
+        fleetDevices.clear()
     }
 }

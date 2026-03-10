@@ -160,6 +160,12 @@ object NativeBridge {
     /** Perform forensic acquisition of encrypted userdata (Physical dumping). */
     external fun acquireForensicImage(handle: Long, partition: String, outDir: String): String
 
+    /** 
+     * Dump the entire physical RAM (DRAM) of the device. 
+     * Returns true if memory imaging completed without hash mismatch. 
+     */
+    external fun dumpRam(handle: Long, outDir: String): Boolean
+
     /** Patch the Android locksettings database to remove user passwords. */
     external fun removeScreenLock(handle: Long, dbPath: String): Boolean
 
@@ -170,6 +176,42 @@ object NativeBridge {
     /** Calculate SHA256 of a file on disk for audit verification. */
     external fun calculateFileHash(path: String): String
 
+    // ── TEE & Secure Storage (Stage 30.1) ───────────────────────
+    /** Read RPMB (Replay Protected Memory Block) contents. Highly restricted. */
+    external fun readRpmb(handle: Long): ByteArray
+
+    /** Read Tee-specific descriptor (Keystore identifier/blob). */
+    external fun readTeeDescriptor(handle: Long): String
+
     /** Peek first N bytes of a partition. Returns hex string or null. */
     external fun peekPartition(handle: Long, name: String, bytes: Int): String?
+
+    // ── MTK FS Decryptor (Stage 300.1) ──────────────────────────
+    /** 
+     * Decrypts the userdata partition in real-time. 
+     * Requires keys from TEE/RPMB.
+     */
+    external fun mtkDecryptFs(handle: Long, partition: String, keyBlob: ByteArray): Boolean
+
+    // ── Forensic File System Explorer (Stage 50.2) ────────────
+    /** List files in a path on a decrypted partition. Returns JSON array. */
+    external fun fsListDirectory(handle: Long, partition: String, path: String): String
+
+    /** Read raw bytes from a file on a decrypted partition. */
+    external fun fsReadFile(handle: Long, partition: String, path: String): ByteArray
+
+    /** Get file metadata (size, permissions, timestamps). Returns JSON. */
+    external fun fsGetFileStats(handle: Long, partition: String, path: String): String
+
+    /** 
+     * Recursively copy a directory from a decrypted partition to local storage.
+     * Returns a JSON summary of files copied and total bytes.
+     */
+    external fun fsExtractDirectory(
+        handle: Long, 
+        partition: String, 
+        srcPath: String, 
+        destPath: String,
+        onProgress: (Int, String) -> Unit
+    ): String
 }

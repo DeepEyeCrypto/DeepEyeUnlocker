@@ -37,67 +37,88 @@ data class DetectionResult(
 class ProtocolDetector {
     companion object {
         private const val TAG = "ProtocolDetector"
+        private const val MIN_CONFIDENCE_ACCEPT = 50
     }
 
     fun detect(snapshot: UsbDescriptorSnapshot): DetectionResult {
         logSnapshot(snapshot)
 
-        // Strict precedence (spec Stage 1.4):
-        // Apple > MTK > Qualcomm > Unisoc > Samsung > Fastboot > ADB > MTP > UNKNOWN
-        val result = detectApple(snapshot)
-            ?: detectMtk(snapshot)
-            ?: detectQualcomm(snapshot)
-            ?: detectUnisoc(snapshot)
-            ?: detectOdin(snapshot)
-            ?: detectFastboot(snapshot)
-            ?: detectAdb(snapshot)
-            ?: detectMtp(snapshot)
-            ?: DetectionResult(
-            deviceMode = DeviceMode.UNKNOWN,
-            protocolFamily = ProtocolFamily.UNKNOWN,
-            confidence = 0,
-            reason = "No explicit mode signature matched"
-        )
+        // Degenerate Guard (Stage 1.4): strict UNKNOWN for degenerate snapshots.
+        if (snapshot.isDegenerate()) {
+            val notReady = DetectionResult(
+                DeviceMode.UNKNOWN,
+                ProtocolFamily.UNKNOWN,
+                0,
+                "Degenerate descriptor — mid-enumeration"
+            )
+            logResult(snapshot, notReady)
+            return notReady
+        }
 
-        logResult(snapshot, result)
-        return result
+        // 10-Stage Strict Pipeline (Stage 1.4):
+        // First non-null wins. Strict precedence:
+        // APPLE > MTK > QC > UNISOC > SAMSUNG > FASTBOOT > ADB > MTP > CDC_SERIAL > GENERIC > UNKNOWN
+        val rawResult = detectApple(snapshot)      // stage1
+            ?: detectMtk(snapshot)                 // stage2
+            ?: detectQualcomm(snapshot)            // stage3
+            ?: detectUnisoc(snapshot)              // stage4
+            ?: detectOdin(snapshot)                // stage5
+            ?: detectFastboot(snapshot)            // stage6
+            ?: detectAdb(snapshot)                 // stage7
+            ?: detectMtp(snapshot)                 // stage8
+            ?: detectCdcSerial(snapshot)           // stage9
+            ?: DetectionResult(                    // stage10
+                deviceMode = DeviceMode.UNKNOWN,
+                protocolFamily = ProtocolFamily.UNKNOWN,
+                0,
+                "No explicit mode signature matched"
+            )
+
+        // Confidence Guard (Stage 1.4):
+        // If confidence is too low (e.g., < 50), treat as UNKNOWN to prevent false positives.
+        val finalResult = if (rawResult.confidence < MIN_CONFIDENCE_ACCEPT && rawResult.deviceMode != DeviceMode.UNKNOWN) {
+            DetectionResult(
+                DeviceMode.UNKNOWN,
+                ProtocolFamily.UNKNOWN,
+                rawResult.confidence,
+                "Rejected low-confidence match (<$MIN_CONFIDENCE_ACCEPT): ${rawResult.reason}"
+            )
+        } else {
+            rawResult
+        }
+
+        logResult(snapshot, finalResult)
+        return finalResult
     }
 
     private fun detectApple(snapshot: UsbDescriptorSnapshot): DetectionResult? {
         if (snapshot.vendorId != 0x05AC) return null
         val pid = snapshot.productId
         val dfuPids = setOf(0x1227)
-        val recoveryPids = setOf(0x1281, 0x1282, 0x12A0, 0x12A8, 0x12AB)
+        val recoveryPids = setOf(0x1281, 0x1282, 0x1280, 0x12A0, 0x12A8, 0x12AB)
+
         return when {
             pid in dfuPids -> DetectionResult(
                 DeviceMode.APPLE_DFU,
                 ProtocolFamily.APPLE_DFU,
                 100,
-                "Matched Apple DFU VID/PID 0x05AC:${"%04X".format(pid)}"
+                "Matched Apple DFU VID/PID 0x05AC:0x${"%04X".format(pid)}"
             )
             pid in recoveryPids -> DetectionResult(
                 DeviceMode.APPLE_RECOVERY,
                 ProtocolFamily.APPLE_RECOVERY,
                 100,
-                "Matched Apple Recovery VID/PID 0x05AC:${"%04X".format(pid)}"
+                "Matched Apple Recovery VID/PID 0x05AC:0x${"%04X".format(pid)}"
             )
             pid in 0x12A0..0x12FF -> DetectionResult(
                 DeviceMode.APPLE_NORMAL,
                 ProtocolFamily.APPLE_NORMAL,
                 60,
-                "Matched Apple normal-mode VID/PID 0x05AC:${"%04X".format(pid)}"
+                "Matched Apple normal-mode VID/PID 0x05AC:0x${"%04X".format(pid)}"
             )
             else -> {
-                Log.w(
-                    TAG,
-                    "[MODE] known-vendor-unknown-pid vendor=APPLE vid=0x05AC pid=0x${"%04X".format(pid)} reason=\"Unknown Apple PID\""
-                )
-                DetectionResult(
-                    DeviceMode.UNKNOWN,
-                    ProtocolFamily.UNKNOWN,
-                    0,
-                    "Known Apple VID 0x05AC but unknown PID 0x${"%04X".format(pid)}"
-                )
+                Log.w(TAG, "[MODE] known-vendor-unknown-pid vendor=APPLE vid=0x05AC pid=0x${"%04X".format(pid)}")
+                DetectionResult(DeviceMode.UNKNOWN, ProtocolFamily.UNKNOWN, 0, "Known Apple VID but unknown PID")
             }
         }
     }
@@ -153,7 +174,7 @@ class ProtocolDetector {
                 100,
                 "Matched Qualcomm EDL VID/PID 0x05C6:0x9008"
             )
-        } else if (vid == 0x05C6 && (pid == 0x900E || pid == 0x901D)) {
+        } else if (vid == 0x05C6 && (pid == 0x9025 || pid == 0x900E || pid == 0x901D)) {
             DetectionResult(
                 DeviceMode.QC_DIAG,
                 ProtocolFamily.DIAG,
@@ -238,11 +259,7 @@ class ProtocolDetector {
     }
 
     private fun detectFastboot(snapshot: UsbDescriptorSnapshot): DetectionResult? {
-        val isFastbootInterface = snapshot.interfaces.any {
-            it.interfaceClass == 0xFF &&
-                it.interfaceSubclass == 0x42 &&
-                it.interfaceProtocol == 0x03
-        }
+        val isFastbootInterface = snapshot.interfaces.any { it.isFastboot }
         val text = listOfNotNull(snapshot.manufacturerName, snapshot.productName).joinToString(" ").lowercase()
 
         return if (isFastbootInterface) {
@@ -254,12 +271,8 @@ class ProtocolDetector {
             )
         } else {
             // Allow a softer text heuristic only when we have vendor-specific USB structure hints.
-            val hasVendorSpecificInterface = snapshot.interfaces.any {
-                it.interfaceClass == 0xFF
-            }
-
-            if ("fastboot" in text && hasVendorSpecificInterface) {
-                return DetectionResult(
+            if ("fastboot" in text && snapshot.isVendorSpecific()) {
+                DetectionResult(
                     DeviceMode.FASTBOOT,
                     ProtocolFamily.FASTBOOT,
                     70,
@@ -270,28 +283,13 @@ class ProtocolDetector {
     }
 
     private fun detectAdb(snapshot: UsbDescriptorSnapshot): DetectionResult? {
-        // STRICT ADB:
-        // 1) Explicit class/subclass/protocol = FF/42/01
-        // 2) Same interface must contain at least one BULK IN + one BULK OUT endpoint
-        val adbInterface = snapshot.interfaces.find {
-            it.interfaceClass == 0xFF &&
-                it.interfaceSubclass == 0x42 &&
-                it.interfaceProtocol == 0x01
-        }
+        // ADB heuristic: Looking for explicit 255/66/1 interface with bidirectional bulk endpoints.
+        val adbInterface = snapshot.interfaces.find { it.isExplicitAdb } ?: return null
 
-        if (adbInterface == null) return null
-
-        val hasBulkIn = adbInterface.endpoints.any {
-            it.type == UsbConstants.USB_ENDPOINT_XFER_BULK && it.direction == UsbConstants.USB_DIR_IN
-        }
-        val hasBulkOut = adbInterface.endpoints.any {
-            it.type == UsbConstants.USB_ENDPOINT_XFER_BULK && it.direction == UsbConstants.USB_DIR_OUT
-        }
-
-        if (!hasBulkIn || !hasBulkOut) {
+        if (!adbInterface.hasBulkBidirectional) {
             Log.w(
                 TAG,
-                "[MODE] adb-signature-rejected intf=${adbInterface.id} reason=missing-bulk-pair hasIn=$hasBulkIn hasOut=$hasBulkOut"
+                "[MODE] adb-signature-rejected intf=${adbInterface.id} reason=missing-bulk-pair"
             )
             return null
         }
@@ -316,6 +314,18 @@ class ProtocolDetector {
                 ProtocolFamily.MTP,
                 60,
                 "Matched MTP/PTP/storage-like interface class"
+            )
+        } else null
+    }
+
+    private fun detectCdcSerial(snapshot: UsbDescriptorSnapshot): DetectionResult? {
+        val hasCdcSerial = snapshot.interfaces.any { it.isCdcSerial }
+        return if (hasCdcSerial) {
+            DetectionResult(
+                DeviceMode.CDC_SERIAL,
+                ProtocolFamily.CDC_SERIAL,
+                50,
+                "Generic CDC-ACM or Vendor Serial interface found"
             )
         } else null
     }

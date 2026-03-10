@@ -26,6 +26,14 @@ object NvBridge {
     /** Writes arbitrary NV_ITEM to Qualcomm modem via DIAG. */
     external fun writeQcomNvItem(handle: Long, itemId: Int, data: ByteArray): Boolean
 
+    // ── TEE & SECURE STORAGE (Stage 30.1) ───────────────────────
+    
+    /** Read RPMB status. */
+    external fun readRpmbStatus(handle: Long): String
+
+    /** Read raw Keystore descriptor. */
+    external fun readTeeInfo(handle: Long): String
+
     // ── Kotlin Utils ─────────────────────────────────────────────
 
     /**

@@ -27,7 +27,15 @@ fun ReportingScreen(
 ) {
     val hazeState = remember { HazeState() }
     val content = remember(reportFile) {
-        reportFile?.readText() ?: "Error: Report file not found."
+        if (reportFile?.extension == "pdf") {
+            "OFFICIAL FORENSIC AUDIT TRAIL (PDF)\n\n" +
+            "Location: ${reportFile.absolutePath}\n" +
+            "Size: ${reportFile.length() / 1024} KB\n\n" +
+            "The document has been digitally signed and is ready for legal handover.\n" +
+            "Use 'SHARE REPORT' to export to secure storage."
+        } else {
+            reportFile?.readText() ?: "Error: Report file not found."
+        }
     }
 
     Box(
