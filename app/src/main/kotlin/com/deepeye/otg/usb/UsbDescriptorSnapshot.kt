@@ -38,13 +38,6 @@ data class UsbInterfaceSnapshot(
     val isCdcSerial: Boolean
         get() = interfaceClass == 0x02 && interfaceSubclass == 0x02
 
-    // Compatibility shims for existing call sites.
-    fun isExplicitAdb(): Boolean = isExplicitAdb
-    fun hasBulkBidirectional(): Boolean = hasBulkBidirectional
-    fun isAppleDfu(): Boolean = isAppleDfu
-    fun isFastboot(): Boolean = isFastboot
-    fun isCdcSerial(): Boolean = isCdcSerial
-
     fun classTriple(): String = "class=0x%02X sub=0x%02X proto=0x%02X".format(interfaceClass, interfaceSubclass, interfaceProtocol)
 }
 

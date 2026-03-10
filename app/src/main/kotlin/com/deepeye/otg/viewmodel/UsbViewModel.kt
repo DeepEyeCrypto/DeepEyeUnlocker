@@ -169,8 +169,7 @@ class UsbViewModel(
     fun clearBatchSelection() { _batchSelectedKeys.value = emptySet() }
 
     fun selectAllBatch() {
-        val keys = sessions.value.associate { it.deviceKey to it }.keys
-        _batchSelectedKeys.value = keys
+        _batchSelectedKeys.value = sessions.value.keys
     }
 
     private val _fleetHealth = MutableStateFlow<Map<String, String>>(emptyMap())
@@ -462,7 +461,7 @@ class UsbViewModel(
 
     fun startRemoteTunnel() {
         viewModelScope.launch {
-            val sessionsMap = sessions.value.associateBy { it.deviceKey }
+            val sessionsMap = sessions.value
             if (sessionsMap.isNotEmpty()) {
                 addLog("CLOUD", "Broadcasting Forensic Fleet to Relay Server...")
                 com.deepeye.otg.service.TunnelManager.startFleetSharing(sessionsMap)
@@ -480,7 +479,7 @@ class UsbViewModel(
 
     fun performCloudSync() {
         viewModelScope.launch {
-            val report = com.deepeye.otg.service.ReportManager.generateFinalJson(appContext)
+            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
             if (report != null) {
                 addLog("SYNC", "Uploading audit trail to Cloud...")
                 val success = com.deepeye.otg.service.CloudSyncService.syncReport(report, "LICENSE-TEMP-KEY")
@@ -846,7 +845,7 @@ class UsbViewModel(
     }
 
     fun exportSessionReport() {
-        val file = com.deepeye.otg.service.ReportManager.generateFinalJson(appContext)
+        val file = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
         _queueStatus.value = SessionState.Reporting(file)
     }
 
@@ -949,6 +948,7 @@ class UsbViewModel(
                     device = device,
                     protocol = protocolFamily,
                     fd = fd,
+                    deviceKey = _selectedDeviceKey.value,
                     onProgress = { pct, msg ->
                         if (_queueStatus.value is SessionState.ExecutingOperation) {
                             _queueStatus.value = SessionState.ExecutingOperation(op, pct, msg)

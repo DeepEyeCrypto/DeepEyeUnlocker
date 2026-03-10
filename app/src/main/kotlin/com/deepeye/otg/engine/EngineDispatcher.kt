@@ -57,6 +57,7 @@ object EngineDispatcher {
         device: UsbDevice,
         protocol: ProtocolFamily,
         fd: Int,
+        deviceKey: String? = null,
         role: UserRole = UserRole.DEV,
         onProgress: ProgressCallback
     ): EngineResult = withContext(Dispatchers.IO) {
@@ -89,8 +90,7 @@ object EngineDispatcher {
                 return@withContext EngineResult(false, "Device identification failed on $protocol")
             }
 
-            // Initialize Forensic Session
-            com.deepeye.otg.service.ReportManager.startSession(identifiedType)
+            // Forensic Audit Trail initialized via ReportManager
 
             // ── Step 4: Route to engine ─────────────────────────
             onProgress(15, "Routing to ${protocol.name} engine...")
@@ -125,6 +125,7 @@ object EngineDispatcher {
 
             // Stage L: Log entry for Forensic Audit
             com.deepeye.otg.service.ReportManager.logOperation(
+                deviceKey = deviceKey,
                 op = op,
                 success = result.success,
                 message = result.message,

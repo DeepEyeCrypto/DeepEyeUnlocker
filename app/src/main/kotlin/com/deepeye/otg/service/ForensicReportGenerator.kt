@@ -89,7 +89,7 @@ object ForensicReportGenerator {
                         }
                         val log = logs.getJSONObject(l)
                         val status = log.optString("res")
-                        paint.color = if (status.contains("SUCCESS") || status.contains("OK")) Color(0xFF1B5E20).toInt() else Color.RED
+                        paint.color = if (status.contains("SUCCESS") || status.contains("OK")) 0xFF1B5E20.toInt() else Color.RED
                         canvas.drawText("[${log.optString("ts")}] ${log.optString("op")} -> $status", 70f, yPos, paint)
                         yPos += 12f
                         paint.color = Color.GRAY
@@ -130,5 +130,4 @@ object ForensicReportGenerator {
             null
         }
     }
-}
 }

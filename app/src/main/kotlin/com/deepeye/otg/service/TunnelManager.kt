@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import okhttp3.*
 import org.json.JSONObject
+import com.deepeye.otg.usb.UsbLifecycleState
+import com.deepeye.otg.domain.models.DeviceMode
 import java.util.concurrent.TimeUnit
 
 /**
@@ -40,7 +42,7 @@ object TunnelManager {
     /**
      * Provider Mode: Share the entire forensic fleet to the cloud for expert collaboration.
      */
-    fun startFleetSharing(sessions: Map<String, com.deepeye.otg.usb.DeviceSession>) {
+    fun startFleetSharing(sessions: Map<String, UsbLifecycleState>) {
         _status.value = TunnelStatus.CONNECTING
         val request = Request.Builder().url(RELAY_ENDPOINT).build()
         
@@ -53,13 +55,15 @@ object TunnelManager {
                     put("type", "FLEET_HANDSHAKE")
                     put("nodeCount", sessions.size)
                     val nodes = org.json.JSONArray()
-                    sessions.forEach { (key, session) ->
-                        nodes.put(JSONObject().apply {
-                            put("key", key)
-                            put("name", session.deviceName)
-                            put("chipset", session.chipset)
-                            put("mode", session.detectedDeviceMode.name)
-                        })
+                    sessions.forEach { (key, state) ->
+                        if (state is UsbLifecycleState.Connected) {
+                            nodes.put(JSONObject().apply {
+                                put("key", key)
+                                put("name", state.deviceName)
+                                put("chipset", state.chipset)
+                                put("mode", state.detectedDeviceMode.name)
+                            })
+                        }
                     }
                     put("nodes", nodes)
                 }
@@ -84,7 +88,12 @@ object TunnelManager {
     /**
      * Legacy Provider Mode: Share a local USB device to the cloud.
      */
+    /**
+     * Legacy Provider Mode: Share a local USB device to the cloud.
+     */
     fun startSharing(device: UsbDevice) {
+        // Implementation for single device sharing
+    }
 
     /**
      * Operator Mode: Connect to a shared device.
@@ -231,6 +240,7 @@ object TunnelManager {
         is TransferResult.ProtocolError -> msg
         is TransferResult.Success -> ""
         is TransferResult.Partial -> "Partial transfer"
+        else -> "Unknown transfer error"
     }
 
     fun stopSharing() {
