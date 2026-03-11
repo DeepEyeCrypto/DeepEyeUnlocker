@@ -83,6 +83,7 @@ fun MainScreen(
                     NavTarget.SETTINGS -> SettingsScreen(viewModel)
                     NavTarget.DASHBOARD -> ForensicDashboardScreen(viewModel)
                     NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
+                    NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
                     NavTarget.IMEI_REPAIR -> {
                         val aiAnalysis by viewModel.aiAnalysis.collectAsState()
                         val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
@@ -536,6 +537,18 @@ private fun MainTopBar(viewModel: UsbViewModel) {
                     imageVector = Icons.Default.Dashboard,
                     contentDescription = "Dashboard",
                     tint = if (currentNav == NavTarget.DASHBOARD) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.IPHONE_15_RESEARCH) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.PhoneIphone,
+                    contentDescription = "iPhone 15 Research",
+                    tint = if (currentNav == NavTarget.IPHONE_15_RESEARCH) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }
             Spacer(Modifier.width(8.dp))

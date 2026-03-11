@@ -6,5 +6,6 @@ enum class NavTarget {
     SETTINGS,
     IMEI_REPAIR,
     DASHBOARD,
-    FILE_EXPLORER
+    FILE_EXPLORER,
+    IPHONE_15_RESEARCH
 }
