@@ -1,3 +1,14 @@
+## [2026.26] — 2026-03-11
+
+### ✨ iPhone 15 Pro Forensic Research & USB-C Analyzer
+
+- **iPhone 15 Pro/Max Forensic Research (Stage 600.1)**: Support for Apple A17 Pro (iPhone 15 Pro) forensic analysis.
+- **USB-C PD Protocol Analyzer**: Low-level sniffing of USB-C Power Delivery handshakes on the iPhone 15 series.
+- **Vulnerability Mapping (CVE Integration)**: Mapping connected iPhone 15 hardware to known vulnerabilities (CVE-2023-42824 etc).
+- **A17 Pro DFU Handshaking**: Experimental support for DFU state monitoring on iPhone 15 Pro models.
+
+---
+
 ## [2026.25] — 2026-03-10
 
 ### ✨ Multi-Device Forensic Laboratory & Fleet Management
