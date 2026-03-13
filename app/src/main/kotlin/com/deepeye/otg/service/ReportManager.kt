@@ -3,6 +3,7 @@ package com.deepeye.otg.service
 import android.content.Context
 import android.util.Log
 import com.deepeye.otg.NativeBridge
+import com.deepeye.otg.data.db.entities.FuzzFindingEntity
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,12 +59,25 @@ object ReportManager {
     /**
      * Generates a consolidated JSON report for ALL active and recently seen devices.
      */
-    fun generateFleetReport(context: Context): File? {
+    fun generateFleetReport(context: Context, fuzzFindings: List<FuzzFindingEntity> = emptyList()): File? {
         val root = JSONObject().apply {
             put("report_type", "FORENSIC_FLEET_AUDIT")
             put("report_id", UUID.randomUUID().toString())
             put("timestamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
-            put("engine_version", "v2026.19-MULTI")
+            put("engine_version", "v2026.25-EXPLOIT-ACTIVE")
+            
+            // ── Exploit Findings (Stage 11.5) ────────────────────
+            val findingsArray = JSONArray()
+            fuzzFindings.forEach { finding ->
+                findingsArray.put(JSONObject().apply {
+                    put("type", finding.type)
+                    put("mutation", finding.mutationType)
+                    put("signature", finding.crashSignature)
+                    put("device", finding.targetDeviceKey)
+                    put("ts", SimpleDateFormat("HH:mm:ss", Locale.US).format(Date(finding.timestamp)))
+                })
+            }
+            put("exploit_findings", findingsArray)
             
             val nodesArray = JSONArray()
             fleetLogs.forEach { (deviceKey, logs) ->

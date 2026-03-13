@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class SettingsManager(context: Context) {
+class SettingsManager @javax.inject.Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext context: Context
+) {
     private val prefs: SharedPreferences = context.getSharedPreferences("deepeye_settings", Context.MODE_PRIVATE)
     
     // Performance Mode

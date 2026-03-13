@@ -108,6 +108,41 @@ object ForensicReportGenerator {
             }
         }
 
+        // 3. Exploit & Success Findings (Stage 11.5)
+        val findings = root.optJSONArray("exploit_findings")
+        if (findings != null && findings.length() > 0) {
+            if (yPos > 700f) {
+                pdfDocument.finishPage(page)
+                page = pdfDocument.startPage(pageInfo)
+                canvas = page.canvas
+                yPos = 50f
+            }
+
+            paint.textSize = 14f
+            paint.isFakeBoldText = true
+            paint.color = 0xFFC62828.toInt() // Deep Red for exploits
+            canvas.drawText("CRITICAL RESEARCH FINDINGS (EXPLOITS)", 50f, yPos, paint)
+            yPos += 25f
+
+            paint.textSize = 9f
+            paint.isFakeBoldText = false
+            for (i in 0 until findings.length()) {
+                if (yPos > 780f) {
+                    pdfDocument.finishPage(page)
+                    page = pdfDocument.startPage(pageInfo)
+                    canvas = page.canvas
+                    yPos = 50f
+                }
+                val f = findings.getJSONObject(i)
+                paint.color = Color.BLACK
+                canvas.drawText("${f.optString("ts")} | ${f.optString("type")} | ${f.optString("device")}", 60f, yPos, paint)
+                yPos += 12f
+                paint.color = Color.BLUE
+                canvas.drawText("  SIG: ${f.optString("signature")}", 70f, yPos, paint)
+                yPos += 16f
+            }
+        }
+
         // 4. Footer
         paint.color = Color.GRAY
         paint.textSize = 8f

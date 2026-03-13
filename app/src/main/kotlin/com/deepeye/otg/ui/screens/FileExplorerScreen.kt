@@ -7,10 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -65,7 +65,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                         viewModel.setNav(NavTarget.HOME)
                     }
                 }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
                 }
                 Spacer(Modifier.width(8.dp))
                 Column {
@@ -90,7 +90,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                             viewModel.openFile(file.path)
                         }
                     }
-                    Divider(color = StitchTokens.GlassBorder.copy(alpha = 0.5f), thickness = 0.5.dp)
+                    HorizontalDivider(color = StitchTokens.GlassBorder.copy(alpha = 0.5f), thickness = 0.5.dp)
                 }
             }
         }

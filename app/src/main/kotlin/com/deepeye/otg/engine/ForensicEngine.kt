@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.deepeye.otg.NativeBridge
 import com.deepeye.otg.usb.gpt.GptParser
+import com.deepeye.otg.usb.gpt.GptStructure
 import com.deepeye.otg.usb.UsbTransport
 import java.io.File
 import java.security.MessageDigest
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * Stage 10 — Forensic Engine (Kotlin Implementation).
  * Handles bit-stream acquisition, carving, and integrity verification.
  */
-class ForensicEngine(private val context: Context) {
+class ForensicEngine @javax.inject.Inject constructor(@dagger.hilt.android.qualifiers.ApplicationContext private val context: Context) {
     companion object {
         private const val TAG = "DeepEye-Forensics"
     }
@@ -84,13 +85,52 @@ class ForensicEngine(private val context: Context) {
     /**
      * Map GPT partition table to usable internal list.
      */
-    suspend fun listPartitions(transport: UsbTransport): List<String> {
+    suspend fun listPartitions(transport: UsbTransport): List<GptStructure.GptEntry> {
         val parser = GptParser(transport)
         return try {
-            val entries = parser.readPartitions()
-            entries.map { "${it.name} (${it.sizeInBytes / 1024 / 1024} MB)" }
+            parser.readPartitions()
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    /**
+     * Read and return hex representation of a specific partition start.
+     */
+    suspend fun peekPartition(handle: Long, name: String, bytes: Int = 512): String {
+        return try {
+            NativeBridge.peekPartition(handle, name, bytes) ?: "ERROR: PEEK_FAILED"
+        } catch (e: Exception) {
+            "ERROR: READ_FAILED"
+        }
+    }
+
+    /**
+     * Search physical storage for a specific pattern.
+     */
+    suspend fun searchPhysicalStorage(handle: Long, pattern: String): String {
+        _status.value = "SEARCHING"
+        return try {
+            NativeBridge.searchStorage(handle, pattern, 100)
+        } catch (e: Exception) {
+            "[]"
+        } finally {
+            _status.value = "SEARCH_COMPLETE"
+        }
+    }
+
+    /**
+     * Apply a byte-level patch to a partition.
+     */
+    suspend fun patchSector(handle: Long, name: String, offset: Long, hexData: String): Boolean {
+        _status.value = "PATCHING $name"
+        val bytes = hexData.split(" ").map { it.toInt(16).toByte() }.toByteArray()
+        return try {
+            NativeBridge.patchPartition(handle, name, offset, bytes)
+        } catch (e: Exception) {
+            false
+        } finally {
+            _status.value = "IDLE"
         }
     }
 

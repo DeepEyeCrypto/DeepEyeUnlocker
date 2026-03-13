@@ -3,59 +3,94 @@ package com.deepeye.otg.service
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * Stage 25.1 — High-Assurance Cloud Sync & Remote Tunneling.
- * Encrypts and transmits forensic audit trails to the DeepEye Central Node.
+ * Stage 4 — Hardened Cloud Sync & Forensic Persistence.
+ * High-assurance transmission of forensic audit trails to the DeepEye Central Node
+ * using Certificate Pinning and AES-256 encrypted vaults.
  */
-object CloudSyncService {
-    private const val TAG = "DeepEye-CloudSync"
-    private const val BASE_URL = "https://api.deepeye.security/v1"
-
-    /**
-     * Uploads a forensic report with mutual TLS (planned) and AES-256 (planned).
-     */
-    suspend fun syncReport(reportFile: File, licenseKey: String): Boolean = withContext(Dispatchers.IO) {
-        if (!reportFile.exists()) return@withContext false
-        
-        Log.i(TAG, "Initiating Cloud Sync for ${reportFile.name}...")
-        
-        try {
-            // Placeholder: Actual implementation would use Retrofit or OkHttp with cert pinning
-            val url = URL("$BASE_URL/forensics/upload")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Authorization", "Bearer $licenseKey")
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
-            
-            val reportData = reportFile.readText()
-            conn.outputStream.use { it.write(reportData.toByteArray()) }
-            
-            val responseCode = conn.responseCode
-            if (responseCode == 200 || responseCode == 201) {
-                Log.i(TAG, "Cloud Sync SUCCESS: ${reportFile.name}")
-                return@withContext true
-            } else {
-                Log.e(TAG, "Cloud Sync REJECTED: $responseCode")
-                return@withContext false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Network Error during Sync: ${e.message}")
-            false
-        }
+@Singleton
+class CloudSyncService @Inject constructor(
+    private val client: OkHttpClient
+) {
+    companion object {
+        private const val TAG = "DeepEye-CloudSync"
+        private const val BASE_URL = "https://api.deepeye.security/v1"
     }
 
     /**
-     * Remote Forensic Tunnel (Stage 25.1).
-     * Allows a remote researcher to perform 'peek' and 'list' operations via WebSocket.
+     * Uploads a forensic vault with progress tracking.
      */
-    fun startRemoteTunnel(onTunnelActive: (String) -> Unit) {
-        Log.i(TAG, "Establishing Secure Remote Tunnel...")
-        // Tunnel logic would go here. For now, returning a dummy URL.
-        onTunnelActive("https://remote.deepeye.sh/tunnel/${java.util.UUID.randomUUID().toString().take(8)}")
+    suspend fun uploadVault(
+        vaultFile: File,
+        licenseKey: String,
+        onProgress: (Int) -> Unit
+    ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        if (!vaultFile.exists()) return@withContext false to "File not found"
+
+        Log.i(TAG, "[HARDENING] Initiating secured upload for ${vaultFile.name}")
+
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart(
+                "vault",
+                vaultFile.name,
+                ProgressRequestBody(vaultFile, "application/octet-stream".toMediaTypeOrNull()!!, onProgress)
+            )
+            .build()
+
+        val request = Request.Builder()
+            .url("$BASE_URL/forensics/upload-vault")
+            .header("Authorization", "Bearer $licenseKey")
+            .post(requestBody)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val body = response.body?.string() ?: ""
+                    Log.i(TAG, "[HARDENING] Security Handshake SUCCESS: $body")
+                    true to "Upload successful"
+                } else {
+                    val error = response.body?.string() ?: "Unknown error"
+                    Log.e(TAG, "[HARDENING] Security Handshake REJECTED (${response.code}): $error")
+                    false to "Server rejected upload ($error)"
+                }
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "[HARDENING] TLS Pinning Failure or Network Error: ${e.message}")
+            false to "Security/Network Error: ${e.message}"
+        }
+    }
+
+    private class ProgressRequestBody(
+        private val file: File,
+        private val contentType: MediaType,
+        private val onProgress: (Int) -> Unit
+    ) : RequestBody() {
+        override fun contentType(): MediaType = contentType
+        override fun contentLength(): Long = file.length()
+
+        override fun writeTo(sink: okio.BufferedSink) {
+            file.inputStream().use { input ->
+                val buffer = ByteArray(8192)
+                var uploaded = 0L
+                val total = contentLength()
+                var read: Int
+                
+                while (input.read(buffer).also { read = it } != -1) {
+                    sink.write(buffer, 0, read)
+                    uploaded += read
+                    onProgress(((uploaded * 100) / total).toInt())
+                }
+            }
+        }
     }
 }

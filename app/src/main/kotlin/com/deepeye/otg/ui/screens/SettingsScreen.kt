@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,7 +53,7 @@ fun SettingsScreen(viewModel: UsbViewModel) {
         // Section header
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { viewModel.setNav(NavTarget.HOME) }) {
-                Icon(Icons.Default.ArrowBack, "Back", tint = StitchTokens.TextPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = StitchTokens.TextPrimary)
             }
             Spacer(Modifier.width(8.dp))
             Text("ENGINE SETTINGS", style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp))

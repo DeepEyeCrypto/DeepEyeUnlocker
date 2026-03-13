@@ -15,25 +15,94 @@ import com.deepeye.otg.ui.toUiState
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.data.*
 import com.deepeye.otg.domain.models.*
+import com.deepeye.otg.fuzz.hid.HidFuzzCoordinator
+import com.deepeye.otg.exploit.ExploitChainOrchestrator
+import com.deepeye.otg.data.db.dao.FuzzDao
+import com.deepeye.otg.data.db.entities.FuzzFindingEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.json.JSONObject
 
-class UsbViewModel(
-    private val appContext: Context,
+@dagger.hilt.android.lifecycle.HiltViewModel
+class UsbViewModel @javax.inject.Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: Context,
     private val lifecycleManager: UsbLifecycleManager,
-    private val settings: com.deepeye.otg.data.SettingsManager
+    private val settings: com.deepeye.otg.data.SettingsManager,
+    private val adbManager: AdbManager,
+    private val hardwareManager: HardwareManager,
+    private val repository: com.deepeye.otg.data.repository.ForensicRepository,
+    private val forensicEngine: com.deepeye.otg.engine.ForensicEngine,
+    private val aiAssistant: com.deepeye.otg.engine.ForensicAiAssistant,
+    private val massExtractor: com.deepeye.otg.service.MassExtractor,
+    private val sessionCoordinator: SessionCoordinator,
+    private val hidFuzzer: com.deepeye.otg.fuzz.hid.HidFuzzCoordinator,
+    private val exploitOrchestrator: com.deepeye.otg.exploit.ExploitChainOrchestrator,
+    private val cloudSyncService: com.deepeye.otg.service.CloudSyncService,
+    private val licenseManager: com.deepeye.otg.service.LicenseManager,
+    private val tunnelManager: com.deepeye.otg.service.TunnelManager,
+    private val fuzzDao: FuzzDao
 ) : ViewModel() {
 
+    val tunnelStatus = tunnelManager.status
+    val tunnelCode = tunnelManager.sessionCode
+
+    init {
+        startHeartbeatLoop()
+    }
+
+    private fun startHeartbeatLoop() {
+        viewModelScope.launch {
+            // Wait for initial stability
+            delay(10_000)
+            while (isActive) {
+                if (licenseManager.licenseState.value == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) {
+                    licenseManager.performHeartbeat()
+                }
+                delay(30 * 60 * 1000L) // Every 30 minutes
+            }
+        }
+    }
+
     private val defaultSessionState = com.deepeye.otg.domain.models.SessionState()
-    private val adbManager = AdbManager(lifecycleManager)
-    private val hardwareManager = HardwareManager(appContext, lifecycleManager)
-    private val forensicEngine = com.deepeye.otg.engine.ForensicEngine(appContext)
-    private val aiAssistant = com.deepeye.otg.engine.ForensicAiAssistant()
-    private val massExtractor = com.deepeye.otg.service.MassExtractor(appContext, lifecycleManager)
 
     private val _statusMsg = MutableStateFlow("Disconnected")
-    val statusMsg: StateFlow<String> = _statusMsg.asStateFlow()
+    val statusMsg: StateFlow<String> = sessionCoordinator.state.map { state ->
+        when (state) {
+            is ConnectionState.Idle -> "Disconnected"
+            is ConnectionState.DeviceDetected -> "Device Detected"
+            is ConnectionState.PermissionPending -> "Permission Pending"
+            is ConnectionState.PermissionDenied -> "Permission Denied"
+            is ConnectionState.Opening -> "Opening..."
+            is ConnectionState.Open -> "Connected"
+            is ConnectionState.Ready -> "Ready"
+            is ConnectionState.Busy -> "Busy"
+            is ConnectionState.Recovering -> "Recovering..."
+            is ConnectionState.Disconnected -> "Disconnected"
+            is ConnectionState.Failed -> "Error: ${state.errorCode}"
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "Disconnected")
+
+    val connectionState = sessionCoordinator.state
+
+    val fuzzingActive = hidFuzzer.isFuzzing
+    val fuzzingStats = hidFuzzer.fuzzStats
+
+    fun startHidFuzzing(deviceKey: String) = hidFuzzer.startFuzzing(deviceKey)
+    fun stopHidFuzzing() = hidFuzzer.stopFuzzing()
+
+    val fuzzFindings = fuzzDao.getAllFindings()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val exploitState = exploitOrchestrator.state
+    val exploitExtractedFilesSize = exploitOrchestrator.extractedFiles.map { it.size }
+    val exploitExtractedFiles = exploitOrchestrator.extractedFiles
+
+    fun runExploitChain(deviceKey: String) {
+        viewModelScope.launch {
+            val transport = lifecycleManager.getTransport(deviceKey) ?: return@launch
+            exploitOrchestrator.executeChain(transport)
+        }
+    }
 
     val aiAnalysis = aiAssistant.analysis
     val aiIsProcessing = aiAssistant.isProcessing
@@ -53,8 +122,8 @@ class UsbViewModel(
     private val _diagnosticSteps = MutableStateFlow<Map<Int, DiagnosticStatus>>(emptyMap())
     val diagnosticSteps: StateFlow<Map<Int, DiagnosticStatus>> = _diagnosticSteps.asStateFlow()
 
-    val licenseStatus = LicenseManager.licenseState
-    val currentLicense = LicenseManager.currentLicense
+    val licenseStatus = licenseManager.licenseState
+    val currentLicense = licenseManager.currentLicense
 
     private val _showActivation = MutableStateFlow(false)
     val showActivation = _showActivation.asStateFlow()
@@ -65,7 +134,7 @@ class UsbViewModel(
 
     fun activateLicense(key: String) {
         viewModelScope.launch {
-            LicenseManager.activate(key)
+            licenseManager.activate(key)
         }
     }
 
@@ -99,10 +168,6 @@ class UsbViewModel(
     private val _currentNav = MutableStateFlow(com.deepeye.otg.ui.screens.NavTarget.HOME)
     val currentNav: StateFlow<com.deepeye.otg.ui.screens.NavTarget> = _currentNav.asStateFlow()
     fun setNav(target: com.deepeye.otg.ui.screens.NavTarget) { _currentNav.value = target }
-
-    // Remote Shared Context (Stage 20.2)
-    val tunnelStatus = com.deepeye.otg.service.TunnelManager.status
-    val tunnelCode = com.deepeye.otg.service.TunnelManager.sessionCode
 
     val updateState = UpdateManager.updateState
 
@@ -147,8 +212,8 @@ class UsbViewModel(
     private val _domainSessionState = MutableStateFlow(com.deepeye.otg.domain.models.SessionState())
     val domainSessionState: StateFlow<com.deepeye.otg.domain.models.SessionState> = _domainSessionState.asStateFlow()
 
-    val currentUserPolicyTier: StateFlow<PolicyTier> = LicenseManager.currentLicense
-        .map { it?.tier ?: PolicyTier.SAFE }
+    val currentUserPolicyTier: StateFlow<PolicyTier> = licenseManager.currentLicense
+        .map { lic: DeepEyeLicense? -> lic?.tier ?: PolicyTier.SAFE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), PolicyTier.SAFE)
 
     private val _deviceMetadata = MutableStateFlow<String?>(null)
@@ -159,6 +224,8 @@ class UsbViewModel(
 
     private val _batchSelectedKeys = MutableStateFlow<Set<String>>(emptySet())
     val batchSelectedKeys = _batchSelectedKeys.asStateFlow()
+
+    private var currentSessionId: Long? = null
 
     fun toggleBatchSelection(key: String) {
         val current = _batchSelectedKeys.value.toMutableSet()
@@ -184,7 +251,7 @@ class UsbViewModel(
             val results = mutableMapOf<String, String>()
             results["JVM"] = System.getProperty("java.version") ?: "UNKNOWN"
             results["NDK"] = if (NativeBridge.calculateFileHash("") != "ERROR") "READY" else "FAULT"
-            results["TUNNEL"] = if (com.deepeye.otg.service.TunnelManager.status.value != com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED) "NOMINAL" else "ERROR"
+            results["TUNNEL"] = if (tunnelManager.status.value != com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED) "NOMINAL" else "ERROR"
             
             _fleetHealth.value = results
             addLog("SECURITY", "Environmental Pre-flight complete: ${results["NDK"]}")
@@ -254,12 +321,22 @@ class UsbViewModel(
     fun runAdbCommand(command: String) {
         adbManager.runShellCommand(command) { result ->
             addLog("ADB", result)
+            viewModelScope.launch {
+                currentSessionId?.let { id ->
+                    repository.logOperation(id, "ADB_SHELL", command, "SUCCESS")
+                }
+            }
         }
     }
 
     fun performMtkIdentification() {
         hardwareManager.performMtkIdentification(_selectedDeviceKey.value) { result ->
             addLog("HW-MTK", result)
+            viewModelScope.launch {
+                currentSessionId?.let { id ->
+                    repository.logOperation(id, "MTK_IDENT", "Identification request", if (result.contains("ERROR")) "FAILED" else "SUCCESS")
+                }
+            }
         }
     }
 
@@ -271,7 +348,13 @@ class UsbViewModel(
 
     fun performQcomHandshake() {
         hardwareManager.performQcomHandshake(_selectedDeviceKey.value) { success ->
-            addLog("HW-QC", if (success) "Sahara Handshake Success" else "Sahara Handshake Failed")
+            val msg = if (success) "Sahara Handshake Success" else "Sahara Handshake Failed"
+            addLog("HW-QC", msg)
+            viewModelScope.launch {
+                currentSessionId?.let { id ->
+                    repository.logOperation(id, "QC_SAHARA", "Handshake attempt", if (success) "SUCCESS" else "FAILED")
+                }
+            }
         }
     }
 
@@ -459,34 +542,25 @@ class UsbViewModel(
         _splitViewActive.value = !_splitViewActive.value
     }
 
-    fun startRemoteTunnel() {
-        viewModelScope.launch {
-            val sessionsMap = sessions.value
-            if (sessionsMap.isNotEmpty()) {
-                addLog("CLOUD", "Broadcasting Forensic Fleet to Relay Server...")
-                com.deepeye.otg.service.TunnelManager.startFleetSharing(sessionsMap)
-            } else {
-                val dev = lifecycleManager.getActiveDevice()
-                if (dev != null) {
-                    addLog("CLOUD", "Initiating Single-Device Tunnel...")
-                    com.deepeye.otg.service.TunnelManager.startSharing(dev)
-                } else {
-                    addLog("ERROR", "No active connection to share.")
-                }
-            }
-        }
-    }
-
     fun performCloudSync() {
         viewModelScope.launch {
-            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
+            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext, fuzzFindings.value)
             if (report != null) {
-                addLog("SYNC", "Uploading audit trail to Cloud...")
-                val success = com.deepeye.otg.service.CloudSyncService.syncReport(report, "LICENSE-TEMP-KEY")
-                if (success) {
-                    addLog("SYNC", "Audit trail synchronized successfully.")
+                val license = licenseManager.currentLicense.value
+                if (license != null) {
+                    addLog("SYNC", "Uploading audit trail to Cloud...")
+                    val result = cloudSyncService.uploadVault(report, license.key) { px ->
+                        _cloudSyncStatus.value = _cloudSyncStatus.value.copy(syncing = true, progress = px, fileName = report.name)
+                    }
+                    if (result.first) {
+                        _cloudSyncStatus.value = _cloudSyncStatus.value.copy(syncing = false, result = "Sync Success", isError = false)
+                        addLog("SYNC", "Audit trail synchronized successfully.")
+                    } else {
+                        _cloudSyncStatus.value = _cloudSyncStatus.value.copy(syncing = false, result = result.second, isError = true)
+                        addLog("ERROR", "Cloud Sync failed: ${result.second}")
+                    }
                 } else {
-                    addLog("ERROR", "Cloud Sync failed (license invalid or server offline)")
+                    addLog("ERROR", "No active license for cloud sync")
                 }
             } else {
                 addLog("ERROR", "No report available for sync")
@@ -496,7 +570,7 @@ class UsbViewModel(
 
     fun generateForensicPdf() {
         viewModelScope.launch {
-            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
+            val report = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext, fuzzFindings.value)
             if (report != null) {
                 addLog("REPORT", "Generating official Fleet Forensic documentation...")
                 val pdf = com.deepeye.otg.service.ForensicReportGenerator.generatePdfReport(appContext, report.absolutePath)
@@ -593,7 +667,11 @@ class UsbViewModel(
     val progress: StateFlow<Int> = _progress.asStateFlow()
 
     private val _queueStatus = MutableStateFlow<SessionState>(SessionState.Idle)
-    val queueState: StateFlow<SessionState> = _queueStatus.asStateFlow()
+    val queueStatus: StateFlow<SessionState> = _queueStatus.asStateFlow()
+    val queueState: StateFlow<SessionState> = queueStatus
+
+    private val _cloudSyncStatus = MutableStateFlow(CloudSyncStatus())
+    val cloudSyncStatus = _cloudSyncStatus.asStateFlow()
 
     // Internal mutable state for compatibility with foreground service
     private val _usbStateValue = MutableStateFlow<SessionState>(SessionState.Idle) 
@@ -729,6 +807,23 @@ class UsbViewModel(
                     put("chipset", state.chipset)
                 }.toString()
                 com.deepeye.otg.service.ReportManager.initDevice(state.deviceKey, deviceJson)
+
+                // Stage 21: Persistent Registry
+                viewModelScope.launch {
+                    repository.recordDevice(
+                        com.deepeye.otg.data.db.entities.DeviceEntity(
+                            deviceKey = state.deviceKey,
+                            vendorId = state.vendorId,
+                            productId = state.productId,
+                            manufacturer = state.brand,
+                            model = state.deviceName,
+                            firstDetectedAt = System.currentTimeMillis(),
+                            lastDetectedAt = System.currentTimeMillis()
+                        )
+                    )
+                    currentSessionId = repository.startSession(state.deviceKey, state.mode.name)
+                    repository.logOperation(currentSessionId!!, "CONNECT", "Device connected via ${state.mode}", "SUCCESS")
+                }
             }
             is UsbLifecycleState.PermissionDenied -> {
                 _usbStateValue.value = SessionState.Error("Permission denied")
@@ -845,7 +940,7 @@ class UsbViewModel(
     }
 
     fun exportSessionReport() {
-        val file = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext)
+        val file = com.deepeye.otg.service.ReportManager.generateFleetReport(appContext, fuzzFindings.value)
         _queueStatus.value = SessionState.Reporting(file)
     }
 
@@ -856,7 +951,7 @@ class UsbViewModel(
             file
         )
         val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-            type = "application/json"
+            type = if (file.extension == "deepvault") "application/octet-stream" else "application/json"
             putExtra(android.content.Intent.EXTRA_STREAM, uri)
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -865,8 +960,51 @@ class UsbViewModel(
         appContext.startActivity(chooser)
     }
 
+    fun encryptToVault(file: java.io.File, password: String) {
+        viewModelScope.launch {
+            val vaultFile = com.deepeye.otg.service.VaultManager.encryptReport(file, password)
+            if (vaultFile != null) {
+                _queueStatus.value = SessionState.Reporting(vaultFile)
+                addLog("SUCCESS", "Report encrypted to vault: ${vaultFile.name}")
+            } else {
+                addLog("ERROR", "Encryption failed")
+            }
+        }
+    }
+
+    fun syncToCloud(file: java.io.File) {
+        val license = licenseManager.currentLicense.value
+        if (license == null) {
+            addLog("ERROR", "No active license for cloud sync")
+            return
+        }
+
+        viewModelScope.launch {
+            _cloudSyncStatus.value = CloudSyncStatus(syncing = true, fileName = file.name)
+            val result = cloudSyncService.uploadVault(file, license.key) { px ->
+                _cloudSyncStatus.value = _cloudSyncStatus.value.copy(progress = px)
+            }
+            
+            if (result.first) {
+                _cloudSyncStatus.value = _cloudSyncStatus.value.copy(syncing = false, result = "Sync Success", isError = false)
+                addLog("SUCCESS", "Vault synchronized to cloud")
+            } else {
+                _cloudSyncStatus.value = _cloudSyncStatus.value.copy(syncing = false, result = result.second, isError = true)
+                addLog("ERROR", "Cloud sync failed: ${result.second}")
+            }
+        }
+    }
+
     fun dismissReport() {
         _queueStatus.value = SessionState.Idle
+    }
+
+    fun startRemoteTunnel() {
+        tunnelManager.startFleetSharing()
+    }
+
+    fun stopRemoteTunnel() {
+        tunnelManager.stopSharing()
     }
 
     fun runHardenValidation() {

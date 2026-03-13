@@ -3,9 +3,12 @@ package com.deepeye.otg.usb
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * High-level session for ADB operations (Stage 7.2).
+ * Hardened for Pro cycle (v2026.27): concurrent safety and window management stubs.
  */
 class AdbSession(
     private val transport: UsbTransport
@@ -18,13 +21,18 @@ class AdbSession(
     val isConnected = _isConnected.asStateFlow()
 
     private var maxData = AdbProtocol.CONNECT_MAXDATA
-    private var localId = 1
-    private var remoteId = 0
+    private var localIdCounter = 1
+    
+    // Concurrent Safety
+    private val sessionMutex = Mutex()
+    private val activeStreams = mutableMapOf<Int, Int>() // localId -> remoteId
 
     /**
      * Perform the ADB connection handshake.
      */
-    suspend fun connect(systemIdentity: String = "host::DeepEyeOTG"): Boolean {
+    suspend fun connect(systemIdentity: String = "host::DeepEyeOTG"): Boolean = sessionMutex.withLock {
+        if (_isConnected.value) return true
+        
         Log.i(TAG, "Initiating ADB handshake...")
 
         val connectMsg = AdbMessage(
@@ -40,28 +48,22 @@ class AdbSession(
             return false
         }
 
-        // Wait for response
-        val readRes = transport.read(24) // Header only first
-        if (readRes !is TransferResult.Success || readRes.data == null) {
-            Log.e(TAG, "Failed to read CNXN response")
-            return false
-        }
-
         val response = receiveMessage() ?: return false
         
-        when (response.command) {
+        return when (response.command) {
             AdbProtocol.A_CNXN -> {
-                Log.i(TAG, "ADB handshake successful")
+                this.maxData = response.arg1
+                Log.i(TAG, "ADB handshake successful (maxData=$maxData)")
                 _isConnected.value = true
-                return true
+                true
             }
             AdbProtocol.A_AUTH -> {
                 Log.w(TAG, "ADB AUTH required")
-                return handleAuth(response.data)
+                handleAuth(response.data)
             }
             else -> {
                 Log.e(TAG, "Unexpected ADB command: ${response.command}")
-                return false
+                false
             }
         }
     }
@@ -70,15 +72,15 @@ class AdbSession(
         val headerRes = transport.read(24)
         if (headerRes !is TransferResult.Success || headerRes.data == null) return null
         
-        val header = headerRes.data
-        val dataLen = java.nio.ByteBuffer.wrap(header).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(12)
+        val msg = AdbMessage.parseHeader(headerRes.data)
+        val dataLen = java.nio.ByteBuffer.wrap(headerRes.data).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(12)
         
         val data = if (dataLen > 0) {
             val dataRes = transport.read(dataLen)
             if (dataRes is TransferResult.Success) dataRes.data else null
         } else null
         
-        return AdbMessage.parse(header, data)
+        return msg.copy(data = data)
     }
 
     private suspend fun handleAuth(token: ByteArray?): Boolean {
@@ -97,34 +99,27 @@ class AdbSession(
 
         transport.write(authMsg.serialize())
 
-        // Read response to signature
-        val readRes = transport.read(24)
-        if (readRes !is TransferResult.Success || readRes.data == null) return false
-        
-        val resp = AdbMessage.parse(readRes.data, null)
+        val resp = receiveMessage() ?: return false
         if (resp.command == AdbProtocol.A_CNXN) {
             _isConnected.value = true
             return true
         }
 
-        // If signature failed, try sending public key
+        // Try public key fallback
         if (resp.command == AdbProtocol.A_AUTH && resp.arg0 == AdbProtocol.AUTH_TOKEN) {
             val pubKey = AdbCrypto.getAdbPublicKeyPayload(keyPair.public as java.security.interfaces.RSAPublicKey)
             val pubKeyMsg = AdbMessage(
                 AdbProtocol.A_AUTH,
                 AdbProtocol.AUTH_RSAPUBLICKEY,
                 0,
-                pubKey + byteArrayOf(0) // Null terminated
+                pubKey + byteArrayOf(0)
             )
             transport.write(pubKeyMsg.serialize())
 
-            val finalRead = transport.read(24)
-            if (finalRead is TransferResult.Success && finalRead.data != null) {
-                val finalResp = AdbMessage.parse(finalRead.data, null)
-                if (finalResp.command == AdbProtocol.A_CNXN) {
-                    _isConnected.value = true
-                    return true
-                }
+            val finalResp = receiveMessage() ?: return false
+            if (finalResp.command == AdbProtocol.A_CNXN) {
+                _isConnected.value = true
+                return true
             }
         }
 
@@ -134,33 +129,58 @@ class AdbSession(
     suspend fun open(destination: String): Int? {
         if (!_isConnected.value) return null
         
-        val id = localId++
+        val lId = localIdCounter++
         val openMsg = AdbMessage(
             AdbProtocol.A_OPEN,
-            id,
+            lId,
             0,
             (destination + "\u0000").toByteArray()
         )
 
         transport.write(openMsg.serialize())
         
-        // Wait for OKAY
         val resp = receiveMessage()
         if (resp != null && resp.command == AdbProtocol.A_OKAY) {
-            remoteId = resp.arg0
-            return remoteId
+            val rId = resp.arg0
+            activeStreams[lId] = rId
+            return lId
         }
         return null
     }
 
-    suspend fun readString(): String? {
+    /**
+     * Reads a single block of data from a stream.
+     * In a full implementation, this would be reactive (listening for WRTE/CLSE).
+     */
+    suspend fun readString(localId: Int): String? {
+        val rId = activeStreams[localId] ?: return null
         val msg = receiveMessage() ?: return null
-        if (msg.command == AdbProtocol.A_WRTE && msg.data != null) {
-            // Acknowledge WRITE
-            val okay = AdbMessage(AdbProtocol.A_OKAY, localId - 1, remoteId, null)
-            transport.write(okay.serialize())
-            return String(msg.data)
+        
+        when (msg.command) {
+            AdbProtocol.A_WRTE -> {
+                // Acknowledge WRITE (OKAY)
+                val okay = AdbMessage(AdbProtocol.A_OKAY, localId, rId, null)
+                transport.write(okay.serialize())
+                return msg.data?.let { String(it) }
+            }
+            AdbProtocol.A_CLSE -> {
+                activeStreams.remove(localId)
+                return null
+            }
         }
         return null
+    }
+
+    suspend fun write(localId: Int, data: ByteArray): Boolean {
+        val rId = activeStreams[localId] ?: return false
+        val msg = AdbMessage(AdbProtocol.A_WRTE, localId, rId, data)
+        return transport.write(msg.serialize()).isSuccess
+    }
+
+    suspend fun close(localId: Int) {
+        val rId = activeStreams[localId] ?: return
+        val msg = AdbMessage(AdbProtocol.A_CLSE, localId, rId, null)
+        transport.write(msg.serialize())
+        activeStreams.remove(localId)
     }
 }

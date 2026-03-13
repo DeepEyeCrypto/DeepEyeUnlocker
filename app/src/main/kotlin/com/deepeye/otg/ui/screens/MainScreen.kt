@@ -31,13 +31,18 @@ import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.ui.components.*
 import com.deepeye.otg.ui.theme.StitchTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
+import com.deepeye.otg.viewmodel.research.CveDashboardViewModel
 import com.deepeye.otg.usb.UsbLifecycleState
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun MainScreen(
     viewModel: UsbViewModel,
+    cveViewModel: CveDashboardViewModel = hiltViewModel(),
+    fuzzViewModel: com.deepeye.otg.viewmodel.research.FuzzDashboardViewModel = hiltViewModel(),
+    hidViewModel: com.deepeye.otg.viewmodel.research.HidResearchViewModel = hiltViewModel(),
     onRemoteShare: () -> Unit
 ) {
     val lifecycleState by viewModel.lifecycleState.collectAsState()
@@ -84,6 +89,21 @@ fun MainScreen(
                     NavTarget.DASHBOARD -> ForensicDashboardScreen(viewModel)
                     NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
                     NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
+                    NavTarget.TERMINAL -> TerminalScreen(viewModel)
+                    NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.HOME) })
+                    NavTarget.STORAGE -> StorageScreen()
+                    NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
+                        viewModel = cveViewModel,
+                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                    )
+                    NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
+                        viewModel = fuzzViewModel,
+                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                    )
+                    NavTarget.HID_RESEARCH -> HidResearchScreen(
+                        viewModel = hidViewModel,
+                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                    )
                     NavTarget.IMEI_REPAIR -> {
                         val aiAnalysis by viewModel.aiAnalysis.collectAsState()
                         val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
@@ -549,6 +569,78 @@ private fun MainTopBar(viewModel: UsbViewModel) {
                     imageVector = Icons.Default.PhoneIphone,
                     contentDescription = "iPhone 15 Research",
                     tint = if (currentNav == NavTarget.IPHONE_15_RESEARCH) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.TERMINAL) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Terminal,
+                    contentDescription = "Forensic Console",
+                    tint = if (currentNav == NavTarget.TERMINAL) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.VAULT) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Storage,
+                    contentDescription = "Forensic Vault",
+                    tint = if (currentNav == NavTarget.VAULT) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.CVE_INTELLIGENCE) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = "CVE Intelligence",
+                    tint = if (currentNav == NavTarget.CVE_INTELLIGENCE) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.FUZZ_DASHBOARD) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.ElectricBolt,
+                    contentDescription = "Fuzz Harness",
+                    tint = if (currentNav == NavTarget.FUZZ_DASHBOARD) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.HID_RESEARCH) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Usb,
+                    contentDescription = "HID Research",
+                    tint = if (currentNav == NavTarget.HID_RESEARCH) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.STORAGE) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.Memory,
+                    contentDescription = "Storage",
+                    tint = if (currentNav == NavTarget.STORAGE) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }
             Spacer(Modifier.width(8.dp))

@@ -1,0 +1,37 @@
+package com.deepeye.otg.fuzz.hid
+
+object HidCorpus {
+    val NORMAL_MULTITOUCH = byteArrayOf(
+        0x05, 0x01, 0x09, 0x04, 0xA1.toByte(), 0x01, 0x09, 0x01, 0xA1.toByte(), 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
+        0x15, 0x00, 0x25, 0x01, 0x95.toByte(), 0x03, 0x75, 0x01, 0x81.toByte(), 0x02, 0x95.toByte(), 0x01, 0x75, 0x05, 0x81.toByte(), 0x03,
+        0xC0.toByte(), 0xC0.toByte()
+    )
+
+    // CVE-2025-43424 Trigger: 255 contacts allocated for 1 -> OOB
+    @OptIn(ExperimentalUnsignedTypes::class)
+    val OVERFLOW_CONTACT_COUNT = byteArrayOf(
+        0x05, 0x0D, 0x09, 0x04, 0xA1.toByte(), 0x01, 0x85.toByte(), 0x01, 0x09, 0x22, 0x95.toByte(), 0x01, 0x75, 0x08, 0x15, 0x00, 
+        0x26, 0xFF.toByte(), 0x00, 0x81.toByte(), 0x02, 0xC0.toByte()
+    )
+
+    val INVERTED_LOGICAL_RANGE = byteArrayOf(
+        0x05, 0x01, 0x09, 0x01, 0xA1.toByte(), 0x01, 0x15, 0x7F, 0x25, 0x00, 0x09, 0x30, 0x75, 0x08, 0x95.toByte(), 0x01, 
+        0x81.toByte(), 0x02, 0xC0.toByte()
+    )
+
+    val DEEP_COLLECTION_NESTING = ByteArray(40) { i ->
+        if (i < 20) 0xA1.toByte() else 0xC0.toByte()
+    }
+
+    val OVERFLOW_REPORT_SIZE = byteArrayOf(
+        0x05, 0x01, 0x09, 0x00, 0xA1.toByte(), 0x01, 0x75, 0xFF.toByte(), 0x95.toByte(), 0xFF.toByte(), 0x81.toByte(), 0x02, 0xC0.toByte()
+    )
+
+    fun getSeeds(): List<FuzzCase> = listOf(
+        FuzzCase("seed_0", "NORMAL_MULTITOUCH", NORMAL_MULTITOUCH),
+        FuzzCase("seed_1", "OVERFLOW_CONTACT_COUNT", OVERFLOW_CONTACT_COUNT, "OOB_TRIGGER"),
+        FuzzCase("seed_2", "INVERTED_LOGICAL_RANGE", INVERTED_LOGICAL_RANGE, "RANGE_CHECK"),
+        FuzzCase("seed_3", "DEEP_COLLECTION_NESTING", DEEP_COLLECTION_NESTING, "STACK_DEPTH"),
+        FuzzCase("seed_4", "OVERFLOW_REPORT_SIZE", OVERFLOW_REPORT_SIZE, "HEAP_ALLOC")
+    )
+}

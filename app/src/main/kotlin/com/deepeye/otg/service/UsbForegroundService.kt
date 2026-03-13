@@ -6,12 +6,19 @@ import android.content.Intent
 import android.os.*
 import androidx.core.app.NotificationCompat
 import com.deepeye.otg.ui.OtgActivity
+import com.deepeye.otg.usb.SessionCoordinator
+import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Foreground service ensuring the USB session is not killed by Android OEM battery-savers
  * during long operations like full flashing or forensic dumps.
  */
+@AndroidEntryPoint
 class UsbForegroundService : Service() {
+
+    @Inject lateinit var coordinator: SessionCoordinator
 
     companion object {
         const val CHANNEL_ID = "DeepEyeUsbSession"

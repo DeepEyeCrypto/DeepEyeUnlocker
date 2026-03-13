@@ -52,13 +52,17 @@ fun GlassButton(
                 scaleY = scaleAnim
                 alpha = opacity
             }
-            .shadow(if (accent) 6.dp else 2.dp, RoundedCornerShape(12.dp), spotColor = Color(0x336750A4))
+            .shadow(if (accent) 8.dp else 2.dp, RoundedCornerShape(12.dp), spotColor = if (accent) com.deepeye.otg.ui.theme.StitchTokens.Primary.copy(alpha = 0.3f) else Color.Black)
             .clip(RoundedCornerShape(12.dp))
             .then(
-                if (accent) Modifier.background(GlassTokens.accentBtnBrush)
+                if (accent) Modifier.background(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        listOf(com.deepeye.otg.ui.theme.StitchTokens.Primary, com.deepeye.otg.ui.theme.StitchTokens.AccentAdb)
+                    )
+                )
                 else Modifier
-                    .background(GlassTokens.GlassSurface)
-                    .border(1.dp, GlassTokens.cardBorderColor, RoundedCornerShape(12.dp))
+                    .background(com.deepeye.otg.ui.theme.StitchTokens.GlassSurface)
+                    .border(1.dp, com.deepeye.otg.ui.theme.StitchTokens.GlassBorder, RoundedCornerShape(12.dp))
             )
             .clickable(
                 interactionSource = interactionSource,
@@ -69,11 +73,10 @@ fun GlassButton(
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
         Text(
-            text = label,
-            color = if (accent) Color.White else Color(0xFF1C1B1F),
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            letterSpacing = 0.5.sp
+            text = label.uppercase(),
+            color = if (accent) Color.White else com.deepeye.otg.ui.theme.StitchTokens.TextPrimary,
+            style = com.deepeye.otg.ui.theme.StitchTokens.LabelSmall,
+            letterSpacing = 1.sp
         )
     }
 }

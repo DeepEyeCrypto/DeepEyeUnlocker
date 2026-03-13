@@ -214,4 +214,21 @@ object NativeBridge {
         destPath: String,
         onProgress: (Int, String) -> Unit
     ): String
+
+    /**
+     * Search for a raw string or hex pattern across the entire physical storage.
+     * Returns a JSON array of SearchResult(lba, offset, context).
+     */
+    external fun searchStorage(handle: Long, pattern: String, limit: Int): String
+
+    /**
+     * Patch specific offsets in a partition with new bytes. 
+     * CAUTION: Destructive operation.
+     */
+    external fun patchPartition(handle: Long, name: String, offset: Long, data: ByteArray): Boolean
+
+    /**
+     * Verify the integrity of a boot/recovery image against a signature.
+     */
+    external fun verifyImageSignature(handle: Long, name: String): String
 }

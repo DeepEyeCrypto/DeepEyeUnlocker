@@ -36,10 +36,10 @@ fun GlassTabRow(
 ) {
     val hazeStyle = remember {
         HazeStyle(
-            backgroundColor = Color.White,
-            tint = HazeTint(Color.White.copy(alpha = 0.72f)),
-            blurRadius = 28.dp,
-            noiseFactor = 0.0f
+            backgroundColor = com.deepeye.otg.ui.theme.StitchTokens.BackgroundDark,
+            tint = HazeTint(Color.White.copy(alpha = 0.05f)),
+            blurRadius = 24.dp,
+            noiseFactor = 0.02f
         )
     }
 
@@ -50,9 +50,9 @@ fun GlassTabRow(
             .clip(RoundedCornerShape(16.dp))
             .then(
                 if (!performanceMode) Modifier.hazeEffect(state = hazeState, style = hazeStyle)
-                else Modifier.background(Color.White.copy(alpha = 0.9f))
+                else Modifier.background(com.deepeye.otg.ui.theme.StitchTokens.SurfaceDark)
             )
-            .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+            .border(1.dp, com.deepeye.otg.ui.theme.StitchTokens.GlassBorder, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         ScrollableTabRow(
@@ -63,8 +63,8 @@ fun GlassTabRow(
             indicator = { tabPositions ->
                 SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                    height = 3.dp,
-                    color = Color(0xFF6750A4)
+                    height = 2.dp,
+                    color = com.deepeye.otg.ui.theme.StitchTokens.Primary
                 )
             }
         ) {
@@ -76,10 +76,9 @@ fun GlassTabRow(
                     modifier = Modifier.height(48.dp)
                 ) {
                     Text(
-                        text = title,
-                        fontSize = 13.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (selected) Color(0xFF6750A4) else Color(0xFF49454F),
+                        text = title.uppercase(),
+                        style = com.deepeye.otg.ui.theme.StitchTokens.LabelSmall,
+                        color = if (selected) com.deepeye.otg.ui.theme.StitchTokens.TextPrimary else com.deepeye.otg.ui.theme.StitchTokens.TextSecondary,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }

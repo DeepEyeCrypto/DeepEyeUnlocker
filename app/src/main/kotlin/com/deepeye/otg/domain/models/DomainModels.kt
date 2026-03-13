@@ -133,3 +133,11 @@ data class PartitionItem(
     val startAddress: String? = null,
     val type: String? = null
 )
+
+data class CloudSyncStatus(
+    val syncing: Boolean = false,
+    val progress: Int = 0,
+    val fileName: String? = null,
+    val result: String? = null,
+    val isError: Boolean = false
+)

@@ -231,3 +231,34 @@ class VersionMappingEngine {
         return 0
     }
 }
+
+/**
+ * Convenience wrapper for iOS version logic.
+ */
+object VersionMapping {
+    fun toVersionCode(version: String): Int {
+        return try {
+            val parts = version.split('.')
+            val major = parts.getOrNull(0)?.toInt() ?: 0
+            val minor = parts.getOrNull(1)?.toInt() ?: 0
+            val patch = parts.getOrNull(2)?.toInt() ?: 0
+            major * 10000 + minor * 100 + patch
+        } catch (e: Exception) { 0 }
+    }
+
+    fun isVulnerable(version: String, fixedIn: String): Boolean {
+        val current = toVersionCode(version)
+        val fixed = toVersionCode(fixedIn)
+        return current < fixed
+    }
+
+    fun getWebkitBuildForIos(version: String): String {
+        // Fallback mapping if engine not initialized
+        return when {
+            version.startsWith("26.1") -> "8618.1.15.10.15"
+            version.startsWith("26.2") -> "8618.2.12.11.7"
+            version.startsWith("26.3") -> "8618.3.11.10.5"
+            else -> "UNKNOWN"
+        }
+    }
+}

@@ -9,17 +9,26 @@ import com.deepeye.otg.domain.models.DeepEyeLicense
 import com.deepeye.otg.domain.models.LicenseStatus
 import com.deepeye.otg.domain.models.PolicyTier
 import com.deepeye.otg.policy.UserRole
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Singleton manager for license state, secure persistence, and server validation.
  */
-object LicenseManager {
-    private const val TAG = "DeepEye-Licensing"
-    private const val PREFS_FILE = "deepeye_secure_vault"
+@Singleton
+class LicenseManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val cloudClient: CloudClient
+) {
+    companion object {
+        private const val TAG = "DeepEye-Licensing"
+        private const val PREFS_FILE = "deepeye_secure_vault"
+    }
 
     private val _licenseState = MutableStateFlow(LicenseStatus.UNREGISTERED)
     val licenseState: StateFlow<LicenseStatus> = _licenseState.asStateFlow()
@@ -29,11 +38,11 @@ object LicenseManager {
 
     private var vault: android.content.SharedPreferences? = null
 
-    /**
-     * Initializes the secure vault and loads existing license.
-     * Must be called in Application.onCreate().
-     */
-    fun initialize(context: Context) {
+    init {
+        initializeVault()
+    }
+
+    private fun initializeVault() {
         try {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -50,7 +59,6 @@ object LicenseManager {
             loadFromVault()
         } catch (e: Exception) {
             Log.e(TAG, "[VAULT] Critical failure in secure storage: ${e.message}")
-            // Fallback to in-memory if encrypted prefs fails (avoid hard crash)
         }
     }
 
@@ -61,7 +69,6 @@ object LicenseManager {
         val expiryTs = vault?.getLong("lic_expiry", 0L) ?: 0L
         val serverTs = vault?.getLong("lic_server_ts", 0L) ?: 0L
 
-        // Security check: Verify HWID binding matches current device
         if (hwidFromVault != HWIDEngine.getHWID()) {
             Log.e(TAG, "[VAULT] License HWID mismatch! Identity theft detected, clearing vault.")
             clearVault()
@@ -71,8 +78,8 @@ object LicenseManager {
         val license = DeepEyeLicense(
             key = key,
             hwid = hwidFromVault,
-            status = LicenseStatus.ACTIVE, // Assuming active if in vault; will be re-validated by server heartbeat later
-            tier = PolicyTier.valueOf(tierStr),
+            status = LicenseStatus.ACTIVE,
+            tier = try { PolicyTier.valueOf(tierStr) } catch (e: Exception) { PolicyTier.SAFE },
             expiryDate = if (expiryTs > 0) Date(expiryTs) else null,
             serverTimestamp = serverTs
         )
@@ -86,14 +93,14 @@ object LicenseManager {
         val hwid = HWIDEngine.getHWID()
         Log.i(TAG, "[ACTIVATION] Attempting gateway handshake — Key: $key")
 
-        val result = CloudClient.activate(key, hwid)
+        val result = cloudClient.activate(key, hwid)
         
         if (result.status == CloudClient.CloudResponse.SUCCESS) {
             val lic = DeepEyeLicense(
                 key = key,
                 hwid = hwid,
                 status = LicenseStatus.ACTIVE,
-                tier = PolicyTier.valueOf(result.tier ?: "SAFE"),
+                tier = try { PolicyTier.valueOf(result.tier ?: "SAFE") } catch (e: Exception) { PolicyTier.SAFE },
                 expiryDate = result.expiry?.takeIf { it > 0 }?.let { Date(it) },
                 serverTimestamp = System.currentTimeMillis()
             )
@@ -134,6 +141,50 @@ object LicenseManager {
             PolicyTier.POLICY -> UserRole.TECHNICIAN
             PolicyTier.RESTRICTED -> UserRole.ENTERPRISE
             PolicyTier.NEVER -> UserRole.CONSUMER
+        }
+    }
+
+    /**
+     * Stage 6: Zero-Knowledge Heartbeat.
+     * Validates license state without leaking raw HWID in every request.
+     */
+    suspend fun performHeartbeat(): Boolean {
+        val lic = _currentLicense.value ?: return false
+        val ts = System.currentTimeMillis()
+        val signature = calculateSignature(lic.key, lic.hwid, ts)
+
+        Log.d(TAG, "[HEARTBEAT] Emitting ZK-nonce for key: ${lic.key.take(8)}...")
+        val result = cloudClient.checkLicense(lic.key, signature, ts)
+
+        if (result.status == CloudClient.CloudResponse.SUCCESS) {
+            val updatedLic = lic.copy(
+                tier = try { PolicyTier.valueOf(result.tier ?: "SAFE") } catch (e: Exception) { PolicyTier.SAFE },
+                expiryDate = result.expiry?.takeIf { it > 0 }?.let { Date(it) },
+                serverTimestamp = ts
+            )
+            _currentLicense.value = updatedLic
+            _licenseState.value = LicenseStatus.ACTIVE
+            saveToVault(updatedLic)
+            return true
+        } else {
+            Log.w(TAG, "[HEARTBEAT] Handshake failed: ${result.status}. Suspending license.")
+            _licenseState.value = mapCloudToStatus(result.status)
+            if (result.status == CloudClient.CloudResponse.REVOKED || result.status == CloudClient.CloudResponse.INVALID_KEY) {
+                clearVault()
+            }
+            return false
+        }
+    }
+
+    private fun calculateSignature(key: String, hwid: String, ts: Long): String {
+        return try {
+            val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+            val secretKey = javax.crypto.spec.SecretKeySpec(key.toByteArray(), "HmacSHA256")
+            mac.init(secretKey)
+            val data = "$hwid|$ts".toByteArray()
+            mac.doFinal(data).joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) {
+            "error_signature_${System.currentTimeMillis()}"
         }
     }
 

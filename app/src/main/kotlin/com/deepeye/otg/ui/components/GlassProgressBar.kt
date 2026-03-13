@@ -32,14 +32,18 @@ fun GlassProgressBar(
             .fillMaxWidth()
             .height(6.dp)
             .clip(RoundedCornerShape(50))
-            .background(GlassTokens.GlassBorderDark)
+            .background(com.deepeye.otg.ui.theme.StitchTokens.GlassBorder)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(animatedProgress)
                 .height(6.dp)
                 .clip(RoundedCornerShape(50))
-                .background(GlassTokens.accentBtnBrush)
+                .background(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        listOf(com.deepeye.otg.ui.theme.StitchTokens.Primary, com.deepeye.otg.ui.theme.StitchTokens.AccentAdb)
+                    )
+                )
         )
     }
 }

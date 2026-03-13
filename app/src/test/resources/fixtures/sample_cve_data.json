@@ -1,0 +1,176 @@
+{
+  "format_version": "1.0",
+  "generator": "DeepEye OTG CVE Intelligence",
+  "generated_at": "2026-03-11T19:00:00+05:30",
+  "description": "Sample CVE entries for iOS 26.x security research pipeline testing",
+  "entries": [
+    {
+      "cveId": "CVE-2026-10001",
+      "component": "WebKit",
+      "vulnerabilityType": "USE_AFTER_FREE",
+      "affectedVersions": ["26.0", "26.1", "26.2"],
+      "fixedVersions": ["26.3"],
+      "fixedComponentBuild": "618.1.15",
+      "exploitationStatus": "ACTIVE_EXPLOITATION",
+      "cvssScore": 8.8,
+      "confidence": "CONFIRMED",
+      "sourceReferences": [
+        "https://support.apple.com/en-us/HT214XXX",
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-10001"
+      ],
+      "summary": "WebKit UAF in DOM tree mutation observer",
+      "cweId": "CWE-416",
+      "notes": "Synthetic test entry"
+    },
+    {
+      "cveId": "CVE-2026-10002",
+      "component": "WebKit",
+      "vulnerabilityType": "TYPE_CONFUSION",
+      "affectedVersions": ["26.0", "26.1"],
+      "fixedVersions": ["26.2"],
+      "fixedComponentBuild": "618.1.10",
+      "exploitationStatus": "POC_AVAILABLE",
+      "cvssScore": 7.5,
+      "confidence": "HIGH",
+      "sourceReferences": [
+        "https://support.apple.com/en-us/HT214YYY"
+      ],
+      "summary": "WebKit type confusion in JIT compilation",
+      "cweId": "CWE-843",
+      "notes": "Synthetic test entry"
+    },
+    {
+      "cveId": "CVE-2026-10003",
+      "component": "Kernel",
+      "vulnerabilityType": "PRIVILEGE_ESCALATION",
+      "affectedVersions": ["26.0", "26.1", "26.2"],
+      "fixedVersions": ["26.3"],
+      "fixedComponentBuild": "10000.30.1",
+      "exploitationStatus": "ACTIVE_EXPLOITATION",
+      "cvssScore": 9.3,
+      "confidence": "CONFIRMED",
+      "sourceReferences": [
+        "https://support.apple.com/en-us/HT214ZZZ",
+        "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+      ],
+      "summary": "Kernel LPE via IOKit driver race condition",
+      "cweId": "CWE-362",
+      "notes": "Synthetic test entry — in CISA KEV"
+    },
+    {
+      "cveId": "CVE-2026-10004",
+      "component": "Kernel",
+      "vulnerabilityType": "INFORMATION_DISCLOSURE",
+      "affectedVersions": ["26.0"],
+      "fixedVersions": ["26.1"],
+      "fixedComponentBuild": "10000.10.1",
+      "exploitationStatus": "NONE",
+      "cvssScore": 5.5,
+      "confidence": "CONFIRMED",
+      "summary": "Kernel info leak via mach port",
+      "cweId": "CWE-200",
+      "notes": "Synthetic test entry"
+    },
+    {
+      "cveId": "CVE-2026-10005",
+      "component": "dyld",
+      "vulnerabilityType": "USE_AFTER_FREE",
+      "affectedVersions": ["26.0", "26.1"],
+      "fixedVersions": ["26.2"],
+      "fixedComponentBuild": "1200.1.0",
+      "exploitationStatus": "POC_AVAILABLE",
+      "cvssScore": 7.8,
+      "confidence": "HIGH",
+      "summary": "dyld UAF in shared cache loading",
+      "cweId": "CWE-416",
+      "notes": "Synthetic test entry"
+    },
+    {
+      "cveId": "CVE-2026-10006",
+      "component": "IOKit",
+      "vulnerabilityType": "BUFFER_OVERFLOW",
+      "affectedVersions": ["26.0", "26.1", "26.2", "26.3"],
+      "fixedVersions": [],
+      "exploitationStatus": "UNKNOWN",
+      "cvssScore": 6.7,
+      "confidence": "MEDIUM",
+      "summary": "IOKit USB HID driver heap overflow",
+      "cweId": "CWE-122",
+      "notes": "Synthetic test entry — unpatched across all 26.x"
+    },
+    {
+      "cveId": "CVE-2026-10007",
+      "component": "Safari",
+      "vulnerabilityType": "SANDBOX_ESCAPE",
+      "affectedVersions": ["26.0", "26.1"],
+      "fixedVersions": ["26.2"],
+      "exploitationStatus": "NONE",
+      "cvssScore": 6.5,
+      "confidence": "MEDIUM",
+      "summary": "Safari sandbox escape via IPC message confusion",
+      "cweId": "CWE-269",
+      "notes": "Synthetic test entry"
+    },
+    {
+      "cveId": "CVE-2026-10008",
+      "component": "AMFI",
+      "vulnerabilityType": "LOGIC_ERROR",
+      "affectedVersions": ["26.0"],
+      "fixedVersions": ["26.1"],
+      "exploitationStatus": "NONE",
+      "cvssScore": 7.0,
+      "confidence": "HIGH",
+      "summary": "AMFI symlink validation bypass",
+      "cweId": "CWE-59",
+      "notes": "Synthetic test entry"
+    }
+  ],
+  "version_mappings": [
+    {"iosVersion": "26.0", "component": "Kernel", "expectedBuild": "10000.0.1"},
+    {"iosVersion": "26.0", "component": "WebKit", "expectedBuild": "618.1.1"},
+    {"iosVersion": "26.0", "component": "dyld",   "expectedBuild": "1200.0.1"},
+    {"iosVersion": "26.1", "component": "Kernel", "expectedBuild": "10000.10.1"},
+    {"iosVersion": "26.1", "component": "WebKit", "expectedBuild": "618.1.5"},
+    {"iosVersion": "26.1", "component": "dyld",   "expectedBuild": "1200.0.5"},
+    {"iosVersion": "26.2", "component": "Kernel", "expectedBuild": "10000.20.1"},
+    {"iosVersion": "26.2", "component": "WebKit", "expectedBuild": "618.1.10"},
+    {"iosVersion": "26.2", "component": "dyld",   "expectedBuild": "1200.1.0"},
+    {"iosVersion": "26.3", "component": "Kernel", "expectedBuild": "10000.30.1"},
+    {"iosVersion": "26.3", "component": "WebKit", "expectedBuild": "618.1.15"},
+    {"iosVersion": "26.3", "component": "dyld",   "expectedBuild": "1200.2.0"}
+  ],
+  "sample_device_profiles": [
+    {
+      "deviceId": "FIXTURE-001",
+      "description": "iPhone 15 Pro Max on iOS 26.0 — maximum exposure",
+      "iosVersion": "26.0",
+      "iosBuildId": "24A100",
+      "modelIdentifier": "iPhone15,3",
+      "observedComponents": []
+    },
+    {
+      "deviceId": "FIXTURE-002",
+      "description": "iPhone 16 on iOS 26.3 — fully patched baseline",
+      "iosVersion": "26.3",
+      "iosBuildId": "24D100",
+      "modelIdentifier": "iPhone16,1",
+      "observedComponents": [
+        {"component": "Kernel", "observedBuild": "10000.30.1"},
+        {"component": "WebKit", "observedBuild": "618.1.15"},
+        {"component": "dyld",   "observedBuild": "1200.2.0"}
+      ]
+    },
+    {
+      "deviceId": "FIXTURE-003",
+      "description": "iPhone 15 on iOS 26.1 with silent WebKit update",
+      "iosVersion": "26.1",
+      "iosBuildId": "24B200",
+      "modelIdentifier": "iPhone15,2",
+      "observedComponents": [
+        {"component": "Kernel", "observedBuild": "10000.10.1"},
+        {"component": "WebKit", "observedBuild": "618.1.15"},
+        {"component": "dyld",   "observedBuild": "1200.0.5"}
+      ]
+    }
+  ]
+}

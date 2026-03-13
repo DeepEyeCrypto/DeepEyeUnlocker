@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +35,9 @@ fun TestHarnessScreen(
     val rawLogs by UsbLogger.logBuffer.collectAsState()
     val highLevelLogs by viewModel.logLines.collectAsState()
     val perfMode by viewModel.performanceMode.collectAsState()
+    val fuzzActive by viewModel.fuzzingActive.collectAsState()
+    val fuzzStats by viewModel.fuzzingStats.collectAsState()
+    val exploitState by viewModel.exploitState.collectAsState()
     val hazeState = remember { HazeState() }
 
     Column(
@@ -162,6 +167,111 @@ fun TestHarnessScreen(
                     InfoRow("Health", health, color = if (health == "STABLE") Color.Green else Color.Red)
                 }
             }
+
+            // ── HID Fuzzing Control ──────────────────────────────────
+            GlassCard(
+                hazeState = hazeState,
+                performanceMode = perfMode,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("HID FUZZING (iOS 26.x RE)", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val key = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.deviceKey
+                        is UsbLifecycleState.Connected -> s.deviceKey
+                        else -> null
+                    }
+
+                    InfoRow("Status", if (fuzzActive) "FUZZING..." else "IDLE", color = if (fuzzActive) Color.Red else Color.Gray)
+                    InfoRow("Total Cases", fuzzStats.totalCases.toString())
+                    InfoRow("Crashes Found", fuzzStats.crashesFound.toString(), color = if (fuzzStats.crashesFound > 0) Color.Red else Color.White)
+                    InfoRow("Seed Index", fuzzStats.currentSeedIndex.toString())
+                    
+                    if (fuzzStats.lastCaseName.isNotEmpty()) {
+                        Text(
+                            text = "Last: ${fuzzStats.lastCaseName}",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    if (!fuzzActive) {
+                        GlassButton(
+                            label = "Start HID Fuzzer",
+                            onClick = { key?.let { viewModel.startHidFuzzing(it) } },
+                            enabled = key != null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        GlassButton(
+                            label = "STOP FUZZER",
+                            onClick = { viewModel.stopHidFuzzing() },
+                            accent = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            // ── Exploit Chain Control ──────────────────────────────────
+            GlassCard(
+                hazeState = hazeState,
+                performanceMode = perfMode,
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("EXPLOIT CHAIN (RESEARCH)", color = Color(0xFF8B5CF6), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val key = when (val s = lifecycleState) {
+                        is UsbLifecycleState.DeviceDetected -> s.deviceKey
+                        is UsbLifecycleState.Connected -> s.deviceKey
+                        else -> null
+                    }
+
+                    val stateText = when(val s = exploitState) {
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Idle -> "READY"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage0_AslrRecon -> "RECON: Bypassing ASLR"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage1_WebKit -> "STAGE 1: WebKit UAF"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage2_Dyld -> "STAGE 2: Dyld UAF"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage3_Kernel -> "STAGE 3: KERNEL LPE"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage4_AmfiBypass -> "STAGE 4: AMFI Bypass"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success -> "SUCCESS: ${s.msg}"
+                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error -> "ERROR: ${s.msg}"
+                    }
+
+                    InfoRow("Chain State", stateText, color = if (exploitState is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error) Color.Red else if (exploitState is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success) Color.Green else Color.White)
+
+                    val isRunning = exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Idle && 
+                                    exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success && 
+                                    exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (!isRunning) {
+                        GlassButton(
+                            label = "Run Exploit Chain",
+                            onClick = { key?.let { viewModel.runExploitChain(it) } },
+                            enabled = key != null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                            color = Color(0xFF8B5CF6),
+                            trackColor = Color.White.copy(alpha = 0.1f)
+                        )
+                    }
+                }
+            }
+
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -1,5 +1,6 @@
-# ── Optimization — DISABLE if hanging ─────────────────────────
--dontoptimize
+# ── Optimization — ENABLE for production build (Stage J) ──────
+# Remove -dontoptimize to allow R8 to perform structural shrinking
+# -dontoptimize
 
 # ── JNI Bridge — CRITICAL: keep all native methods ──────────
 -keep class com.deepeye.otg.NativeBridge { *; }
@@ -16,6 +17,15 @@
     native <methods>;
 }
 
+# ── Hilt / Dagger — CRITICAL for dependency injection ───────
+-keep class * extends android.app.Application
+-keep @com.google.dagger.hilt.android.HiltAndroidApp class *
+-keep @dagger.hilt.android.lifecycle.HiltViewModel class *
+-keep class com.deepeye.otg.di.** { *; }
+-keep class com.deepeye.otg.Hilt_* { *; }
+-keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
+-keep class * implements dagger.hilt.internal.UnsafeCasts { *; }
+
 # ── USB + Protocol core ─────────────────────────────────────
 -keep class com.deepeye.otg.usb.** { *; }
 -keep class com.deepeye.otg.protocol.** { *; }
@@ -26,38 +36,37 @@
 -keep class com.deepeye.otg.domain.models.** { *; }
 -keep class com.deepeye.otg.policy.** { *; }
 
-# ── Service / Auth Infrastructure (Stage C) ───────────────
 -keep class com.deepeye.otg.service.** { *; }
 -keep class com.deepeye.otg.data.** { *; }
+
+# ── Exploit Research — HARDEN payloads (Stage J) ──────────
+-keep class com.deepeye.otg.exploit.** { *; }
+-keep class com.deepeye.otg.fuzz.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-dontwarn com.deepeye.otg.exploit.**
+
+# ── OkHttp + Okio ───────────────────────────────────────────
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# ── Zip4j ───────────────────────────────────────────────────
+-keep class net.lingala.zip4j.** { *; }
+-dontwarn net.lingala.zip4j.**
 
 # ── Sealed class & Enums ────────────────────────────────────
 -keep class com.deepeye.otg.usb.SessionState { *; }
 -keep class com.deepeye.otg.usb.SessionState$* { *; }
 
-# ── Protocol probe + detected protocol enums ────────────────
--keep class com.deepeye.otg.ProtocolProbe { *; }
--keep class com.deepeye.otg.DetectedProtocol { *; }
--keep class com.deepeye.otg.data.ConnectionMode { *; }
-
-# ── Compose — required for reflection-based tooling ─────────
--keep class androidx.compose.** { *; }
--dontwarn androidx.compose.**
-
-# ── Kotlin metadata ─────────────────────────────────────────
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes SourceFile,LineNumberTable
--keepattributes RuntimeVisibleAnnotations
-
-# ── Kotlin serialization (future-proof) ─────────────────────
--keepattributes InnerClasses
--dontnote kotlinx.serialization.**
-
 # ── Remove debug/verbose logging in release ─────────────────
 -assumenosideeffects class android.util.Log {
     public static int d(...);
     public static int v(...);
+    public static int i(java.lang.String, java.lang.String);
 }
 
-# ── Crashlytics / stack traces — keep line numbers ──────────
+# ── Kotlin metadata ─────────────────────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-keepattributes RuntimeVisibleAnnotations
 -renamesourcefileattribute SourceFile

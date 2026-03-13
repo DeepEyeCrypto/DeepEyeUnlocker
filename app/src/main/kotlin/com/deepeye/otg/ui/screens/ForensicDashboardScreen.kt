@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +32,8 @@ fun ForensicDashboardScreen(viewModel: UsbViewModel) {
     val sessions by viewModel.sessions.collectAsState()
     val selectedKey by viewModel.selectedDeviceKey.collectAsState()
     val batchSelectedKeys by viewModel.batchSelectedKeys.collectAsState()
+    val fuzzFindings by viewModel.fuzzFindings.collectAsState()
+    val extractedFiles by viewModel.exploitExtractedFiles.collectAsState()
     
     var showActionConfirm by remember { mutableStateOf<String?>(null) }
 
@@ -82,7 +85,7 @@ fun ForensicDashboardScreen(viewModel: UsbViewModel) {
                     color = StitchTokens.TextPrimary
                 )
                 Text(
-                    text = "${sessions.size} Active Sessions | ${batchSelectedKeys.size} Selected",
+                    text = "${sessions.size} Active Sessions | ${batchSelectedKeys.size} Selected | ${fuzzFindings.size} Findings",
                     style = StitchTokens.LabelSmall,
                     color = StitchTokens.Primary
                 )
@@ -136,30 +139,90 @@ fun ForensicDashboardScreen(viewModel: UsbViewModel) {
         val aiAnalysis by viewModel.aiAnalysis.collectAsState()
         val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
 
-        if (aiAnalysis.isNotEmpty()) {
+        if (aiAnalysis.isNotEmpty() || fuzzFindings.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                color = StitchTokens.Primary.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, StitchTokens.Primary.copy(alpha = 0.2f))
+                color = if (fuzzFindings.isNotEmpty()) Color(0xFFEF4444).copy(alpha = 0.05f) else StitchTokens.Primary.copy(alpha = 0.05f),
+                border = BorderStroke(1.dp, if (fuzzFindings.isNotEmpty()) Color(0xFFEF4444).copy(alpha = 0.2f) else StitchTokens.Primary.copy(alpha = 0.2f))
             ) {
                 Row(
                     Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome,
+                        imageVector = if (fuzzFindings.isNotEmpty()) Icons.Default.Security else Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = StitchTokens.Primary,
+                        tint = if (fuzzFindings.isNotEmpty()) Color(0xFFEF4444) else StitchTokens.Primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(12.dp))
+                    val displayText = when {
+                        fuzzFindings.isNotEmpty() -> {
+                            val lastFinding = fuzzFindings.last()
+                            val detail = if (lastFinding.crashSignature.contains("ASLR_SLIDE")) {
+                                " [RECON: ${lastFinding.crashSignature}]"
+                            } else ""
+                            "SECURITY FINDING: ${fuzzFindings.size} crashes logged.$detail Potential CVE-2025-43424 hits detected."
+                        }
+                        aiIsProcessing -> "DeepEye AI analyzing fleet context..."
+                        else -> "INSIGHT: $aiAnalysis"
+                    }
                     Text(
-                        text = if (aiIsProcessing) "DeepEye AI analyzing fleet context..." else "INSIGHT: $aiAnalysis",
+                        text = displayText,
                         style = StitchTokens.BodyMedium.copy(fontWeight = FontWeight.Medium),
                         color = StitchTokens.TextPrimary
                     )
+                }
+            }
+        }
+
+        // ── Extracted Data Gallery (Stage 11.5) ────────────────────
+        if (extractedFiles.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.Green.copy(alpha = 0.05f),
+                border = BorderStroke(1.dp, Color.Green.copy(alpha = 0.2f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Upload, null, tint = Color.Green, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "SENSITIVE DATA EXFILTRATED",
+                            style = StitchTokens.TitleLarge.copy(fontSize = 16.sp),
+                            color = Color.Green
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    
+                    extractedFiles.keys.forEach { path ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Description, null, tint = Color.White.copy(0.4f), modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    path,
+                                    style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
+                            }
+                            Text(
+                                "DECRYPTED",
+                                style = StitchTokens.LabelSmall,
+                                color = Color.Green.copy(0.6f)
+                            )
+                        }
+                    }
                 }
             }
         }

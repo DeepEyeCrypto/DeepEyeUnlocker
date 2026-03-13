@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.ui.theme.StitchTokens
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -46,12 +47,12 @@ fun GlassCard(
     )
 
     // ── CRITICAL: backgroundColor MUST be specified ──────────
-    val hazeStyle = remember {
+    val hazeStyle = remember(accentColor) {
         HazeStyle(
-            backgroundColor = Color.White,   // ← fixes crash
-            tint = HazeTint(Color.White.copy(alpha = 0.52f)),
-            blurRadius = 24.dp,
-            noiseFactor = 0.0f
+            backgroundColor = StitchTokens.BackgroundDark,
+            tint = HazeTint(if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f)),
+            blurRadius = 20.dp,
+            noiseFactor = 0.02f
         )
     }
 
@@ -61,25 +62,19 @@ fun GlassCard(
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(
-                elevation = 4.dp,
-                shape = shape,
-                ambientColor = Color(0xFF6750A4).copy(alpha = 0.12f),
-                spotColor = Color(0xFF6750A4).copy(alpha = 0.08f)
-            )
-            .clip(shape)
             .then(
                 if (hazeState != null && !performanceMode) {
                     Modifier.hazeEffect(state = hazeState, style = hazeStyle)
                 } else {
-                    Modifier.background(GlassTokens.glassBrush)
+                    Modifier.background(StitchTokens.SurfaceDark.copy(alpha = 0.8f))
                 }
             )
             .border(
                 width = 1.dp,
-                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.4f) else GlassTokens.cardBorderColor,
+                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else StitchTokens.GlassBorder,
                 shape = shape
             )
+            .clip(shape)
             .then(
                 if (onClick != null) Modifier.clickable(
                     interactionSource = interactionSource,

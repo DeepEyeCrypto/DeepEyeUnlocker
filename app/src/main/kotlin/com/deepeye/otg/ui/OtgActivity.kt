@@ -21,24 +21,21 @@ import com.deepeye.otg.ui.screens.LoadingScreen
 import com.deepeye.otg.ui.theme.DeepEyeTheme
 import com.deepeye.otg.usb.SessionState
 import com.deepeye.otg.viewmodel.UsbViewModel
-import com.deepeye.otg.viewmodel.UsbViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@dagger.hilt.android.AndroidEntryPoint
 class OtgActivity : AppCompatActivity() {
 
     private val app by lazy { application as DeepEyeApplication }
 
-    private val viewModel: UsbViewModel by viewModels {
-        UsbViewModelFactory(
-            appContext = applicationContext,
-            lifecycleManager = app.usbLifecycleManager,
-            settings = com.deepeye.otg.data.SettingsManager(applicationContext)
-        )
-    }
-
+    private val viewModel: UsbViewModel by viewModels()
+    
+    @javax.inject.Inject
+    lateinit var tunnelManager: TunnelManager
+ 
     // ── Engine loading state ────────────────────────────────────
     private val engineLoaded = MutableStateFlow(false)
     private val loadingStatus = MutableStateFlow("Initializing...")
@@ -47,8 +44,6 @@ class OtgActivity : AppCompatActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-
-        TunnelManager.initialize(app.usbLifecycleManager)
 
         setContent {
             DeepEyeTheme {
@@ -83,7 +78,7 @@ class OtgActivity : AppCompatActivity() {
 
         // Handle Remote Session (Stage H)
         intent?.getStringExtra("REMOTE_SESSION")?.let { code ->
-            TunnelManager.joinSession(code)
+            tunnelManager.joinSession(code)
         }
 
         lifecycleScope.launch(Dispatchers.IO) {

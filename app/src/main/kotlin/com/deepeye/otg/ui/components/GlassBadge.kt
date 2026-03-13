@@ -87,8 +87,8 @@ fun GlassPolicyBadge(tier: com.deepeye.otg.domain.models.PolicyTier) {
     }
     GlassBadge(
         label = tier.name,
-        fillColor = fill,
-        borderColor = border,
+        fillColor = fill.copy(alpha = 0.15f),
+        borderColor = border.copy(alpha = 0.3f),
         textColor = text
     )
 }

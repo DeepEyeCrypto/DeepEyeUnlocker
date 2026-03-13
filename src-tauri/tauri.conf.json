@@ -1,0 +1,49 @@
+{
+  "productName": "DeepEyeUnlocker",
+  "version": "2026.27.0",
+  "identifier": "com.deepeye.unlocker.desktop",
+  "bundle": {
+    "active": true,
+    "icon": [],
+    "resources": [
+      "python/**/*"
+    ]
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "DeepEye Unlocker — Desktop Console",
+        "width": 1280,
+        "height": 900
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "plugins": {
+    "shell": {
+      "open": true,
+      "scope": [
+        {
+          "name": "python3",
+          "cmd": "python3",
+          "args": true,
+          "sidecar": false
+        },
+        {
+          "name": "adb",
+          "cmd": "adb",
+          "args": true,
+          "sidecar": false
+        }
+      ]
+    }
+  }
+}

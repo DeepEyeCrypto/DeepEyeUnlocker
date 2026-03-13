@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Cable
 import androidx.compose.material.icons.filled.Memory
@@ -79,7 +79,7 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { viewModel.setNav(NavTarget.HOME) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
                     }
                     Spacer(Modifier.width(6.dp))
                     Text(

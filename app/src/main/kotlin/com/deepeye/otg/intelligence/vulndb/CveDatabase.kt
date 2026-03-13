@@ -93,6 +93,9 @@ interface CveDao {
     suspend fun getActivelyExploited(): List<CveEntry>
 
     @Query("SELECT * FROM cve_entries WHERE exploitationStatus = 'ACTIVE_EXPLOITATION' ORDER BY cvssScore DESC")
+    suspend fun getCritical(): List<CveEntry>
+
+    @Query("SELECT * FROM cve_entries WHERE exploitationStatus = 'ACTIVE_EXPLOITATION' ORDER BY cvssScore DESC")
     fun observeActivelyExploited(): Flow<List<CveEntry>>
 
     // ── Confidence filtering ──

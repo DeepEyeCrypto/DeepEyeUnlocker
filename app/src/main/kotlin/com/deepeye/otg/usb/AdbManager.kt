@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Top-level manager for ADB orchestration (Stage 7.4).
+ * Refactored for AdbSession API changes.
  */
 class AdbManager(
     private val lifecycleManager: UsbLifecycleManager
@@ -46,8 +47,8 @@ class AdbManager(
                 }
 
                 _lastLog.value = "Opening shell: $command"
-                val streamId = session.open("shell:$command")
-                if (streamId == null) {
+                val localId = session.open("shell:$command")
+                if (localId == null) {
                     _lastLog.value = "Error: Failed to open shell stream"
                     return@launch
                 }
@@ -56,16 +57,21 @@ class AdbManager(
                 val output = StringBuilder()
                 
                 // Read until stream closes or timeout (simple loop for now)
-                repeat(5) {
-                    val part = session.readString()
+                repeat(10) {
+                    val part = session.readString(localId)
                     if (part != null) {
                         output.append(part)
+                    } else {
+                        // Stream likely closed or timed out
                     }
                 }
 
                 val finalOutput = output.toString().trim()
                 _lastLog.value = "Output received: ${finalOutput.take(50)}..."
                 onResult(finalOutput)
+                
+                // Clean up stream
+                session.close(localId)
 
             } catch (e: Exception) {
                 Log.e(TAG, "ADB Command failed", e)

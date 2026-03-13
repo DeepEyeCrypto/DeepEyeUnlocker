@@ -43,11 +43,11 @@ data class AdbMessage(
     val arg1: Int,
     val data: ByteArray? = null
 ) {
-    fun serialize(): ByteArray {
-        val dataLength = data?.size ?: 0
-        val checksum = AdbProtocol.generateChecksum(data)
-        val magic = AdbProtocol.generateMagic(command)
+    val dataLength: Int get() = data?.size ?: 0
+    val checksum: Int get() = AdbProtocol.generateChecksum(data)
+    val magic: Int get() = AdbProtocol.generateMagic(command)
 
+    fun serialize(): ByteArray {
         val buffer = ByteBuffer.allocate(24 + dataLength).order(ByteOrder.LITTLE_ENDIAN)
         buffer.putInt(command)
         buffer.putInt(arg0)
@@ -55,24 +55,30 @@ data class AdbMessage(
         buffer.putInt(dataLength)
         buffer.putInt(checksum)
         buffer.putInt(magic)
-        if (data != null) {
-            buffer.put(data)
-        }
+        data?.let { buffer.put(it) }
+        return buffer.array()
+    }
+
+    fun serializeHeader(): ByteArray {
+        val buffer = ByteBuffer.allocate(24).order(ByteOrder.LITTLE_ENDIAN)
+        buffer.putInt(command)
+        buffer.putInt(arg0)
+        buffer.putInt(arg1)
+        buffer.putInt(dataLength)
+        buffer.putInt(checksum)
+        buffer.putInt(magic)
         return buffer.array()
     }
 
     companion object {
-        fun parse(header: ByteArray, data: ByteArray?): AdbMessage {
+        fun parseHeader(header: ByteArray): AdbMessage {
             val buffer = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
-            val command = buffer.getInt()
-            val arg0 = buffer.getInt()
-            val arg1 = buffer.getInt()
-            val dataLength = buffer.getInt()
-            val checksum = buffer.getInt()
-            val magic = buffer.getInt()
-
-            // Verification logic would go here (checksum, magic)
-            return AdbMessage(command, arg0, arg1, data)
+            return AdbMessage(
+                command = buffer.getInt(),
+                arg0 = buffer.getInt(),
+                arg1 = buffer.getInt(),
+                data = null // Data to be read separately
+            )
         }
     }
 }

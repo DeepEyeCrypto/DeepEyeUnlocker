@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Default capabilities for DeepEye Unlocker","local":true,"windows":["main"],"permissions":["core:default","shell:allow-execute","shell:allow-spawn","sql:default"]}}

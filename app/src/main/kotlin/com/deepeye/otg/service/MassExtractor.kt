@@ -14,8 +14,8 @@ import java.io.File
  * Stage 50.3 — Mass Forensic Data Extraction Service.
  * Orchestrates multi-device pulls of critical evidence to central storage.
  */
-class MassExtractor(
-    private val context: Context,
+class MassExtractor @javax.inject.Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
     private val lifecycleManager: UsbLifecycleManager
 ) {
     private val TAG = "DeepEye-MassExtract"
@@ -59,7 +59,15 @@ class MassExtractor(
             if (handle != 0L) {
                 try {
                     // 1. Ensure MTK Decryption is active for this node (Stage 300.1)
-                    // (Assuming keys are already extracted as part of normal init)
+                    val devInfo = NativeBridge.identifyDevice(handle)
+                    if (devInfo.contains("MTK", ignoreCase = true)) {
+                        onLog(key, "MTK Device detected. Initializing real-time decryption...")
+                        if (MtkFsDecryptor.decryptUserdata(handle)) {
+                            onLog(key, "MTK Decryption ACTIVE. Physical userdata is now transparent.")
+                        } else {
+                            onLog(key, "WARNING: Decryption failed. Data might be acquired in encrypted state.")
+                        }
+                    }
                     
                     srcPaths.forEach { src ->
                         onLog(key, "Pulling evidence: $src")

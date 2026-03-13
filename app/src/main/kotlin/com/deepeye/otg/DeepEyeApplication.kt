@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
  *
  * Registered in AndroidManifest.xml via android:name=".DeepEyeApplication"
  */
+@dagger.hilt.android.HiltAndroidApp
 class DeepEyeApplication : Application() {
 
     private val appJob = SupervisorJob()
@@ -26,21 +27,14 @@ class DeepEyeApplication : Application() {
 
     val appScope = CoroutineScope(appJob + Dispatchers.Default + appExceptionHandler)
 
-    val usbManager: UsbManager by lazy {
-        getSystemService(Context.USB_SERVICE) as UsbManager
-    }
+    @javax.inject.Inject
+    lateinit var usbLifecycleManager: UsbLifecycleManager
 
-    /**
-     * Process-wide USB lifecycle manager.
-     * This survives Activity recreation and prevents lifecycle coupling bugs.
-     */
-    val usbLifecycleManager: UsbLifecycleManager by lazy {
-        UsbLifecycleManager(
-            context = applicationContext,
-            usbManager = usbManager,
-            scope = appScope
-        )
-    }
+    @javax.inject.Inject
+    lateinit var usbManager: android.hardware.usb.UsbManager
+
+    @javax.inject.Inject
+    lateinit var licenseManager: com.deepeye.otg.service.LicenseManager
 
     companion object {
         private const val TAG = "DeepEye"
@@ -49,13 +43,15 @@ class DeepEyeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // ── Initialize Timber Logging ───────────────────────────
+        if (BuildConfig.DEBUG) {
+            timber.log.Timber.plant(timber.log.Timber.DebugTree())
+        }
+
         // ── Load native lib on IO thread — NEVER on main ────────
         appScope.launch(Dispatchers.IO) {
             NativeBridge.loadAsync()
         }
-
-        // ── Initialize Secure Licensing (Stage C) ───────────────
-        com.deepeye.otg.service.LicenseManager.initialize(this)
 
         // ── Bootstrap already attached devices (cold start + process restart) ──
         bootstrapAttachedDevices()

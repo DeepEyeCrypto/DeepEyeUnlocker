@@ -63,7 +63,7 @@ fun DebugOverlayPanel(viewModel: UsbViewModel) {
                     }
                 }
 
-                Divider(color = Color.White.copy(0.05f))
+                HorizontalDivider(color = Color.White.copy(0.05f))
 
                 Box(modifier = Modifier.heightIn(max = 200.dp)) {
                     LazyColumn(modifier = Modifier.padding(8.dp)) {

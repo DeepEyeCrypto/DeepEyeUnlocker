@@ -21,19 +21,21 @@ import com.deepeye.otg.ui.RemoteShareScreen
 import androidx.compose.runtime.collectAsState
 import java.util.UUID
 
+@dagger.hilt.android.AndroidEntryPoint
 class RemoteShareActivity : AppCompatActivity() {
 
     private lateinit var usbManager: UsbManager
     private val actionUsbPermission = com.deepeye.otg.usb.UsbPermissionGuard.ACTION_USB_PERMISSION
     private var pendingPermissionDeviceId: Int? = null
 
+    @javax.inject.Inject
+    lateinit var tunnel: com.deepeye.otg.service.TunnelManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
         
-        val tunnel = com.deepeye.otg.service.TunnelManager
-
         setContent {
             val tunnelStatus by tunnel.status.collectAsState()
             val tunnelCode by tunnel.sessionCode.collectAsState()
@@ -83,14 +85,7 @@ class RemoteShareActivity : AppCompatActivity() {
                 isDeviceDetected = isDetected,
                 onStartSharing = {
                     if (tunnelCode == null) {
-                        val device = usbDevice
-                        if (device == null) return@RemoteShareScreen
-
-                        if (usbManager.hasPermission(device)) {
-                            tunnel.startSharing(device)
-                        } else {
-                            requestUsbPermission(device)
-                        }
+                        tunnel.startFleetSharing()
                     } else {
                         tunnel.stopSharing()
                     }
