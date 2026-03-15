@@ -27,18 +27,18 @@ object DeepEyeCatalogs {
         )),
         FeatureGroup("g2", "Reset & Cleanup", listOf(
             DeepEyeOperation("op_factory_reset", "Factory Reset / Format Userdata", "Factory Reset", "Securely wipe all user content", policyTier = PolicyTier.SAFE, dangerous = true),
-            DeepEyeOperation("op_demo_retail", "Demo Mode to Retail", "Demo-to-Retail", "Convert store demo units to standard retail logic", policyTier = PolicyTier.RESTRICTED),
+            DeepEyeOperation("op_demo_retail", "Demo Mode to Retail", "Demo-to-Retail", "Convert demo unit to retail config", policyTier = PolicyTier.RESTRICTED),
             DeepEyeOperation("op_safe_wipe", "Safe Wipe with Backup", "Safe Wipe", "Wipe device but retain app data or specific media", policyTier = PolicyTier.SAFE),
-            DeepEyeOperation("op_brand_config", "Brand Config Presets", "Brand Config", "Apply specific region/brand NV configurations", policyTier = PolicyTier.POLICY)
+            DeepEyeOperation("op_brand_config", "Brand Config Presets", "Brand Config", "Modify device brand configuration", policyTier = PolicyTier.POLICY)
         )),
         FeatureGroup("g3", "Account / Recovery Guidance", listOf(
-            DeepEyeOperation("op_frp_google", "Google Account Recovery Guidance", "FRP Bypass / Reset", "Remove Factory Reset Protection locks", policyTier = PolicyTier.POLICY),
-            DeepEyeOperation("op_frp_samsung", "Samsung / Mi Account Guidance", "Brand Account Reset", "Bypass or remove vendor cloud locks", policyTier = PolicyTier.POLICY),
-            DeepEyeOperation("op_efrp_enterprise", "Enterprise EFRP Hooks", "Enterprise EFRP", "Manage enterprise managed setups", policyTier = PolicyTier.RESTRICTED),
+            DeepEyeOperation("op_frp_google", "Google Account Recovery Guidance", "FRP Bypass / Reset", "Bypass Factory Reset Protection", policyTier = PolicyTier.POLICY),
+            DeepEyeOperation("op_frp_samsung", "Samsung / Mi Account Guidance", "Brand Account Reset", "Reset brand account binding", policyTier = PolicyTier.POLICY),
+            DeepEyeOperation("op_efrp_enterprise", "Enterprise EFRP Hooks", "Enterprise EFRP", "Enterprise FRP removal", policyTier = PolicyTier.RESTRICTED),
             DeepEyeOperation("op_recovery_flow", "Recovery Flow Assistant", "Recovery Assist", "Step-by-step help for bootlooped phones", policyTier = PolicyTier.SAFE)
         )),
         FeatureGroup("g4", "Locks & Security", listOf(
-            DeepEyeOperation("op_screen_lock", "Screen Lock Repair Workflow", "Screen Lock Reset", "Remove pattern or pin without data loss (if possible)", policyTier = PolicyTier.POLICY),
+            DeepEyeOperation("op_screen_lock", "Screen Lock Repair Workflow", "Screen Lock Reset", "Remove screen lock on owned device", policyTier = PolicyTier.POLICY),
             DeepEyeOperation("op_lock_state", "Lock State Analysis", "Lock Analysis", "Detect current BL and FRP lock statuses", policyTier = PolicyTier.SAFE),
             DeepEyeOperation("op_bl_unlock", "Bootloader Unlock", "Bootloader Unlock", "Automate BL unlock processes (Brand dependent)", policyTier = PolicyTier.POLICY, dangerous = true),
             DeepEyeOperation("op_mdm_check", "MDM / Finance Lock Status", "MDM Status", "Check for finance or MDM restrictions", policyTier = PolicyTier.SAFE)
