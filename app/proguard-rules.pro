@@ -27,22 +27,23 @@
 -keep class * implements dagger.hilt.internal.UnsafeCasts { *; }
 
 # ── USB + Protocol core ─────────────────────────────────────
--keep class com.deepeye.otg.usb.** { *; }
--keep class com.deepeye.otg.protocol.** { *; }
--keep class com.deepeye.otg.engine.** { *; }
--keep class com.deepeye.otg.repair.** { *; }
+# [HARDENED] Allowing obfuscation of internal states
+-keep class com.deepeye.otg.usb.UsbTransport { *; }
+-keep class com.deepeye.otg.protocol.ProtocolDetector { *; }
+-keep class com.deepeye.otg.protocol.mtk.MtkSession { *; }
+-keep class com.deepeye.otg.protocol.qualcomm.QcomSession { *; }
 
 # ── Domain Models — CRITICAL for state-driven UI ──────────
 -keep class com.deepeye.otg.domain.models.** { *; }
 -keep class com.deepeye.otg.policy.** { *; }
 
--keep class com.deepeye.otg.service.** { *; }
--keep class com.deepeye.otg.data.** { *; }
+# ── Service layer — OBFUSCATE forensic logic ───────────────
+-keep class com.deepeye.otg.service.MassExtractor { *; }
+-keep class com.deepeye.otg.service.ReportManager { *; }
 
-# ── Exploit Research — HARDEN payloads (Stage J) ──────────
--keep class com.deepeye.otg.exploit.** { *; }
--keep class com.deepeye.otg.fuzz.** { *; }
--keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+# ── Exploit Research — STRIP metadata (Stage J) ────────────
+-keep class com.deepeye.otg.exploit.ExploitPayload { *; }
+-keepattributes *Annotation*,Signature
 -dontwarn com.deepeye.otg.exploit.**
 
 # ── OkHttp + Okio ───────────────────────────────────────────

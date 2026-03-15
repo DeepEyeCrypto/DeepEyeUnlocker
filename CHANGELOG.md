@@ -5,7 +5,8 @@
 - **Android Universal APK**: Consolidated all target ABIs into a single, high-assurance production APK with R8 minification and native libusb stripping.
 - **MtkFsDecryptor Refinement**: Implemented "Double-Layer" decryption support for MTK Dimensity SoCs, enabling simultaneous access to FBE-encrypted userdata and Adoptable Storage (SD card) volumes.
 - **Physical Integrity Dash (Stage 600.1)**: Enhanced the Forensic Dashboard with hardware-level integrity indicators (Shield/Verified). Monitors for signal impedance anomalies and unauthorized hardware interposers.
-- **Intelligence Automation**: Integrated `ForensicAiAssistant` orchestration for YARA-triggered deep analysis and automated forensic case summarization.
+- **ADB Crypto Hardening**: Upgraded RSA keys to 4096-bit and switched to SHA256withRSA to ensure compliance with Android 15 security policies.
+- **R8 Production Audit**: Strengthened obfuscation by minimizing -keep wildcards in ProGuard rules, protecting sensitive internal forensic logic from reverse engineering.
 - **Stability Fixes**: Resolved Tauri release bundling errors and synchronized Cargo dependencies for reproducible CI/CD parity.
 
 ---
