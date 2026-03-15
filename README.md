@@ -1,135 +1,111 @@
-# DeepEye Unlocker v2026.3
+<div align="center">
 
-> Universal Power. Precision Control. Liquid Glass.
+# 👁️ DEEPEYE UNLOCKER
 
-![DeepEye Banner](assets/deepeye_readme_banner.png)
+### **Advanced Mobile Forensics · Decryption · Signal Analysis**
 
-[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?style=flat-square&color=9C6FFF)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest)
-[![Build Status](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml/badge.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions/workflows/build.yml)
-[![Platform](https://img.shields.io/badge/Platform-Android%20(OTG)-green.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
-[![UI](https://img.shields.io/badge/UI-Liquid%20Glass%20·%20Compose-9C6FFF.svg)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
+![DeepEye Banner](file:///Users/enayat/.gemini/antigravity/brain/68759bb6-0bad-41ba-8200-5d39e155e045/deepeye_tactical_banner_1773572279120.png)
 
----
-
-## 🔷 Professional Mobile Repair — Reimagined for Android
-
-DeepEye Unlocker is a high-performance Android application designed for mobile technicians and security researchers. It enables full hardware-level access to connected devices via USB OTG, supporting advanced operations like firmware flashing, lock removal, and FRP bypass — all from your Android phone.
+[![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?style=for-the-badge&color=8B5CF6)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/DeepEyeCrypto/DeepEyeUnlocker/build.yml?style=for-the-badge&label=ENGINE_STATUS)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions)
+[![Integrity](https://img.shields.io/badge/STAGE-600.1_SHIELDED-00E676?style=for-the-badge)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker)
 
 ---
 
-## ✨ Features
+**DeepEye Unlocker** is an editor-grade mobile forensic engine designed for high-assurance device acquisition and decryption. Built for security researchers and digital forensics experts, it provides bit-level access to secure storage via ultra-low latency USB orchestration.
 
-### 🎨 Liquid Glass UI (v2)
+[**Download RC**](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases) • [**Technical Specs**](#-technical-specifications) • [**Forensic Dashboard**](#-forensic-dashboard-v2)
 
-- **Jetpack Compose Native:** Built from the ground up with a premium, zero-latency interface
-- **Liquid Glass Theme:** Deep space gradient bg (`#05050F` → `#0A0015`) with animated purple/blue orbs
-- **Glassmorphism:** Frosted glass cards (`white/5%` + `white/12%` border) throughout
-- **Gradient Accents:** Purple gradient buttons (`#9747FF` → `#6B2FE0`), frosted pill badges
-- **6 Brand Tabs:** Xiaomi, Samsung, Oppo, Vivo, Realme, OnePlus — glass pill style
-- **24 Feature Cards:** Organized across 6 groups with glow-border tier badges
-- **macOS-Style Terminal:** Traffic light dots (🔴🟡🟢) with color-coded logs and blinking cursor
-- **Remote Tunnel:** Glass-themed remote device sharing with session ID display
-
-### 🔌 Advanced USB OTG Engine
-
-- **Chipset Autodetect:** Instant detection of Qualcomm (EDL/Sahara), MTK (BROM), and Samsung (Odin) boot modes
-- **Hardened Transport:** Production-grade USB bulk transfer with timeout handling & error recovery
-- **Native Core:** High-speed C++17 engine (`libusb 1.0.26`) performing raw USB state transitions
-- **ITransport Abstraction:** Clean interface for USB + TCP transport
-
-### 🛠️ Core Operations (24 Features)
-
-| Group | Operations |
-|---|---|
-| **A — Unlock** | Bootloader unlock/relock, FRP erase, Factory reset |
-| **B — Security Repair** | Screen lock removal, Mi Cloud removal, Auth bypass, Demo→Retail |
-| **C — FRP & Account** | Google FRP, Samsung/Mi account, Enterprise EFRP, MTK MetaMode |
-| **D — Firmware** | Write/read firmware, Partition manager, EFS backup/restore |
-| **E — IMEI & Network** | IMEI check/restore, 5G modem repair, Network/SIM unlock |
-| **F — Advanced** | Deep device info, ADB/Diag enable, One-click root, App manager |
+</div>
 
 ---
 
-## 🚀 Quick Start
+## ⚡ CORE CAPABILITIES
 
-### Prerequisites
+### 🔓 DATA DECRYPTION (STAGE 300.1)
+*   **Double-Layer Decryption**: Simultaneous access to FBE-encrypted UserData and Adoptable Storage (SD card) volumes.
+*   **MTK Dimensity Support**: Native decryption for the latest MediaTek Dimensity 9000+ chipsets.
+*   **TEE Key Extraction**: Automated retrieval of Keystore blobs from RPMB/Secure Contexts.
 
-- JDK 17 (Temurin recommended)
-- Android SDK 26+ (Android 8.0 → 15+)
-- NDK 25.1.8937393 + CMake 3.22.1
-- OTG Adapter (Type-C to USB-A or C-to-C)
+### 🛡️ PHYSICAL INTEGRITY (STAGE 600.1)
+*   **Eye-Diagram Analysis**: Real-time monitoring of USB signal integrity and impedance deltas.
+*   **Tamper Detection**: Detects hardware interposers and unauthorized signal relaying during acquisition.
+*   **Signal Impedance Guard**: Auto-disconnect on signal anomalies to prevent data corruption or side-channel leakage.
 
-### Build
+### 🔌 HARDENED PROTOCOL ENGINE
+*   **Multi-SoC Handshake**: Deep support for Qualcomm Sahara (EDL), MTK Brom, Samsung Odin, and UniSoc FDL.
+*   **RSA-4096 Crypto**: ADB communication hardened with SHA256-standard 4096-bit encryption.
+*   **Low-Latency I/O**: Direct `libusb` orchestration with sub-millisecond command dispatch.
 
+---
+
+## 🏗️ SYSTEM ARCHITECTURE
+
+```mermaid
+graph TD
+    UI[Jetpack Compose Liquid Glass] --> VM[Forensic ViewModel]
+    VM --> JB[JNI Native Bridge]
+    JB --> CORE[C++17 DeepEye Core]
+    CORE --> USB[libusb 1.0.26 / ITransport]
+    CORE --> FE[Forensic Engine]
+    FE --> DEC[Decryption Layer]
+    FE --> AUD[Audit & Integrity]
+    USB --> DEV[Target Physical Device]
+```
+
+### 🛰️ TECHNICAL SPECIFICATIONS
+| LAYER | TECHNOLOGY | TARGET LATENCY |
+| :--- | :--- | :--- |
+| **Frontend** | Jetpack Compose / Liquid Glass v2 | < 16.7ms (60 FPS) |
+| **Bridge** | JNI NativeBridge (Kotlin 2.0) | < 0.5ms |
+| **Core** | C++17 NDK (Standalone STL) | < 0.1ms |
+| **USB** | libusb-1.0.26 (Asynchronous I/O) | < 2.0ms (Bulk Transfer) |
+
+---
+
+## 🕹️ FORENSIC DASHBOARD V2
+
+The **DeepEye Dashboard** leverages the "Liquid Glass" design system for a high-intensity, tactical user experience:
+
+*   **Glassmorphism Cards**: Frosted semi-transparent UI with dynamic neon-purple shadows.
+*   **Live Integrity Shield**: Real-time "Shielded/Verified" status based on Stage 600.1 signal analysis.
+*   **Terminal Console**: macOS-style interactive terminal with blazingly fast log streaming.
+*   **Consolidated Audits**: One-click generation of PDF forensic reports with SHA-256 integrity chaining.
+
+---
+
+## 🚀 INSTALLATION & BUILD
+
+### 📋 PREREQUISITES
+*   **Android SDK**: API 26 to 35 (Android 8.0 → 15+)
+*   **NDK**: 25.1.8937393
+*   **JDK**: 17 (Target 1.8 compatibility for native libs)
+*   **Environment**: `GRADLE_OPTS="-Xmx4g"` recommended for R8 minification.
+
+### 🛠️ BUILD PRODUCTION APK
 ```bash
+# Clone the repository
 git clone https://github.com/DeepEyeCrypto/DeepEyeUnlocker.git
 cd DeepEyeUnlocker
 
-# Set environment
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
-export ANDROID_HOME=/usr/local/share/android-commandlinetools
-
-# Build signed release
+# Synchronize dependencies and build
 ./gradlew assembleRelease
 ```
-
-APK output: `app/build/outputs/apk/release/app-release.apk`
-
-Run on a **physical Android device** — emulators do not support OTG.
+*Output: `app/build/outputs/apk/release/DeepEyeUnlocker_v2026.27.0.apk`*
 
 ---
 
-## 🏗️ Architecture
-
-```text
-┌─────────────────────────────────────┐
-│  Jetpack Compose UI (Kotlin)        │
-│  Material3 · Liquid Glass · Compose │
-├─────────────────────────────────────┤
-│  Business Logic                     │
-│  Coroutines · Flow · ViewModel      │
-├─────────────────────────────────────┤
-│  JNI Bridge                         │
-│  native-lib.cpp ↔ NativeBridge.kt   │
-├─────────────────────────────────────┤
-│  C++17 Native Core (NDK)            │
-│  EDL · BROM · Odin · FDL · Firehose │
-│  libusb 1.0.26 · ITransport         │
-└─────────────────────────────────────┘
-```
-
-### Design System
-
-```
-DeepEyeColors (DeepEyeUI.kt)
-├── BgStart: #05050F → BgEnd: #0A0015  (deep space gradient)
-├── PrimaryGlow: #7C4DFF               (accent purple)
-├── AccentPurple: #9C6FFF              (highlights)
-├── GradientButton: #9747FF → #6B2FE0  (RUN buttons)
-├── GlassCardBg: white/5%             (frosted cards)
-├── GlassBorder: white/12%            (card borders)
-├── Tier1: #69FF47  Tier2: #FFD740  Tier3: #FF6E6E
-└── Terminal: green #4ADE80, yellow #FACC15
-```
+## ⚖️ LEGAL & ETHICS
+DeepEye Unlocker is developed for digital research and forensic audit only. **Software Use Policy**:
+1. Use only on devices with explicit legal authorization.
+2. Compliance with local privacy and data protection laws is mandatory.
+3. Decryption features are provided for academic study.
 
 ---
 
-## 📋 Changelog
+<div align="center">
 
-See [CHANGELOG.md](CHANGELOG.md) for full release history.
+**Built with Precision for the Global Research Community.**
+[Official Telegram](https://t.me/DeepEyeCrypto) • [Documentation](docs/INDEX.md)
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow clean, minimal diff practices and ensure performance-critical paths stay at sub-millisecond latency.
-
----
-
-## ⚖️ Legal
-
-This tool is provided for **educational purposes** and for use on devices you legally own. Users are responsible for compliance with local laws.
-
----
-
-### Built with ❤️ by the DeepEye Community
+</div>
