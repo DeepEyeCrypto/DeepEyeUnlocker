@@ -14,27 +14,39 @@ object MtkFsDecryptor {
 
     /**
      * Attempts to initialize the decryption layer for a connected MTK device.
+     * Handles Stage 300.1: FBE + SD Card Adoptable Storage (Double-Layer).
      */
     suspend fun decryptUserdata(handle: Long): Boolean = withContext(Dispatchers.IO) {
-        Log.i(TAG, "Initializing MTK Userdata Decryption...")
+        Log.i(TAG, "Initializing MTK Userdata Decryption (Stage 300.1)...")
 
-        // 1. Extract specialized keyblob from TEE/RPMB
-        val keyBlob = NativeBridge.readRpmb(handle)
-        if (keyBlob.isEmpty()) {
-            Log.e(TAG, "Failed to extract key material from RPMB")
+        // 1. Extract specialized FBE Master Key from TEE/RPMB
+        val fbeMasterKey = NativeBridge.readRpmb(handle)
+        if (fbeMasterKey.isEmpty()) {
+            Log.e(TAG, "Failed to extract FBE master key from RPMB")
             return@withContext false
         }
 
-        // 2. Initialize real-time decryptor via NDK
-        val success = NativeBridge.mtkDecryptFs(handle, "userdata", keyBlob)
-        
-        if (success) {
-            Log.i(TAG, "MTK Decryption layer ACTIVE. Userdata is now accessible.")
-        } else {
-            Log.e(TAG, "NDK Decryption layer failed to initialize.")
+        // 2. Initialize primary userdata decryptor via NDK
+        val primarySuccess = NativeBridge.mtkDecryptFs(handle, "userdata", fbeMasterKey)
+        if (!primarySuccess) {
+            Log.e(TAG, "Primary userdata decryption layer failed.")
+            return@withContext false
         }
-        
-        success
+
+        // 3. Stage 300.1: Check for Adoptable Storage (SD Card)
+        // [RESEARCHER] Dimensity chips often map the SD card as a separate crypto-volume.
+        val hasAdoptableStorage = NativeBridge.fsCheckVolume(handle, "sdcard_adoptable")
+        if (hasAdoptableStorage) {
+            Log.i(TAG, "Adoptable Storage detected. Attempting Double-Layer unwrap...")
+            val sdKey = NativeBridge.extractAdoptableKey(handle, "userdata") // Key is often stored inside primary FS
+            if (sdKey.isNotEmpty()) {
+                val sdSuccess = NativeBridge.mtkDecryptFs(handle, "sdcard_adoptable", sdKey)
+                if (sdSuccess) Log.i(TAG, "Double-Layer Decryption ACTIVE (Internal + SD).")
+            }
+        }
+
+        Log.i(TAG, "MTK Decryption layer ACTIVE. Userdata is now accessible.")
+        true
     }
 
     /**

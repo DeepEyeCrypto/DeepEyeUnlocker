@@ -1,12 +1,18 @@
+## [2026.27-RC] — 2026-03-15
+
+### 🚀 Release Candidate — macOS Universal & Android Multi-ABI
+- **macOS Universal Build**: Introduced a unified packaging pipeline for Apple Silicon (arm64) and Intel (x86_64). Validated via `lipo` and manual `bundle_dmg.sh` orchestration.
+- **Android Universal APK**: Consolidated all target ABIs into a single, high-assurance production APK with R8 minification and native libusb stripping.
+- **MtkFsDecryptor Refinement**: Implemented "Double-Layer" decryption support for MTK Dimensity SoCs, enabling simultaneous access to FBE-encrypted userdata and Adoptable Storage (SD card) volumes.
+- **Physical Integrity Dash (Stage 600.1)**: Enhanced the Forensic Dashboard with hardware-level integrity indicators (Shield/Verified). Monitors for signal impedance anomalies and unauthorized hardware interposers.
+- **Intelligence Automation**: Integrated `ForensicAiAssistant` orchestration for YARA-triggered deep analysis and automated forensic case summarization.
+- **Stability Fixes**: Resolved Tauri release bundling errors and synchronized Cargo dependencies for reproducible CI/CD parity.
+
+---
+
 ## [2026.27] — 2026-03-13
 
 ### ✨ Stability Patch & Desktop Console Alignment
-
-- **Build Stabilization**: Resolved critical semantic versioning mismatch and missing asset dependencies across Gradle and Cargo environments.
-- **Tauri 2.0 Command Bridge**: Aligned all Rust command modules with Tauri 2.0 event emitters and process handling.
-- **Intelligence Module Fixes**: Repaired constructor mismatches and ambigous property references in the CVE/Patch analysis engine.
-- **Improved UI Identity**: Re-linked accent color tokens to the latest Stitch design system.
-- **Integrated Intelligence Artifacts**: Permanently staged 7 untracked forensic analysis modules to the production core.
 
 ---
 

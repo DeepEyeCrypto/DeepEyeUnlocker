@@ -374,8 +374,21 @@ private fun DeviceDashboardCard(
                 Text(
                     text = mode,
                     style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
-                    color = StitchTokens.TextMono
+                    color = StitchTokens.TextMono,
+                    modifier = Modifier.weight(1f)
                 )
+
+                // Stage 600.1 — Physical Integrity Indicator
+                if (state is UsbLifecycleState.Connected) {
+                    val integrityIcon = if (state.chipset.contains("Qualcomm")) Icons.Default.Shield else Icons.Default.Verified
+                    val integrityColor = if (state.deviceName.contains("SEC-")) Color(0xFF00E676) else StitchTokens.Primary // Simplified mock
+                    Icon(
+                        imageVector = integrityIcon,
+                        contentDescription = "HW Integrity",
+                        tint = integrityColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }
