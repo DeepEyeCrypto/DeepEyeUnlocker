@@ -104,6 +104,7 @@ fun MainScreen(
                         viewModel = hidViewModel,
                         onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
                     )
+                    NavTarget.DEVICE_SUPPORT -> com.deepeye.otg.ui.device.DeviceSupportScreen()
                     NavTarget.IMEI_REPAIR -> {
                         val aiAnalysis by viewModel.aiAnalysis.collectAsState()
                         val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
@@ -641,6 +642,18 @@ private fun MainTopBar(viewModel: UsbViewModel) {
                     imageVector = Icons.Default.Memory,
                     contentDescription = "Storage",
                     tint = if (currentNav == NavTarget.STORAGE) StitchTokens.Primary else StitchTokens.TextSecondary
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = { viewModel.setNav(NavTarget.DEVICE_SUPPORT) },
+                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
+            ) {
+                val currentNav by viewModel.currentNav.collectAsState()
+                Icon(
+                    imageVector = Icons.Default.ContactSupport,
+                    contentDescription = "Device DB",
+                    tint = if (currentNav == NavTarget.DEVICE_SUPPORT) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }
             Spacer(Modifier.width(8.dp))

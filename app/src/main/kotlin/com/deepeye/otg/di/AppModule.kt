@@ -12,6 +12,7 @@ import com.deepeye.otg.usb.AdbManager
 import com.deepeye.otg.usb.HardwareManager
 import com.deepeye.otg.usb.SessionCoordinator
 import com.deepeye.otg.usb.UsbLifecycleManager
+import com.deepeye.otg.usb.IosSessionCoordinator
 import com.deepeye.otg.fuzz.hid.HidFuzzCoordinator
 import com.deepeye.otg.fuzz.hid.MaliciousHidDevice
 import com.deepeye.otg.exploit.ExploitChainOrchestrator
@@ -147,5 +148,14 @@ object AppModule {
         lifecycleManager: UsbLifecycleManager
     ): HardwareManager {
         return HardwareManager(context, lifecycleManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIosSessionCoordinator(
+        sessionCoordinator: SessionCoordinator,
+        hardwareManager: HardwareManager
+    ): IosSessionCoordinator {
+        return IosSessionCoordinator(sessionCoordinator, hardwareManager)
     }
 }

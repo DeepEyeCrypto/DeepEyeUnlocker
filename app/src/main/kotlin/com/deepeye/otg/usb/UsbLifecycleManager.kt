@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlin.math.pow
 import kotlinx.coroutines.sync.withLock
+import com.deepeye.otg.data.device.ProtocolRouter
+import com.deepeye.otg.data.device.DeviceProtocol
 import timber.log.Timber
 
 /**
@@ -67,6 +69,28 @@ class UsbLifecycleManager(
                 val snapshot = UsbSnapshotFactory.from(device)
                 val detection = detector.detect(snapshot)
                 val mode = detection.toConnectionMode()
+
+                // Protocol Routing Logic (Stage 201.2)
+                val routingResult = ProtocolRouter.route(
+                    device.vendorId, 
+                    device.productId, 
+                    snapshot.manufacturerName, 
+                    snapshot.productName
+                )
+                Timber.d("[ROUTER] vid=0x${device.vendorId.toString(16)} protocol=${routingResult.protocol} confidence=${routingResult.confidence}")
+
+                // Dispatch to specific protocol session (Stage 201.3)
+                when (routingResult.protocol) {
+                    DeviceProtocol.MTK_V6       -> startMtkV6Session(device)
+                    DeviceProtocol.MTK_BROM     -> startMtkBromSession(device)
+                    DeviceProtocol.QC_EDL       -> startQcEdlSession(device)
+                    DeviceProtocol.SAMSUNG_ODIN -> startSamsungSession(device)
+                    DeviceProtocol.MTK_OR_QC    -> askUserToSelect(device)
+                    DeviceProtocol.UNKNOWN      -> showUnknownDevice(device)
+                }
+
+                Timber.i("[PROTOCOL] Device attached: ${device.productName} (VID=0x${Integer.toHexString(device.vendorId)})")
+                Timber.i("[PROTOCOL] Route Result: ${routingResult.protocol} | Confidence: ${routingResult.confidence} | Reason: ${routingResult.reason}")
 
                 val newState = UsbLifecycleState.DeviceDetected(
                     device = device,
@@ -317,5 +341,32 @@ class UsbLifecycleManager(
             retryCount++
             onDeviceAttached(device)
         }
+    }
+
+    // ── Session Dispatching (Stage 201.3) ───────────────────────
+
+    private fun startMtkV6Session(device: UsbDevice) {
+        Timber.i("[SESSION] Starting MTK V6 (Dimensity) session for ${device.productName}")
+        // Next: Implement V6 handshake trigger
+    }
+
+    private fun startMtkBromSession(device: UsbDevice) {
+        Timber.i("[SESSION] Starting MTK Classic BROM session for ${device.productName}")
+    }
+
+    private fun startQcEdlSession(device: UsbDevice) {
+        Timber.i("[SESSION] Starting Qualcomm EDL (Sahara/Firehose) session for ${device.productName}")
+    }
+
+    private fun startSamsungSession(device: UsbDevice) {
+        Timber.i("[SESSION] Starting Samsung ODIN session for ${device.productName}")
+    }
+
+    private fun askUserToSelect(device: UsbDevice) {
+        Timber.w("[SESSION] Ambiguous protocol (MTK/QC) for ${device.productName}. Awaiting User choice.")
+    }
+
+    private fun showUnknownDevice(device: UsbDevice) {
+        Timber.w("[SESSION] Unknown device 0x${device.vendorId.toString(16)}. Showing generic support.")
     }
 }
