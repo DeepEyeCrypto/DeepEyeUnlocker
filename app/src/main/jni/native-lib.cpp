@@ -893,3 +893,16 @@ Java_com_deepeye_otg_NativeBridge_fsReadFile(JNIEnv *env, jobject thiz,
   auto data = forensics.ReadFile(part, p);
   return vecToJbyteArray(env, data);
 }
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_NativeBridge_examinePhysicalIntegrity(JNIEnv *env, jobject thiz,
+                                                          jlong handle) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewStringUTF("{\"status\":\"UNKNOWN\"}");
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  return env->NewStringUTF(forensics.ExaminePhysicalIntegrity().c_str());
+}

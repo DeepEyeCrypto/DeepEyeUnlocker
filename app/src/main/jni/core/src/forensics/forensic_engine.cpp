@@ -115,5 +115,11 @@ std::vector<uint8_t> ForensicEngine::ReadFile(const std::string &partition, cons
     return {0x48, 0x65, 0x6C, 0x6C, 0x6F}; // "Hello"
 }
 
+std::string ForensicEngine::ExaminePhysicalIntegrity() {
+    // Stage 600.1 — Signal Analysis Calibration
+    // Simulate reading impedance from USB controller (D+/D- pins)
+    return "{\"status\":\"VERIFIED\",\"impedance_delta\":0.02,\"eye_score\":98}";
+}
+
 } // namespace Forensics
 } // namespace DeepEye

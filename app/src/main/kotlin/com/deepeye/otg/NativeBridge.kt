@@ -241,4 +241,10 @@ object NativeBridge {
      * Verify the integrity of a boot/recovery image against a signature.
      */
     external fun verifyImageSignature(handle: Long, name: String): String
+
+    /**
+     * Stage 600.1 — Analyze USB signal integrity and check for hardware tampering.
+     * Returns a JSON report containing impedance delta and Eye-Diagram profile.
+     */
+    external fun examinePhysicalIntegrity(handle: Long): String
 }

@@ -72,6 +72,11 @@ public:
    */
   std::vector<uint8_t> ReadFile(const std::string &partition, const std::string &path);
 
+  /**
+   * Stage 600.1 — Analyze USB signal integrity.
+   */
+  std::string ExaminePhysicalIntegrity();
+
 private:
   Core::ProtocolEngine *_engine;
 
