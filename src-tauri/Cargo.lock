@@ -568,7 +568,7 @@ dependencies = [
 
 [[package]]
 name = "deep-eye-unlocker-desktop"
-version = "2026.12.0"
+version = "2026.27.0"
 dependencies = [
  "serde",
  "serde_json",
