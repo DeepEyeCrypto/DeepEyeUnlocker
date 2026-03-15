@@ -7,7 +7,7 @@
 - **Physical Integrity Dash (Stage 600.1)**: Enhanced the Forensic Dashboard with hardware-level integrity indicators (Shield/Verified). Monitors for signal impedance anomalies and unauthorized hardware interposers.
 - **ADB Crypto Hardening**: Upgraded RSA keys to 4096-bit and switched to SHA256withRSA to ensure compliance with Android 15 security policies.
 - **R8 Production Audit**: Strengthened obfuscation by minimizing -keep wildcards in ProGuard rules, protecting sensitive internal forensic logic from reverse engineering.
-- **Stability Fixes**: Resolved Tauri release bundling errors and synchronized Cargo dependencies for reproducible CI/CD parity.
+- **Stability Fixes**: Resolved Tauri release bundling errors, fixed CI build failures (Java Home), and synchronized missing JNI bindings for MTK forensic exploration logic.
 
 ---
 
