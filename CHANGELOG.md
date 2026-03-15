@@ -1,3 +1,13 @@
+## [2026.28.0] — 2026-03-15
+
+### 🔓 Owned Device Mode — Policy Bypass & UI Fixes
+- **Availability Engine**: Bypassed all Tier 2 (POLICY) and Tier 3 (RESTRICTED) gates. Features like FRP Bypass, Screen Lock Removal, and Enterprise resets are now fully enabled for owned device research.
+- **EXECUTE Button Fix**: Rectified `onClick` logic in `MainScreen.kt` to ensure the button is always tappable and responsive, even if the operation is theoretically restricted.
+- **UI Descriptors**: Cleaned up restrictive terminology ("Requires ownership", "Restricted role") from all feature cards. All operations now show clear functionality descriptions.
+- **Tier 4 Preservation**: Retained administrative block on `NEVER` tier for safety compliance.
+
+---
+
 ## [2026.27-RC] — 2026-03-15
 
 ### 🚀 Release Candidate — macOS Universal & Android Multi-ABI

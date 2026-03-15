@@ -1,6 +1,6 @@
 {
   "name": "deep-eye-unlocker",
-  "version": "2026.27.0",
+  "version": "2026.28.0",
   "description": "DeepEye Unlocker Tauri v2 Console",
   "main": "index.html",
   "scripts": {
