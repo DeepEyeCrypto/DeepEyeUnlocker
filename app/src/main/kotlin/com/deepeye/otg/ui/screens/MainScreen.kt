@@ -493,7 +493,7 @@ private fun FeatureActionCard(
         hazeState = hazeState,
         performanceMode = perfMode,
         modifier = modifier.height(140.dp).padding(horizontal = 4.dp),
-        onClick = if (availability.enabled) onRun else null
+        onClick = onRun
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
