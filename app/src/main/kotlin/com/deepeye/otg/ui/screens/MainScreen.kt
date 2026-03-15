@@ -651,8 +651,8 @@ private fun MainTopBar(viewModel: UsbViewModel) {
             ) {
                 val currentNav by viewModel.currentNav.collectAsState()
                 Icon(
-                    imageVector = Icons.Default.ContactSupport,
-                    contentDescription = "Device DB",
+                    imageVector = Icons.Default.PhoneAndroid,
+                    contentDescription = "Devices",
                     tint = if (currentNav == NavTarget.DEVICE_SUPPORT) StitchTokens.Primary else StitchTokens.TextSecondary
                 )
             }

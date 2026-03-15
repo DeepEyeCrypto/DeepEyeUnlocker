@@ -79,6 +79,13 @@ enum class ConnectionMode(
         chipset = "MTK",
         requiresHardware = false
     ),
+    CDC_SERIAL(
+        label = "CDC Serial",
+        shortLabel = "CDC",
+        description = "MTK BROM/META over CDC serial port",
+        chipset = "MTK",
+        requiresHardware = false
+    ),
     ODIN(
         label = "ODIN",
         shortLabel = "ODIN",

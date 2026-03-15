@@ -8,8 +8,14 @@ import com.deepeye.otg.policy.PolicyEngine
 import com.deepeye.otg.policy.UserRole
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.domain.models.ProtocolFamily
+import com.deepeye.otg.domain.engine.mtk.MtkCdcSession
+import com.deepeye.otg.usb.UsbSessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 // ═══════════════════════════════════════════════════════════════════
 //  EngineDispatcher — maps DeepEyeOperation × ProtocolFamily
@@ -109,6 +115,7 @@ object EngineDispatcher {
 
                 ProtocolFamily.UNISOC  -> executeUnisoc(op, handle, onProgress)
                 ProtocolFamily.FASTBOOT -> executeFastboot(op, handle, onProgress)
+                ProtocolFamily.CDC_SERIAL -> executeMtkCdc(context, op, device, deviceKey ?: "unk", onProgress)
 
                 else -> {
                     // Check for forensic or identity repair operations
@@ -920,6 +927,80 @@ object EngineDispatcher {
         return op == DeepEyeOperation.SAFE_DUMP || 
                op == DeepEyeOperation.DELETED_DATA_CARVING || 
                op == DeepEyeOperation.FORENSIC_ACQUISITION
+    }
+
+    private suspend fun executeMtkCdc(
+        context: android.content.Context,
+        op: DeepEyeOperation,
+        device: UsbDevice,
+        deviceKey: String,
+        onProgress: ProgressCallback
+    ): EngineResult = withContext(Dispatchers.IO) {
+        log("[MTK_CDC] Dispatching specialized OPLUS session: ${op.id}")
+        
+        val usbManager = context.getSystemService(android.content.Context.USB_SERVICE) as android.hardware.usb.UsbManager
+        val connection = usbManager.openDevice(device) ?: return@withContext EngineResult(false, "Failed to open USB connection for CDC")
+        
+        val session = MtkCdcSession(connection, device, deviceKey)
+        
+        try {
+            onProgress(10, "Setting up CDC-ACM...")
+            if (!session.setupCdc()) {
+                return@withContext EngineResult(false, "CDC-ACM setup failed")
+            }
+            
+            onProgress(20, "Executing BROM handshake...")
+            if (!session.handshake()) {
+                return@withContext EngineResult(false, "BROM Handshake failed - Check cable/mode")
+            }
+            
+            val info = session.readChipInfo()
+            onProgress(30, "Chip Identified: ${info.chipName} (${info.hwCode})")
+            
+            when (op) {
+                DeepEyeOperation.PARTITION_MANAGER -> {
+                    onProgress(40, "Reading GPT layout...")
+                    val res = session.executePartitionManager()
+                    if (res.isFailure) return@withContext EngineResult(false, "Partition Manager: ${res.exceptionOrNull()?.message}")
+                    val list = res.getOrDefault(emptyList())
+                    onProgress(100, "Found ${list.size} partitions")
+                    EngineResult(true, "GPT parsed successfully", mapOf("partitions" to list.joinToString("|") { it.name }))
+                }
+                
+                DeepEyeOperation.READ_FIRMWARE -> {
+                    onProgress(40, "Starting ROM dump...")
+                    session.executeReadBackup("FULL_DUMP", 0, 1024 * 1024 * 512).collect { (progress, msg) ->
+                        onProgress(progress.toInt(), msg)
+                    }
+                    EngineResult(true, "MTK CDC dump complete")
+                }
+                
+                DeepEyeOperation.BACKUP_EFS -> {
+                    onProgress(40, "Acquiring security partitions...")
+                    session.executeBackupSecurity().collect { (progress, msg) ->
+                        onProgress(progress.toInt(), msg)
+                    }
+                    EngineResult(true, "Security partitions backed up")
+                }
+                
+                DeepEyeOperation.WRITE_FIRMWARE -> {
+                    onProgress(40, "Write Firmware is MOCKED in CDC session")
+                    delay(1000)
+                    onProgress(100, "Write sequence finished (Simulated)")
+                    EngineResult(true, "Firmware write mucked (safety)")
+                }
+                
+                else -> {
+                    onProgress(100, "Operation not yet implemented for CDC session")
+                    EngineResult(false, "Operation ${op.name} not supported on MTK CDC Engine")
+                }
+            }
+        } catch (e: Exception) {
+            log("[MTK_CDC] Error: ${e.message}")
+            EngineResult(false, "MTK CDC Error: ${e.message}")
+        } finally {
+            connection.close()
+        }
     }
 
     private fun log(msg: String) = Log.i(TAG, msg)

@@ -3,6 +3,8 @@ package com.deepeye.otg.usb
 import android.hardware.usb.UsbDevice
 import com.deepeye.otg.data.device.DeviceProtocol
 import com.deepeye.otg.data.device.ProtocolRouter
+import com.deepeye.otg.data.device.LiveTestHelper
+import com.deepeye.otg.data.device.XiaomiProtocolResolver
 import javax.inject.Inject
 import javax.inject.Singleton
 import timber.log.Timber
@@ -21,21 +23,26 @@ class IosSessionCoordinator @Inject constructor(
      * Called from UsbLifecycleManager after basic device detection.
      */
     fun onDeviceAttached(device: UsbDevice) {
-        val result = ProtocolRouter.route(
-            vid = device.vendorId,
-            pid = device.productId,
-        )
+        val result = LiveTestHelper.onDeviceAttached(device)
         
-        Timber.d("[ROUTER] vid=0x${device.vendorId.toString(16)} " +
-                 "protocol=${result.protocol} " +
-                 "confidence=${result.confidence}")
-
         when (result.protocol) {
             DeviceProtocol.MTK_V6       -> startMtkV6Session(device)
             DeviceProtocol.MTK_BROM     -> startMtkBromSession(device)
             DeviceProtocol.QC_EDL       -> startQcEdlSession(device)
             DeviceProtocol.SAMSUNG_ODIN -> startSamsungSession(device)
-            DeviceProtocol.MTK_OR_QC    -> askUserToSelect(device)
+            DeviceProtocol.MTK_OR_QC    -> {
+                // Secondary resolution for ambiguous Xiaomi cases
+                val model = device.productName ?: ""
+                val exact = XiaomiProtocolResolver.resolveExact(model)
+                val resolved = exact ?: XiaomiProtocolResolver.resolve(model, null, 0)
+                
+                when (resolved) {
+                    DeviceProtocol.MTK_V6       -> startMtkV6Session(device)
+                    DeviceProtocol.QC_EDL       -> startQcEdlSession(device)
+                    DeviceProtocol.MTK_BROM     -> startMtkBromSession(device)
+                    else -> askUserToSelect(device)
+                }
+            }
             DeviceProtocol.UNKNOWN      -> showUnknownDevice(device)
         }
     }

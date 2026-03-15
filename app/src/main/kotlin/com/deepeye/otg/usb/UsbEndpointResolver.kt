@@ -84,6 +84,7 @@ object UsbEndpointResolver {
             ConnectionMode.DIAG      -> 2048 to 2000 // For AT-style DIAG commands
             ConnectionMode.MTP       -> 16384 to 5000
             ConnectionMode.META      -> 512 to 3000
+            ConnectionMode.CDC_SERIAL -> 512 to 3000
             ConnectionMode.ISP       -> 16384 to 15000 // Slow eMMC-style access
             ConnectionMode.TESTPOINT -> 512 to 5000
             ConnectionMode.ODIN      -> 16384 to 10000 // Samsung flashing chunks

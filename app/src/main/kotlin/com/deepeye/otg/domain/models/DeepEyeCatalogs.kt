@@ -10,6 +10,7 @@ object DeepEyeCatalogs {
         ModeCardSpec("mtk_brom", "MTK BROM", false, "Vol Up + Down on plugin", "Emergency MTK flashing", "Risk of hard brick if wrong DA", DeviceMode.MTK_BROM),
         ModeCardSpec("mtk_preldr", "MTK Preloader", true, "Plugin USB", "Normal MTK flashing", null, DeviceMode.MTK_PRELOADER),
         ModeCardSpec("mtk_meta", "MTK Meta", false, "From ADB/Preloader", "IMEI repair, factory tests", null, DeviceMode.MTK_META),
+        ModeCardSpec("mtk_cdc", "MTK CDC (OPLUS)", true, "VID=0x22D9 (CDC Mode)", "BROM/META over Serial port", "Common in modern OPLUS/OnePlus devices", DeviceMode.CDC_SERIAL),
         ModeCardSpec("qc_edl", "Qualcomm EDL", false, "Testpoint or EDL cable", "Low-level unbrick (9008)", "Requires proper firehose", DeviceMode.QC_EDL),
         ModeCardSpec("qc_diag", "Qualcomm DIAG", false, "Enable via root/code", "QCN backup, network tests", null, DeviceMode.QC_DIAG),
         ModeCardSpec("unisoc_fdl", "UniSoc FDL / Download", false, "Vol Down + Plugin", "Spreadtrum/Unisoc flashing", null, DeviceMode.UNISOC_FDL),

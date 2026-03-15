@@ -40,18 +40,6 @@ object ProtocolRouter {
         brand: String? = null,
         model: String? = null,
     ): RoutingResult {
-        // Step 0: Specialized PID fast paths
-        if (vid == 0x22D9 && pid == 0x0006) {
-            return RoutingResult(
-                protocol   = DeviceProtocol.MTK_V6,
-                confidence = RoutingConfidence.HIGH,
-                brand      = "OPLUS",
-                model      = "Modern MTK Handshake",
-                entry      = null,
-                reason     = "OPLUS PID 0x0006 matched",
-            )
-        }
-
         // Step 1: VID fast path
         val vidProto = DeviceDatabase.protocolFromVid(vid)
         if (vidProto != DeviceProtocol.UNKNOWN && brand == null) {
@@ -86,21 +74,6 @@ object ProtocolRouter {
 
         // Step 3: Brand-only match
         if (brand != null) {
-            // Special case: Xiaomi dynamic resolution
-            if (brand.equals("Xiaomi", ignoreCase = true) && model != null) {
-                val xiaomiProto = resolveXiaomi(model)
-                if (xiaomiProto != DeviceProtocol.MTK_OR_QC) {
-                    return RoutingResult(
-                        protocol   = xiaomiProto,
-                        confidence = RoutingConfidence.HIGH,
-                        brand      = brand,
-                        model      = model,
-                        entry      = null,
-                        reason     = "Xiaomi-specific match for $model",
-                    )
-                }
-            }
-
             val proto = DeviceDatabase.protocolForBrand(brand)
             if (proto != DeviceProtocol.UNKNOWN) {
                 Timber.d("[ROUTER] brand=$brand " +
@@ -143,15 +116,15 @@ object ProtocolRouter {
 
     /**
      * For Xiaomi: determine MTK vs QC from series
-     * Uses XiaomiProtocolResolver (262 models database)
+     * Redmi/POCO → MTK_V6 | Mi/flagship → QC_EDL
      */
-    fun resolveXiaomi(model: String, series: String? = null, year: Int = 2022): DeviceProtocol {
-        // 1. Try exact model lookup
-        val exact = XiaomiProtocolResolver.resolveExact(model)
-        if (exact != null) return exact
-
-        // 2. Fallback to logic-based resolution
-        return XiaomiProtocolResolver.resolve(model, series, year)
+    fun resolveXiaomi(model: String, series: String?): DeviceProtocol {
+        val s = series?.lowercase() ?: model.lowercase()
+        return when {
+            "redmi" in s || "poco" in s -> DeviceProtocol.MTK_V6
+            "mi " in s || s.startsWith("mi") -> DeviceProtocol.QC_EDL
+            else -> DeviceProtocol.MTK_OR_QC
+        }
     }
 
     /**

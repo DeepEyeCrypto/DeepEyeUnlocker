@@ -29,6 +29,7 @@ data class DetectionResult(
         DeviceMode.APPLE_RECOVERY -> com.deepeye.otg.data.ConnectionMode.APPLE_RECOVERY
         DeviceMode.APPLE_NORMAL -> com.deepeye.otg.data.ConnectionMode.APPLE_NORMAL
         DeviceMode.DISCONNECTED -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
+        DeviceMode.CDC_SERIAL -> com.deepeye.otg.data.ConnectionMode.CDC_SERIAL
         DeviceMode.UNKNOWN -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
         else -> com.deepeye.otg.data.ConnectionMode.UNKNOWN
     }
@@ -145,6 +146,12 @@ class ProtocolDetector {
                 ProtocolFamily.MTK,
                 90,
                 "Matched MTK Meta VID/PID 0x0E8D:0x2001"
+            )
+            vid == 0x22D9 && pid == 0x0006 -> DetectionResult(
+                DeviceMode.CDC_SERIAL,
+                ProtocolFamily.MTK,
+                95,
+                "Matched OPLUS MTK CDC-Serial (META/BROM Proxy) VID/PID 0x22D9:0x0006"
             )
             vid == 0x0E8D -> {
                 // Known MTK vendor VID with an unknown PID – explicitly log and return UNKNOWN
