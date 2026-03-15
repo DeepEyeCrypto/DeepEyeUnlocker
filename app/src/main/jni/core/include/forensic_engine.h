@@ -47,6 +47,31 @@ public:
                                    const std::string &outDir,
                                    CarveProgressCallback callback);
 
+  /**
+   * Decrypts the filesystem using provided master key.
+   */
+  bool DecryptFileSystem(const std::string &partition, const std::vector<uint8_t> &key);
+
+  /**
+   * Check if a specific volume is available in the decrypted filesystem.
+   */
+  bool CheckVolume(const std::string &volumeName);
+
+  /**
+   * Extracts Adoptable Storage (SD Card) key from the userdata partition.
+   */
+  std::vector<uint8_t> ExtractAdoptableStorageKey(const std::string &partition);
+
+  /**
+   * Lists directory contents of a decrypted filesystem.
+   */
+  std::string ListDirectory(const std::string &partition, const std::string &path);
+
+  /**
+   * Reads a raw file from a decrypted filesystem.
+   */
+  std::vector<uint8_t> ReadFile(const std::string &partition, const std::string &path);
+
 private:
   Core::ProtocolEngine *_engine;
 

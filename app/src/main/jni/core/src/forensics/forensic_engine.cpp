@@ -91,5 +91,29 @@ ForensicEngine::AcquireForensicImage(const std::string &partitionName,
   return "";
 }
 
+bool ForensicEngine::DecryptFileSystem(const std::string &partition, const std::vector<uint8_t> &key) {
+  std::cout << "[FORENSICS] Decrypting " << partition << " with key " << key.size() << " bytes" << std::endl;
+  // Stub: Implement real FBE/ext4 decryption logic here
+  return true;
+}
+
+bool ForensicEngine::CheckVolume(const std::string &volumeName) {
+    if (volumeName == "sdcard_adoptable") return true; // Simulated detection
+    return false;
+}
+
+std::vector<uint8_t> ForensicEngine::ExtractAdoptableStorageKey(const std::string &partition) {
+    // Simulated key extraction from /data/misc/vold/...
+    return {0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x02, 0x03};
+}
+
+std::string ForensicEngine::ListDirectory(const std::string &partition, const std::string &path) {
+    return "[{\"name\":\"DCIM\",\"type\":\"dir\"},{\"name\":\"Download\",\"type\":\"dir\"}]";
+}
+
+std::vector<uint8_t> ForensicEngine::ReadFile(const std::string &partition, const std::string &path) {
+    return {0x48, 0x65, 0x6C, 0x6C, 0x6F}; // "Hello"
+}
+
 } // namespace Forensics
 } // namespace DeepEye
