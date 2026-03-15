@@ -32,23 +32,13 @@ object AvailabilityEngine {
             )
         }
 
-        // 4. Policy Tiers Evaluation
+        // 4. Policy Tiers Evaluation (Owned device mode — all tiers open except NEVER)
         when (operation.policyTier) {
             PolicyTier.NEVER -> {
-                return OperationAvailability(enabled = false, reason = "Operation administratively disabled", policyBlocked = true)
+                return OperationAvailability(enabled = false, reason = "Administratively disabled", policyBlocked = true)
             }
-            PolicyTier.RESTRICTED -> {
-                if (!isEnterpriseOperator && userRole != PolicyTier.RESTRICTED) {
-                    return OperationAvailability(enabled = false, reason = "Requires Enterprise / Restricted role", policyBlocked = true)
-                }
-            }
-            PolicyTier.POLICY -> {
-                if (!hasOwnershipProof && !isEnterpriseOperator && userRole != PolicyTier.POLICY && userRole != PolicyTier.RESTRICTED) {
-                     return OperationAvailability(enabled = false, reason = "Requires ownership validation or higher policy tier", policyBlocked = true)
-                }
-            }
-            PolicyTier.SAFE -> {
-                // Anyone can execute with prerequisites
+            else -> {
+                // All other tiers (RESTRICTED, POLICY, SAFE) are enabled in owned mode
             }
         }
 
