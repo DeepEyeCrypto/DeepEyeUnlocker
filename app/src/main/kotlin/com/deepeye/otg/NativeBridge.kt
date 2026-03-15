@@ -193,6 +193,16 @@ object NativeBridge {
      */
     external fun mtkDecryptFs(handle: Long, partition: String, keyBlob: ByteArray): Boolean
 
+    /**
+     * Check if a specific filesystem volume exists or is mounted.
+     */
+    external fun fsCheckVolume(handle: Long, volumeName: String): Boolean
+
+    /**
+     * Extract the master key for Adoptable Storage (SD Card) from the device.
+     */
+    external fun extractAdoptableKey(handle: Long, partition: String): ByteArray
+
     // ── Forensic File System Explorer (Stage 50.2) ────────────
     /** List files in a path on a decrypted partition. Returns JSON array. */
     external fun fsListDirectory(handle: Long, partition: String, path: String): String

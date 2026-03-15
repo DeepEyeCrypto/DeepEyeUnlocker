@@ -800,3 +800,96 @@ Java_com_deepeye_otg_repair_NvBridge_writeQcomNvItem(JNIEnv *env, jobject thiz,
   DeepEye::Repair::QcomNvEngine engine(transport);
   return engine.WriteNvItem(item, buffer) ? JNI_TRUE : JNI_FALSE;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  MTK FS Decryptor & FS Explorer (Stage 300.1 / 50.2)
+// ═══════════════════════════════════════════════════════════════════
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_mtkDecryptFs(JNIEnv *env, jobject thiz,
+                                               jlong handle, jstring partition,
+                                               jbyteArray keyBlob) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return JNI_FALSE;
+
+  std::string part = jstringToStd(env, partition);
+  auto key = jbyteArrayToVec(env, keyBlob);
+  LOGI("mtkDecryptFs: partition=%s, keyLen=%zu", part.c_str(), key.size());
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  return forensics.DecryptFileSystem(part, key) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_deepeye_otg_NativeBridge_fsCheckVolume(JNIEnv *env, jobject thiz,
+                                                jlong handle,
+                                                jstring volumeName) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return JNI_FALSE;
+
+  std::string vol = jstringToStd(env, volumeName);
+  LOGI("fsCheckVolume: %s", vol.c_str());
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  return forensics.CheckVolume(vol) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_deepeye_otg_NativeBridge_extractAdoptableKey(JNIEnv *env, jobject thiz,
+                                                     jlong handle,
+                                                     jstring partition) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewByteArray(0);
+
+  std::string part = jstringToStd(env, partition);
+  LOGI("extractAdoptableKey: %s", part.c_str());
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  auto key = forensics.ExtractAdoptableStorageKey(part);
+  return vecToJbyteArray(env, key);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_deepeye_otg_NativeBridge_fsListDirectory(JNIEnv *env, jobject thiz,
+                                                  jlong handle,
+                                                  jstring partition,
+                                                  jstring path) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewStringUTF("[]");
+
+  std::string part = jstringToStd(env, partition);
+  std::string p = jstringToStd(env, path);
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  return env->NewStringUTF(forensics.ListDirectory(part, p).c_str());
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_com_deepeye_otg_NativeBridge_fsReadFile(JNIEnv *env, jobject thiz,
+                                             jlong handle, jstring partition,
+                                             jstring path) {
+  (void)thiz;
+  auto transport = asTransport(handle);
+  if (!transport)
+    return env->NewByteArray(0);
+
+  std::string part = jstringToStd(env, partition);
+  std::string p = jstringToStd(env, path);
+
+  DeepEye::Core::ProtocolEngine engine(transport);
+  DeepEye::Forensics::ForensicEngine forensics(&engine);
+  auto data = forensics.ReadFile(part, p);
+  return vecToJbyteArray(env, data);
+}
