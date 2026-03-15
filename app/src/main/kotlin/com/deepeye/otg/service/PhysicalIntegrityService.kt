@@ -12,7 +12,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class PhysicalIntegrityService @Inject constructor() {
-    private const val TAG = "IntegrityService"
+    companion object {
+        private const val TAG = "IntegrityService"
+    }
 
     enum class IntegrityStatus {
         VERIFIED,
