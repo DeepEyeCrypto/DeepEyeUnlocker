@@ -30,12 +30,19 @@ import com.deepeye.otg.domain.engine.AvailabilityEngine
 import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.ui.components.*
 import com.deepeye.otg.ui.theme.StitchTokens
-import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.viewmodel.research.CveDashboardViewModel
+import com.deepeye.otg.intelligence.vulndb.RiskLevel
+import com.deepeye.otg.intelligence.vulndb.SplStatus
 import com.deepeye.otg.usb.UsbLifecycleState
 import androidx.hilt.navigation.compose.hiltViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import com.deepeye.otg.ui.device.DeviceSupportScreen
+import com.deepeye.otg.ui.screens.CveDashboardScreen
+import com.deepeye.otg.ui.screens.FuzzDashboardScreen
+import com.deepeye.otg.ui.screens.HidResearchScreen
+import com.deepeye.otg.ui.screens.Iphone15ResearchScreen
+import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
 fun MainScreen(
@@ -58,19 +65,25 @@ fun MainScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(StitchTokens.BackgroundDark, StitchTokens.SurfaceDark)
+                    colors = listOf(StitchTokens.Semantic.BackgroundBase, StitchTokens.Semantic.BackgroundElevated)
                 )
             )
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Multi-Device Rail (Stage 200.1)
-            if (sessions.size > 1) {
-                MultiDeviceRail(
-                    sessions = sessions,
-                    selectedKey = selectedKey,
-                    onSelect = { viewModel.selectDevice(it) }
-                )
-            }
+        Row(modifier = Modifier.fillMaxSize()) {
+            // V3.0 Command Rail
+            MissionNavigationRail(viewModel)
+
+            Column(modifier = Modifier.weight(1f)) {
+                // Consolidated Mission Top Bar (Stage 200.2)
+                if (currentNav != NavTarget.SETTINGS) {
+                    MissionTopBar(
+                        viewModel = viewModel,
+                        sessions = sessions,
+                        selectedKey = selectedKey,
+                        onSelect = { viewModel.selectDevice(it) },
+                        onRemoteShare = onRemoteShare
+                    )
+                }
 
             // Debug Overlay (Top Layer)
             DebugOverlayPanel(viewModel)
@@ -85,26 +98,29 @@ fun MainScreen(
                 label = "NavTransition"
             ) { target ->
                 when (target) {
-                    NavTarget.SETTINGS -> SettingsScreen(viewModel)
-                    NavTarget.DASHBOARD -> ForensicDashboardScreen(viewModel)
+                    NavTarget.DASHBOARD -> {
+                        TargetDashboardScreen(viewModel, hazeState)
+                    }
+                    NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
+                    NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
+                    NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
                     NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
                     NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
                     NavTarget.TERMINAL -> TerminalScreen(viewModel)
-                    NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.HOME) })
-                    NavTarget.STORAGE -> StorageScreen()
                     NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
                         viewModel = cveViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
                     )
                     NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
                         viewModel = fuzzViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
                     )
                     NavTarget.HID_RESEARCH -> HidResearchScreen(
                         viewModel = hidViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.HOME) }
+                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
                     )
-                    NavTarget.DEVICE_SUPPORT -> com.deepeye.otg.ui.device.DeviceSupportScreen()
+                    NavTarget.STORAGE -> StorageScreen()
+                    NavTarget.SETTINGS -> SettingsScreen(viewModel)
                     NavTarget.IMEI_REPAIR -> {
                         val aiAnalysis by viewModel.aiAnalysis.collectAsState()
                         val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
@@ -122,59 +138,12 @@ fun MainScreen(
                             isAiProcessing = aiIsProcessing
                         )
                     }
-                    else -> {
-                        // Logic for Home / Devices (Active / Idle)
-                        val effectiveState = if (selectedKey != null) sessions[selectedKey] ?: lifecycleState else lifecycleState
-                        
-                        AnimatedContent(
-                            targetState = effectiveState,
-                            transitionSpec = {
-                                (fadeIn(tween(400)) + slideInVertically { it / 2 }).togetherWith(fadeOut(tween(300)))
-                            },
-                            label = "MainStateTransition"
-                        ) { state ->
-                            when (state) {
-                                is UsbLifecycleState.Idle -> DisconnectedView(hazeState)
-                                is UsbLifecycleState.DeviceDetected -> {
-                                    WaitingScreen(op = sessionState.queuedOperation) { viewModel.resetToIdle() }
-                                }
-                                is UsbLifecycleState.PermissionPending -> {
-                                    WaitingScreen(op = sessionState.queuedOperation) { viewModel.resetToIdle() }
-                                }
-                                is UsbLifecycleState.Connected -> {
-                                    if (sessionState.deviceMode == DeviceMode.MTP_ONLY) {
-                                        MtpOnlyScreen(onBack = { viewModel.resetToIdle() })
-                                    } else {
-                                        ActiveSessionView(
-                                            state = state,
-                                            sessionState = sessionState,
-                                            viewModel = viewModel,
-                                            hazeState = hazeState,
-                                            perfMode = perfMode
-                                        )
-                                    }
-                                }
-                                is UsbLifecycleState.Dead -> {
-                                    ErrorScreen(message = "Connection lost: ${state.reason}", onRetry = { viewModel.resetToIdle() })
-                                }
-                                is UsbLifecycleState.Error -> {
-                                    ErrorOverlay(state.message) { viewModel.resetToIdle() }
-                                }
-                                else -> {
-                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        CircularProgressIndicator(color = StitchTokens.Primary)
-                                    }
-                                }
-                            }
+                        else -> {
+                            DisconnectedView(hazeState)
                         }
                     }
                 }
             }
-        }
-
-        // Overlay Navigation / Controls (Top Bar always visible above Home, but hidden in Settings for clean exit)
-        if (currentNav != NavTarget.SETTINGS) {
-            MainTopBar(viewModel)
         }
 
         // Remote Relay FAB
@@ -189,62 +158,6 @@ fun MainScreen(
             shape = CircleShape
         ) {
             Icon(Icons.Default.CloudSync, "Remote Share")
-        }
-    }
-}
-
-@Composable
-fun MultiDeviceRail(
-    sessions: Map<String, UsbLifecycleState>,
-    selectedKey: String?,
-    onSelect: (String) -> Unit
-) {
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(StitchTokens.SurfaceDark.copy(alpha = 0.5f))
-            .padding(vertical = 8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(sessions.toList()) { (key, state) ->
-            val isSelected = key == selectedKey
-            val deviceName = when (state) {
-                is UsbLifecycleState.Connected -> state.deviceName
-                is UsbLifecycleState.DeviceDetected -> "Detecting..."
-                else -> "Unknown"
-            }
-
-            Surface(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onSelect(key) }
-                    .border(
-                        width = 1.dp,
-                        color = if (isSelected) StitchTokens.Primary else Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    ),
-                color = if (isSelected) StitchTokens.Primary.copy(alpha = 0.1f) else StitchTokens.GlassSurface,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Usb,
-                        contentDescription = null,
-                        tint = if (isSelected) StitchTokens.Primary else StitchTokens.TextSecondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = deviceName,
-                        style = StitchTokens.LabelSmall,
-                        color = if (isSelected) StitchTokens.TextPrimary else StitchTokens.TextSecondary
-                    )
-                }
-            }
         }
     }
 }
@@ -433,6 +346,7 @@ private fun OperationCatalog(
 private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
     val logs by viewModel.logs.collectAsState()
     val aiAnalysis by viewModel.aiAnalysis.collectAsState()
+    val exposureReport by viewModel.exposureReport.collectAsState()
     
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -447,15 +361,52 @@ private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
         Spacer(Modifier.height(12.dp))
         
         // AI Intel Snippet
-        GlassCard(hazeState = null, modifier = Modifier.fillMaxWidth().height(80.dp), accentColor = accent.copy(0.2f)) {
-            Column(Modifier.padding(8.dp)) {
-                Text("AI INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = accent)
-                Text(
-                    text = aiAnalysis.ifEmpty { "Waiting for session telemetry..." },
-                    style = StitchTokens.BodyMedium,
-                    color = Color.LightGray,
-                    maxLines = 3
-                )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            GlassCard(hazeState = null, modifier = Modifier.weight(1f).height(100.dp), accentColor = accent.copy(0.2f)) {
+                Column(Modifier.padding(8.dp)) {
+                    Text("AI INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = accent)
+                    Text(
+                        text = aiAnalysis.ifEmpty { "Waiting for session telemetry..." },
+                        style = StitchTokens.BodyMedium.copy(fontSize = 11.sp),
+                        color = Color.LightGray,
+                        maxLines = 4
+                    )
+                }
+            }
+            
+            exposureReport?.let { report ->
+                val riskColor = when (report.overallRiskLevel) {
+                    RiskLevel.CRITICAL -> Color(0xFFFF1744)
+                    RiskLevel.HIGH -> Color(0xFFFF9100)
+                    RiskLevel.MEDIUM -> Color(0xFFFFD600)
+                    RiskLevel.LOW -> Color(0xFF4ADE80)
+                    else -> Color.Gray
+                }
+                
+                GlassCard(hazeState = null, modifier = Modifier.width(140.dp).height(100.dp), accentColor = riskColor.copy(0.2f)) {
+                    Column(Modifier.padding(8.dp)) {
+                        Text("VULN_INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = riskColor)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = report.overallRiskLevel.name,
+                            style = StitchTokens.TitleLarge.copy(fontSize = 14.sp),
+                            color = riskColor
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Exposures: ${report.exposedCves.size}",
+                            style = StitchTokens.BodyMedium.copy(fontSize = 10.sp),
+                            color = Color.LightGray
+                        )
+                        if (report.exposedCves.any { it.cisaKev }) {
+                            Text(
+                                text = "⚠️ CISA KEV",
+                                style = StitchTokens.LabelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                                color = Color(0xFFFF1744)
+                            )
+                        }
+                    }
+                }
             }
         }
         
@@ -535,163 +486,6 @@ private fun StatusChip(icon: ImageVector, label: String, color: Color) {
 }
 
 @Composable
-private fun MainTopBar(viewModel: UsbViewModel) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(24.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text("DEEPEYE OTG", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
-            Text("Pro Forensic Toolkit", style = StitchTokens.LabelSmall, color = StitchTokens.Primary)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.DASHBOARD) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Dashboard,
-                    contentDescription = "Dashboard",
-                    tint = if (currentNav == NavTarget.DASHBOARD) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.IPHONE_15_RESEARCH) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.PhoneIphone,
-                    contentDescription = "iPhone 15 Research",
-                    tint = if (currentNav == NavTarget.IPHONE_15_RESEARCH) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.TERMINAL) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Terminal,
-                    contentDescription = "Forensic Console",
-                    tint = if (currentNav == NavTarget.TERMINAL) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.VAULT) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Storage,
-                    contentDescription = "Forensic Vault",
-                    tint = if (currentNav == NavTarget.VAULT) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.CVE_INTELLIGENCE) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = "CVE Intelligence",
-                    tint = if (currentNav == NavTarget.CVE_INTELLIGENCE) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.FUZZ_DASHBOARD) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.ElectricBolt,
-                    contentDescription = "Fuzz Harness",
-                    tint = if (currentNav == NavTarget.FUZZ_DASHBOARD) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.HID_RESEARCH) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Usb,
-                    contentDescription = "HID Research",
-                    tint = if (currentNav == NavTarget.HID_RESEARCH) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.STORAGE) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.Memory,
-                    contentDescription = "Storage",
-                    tint = if (currentNav == NavTarget.STORAGE) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.DEVICE_SUPPORT) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val currentNav by viewModel.currentNav.collectAsState()
-                Icon(
-                    imageVector = Icons.Default.PhoneAndroid,
-                    contentDescription = "Devices",
-                    tint = if (currentNav == NavTarget.DEVICE_SUPPORT) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.toggleDebugPanel() },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val showDebug by viewModel.showDebugPanel.collectAsState()
-                Icon(
-                    Icons.Default.BugReport, 
-                    "Debug", 
-                    tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.toggleSplitView() },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                val splitActive by viewModel.splitViewActive.collectAsState()
-                Icon(
-                    imageVector = if (splitActive) Icons.Default.VerticalSplit else Icons.Default.ViewAgenda,
-                    contentDescription = "Split View",
-                    tint = if (splitActive) StitchTokens.Primary else StitchTokens.TextSecondary
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { viewModel.setNav(NavTarget.SETTINGS) },
-                modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.05f))
-            ) {
-                Icon(Icons.Default.Settings, "Settings", tint = StitchTokens.TextSecondary)
-            }
-        }
-    }
-}
-
-@Composable
 private fun LogTailView(logs: List<com.deepeye.otg.ui.viewmodel.LogEntry>) {
     GlassCard(
         hazeState = null, // No blur for log tail to keep it sharp
@@ -740,4 +534,56 @@ private fun accentColorForMode(mode: DeviceMode): Color = when (mode) {
     DeviceMode.FASTBOOT -> StitchTokens.AccentFastboot
     DeviceMode.APPLE_DFU, DeviceMode.APPLE_RECOVERY, DeviceMode.APPLE_NORMAL -> StitchTokens.AccentApple
     else -> StitchTokens.Primary
+}
+
+@Composable
+private fun MissionNavigationRail(viewModel: UsbViewModel) {
+    val currentNav by viewModel.currentNav.collectAsState()
+    
+    NavigationRail(
+        containerColor = Color.Transparent,
+        header = {
+            Icon(
+                imageVector = Icons.Default.Cyclone,
+                contentDescription = "DeepEye",
+                tint = StitchTokens.Primary,
+                modifier = Modifier.size(32.dp).padding(vertical = 16.dp)
+            )
+        },
+        modifier = Modifier.padding(top = 24.dp)
+    ) {
+        MissionHub.entries.forEach { hub ->
+            val isSelected = currentNav.hub == hub
+            NavigationRailItem(
+                selected = isSelected,
+                onClick = {
+                    val target = when (hub) {
+                        MissionHub.COMMAND -> NavTarget.DASHBOARD
+                        MissionHub.LAB -> NavTarget.LAB_HOME
+                        MissionHub.INTEL -> NavTarget.CVE_INTELLIGENCE
+                        MissionHub.ARCHIVE -> NavTarget.SETTINGS
+                    }
+                    viewModel.setNav(target)
+                },
+                icon = {
+                    Icon(
+                        imageVector = hub.icon,
+                        contentDescription = hub.label,
+                        tint = if (isSelected) Color.White else StitchTokens.TextSecondary
+                    )
+                },
+                label = {
+                    Text(
+                        text = hub.label.uppercase(),
+                        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
+                        color = if (isSelected) StitchTokens.Primary else StitchTokens.TextSecondary
+                    )
+                },
+                alwaysShowLabel = true,
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = StitchTokens.Primary.copy(alpha = 0.1f)
+                )
+            )
+        }
+    }
 }

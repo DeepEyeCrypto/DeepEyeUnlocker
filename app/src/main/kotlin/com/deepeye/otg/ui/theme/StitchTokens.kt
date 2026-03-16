@@ -38,6 +38,20 @@ object StitchTokens {
     val AccentSuccess     = Color(0xFF4ADE80) // Success Green
     val AccentWarning     = Color(0xFFFFD740) // Amber Warning
     
+    // ── Connectivity States (V3.0) ──────────────────────────────────────────────
+    val ConnectionPulse   = Primary           // Glow for active session
+    val ConnectionIdle    = Color(0xFF455A64) // Slate for standby
+    val ConnectionError   = Color(0xFFFF1744) // Hardware conflict
+    
+    // ── Risk Hierarchy (Mission Safety) ─────────────────────────────────────────
+    val RiskSafe          = Color(0xFF4ADE80).copy(alpha = 0.15f) // Success Green (Low Impact)
+    val RiskAdvanced      = Color(0xFFFFAB40).copy(alpha = 0.15f) // Amber (Medium Impact)
+    val RiskDanger        = Color(0xFFFF1744).copy(alpha = 0.15f) // Red (Destructive Impact)
+    
+    val BorderSafe        = Color(0xFF4ADE80).copy(alpha = 0.3f)
+    val BorderAdvanced    = Color(0xFFFFAB40).copy(alpha = 0.3f)
+    val BorderDanger      = Color(0xFFFF1744).copy(alpha = 0.3f)
+    
     // ── Spacing & Shapes ────────────────────────────────────────────────────────
     val GridBase          = 4.dp
     val PaddingNone       = 0.dp
@@ -81,4 +95,47 @@ object StitchTokens {
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Medium
     )
+
+    // ── Semantic Design Language Extension (Phase 1) ─────────────────────────────
+    object Semantic {
+        // Base Layers
+        val BackgroundBase      = BackgroundDark
+        val BackgroundElevated  = SurfaceDark
+        
+        // Interaction Surfaces
+        val SurfaceCard         = SurfaceDark
+        val SurfaceGlass        = GlassSurface
+        val BorderSubtle        = GlassBorder
+        val BorderActive        = GlassBorderActive
+        
+        // Protocol Status Accents
+        val StatusConnected     = Primary
+        val StatusIdle          = ConnectionIdle
+        val StatusHandshaking   = AccentWarning
+        
+        // Domain Accents
+        val ProtocolMtk         = AccentBrom
+        val ProtocolAdb         = AccentAdb
+        val ProtocolEdl         = AccentEdl
+        val ProtocolFastboot    = AccentFastboot
+        val ProtocolApple       = AccentApple
+        
+        // Mission Risk Containers
+        val RiskSafeFill        = RiskSafe
+        val RiskAdvancedFill    = RiskAdvanced
+        val RiskDangerFill      = RiskDanger
+        
+        val RiskSafeBorder      = BorderSafe
+        val RiskAdvancedBorder  = BorderAdvanced
+        val RiskDangerBorder    = BorderDanger
+        
+        // Typography Hierarchy
+        val TextMain            = TextPrimary
+        val TextMuted           = TextSecondary
+        val TextTechnical       = TextMono
+        
+        // Terminal System
+        val TerminalBackground  = Color(0xFF030303)
+        val TerminalText        = TextMono
+    }
 }

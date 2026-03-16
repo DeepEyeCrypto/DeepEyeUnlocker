@@ -16,12 +16,12 @@ import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.data.*
 import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.fuzz.hid.HidFuzzCoordinator
-import com.deepeye.otg.exploit.ExploitChainOrchestrator
-import com.deepeye.otg.data.db.dao.FuzzDao
-import com.deepeye.otg.data.db.entities.FuzzFindingEntity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.json.JSONObject
+import timber.log.Timber
+import com.deepeye.otg.intelligence.vulndb.*
+import com.deepeye.otg.data.db.dao.FuzzDao
 
 @dagger.hilt.android.lifecycle.HiltViewModel
 class UsbViewModel @javax.inject.Inject constructor(
@@ -36,11 +36,12 @@ class UsbViewModel @javax.inject.Inject constructor(
     private val massExtractor: com.deepeye.otg.service.MassExtractor,
     private val sessionCoordinator: SessionCoordinator,
     private val hidFuzzer: com.deepeye.otg.fuzz.hid.HidFuzzCoordinator,
-    private val exploitOrchestrator: com.deepeye.otg.exploit.ExploitChainOrchestrator,
     private val cloudSyncService: com.deepeye.otg.service.CloudSyncService,
     private val licenseManager: com.deepeye.otg.service.LicenseManager,
     private val tunnelManager: com.deepeye.otg.service.TunnelManager,
-    private val fuzzDao: FuzzDao
+    private val fuzzDao: FuzzDao,
+    private val cveDao: com.deepeye.otg.intelligence.vulndb.CveDao,
+    private val exploitOrchestrator: com.deepeye.otg.exploit.UniversalExploitOrchestrator
 ) : ViewModel() {
 
     val tunnelStatus = tunnelManager.status
@@ -94,13 +95,11 @@ class UsbViewModel @javax.inject.Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     val exploitState = exploitOrchestrator.state
-    val exploitExtractedFilesSize = exploitOrchestrator.extractedFiles.map { it.size }
-    val exploitExtractedFiles = exploitOrchestrator.extractedFiles
 
     fun runExploitChain(deviceKey: String) {
         viewModelScope.launch {
             val transport = lifecycleManager.getTransport(deviceKey) ?: return@launch
-            exploitOrchestrator.executeChain(transport)
+            exploitOrchestrator.autoExploit(transport, _exposureReport.value ?: return@launch)
         }
     }
 
@@ -165,7 +164,7 @@ class UsbViewModel @javax.inject.Inject constructor(
     fun toggleLogUsbToFile() = settings.toggleLogUsbToFile()
     fun setPermissionTimeout(seconds: Int) = settings.setPermissionTimeout(seconds)
 
-    private val _currentNav = MutableStateFlow(com.deepeye.otg.ui.screens.NavTarget.HOME)
+    private val _currentNav = MutableStateFlow(com.deepeye.otg.ui.screens.NavTarget.DASHBOARD)
     val currentNav: StateFlow<com.deepeye.otg.ui.screens.NavTarget> = _currentNav.asStateFlow()
     fun setNav(target: com.deepeye.otg.ui.screens.NavTarget) { _currentNav.value = target }
 
@@ -224,6 +223,10 @@ class UsbViewModel @javax.inject.Inject constructor(
 
     private val _batchSelectedKeys = MutableStateFlow<Set<String>>(emptySet())
     val batchSelectedKeys = _batchSelectedKeys.asStateFlow()
+
+    private val _exposureReport = MutableStateFlow<com.deepeye.otg.intelligence.vulndb.DevicePatchReport?>(null)
+    val exposureReport = _exposureReport.asStateFlow()
+
 
     private var currentSessionId: Long? = null
 
@@ -636,6 +639,10 @@ class UsbViewModel @javax.inject.Inject constructor(
                         
                         // Automatically trigger AI analysis after deep identification
                         aiAssistant.analyzeSession(state.chipset, _activeProtocolFamily.value, info)
+
+                        // Trigger Forensic Vulnerability Analysis
+                        performVulnerabilityAnalysis(json)
+
                     } catch (e: Exception) {}
                 } catch (e: Exception) {
                     Log.e("UsbViewModel", "Deep identification failed: ${e.message}")
@@ -643,6 +650,58 @@ class UsbViewModel @javax.inject.Inject constructor(
                     NativeBridge.closeCore(handle)
                 }
             }
+        }
+    }
+
+    private fun performVulnerabilityAnalysis(json: JSONObject) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Extract telemetry
+                val androidSpl = json.optString("android_spl", "")
+                val qtiSpl = json.optString("qti_spl", "")
+                val mtkSpl = json.optString("mtk_spl", "")
+                val kernel = json.optString("kernel_version", "")
+                val brand = json.optString("brand", "Unknown")
+                val model = json.optString("model", "Unknown")
+
+                // Fetch intelligence base
+                val cves = cveDao.getAllSync()
+                
+                // Initialize forensic analyzer
+                val analyzer = com.deepeye.otg.intelligence.vulndb.PatchStateAnalyzer(cveDao)
+                
+                // Execute assessment
+                val observation = DeviceObservation(
+                    brand = brand,
+                    model = model,
+                    androidSpl = androidSpl,
+                    qtiSpl = qtiSpl.ifEmpty { null },
+                    mtkSpl = mtkSpl.ifEmpty { null },
+                    kernelVersion = kernel
+                )
+                val report = analyzer.analyze(observation)
+
+                _exposureReport.value = report
+                
+                Timber.i("[INTEL] Vulnerability analysis complete. Risk: ${report.overallRiskLevel}")
+                if (report.exposedCves.isNotEmpty()) {
+                    addLog("SECURITY", "WARN: ${report.exposedCves.size} potential exposures detected. Risk: ${report.overallRiskLevel}")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "[INTEL] Vulnerability analysis failed")
+            }
+        }
+    }
+
+    private fun triggerAutoExploit() {
+        val currentReport = _exposureReport.value ?: return
+        val currentKey = _selectedDeviceKey.value ?: return
+        val session = lifecycleManager.getTransport(currentKey) ?: return
+        
+        viewModelScope.launch {
+            addLog("SECURITY", "WARN: Starting automated compromise chain based on VulnIntel-AI...")
+            val transport = session
+            exploitOrchestrator.autoExploit(transport, currentReport)
         }
     }
 
@@ -711,7 +770,17 @@ class UsbViewModel @javax.inject.Inject constructor(
                         else -> null
                     }
                     if (op != null) {
-                        startOperation(op)
+                        when (op) {
+                            DeepEyeOperation.CLEAR_LOGS -> {
+                                _logLines.value = emptyList()
+                            }
+                            DeepEyeOperation.AUTO_EXPLOIT -> {
+                                triggerAutoExploit()
+                            }
+                            else -> {
+                                startOperation(op)
+                            }
+                        }
                     } else {
                         _queueStatus.value = SessionState.ConnectedReady(
                             deviceName = ls.deviceName,
@@ -1037,6 +1106,17 @@ class UsbViewModel @javax.inject.Inject constructor(
                     _queueStatus.value = if (success) SessionState.OperationComplete(op, true, msg) else SessionState.Error(msg)
                     addLog(if (success) "SUCCESS" else "ERROR", msg)
                 }
+                return@launch
+            }
+
+            if (op == DeepEyeOperation.AUTO_EXPLOIT) {
+                triggerAutoExploit()
+                return@launch
+            }
+
+            if (op == DeepEyeOperation.CLEAR_LOGS) {
+                _logLines.value = emptyList()
+                _queueStatus.value = SessionState.Idle
                 return@launch
             }
 

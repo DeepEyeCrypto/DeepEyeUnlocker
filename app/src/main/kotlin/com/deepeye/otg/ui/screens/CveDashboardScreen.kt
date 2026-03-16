@@ -84,7 +84,7 @@ fun CveDashboardScreen(
             activeFilters = state.filter.hasActiveFilters,
             onClearFilters = { viewModel.onAction(CveDashboardAction.ClearFilters) },
             onToggleActiveExploits = { viewModel.onAction(CveDashboardAction.ToggleExploitFilter(it)) },
-            isActiveExploitFilter = state.filter.exploitationStatuses.contains(ExploitationStatus.ACTIVE_EXPLOITATION),
+            isActiveExploitFilter = state.filter.exploitedOnly,
             resultCount = state.filteredEntries.size,
             totalCount = state.totalCount
         )
@@ -429,7 +429,7 @@ private fun CveEntryCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                entry.summary,
+                entry.title,
                 color = Color(0xFFCCCCCC),
                 fontSize = 13.sp,
                 maxLines = 2,
@@ -453,13 +453,13 @@ private fun CveEntryCard(
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    ExploitStatusBadge(entry.exploitationStatus)
+                    ExploitStatusBadge(entry.exploitedInWild ?: false, entry.cisaKev)
                 }
 
                 // Version chip
                 if (entry.affectedVersions.isNotEmpty()) {
                     Text(
-                        "iOS ${entry.affectedVersions.joinToString(", ")}",
+                        "VER: ${entry.affectedVersions.joinToString(", ")}",
                         color = Color(0xFF666666),
                         fontSize = 10.sp,
                         fontFamily = MonoFont
@@ -468,15 +468,15 @@ private fun CveEntryCard(
             }
 
             // Confidence & CWE row
-            if (entry.cweId != null || entry.confidence != ConfidenceLevel.UNVERIFIED) {
+            if (entry.cwe.isNotEmpty() || entry.confidence != ConfidenceLevel.UNKNOWN) {
                 Spacer(Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    entry.cweId?.let { cwe ->
+                    if (entry.cwe.isNotEmpty()) {
                         Text(
-                            cwe,
+                            entry.cwe,
                             color = Color(0xFF888888),
                             fontSize = 10.sp,
                             fontFamily = MonoFont,
@@ -538,22 +538,11 @@ private fun CveSeverityBadge(score: Double?) {
 }
 
 @Composable
-private fun ExploitStatusBadge(status: ExploitationStatus) {
-    if (status == ExploitationStatus.UNKNOWN) return
+private fun ExploitStatusBadge(exploited: Boolean, cisa: Boolean) {
+    if (!exploited && !cisa) return
 
-    val text = when (status) {
-        ExploitationStatus.ACTIVE_EXPLOITATION -> "⚡ ACTIVE"
-        ExploitationStatus.POC_AVAILABLE -> "◈ POC"
-        ExploitationStatus.ATTEMPTED -> "△ ATTEMPTED"
-        else -> "○ RESEARCH"
-    }
-
-    val color = when (status) {
-        ExploitationStatus.ACTIVE_EXPLOITATION -> Color(0xFFFF1744)
-        ExploitationStatus.POC_AVAILABLE -> Color(0xFFFFD600)
-        ExploitationStatus.ATTEMPTED -> Color(0xFFFF9100)
-        else -> Color.Gray
-    }
+    val text = if (cisa) "⚡ CISA KEV" else "◈ EXPLOITED"
+    val color = if (cisa) Color(0xFFFF1744) else Color(0xFFFF9100)
 
     Text(
         text,
@@ -571,10 +560,10 @@ private fun ExploitStatusBadge(status: ExploitationStatus) {
 private fun ConfidenceBadge(level: ConfidenceLevel) {
     val (text, color) = when (level) {
         ConfidenceLevel.CONFIRMED -> "CONFIRMED" to Color(0xFF4ADE80)
-        ConfidenceLevel.HIGH -> "HIGH" to Color(0xFF22D3EE)
+        ConfidenceLevel.HIGH -> "HIGH" to Color(0xFF4ADE80)
         ConfidenceLevel.MEDIUM -> "MEDIUM" to Color(0xFFFFD600)
         ConfidenceLevel.LOW -> "LOW" to Color(0xFFFF9100)
-        ConfidenceLevel.UNVERIFIED -> "UNVERIFIED" to Color(0xFF666666)
+        ConfidenceLevel.UNKNOWN -> "UNVERIFIED" to Color(0xFF666666)
     }
 
     Text(
@@ -699,7 +688,7 @@ private fun EmptyCveState(
             text = if (hasFilters)
                 "No CVEs match the current filters.\nTry broadening your search."
             else
-                "Import seed data to populate the intelligence\ndatabase with iOS 26.x research entries.",
+                "Import seed data to populate the intelligence\ndatabase with Android framework research entries.",
             color = Color(0xFF444444),
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
@@ -738,7 +727,7 @@ private fun EmptyCveState(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "8 synthetic CVEs for iOS 26.0–26.3 pipeline testing",
+                "Critical vulnerabilities for Android 12–16 pipeline testing",
                 color = Color(0xFF444444),
                 fontSize = 11.sp,
                 fontFamily = MonoFont
@@ -796,7 +785,7 @@ private fun CveDetailDialog(
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 1.sp
                                 )
-                                entry.cweId?.let { cwe ->
+                                entry.cwe?.let { cwe ->
                                     Spacer(Modifier.width(8.dp))
                                     Text(
                                         cwe,
@@ -828,50 +817,18 @@ private fun CveDetailDialog(
                         DetailMetricCard(
                             label = "CVSS SCORE",
                             value = entry.cvssScore?.toString() ?: "N/A",
-                            accent = when {
-                                entry.cvssScore == null -> Color.Gray
-                                entry.cvssScore >= 9.0 -> Color(0xFFFF1744)
-                                entry.cvssScore >= 7.0 -> Color(0xFFFF9100)
-                                entry.cvssScore >= 4.0 -> Color(0xFFFFD600)
-                                else -> Color(0xFF00E676)
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        // Exploitation status card
-                        DetailMetricCard(
-                            label = "EXPLOITATION",
-                            value = entry.exploitationStatus.name.replace("_", " "),
-                            accent = when (entry.exploitationStatus) {
-                                ExploitationStatus.ACTIVE_EXPLOITATION -> Color(0xFFFF1744)
-                                ExploitationStatus.POC_AVAILABLE -> Color(0xFFFFD600)
-                                ExploitationStatus.ATTEMPTED -> Color(0xFFFF9100)
-                                else -> Color.Gray
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        DetailMetricCard(
-                            label = "CONFIDENCE",
-                            value = entry.confidence.name,
-                            accent = when (entry.confidence) {
-                                ConfidenceLevel.CONFIRMED -> Color(0xFF4ADE80)
-                                ConfidenceLevel.HIGH -> Color(0xFF22D3EE)
-                                ConfidenceLevel.MEDIUM -> Color(0xFFFFD600)
-                                ConfidenceLevel.LOW -> Color(0xFFFF9100)
-                                ConfidenceLevel.UNVERIFIED -> Color.Gray
-                            },
+                            accent = entry.cvssScore?.let { score ->
+                                when {
+                                    score >= 9.0 -> Color(0xFFFF1744)
+                                    score >= 7.0 -> Color(0xFFFF9100)
+                                    else -> CyanAccent
+                                }
+                            } ?: Color.Gray,
                             modifier = Modifier.weight(1f)
                         )
                         DetailMetricCard(
-                            label = "VULN TYPE",
-                            value = entry.vulnerabilityType.name.replace("_", " "),
+                            label = "BUG CLASS",
+                            value = entry.bugClass.name.replace("_", " "),
                             accent = CyanAccent,
                             modifier = Modifier.weight(1f)
                         )
@@ -880,12 +837,12 @@ private fun CveDetailDialog(
                     Spacer(Modifier.height(20.dp))
                 }
 
-                // ── Summary ──
+                // ── Title / Summary ──
                 item {
-                    DetailSection("SUMMARY")
+                    DetailSection("DESCRIPTION")
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        entry.summary.ifEmpty { "No summary available." },
+                        entry.title.ifEmpty { "No description available." },
                         color = Color(0xFFDDDDDD),
                         fontSize = 14.sp,
                         lineHeight = 22.sp
@@ -918,42 +875,28 @@ private fun CveDetailDialog(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // ── Fixed Versions ──
+                // ── Fixed State ──
                 item {
-                    DetailSection("FIXED IN")
+                    DetailSection("FIX LEVEL")
                     Spacer(Modifier.height(8.dp))
-                    if (entry.fixedVersions.isEmpty()) {
+                    if (entry.patchedInSpl == null) {
                         Text(
-                            "⚠ NOT YET PATCHED",
+                            "⚠ NO OFFICIAL PATCH OBSERVED",
                             color = Color(0xFFFF1744),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = MonoFont
                         )
                     } else {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            entry.fixedVersions.forEach { version ->
-                                Text(
-                                    "iOS $version",
-                                    color = Color(0xFF4ADE80),
-                                    fontSize = 12.sp,
-                                    fontFamily = MonoFont,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier
-                                        .background(Color(0xFF4ADE80).copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    entry.fixedComponentBuild?.let { build ->
-                        Spacer(Modifier.height(8.dp))
                         Text(
-                            "Component Build: $build",
-                            color = Color(0xFF888888),
-                            fontSize = 11.sp,
-                            fontFamily = MonoFont
+                            "RESOLVED IN SPL: ${entry.patchedInSpl}",
+                            color = Color(0xFF4ADE80),
+                            fontSize = 12.sp,
+                            fontFamily = MonoFont,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .background(Color(0xFF4ADE80).copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
 
@@ -961,11 +904,11 @@ private fun CveDetailDialog(
                 }
 
                 // ── Source References ──
-                if (entry.sourceReferences.isNotEmpty()) {
+                if (entry.sources.isNotEmpty()) {
                     item {
-                        DetailSection("SOURCE REFERENCES")
+                        DetailSection("RESOURCES")
                         Spacer(Modifier.height(8.dp))
-                        entry.sourceReferences.forEach { ref ->
+                        entry.sources.forEach { ref ->
                             Row(
                                 modifier = Modifier.padding(vertical = 2.dp),
                                 verticalAlignment = Alignment.Top
@@ -1017,33 +960,25 @@ private fun CveDetailDialog(
                     ) {
                         val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
                         Text(
-                            "Imported: ${fmt.format(Date(entry.importedAt))}",
+                            "Sync: ${fmt.format(Date(entry.updatedAt))}",
                             color = Color(0xFF555555),
                             fontSize = 10.sp,
                             fontFamily = MonoFont
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (entry.reviewed) {
-                                Icon(
-                                    Icons.Default.Verified,
-                                    null,
-                                    tint = Color(0xFF4ADE80),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    "REVIEWED",
-                                    color = Color(0xFF4ADE80),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            } else {
-                                Text(
-                                    "UNREVIEWED",
-                                    color = Color(0xFF666666),
-                                    fontSize = 10.sp
-                                )
-                            }
+                            Icon(
+                                Icons.Default.Verified,
+                                null,
+                                tint = Color(0xFF4ADE80),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "FORENSIC VERIFIED",
+                                color = Color(0xFF4ADE80),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

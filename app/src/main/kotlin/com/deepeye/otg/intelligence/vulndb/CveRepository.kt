@@ -61,6 +61,6 @@ class CveRepository(
     /**
      * Get unpatched CVEs for a specific version.
      */
-    fun observeExposures(iosVersion: String): Flow<List<CveEntry>> =
-        cveDao.observeUnpatchedForVersion(iosVersion)
+    fun observeExposures(version: String): Flow<List<CveEntry>> =
+        cveDao.observeUnpatchedForVersion(version)
 }

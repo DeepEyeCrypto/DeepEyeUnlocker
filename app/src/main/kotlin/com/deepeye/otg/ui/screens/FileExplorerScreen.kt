@@ -62,7 +62,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                         val parent = currentPath.substringBeforeLast("/", "").ifEmpty { "/" }
                         viewModel.browsePath(parent)
                     } else {
-                        viewModel.setNav(NavTarget.HOME)
+                        viewModel.setNav(NavTarget.LAB_HOME)
                     }
                 }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)

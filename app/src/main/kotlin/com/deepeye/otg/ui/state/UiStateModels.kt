@@ -61,25 +61,24 @@ data class CveDashboardState(
 data class CveFilter(
     val components: Set<String> = emptySet(),
     val severityMin: Double? = null,
-    val exploitationStatuses: Set<ExploitationStatus> = emptySet(),
+    val exploitedOnly: Boolean = false,
+    val cisaKevOnly: Boolean = false,
     val confidenceLevels: Set<ConfidenceLevel> = emptySet(),
-    val vulnerabilityTypes: Set<VulnerabilityType> = emptySet(),
+    val bugClasses: Set<BugClass> = emptySet(),
     val affectedVersion: String? = null,
-    val unpatchedOnly: Boolean = false,
-    val activeExploitationOnly: Boolean = false
+    val unpatchedOnly: Boolean = false
 ) {
     val hasActiveFilters: Boolean
         get() = components.isNotEmpty() || severityMin != null ||
-                exploitationStatuses.isNotEmpty() || confidenceLevels.isNotEmpty() ||
-                vulnerabilityTypes.isNotEmpty() || affectedVersion != null ||
-                unpatchedOnly || activeExploitationOnly
+                exploitedOnly || cisaKevOnly || confidenceLevels.isNotEmpty() ||
+                bugClasses.isNotEmpty() || affectedVersion != null ||
+                unpatchedOnly
 }
 
 enum class CveSortField {
     CVE_ID,
     COMPONENT,
     CVSS_SCORE,
-    EXPLOITATION_STATUS,
     CONFIDENCE,
     UPDATED_AT
 }
@@ -102,7 +101,7 @@ data class DeviceAnalysisState(
     val deviceProfile: AppleDeviceProfile? = null,
 
     /** Exposure report from PatchStateAnalyzer */
-    val exposureReport: ExposureReport? = null,
+    val exposureReport: DevicePatchReport? = null,
 
     /** Security score */
     val securityScore: SecurityScore? = null,

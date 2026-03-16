@@ -150,23 +150,24 @@ class RuleEngine {
             category = FindingCategory.KNOWN_VULNERABILITY,
             defaultSeverity = FindingSeverity.CRITICAL,
             evaluate = { ctx ->
-                ctx.exposureReport?.activeExploitExposed?.map { cve ->
+                val report = ctx.exposureReport ?: return@DetectionRule emptyList()
+                report.exposedCves.filter { it.exploitedInWild == true }.map { cve ->
                     Finding(
                         id = "SEC-001_${cve.cveId}",
                         title = "Active Exploitation: ${cve.cveId}",
                         description = "${cve.cveId} (${cve.component}) is actively exploited in the wild " +
-                                "and this device appears exposed. ${cve.summary}",
+                                "and this device appears exposed. ${cve.title}",
                         severity = FindingSeverity.CRITICAL,
                         category = FindingCategory.KNOWN_VULNERABILITY,
                         affectedComponent = cve.component,
                         deviceId = ctx.deviceId,
                         relatedCves = listOf(cve.cveId),
                         cvssScore = cve.cvssScore,
-                        evidence = cve.reasoning,
+                        evidence = cve.primitive,
                         remediation = "Update to iOS version that includes the fix for ${cve.cveId}",
                         remediationEffort = RemediationEffort.EASY
                     )
-                } ?: emptyList()
+                }
             }
         ))
 
@@ -179,19 +180,20 @@ class RuleEngine {
             defaultSeverity = FindingSeverity.HIGH,
             evaluate = { ctx ->
                 val report = ctx.exposureReport ?: return@DetectionRule emptyList()
-                if (report.exposedCount > 3) {
+                val activeExploited = report.exposedCves.filter { it.exploitedInWild == true }
+                if (report.exposedCves.size > 3) {
                     listOf(Finding(
-                        id = "SEC-002_${report.iosVersion}",
-                        title = "Outdated iOS ${report.iosVersion} — ${report.exposedCount} unpatched CVEs",
-                        description = "iOS ${report.iosVersion} has ${report.exposedCount} unpatched vulnerabilities, " +
-                                "including ${report.activeExploitExposed.size} actively exploited.",
-                        severity = if (report.activeExploitExposed.isNotEmpty())
+                        id = "SEC-002_${report.androidSpl}",
+                        title = "Outdated SPL ${report.androidSpl} — ${report.exposedCves.size} unpatched CVEs",
+                        description = "The device SPL ${report.androidSpl} has ${report.exposedCves.size} unpatched vulnerabilities, " +
+                                "including ${activeExploited.size} actively exploited.",
+                        severity = if (activeExploited.isNotEmpty())
                             FindingSeverity.CRITICAL else FindingSeverity.HIGH,
                         category = FindingCategory.OUTDATED_PATCH,
-                        affectedComponent = "iOS",
+                        affectedComponent = "Android",
                         deviceId = ctx.deviceId,
-                        evidence = "Risk score: ${report.overallRiskScore}/10.0",
-                        remediation = "Update to the latest iOS version to address known vulnerabilities",
+                        evidence = "Risk level: ${report.overallRiskLevel}",
+                        remediation = "Update to the latest security patch to address known vulnerabilities",
                         remediationEffort = RemediationEffort.EASY
                     ))
                 } else emptyList()
@@ -312,17 +314,17 @@ class RuleEngine {
             defaultSeverity = FindingSeverity.LOW,
             evaluate = { ctx ->
                 val report = ctx.exposureReport ?: return@DetectionRule emptyList()
-                if (report.uncertainCount > 5) {
+                if (report.unknownCves.size > 5) {
                     listOf(Finding(
                         id = "SEC-007_uncertainty",
-                        title = "${report.uncertainCount} CVEs with Unknown Exposure Status",
-                        description = "${report.uncertainCount} CVEs could not be confidently classified. " +
+                        title = "${report.unknownCves.size} CVEs with Unknown Exposure Status",
+                        description = "${report.unknownCves.size} CVEs could not be confidently classified. " +
                                 "More component version data is needed for accurate assessment.",
                         severity = FindingSeverity.LOW,
                         category = FindingCategory.GENERAL,
                         affectedComponent = "Assessment",
                         deviceId = ctx.deviceId,
-                        evidence = "Coverage gaps: ${report.componentCoverage.filter { !it.value.hasObservedBuild }.keys}",
+                        evidence = "Coverage gaps in various subsystems",
                         remediation = "Obtain additional component version data through device inspection or pairing"
                     ))
                 } else emptyList()

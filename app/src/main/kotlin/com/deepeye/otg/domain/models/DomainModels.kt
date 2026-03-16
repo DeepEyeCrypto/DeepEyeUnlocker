@@ -23,6 +23,10 @@ enum class PolicyTier {
     SAFE, POLICY, RESTRICTED, NEVER
 }
 
+enum class RiskLevel {
+    SAFE, ADVANCED, DANGER
+}
+
 data class OperationAvailability(
     val enabled: Boolean,
     val reason: String? = null,
@@ -39,6 +43,7 @@ data class DeepEyeOperation(
     val description: String,
     val tags: List<String> = emptyList(),
     val policyTier: PolicyTier = PolicyTier.SAFE,
+    val riskLevel: RiskLevel = RiskLevel.SAFE,
     val protocolFamily: ProtocolFamily = ProtocolFamily.GENERIC,
     val requiredModes: Set<DeviceMode> = emptySet(),
     val requiresConnection: Boolean = true,
@@ -46,6 +51,9 @@ data class DeepEyeOperation(
     val dangerous: Boolean = false,
     val enabledByDefaultInUi: Boolean = true
 ) {
+    val effectiveRisk: RiskLevel
+        get() = if (dangerous) RiskLevel.DANGER else riskLevel
+
     companion object {
         // Legacy shims for EngineDispatcher and PolicyEngine functionality
         val WRITE_FIRMWARE = DeepEyeOperation("op_write_fw", "Write Firmware", "Write Firmware", "", policyTier = PolicyTier.POLICY, dangerous = true)
@@ -80,8 +88,14 @@ data class DeepEyeOperation(
         val BROWSE_FS = DeepEyeOperation("op_browse_fs", "Browse Decrypted FS", "Browse FS", "Live evidence exploration", policyTier = PolicyTier.POLICY)
         val RAM_IMAGING = DeepEyeOperation("op_ram_imaging", "RAM Forensics", "RAM Image", "Volatile memory imaging", policyTier = PolicyTier.RESTRICTED)
         
+        // System Actions
+        val CLEAR_LOGS = DeepEyeOperation("op_clear_logs", "Clear Logs", "Clear Logs", "Wipe forensic logs from memory", policyTier = PolicyTier.SAFE)
+        
         // Testing Harness
         val TEST_HARNESS = DeepEyeOperation("op_test_harness", "Test Harness", "Test", "Integration testing", policyTier = PolicyTier.SAFE)
+
+        // Forensic Intelligence (VulnIntel-AI)
+        val AUTO_EXPLOIT = DeepEyeOperation("op_auto_exploit", "Auto-Exploit Compromise", "Auto-Exploit", "Telemetry-driven compromise", policyTier = PolicyTier.RESTRICTED, dangerous = true)
 
         fun values(): Array<DeepEyeOperation> = arrayOf(
             WRITE_FIRMWARE, READ_FIRMWARE, BACKUP_EFS, RESTORE_EFS, PARTITION_MANAGER,
@@ -89,7 +103,7 @@ data class DeepEyeOperation(
             REMOVE_MI_CLOUD, EFRP_MDM_HOOK, REMOVE_SCREEN_LOCK, LOCK_STATE_ANALYSIS,
             UNLOCK_BOOTLOADER, MDM_REMOVE, IMEI_CHECK, IMEI_RESTORE, MODEM_REPAIR,
             NETWORK_UNLOCK, DEEP_DEVICE_INFO, ADB_ENABLE, ONE_CLICK_ROOT, APP_MANAGER,
-            SAFE_DUMP, DELETED_DATA_CARVING, FORENSIC_ACQUISITION, BROWSE_FS, RAM_IMAGING, TEST_HARNESS
+            SAFE_DUMP, DELETED_DATA_CARVING, FORENSIC_ACQUISITION, BROWSE_FS, RAM_IMAGING, TEST_HARNESS, AUTO_EXPLOIT, CLEAR_LOGS
         )
     }
 }

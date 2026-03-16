@@ -13,8 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 // ──────────────────────────────────────────────────────────────
-// CVE Dashboard ViewModel
-// DeepEye OTG — ViewModels Module (Part 9)
+// CVE Dashboard ViewModel (V3.0 — VulnIntel-AI)
+// DeepEye OTG — ViewModels Module
 // ──────────────────────────────────────────────────────────────
 
 @HiltViewModel
@@ -32,7 +32,6 @@ class CveDashboardViewModel @Inject constructor(
     private var filterJob: Job? = null
 
     init {
-        // Observe entire database for summary statistics
         viewModelScope.launch {
             cveDao.observeAll().collect { entries ->
                 updateStats(entries)
@@ -60,14 +59,12 @@ class CveDashboardViewModel @Inject constructor(
             }
             is CveDashboardAction.SortBy -> {
                 _uiState.value = _uiState.value.copy(sortBy = action.field, sortAscending = action.ascending)
-                triggerFilter() // Re-sort current list
+                triggerFilter()
             }
             is CveDashboardAction.ImportSeedData -> {
                 importSeedData()
             }
             is CveDashboardAction.RefreshAll -> {
-                // In production, this would hit an upstream API.
-                // For the research lab, we reload our seed/custom datasets.
                 importSeedData()
             }
             is CveDashboardAction.ClearFilters -> {
@@ -76,12 +73,7 @@ class CveDashboardViewModel @Inject constructor(
             }
             is CveDashboardAction.ToggleExploitFilter -> {
                 val current = _uiState.value.filter
-                val newStatuses = if (action.active) {
-                    current.exploitationStatuses + ExploitationStatus.ACTIVE_EXPLOITATION
-                } else {
-                    current.exploitationStatuses - ExploitationStatus.ACTIVE_EXPLOITATION
-                }
-                _uiState.value = _uiState.value.copy(filter = current.copy(exploitationStatuses = newStatuses))
+                _uiState.value = _uiState.value.copy(filter = current.copy(exploitedOnly = action.active))
                 triggerFilter()
             }
             is CveDashboardAction.FilterByComponent -> {
@@ -106,24 +98,19 @@ class CveDashboardViewModel @Inject constructor(
                 )
             }.sortedByDescending { it.cnt }
 
-        val exploitStats = entries.groupBy { it.exploitationStatus }
-            .map { (status, list) ->
-                ExploitationStat(exploitationStatus = status, cnt = list.size)
-            }
-
+        val exploitableCount = entries.count { it.exploitedInWild == true }
+        
         _uiState.value = _uiState.value.copy(
-                allEntries = entries,
-                totalCount = entries.size,
-                componentStats = componentStats,
-                exploitationStats = exploitStats,
-                lastSyncAt = System.currentTimeMillis()
-            )
+            allEntries = entries,
+            totalCount = entries.size,
+            componentStats = componentStats,
+            lastSyncAt = System.currentTimeMillis()
+        )
     }
 
     private fun triggerFilter() {
         filterJob?.cancel()
         filterJob = viewModelScope.launch {
-            // Debounce fast typing in search
             delay(150)
             applyFiltersAndSort(_uiState.value.allEntries)
         }
@@ -138,36 +125,34 @@ class CveDashboardViewModel @Inject constructor(
         var filtered = entries.filter { cve ->
             var matches = true
 
-            // Search query across ID, Summary, Component
             if (query.isNotEmpty()) {
                 val qMatch = cve.cveId.lowercase().contains(query) ||
-                        cve.summary.lowercase().contains(query) ||
+                        cve.title.lowercase().contains(query) ||
                         cve.component.lowercase().contains(query)
                 if (!qMatch) matches = false
             }
 
-            // Component filter
             if (matches && f.components.isNotEmpty() && !f.components.contains(cve.component)) {
                 matches = false
             }
 
-            // Severity filter
             if (matches && f.severityMin != null && (cve.cvssScore ?: 0.0) < f.severityMin) {
                 matches = false
             }
 
-            // Exploitation status filter
-            if (matches && f.exploitationStatuses.isNotEmpty() && !f.exploitationStatuses.contains(cve.exploitationStatus)) {
+            if (matches && f.exploitedOnly && cve.exploitedInWild != true) {
                 matches = false
             }
 
-            // Confidence Level
+            if (matches && f.cisaKevOnly && !cve.cisaKev) {
+                matches = false
+            }
+
             if (matches && f.confidenceLevels.isNotEmpty() && !f.confidenceLevels.contains(cve.confidence)) {
                 matches = false
             }
 
-            // Vulnerability Type
-            if (matches && f.vulnerabilityTypes.isNotEmpty() && !f.vulnerabilityTypes.contains(cve.vulnerabilityType)) {
+            if (matches && f.bugClasses.isNotEmpty() && !f.bugClasses.contains(cve.bugClass)) {
                 matches = false
             }
 
@@ -179,7 +164,6 @@ class CveDashboardViewModel @Inject constructor(
             CveSortField.CVE_ID -> filtered.sortedBy { it.cveId }
             CveSortField.COMPONENT -> filtered.sortedBy { it.component }
             CveSortField.CVSS_SCORE -> filtered.sortedBy { it.cvssScore ?: 0.0 }
-            CveSortField.EXPLOITATION_STATUS -> filtered.sortedBy { it.exploitationStatus.ordinal }
             CveSortField.CONFIDENCE -> filtered.sortedBy { it.confidence.ordinal }
             CveSortField.UPDATED_AT -> filtered.sortedBy { it.updatedAt }
         }
@@ -197,20 +181,17 @@ class CveDashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(importProgress = 0f, error = null)
             try {
-                // Simulate progressive loading for UX
-                for (i in 1..10) {
+                for (i in 1..5) {
                     delay(50)
-                    _uiState.value = _uiState.value.copy(importProgress = i / 10f)
+                    _uiState.value = _uiState.value.copy(importProgress = i / 5f)
                 }
 
                 importer.importSeedData()
                 _uiState.value = _uiState.value.copy(importProgress = null)
-                _uiEvents.emit(UiEvent.ShowToast("CVE DB updated with testing seeds"))
+                _uiEvents.emit(UiEvent.ShowToast("VulnIntel-AI DB synchronized"))
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-error = "Import failed: ${e.message}", importProgress = null
-)
-                _uiEvents.emit(UiEvent.ShowSnackbar("CVE Import Failed: ${e.message}", isError = true))
+                _uiState.value = _uiState.value.copy(error = "Sync failed: ${e.message}", importProgress = null)
+                _uiEvents.emit(UiEvent.ShowSnackbar("Sync Failed: ${e.message}", isError = true))
             }
         }
     }

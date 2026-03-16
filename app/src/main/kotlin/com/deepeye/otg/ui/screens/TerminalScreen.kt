@@ -64,7 +64,7 @@ fun TerminalScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { mainViewModel.setNav(NavTarget.HOME) }) {
+                    IconButton(onClick = { mainViewModel.setNav(NavTarget.DASHBOARD) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
                     }
                 },

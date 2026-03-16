@@ -7,7 +7,11 @@ import com.deepeye.otg.DeepEyeApplication
 import com.deepeye.otg.data.SettingsManager
 import com.deepeye.otg.engine.ForensicAiAssistant
 import com.deepeye.otg.engine.ForensicEngine
+import com.deepeye.otg.intelligence.vulndb.*
 import com.deepeye.otg.service.MassExtractor
+import androidx.room.Room
+import com.deepeye.otg.data.db.AppDatabase
+import com.deepeye.otg.engine.RamdiskForensicEngine
 import com.deepeye.otg.usb.AdbManager
 import com.deepeye.otg.usb.HardwareManager
 import com.deepeye.otg.usb.SessionCoordinator
@@ -18,8 +22,10 @@ import com.deepeye.otg.fuzz.hid.MaliciousHidDevice
 import com.deepeye.otg.exploit.ExploitChainOrchestrator
 import com.deepeye.otg.exploit.PostExploitExtractor
 import com.deepeye.otg.exploit.AslrDefeater
+import com.deepeye.otg.exploit.UniversalExploitOrchestrator
 import com.deepeye.otg.exploit.AmfiSymlinkBypass
 import com.deepeye.otg.data.db.dao.FuzzDao
+import com.deepeye.otg.data.db.dao.ForensicDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -157,5 +163,86 @@ object AppModule {
         hardwareManager: HardwareManager
     ): IosSessionCoordinator {
         return IosSessionCoordinator(sessionCoordinator, hardwareManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUniversalExploitOrchestrator(
+        appScope: CoroutineScope,
+        fuzzDao: FuzzDao,
+        sessionCoordinator: SessionCoordinator,
+        extractor: PostExploitExtractor
+    ): UniversalExploitOrchestrator {
+        return UniversalExploitOrchestrator(appScope, fuzzDao, sessionCoordinator, extractor)
+    }
+
+    // ── CVE Intelligence ──
+
+    @Provides
+    @Singleton
+    fun provideCveDatabase(@ApplicationContext context: Context): CveDatabase {
+        return CveDatabase.getInstance(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCveDao(db: CveDatabase): CveDao {
+        return db.cveDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCveImporter(dao: CveDao): CveImporter {
+        return CveImporter(dao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVersionMappingEngine(): VersionMappingEngine {
+        return VersionMappingEngine()
+    }
+
+    @Provides
+    @Singleton
+    fun providePatchStateAnalyzer(cveDao: CveDao): PatchStateAnalyzer {
+        return PatchStateAnalyzer(cveDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCveRepository(
+        cveDao: CveDao,
+        importer: CveImporter,
+        analyzer: PatchStateAnalyzer
+    ): CveRepository {
+        return CveRepository(cveDao, importer, analyzer)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRamdiskForensicEngine(): RamdiskForensicEngine {
+        return RamdiskForensicEngine()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "deepeye_forensics.db"
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideForensicDao(db: AppDatabase): ForensicDao {
+        return db.forensicDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFuzzDao(db: AppDatabase): FuzzDao {
+        return db.fuzzDao()
     }
 }

@@ -78,7 +78,7 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { viewModel.setNav(NavTarget.HOME) }) {
+                    IconButton(onClick = { viewModel.setNav(NavTarget.DASHBOARD) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
                     }
                     Spacer(Modifier.width(6.dp))

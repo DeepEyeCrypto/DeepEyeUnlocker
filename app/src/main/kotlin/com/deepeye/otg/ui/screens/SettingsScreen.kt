@@ -52,7 +52,7 @@ fun SettingsScreen(viewModel: UsbViewModel) {
     ) {
         // Section header
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.setNav(NavTarget.HOME) }) {
+            IconButton(onClick = { viewModel.setNav(NavTarget.DASHBOARD) }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = StitchTokens.TextPrimary)
             }
             Spacer(Modifier.width(8.dp))

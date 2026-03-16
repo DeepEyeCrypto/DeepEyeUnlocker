@@ -1,40 +1,22 @@
 package com.deepeye.otg.intelligence.vulndb
 
+import android.util.Log
+
 /**
- * Lightweight logger that is JVM-test friendly (no android.util.Log dependency).
- * Falls back to stdout when android.util.Log is unavailable (unit tests).
+ * Thread-safe logger that avoids android.util.Log for JVM-only zones
+ * if needed, but defaults to Android Log for the OTG app.
  */
-internal object LogSafe {
-    private const val TAG_PREFIX = "[vulndb]"
-
-    // Reflection lookup for android.util.Log to avoid hard dependency in unit tests.
-    private val androidLogClass: Class<*>? = runCatching {
-        Class.forName("android.util.Log")
-    }.getOrNull()
-
-    private val methodI = androidLogClass?.methods?.find { it.name == "i" && it.parameterTypes.size >= 2 }
-    private val methodW = androidLogClass?.methods?.find { it.name == "w" && it.parameterTypes.size >= 2 }
-    private val methodE = androidLogClass?.methods?.find { it.name == "e" && it.parameterTypes.size >= 2 }
-
+object LogSafe {
     fun i(tag: String, msg: String) {
-        if (!tryAndroidLog(methodI, tag, msg)) println("$TAG_PREFIX I/$tag: $msg")
+        Log.i(tag, msg)
     }
-
     fun w(tag: String, msg: String) {
-        if (!tryAndroidLog(methodW, tag, msg)) println("$TAG_PREFIX W/$tag: $msg")
+        Log.w(tag, msg)
     }
-
-    fun e(tag: String, msg: String) {
-        if (!tryAndroidLog(methodE, tag, msg)) println("$TAG_PREFIX E/$tag: $msg")
+    fun e(tag: String, msg: String, tr: Throwable? = null) {
+        Log.e(tag, msg, tr)
     }
-
-    private fun tryAndroidLog(method: java.lang.reflect.Method?, tag: String, msg: String): Boolean {
-        return try {
-            if (method == null) return false
-            method.invoke(null, tag, msg)
-            true
-        } catch (_: Throwable) {
-            false
-        }
+    fun d(tag: String, msg: String) {
+        Log.d(tag, msg)
     }
 }

@@ -22,8 +22,8 @@ object DeepEyeCatalogs {
     val FEATURE_GROUPS = listOf(
         FeatureGroup("g1", "Flashing & Firmware", listOf(
             DeepEyeOperation("op_write_fw", "Write Firmware", "Write Firmware", "Flash full or partial firmware image to device", policyTier = PolicyTier.POLICY, protocolFamily = ProtocolFamily.GENERIC, dangerous = true),
-            DeepEyeOperation("op_read_fw", "Read / Backup Firmware", "Read / Backup", "Dump full ROM blocks from device to host", policyTier = PolicyTier.SAFE),
-            DeepEyeOperation("op_backup_sec", "Backup / Restore Security", "Backup Security", "Backup sensitive partitions (EFS, NVRAM, persist)", policyTier = PolicyTier.POLICY),
+            DeepEyeOperation("op_read_fw", "Read / Backup Firmware", "Read / Backup", "Dump full ROM blocks from device to host", policyTier = PolicyTier.SAFE, riskLevel = RiskLevel.ADVANCED),
+            DeepEyeOperation("op_backup_sec", "Backup / Restore Security", "Backup Security", "Backup sensitive partitions (EFS, NVRAM, persist)", policyTier = PolicyTier.POLICY, riskLevel = RiskLevel.ADVANCED),
             DeepEyeOperation("op_part_mgr", "Partition Manager", "Partition Manager", "View and modify raw partition tables dynamically", policyTier = PolicyTier.RESTRICTED, dangerous = true)
         )),
         FeatureGroup("g2", "Reset & Cleanup", listOf(
@@ -61,6 +61,9 @@ object DeepEyeCatalogs {
             DeepEyeOperation("op_safe_dump", "Safe Dump (Bit-stream)", "Safe Dump", "Physical acquisition with hash verification", policyTier = PolicyTier.SAFE),
             DeepEyeOperation("op_carve", "Carve Deleted Data", "Carve Data", "Recover deleted files via signature analysis", policyTier = PolicyTier.RESTRICTED),
             DeepEyeOperation("op_ram_imaging", "RAM Forensics (Volatile)", "RAM Image", "Capture raw device memory for malware analysis", policyTier = PolicyTier.RESTRICTED)
+        )),
+        FeatureGroup("g8", "Intelligence & Compromise", listOf(
+            DeepEyeOperation("op_auto_exploit", "Auto-Exploit Compromise", "Auto-Exploit", "Compromise device using telemetry-matched intelligence", policyTier = PolicyTier.RESTRICTED, dangerous = true)
         ))
     )
 }

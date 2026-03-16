@@ -236,21 +236,17 @@ fun TestHarnessScreen(
                     }
 
                     val stateText = when(val s = exploitState) {
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Idle -> "READY"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage0_AslrRecon -> "RECON: Bypassing ASLR"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage1_WebKit -> "STAGE 1: WebKit UAF"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage2_Dyld -> "STAGE 2: Dyld UAF"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage3_Kernel -> "STAGE 3: KERNEL LPE"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.stage4_AmfiBypass -> "STAGE 4: AMFI Bypass"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success -> "SUCCESS: ${s.msg}"
-                        is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error -> "ERROR: ${s.msg}"
+                        is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Idle -> "READY"
+                        is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Analyzing -> "ANALYZING: ${s.brand}"
+                        is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Executing -> "EXECUTING: ${s.cveId} (${s.stage})"
+                        is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Success -> "SUCCESS: ${s.msg}"
+                        is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Failed -> "FAILED: ${s.reason}"
                     }
 
-                    InfoRow("Chain State", stateText, color = if (exploitState is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error) Color.Red else if (exploitState is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success) Color.Green else Color.White)
+                    InfoRow("Chain State", stateText, color = if (exploitState is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Failed) Color.Red else if (exploitState is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Success) Color.Green else Color.White)
 
-                    val isRunning = exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Idle && 
-                                    exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Success && 
-                                    exploitState !is com.deepeye.otg.exploit.ExploitChainOrchestrator.ChainState.Error
+                    val isRunning = exploitState is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Executing || 
+                                    exploitState is com.deepeye.otg.exploit.UniversalExploitOrchestrator.ExploitState.Analyzing
 
                     Spacer(modifier = Modifier.height(12.dp))
 

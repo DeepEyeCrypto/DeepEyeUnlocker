@@ -102,8 +102,10 @@ class DeviceAnalysisViewModel(
             try {
                 // 1. Build observation for intelligence module
                 val observation = DeviceObservation(
+                    brand = "Apple",
+                    model = profile.marketingName ?: profile.modelIdentifier ?: "iPhone",
                     deviceId = profile.udid ?: profile.usbSerialNumber ?: "unknown",
-                    iosVersion = profile.iosVersion ?: "UNKNOWN", // In prod: infer or prompt if unknown
+                    iosVersion = profile.iosVersion ?: "UNKNOWN",
                     iosBuildId = profile.buildVersion,
                     observedComponents = profile.componentBuilds.map {
                         ObservedComponentVersion(it.component, it.buildVersion)

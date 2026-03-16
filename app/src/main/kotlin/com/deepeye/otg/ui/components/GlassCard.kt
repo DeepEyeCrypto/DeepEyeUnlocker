@@ -49,7 +49,7 @@ fun GlassCard(
     // ── CRITICAL: backgroundColor MUST be specified ──────────
     val hazeStyle = remember(accentColor) {
         HazeStyle(
-            backgroundColor = StitchTokens.BackgroundDark,
+            backgroundColor = StitchTokens.Semantic.BackgroundBase,
             tint = HazeTint(if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f)),
             blurRadius = 20.dp,
             noiseFactor = 0.02f
@@ -66,12 +66,12 @@ fun GlassCard(
                 if (hazeState != null && !performanceMode) {
                     Modifier.hazeEffect(state = hazeState, style = hazeStyle)
                 } else {
-                    Modifier.background(StitchTokens.SurfaceDark.copy(alpha = 0.8f))
+                    Modifier.background(StitchTokens.Semantic.SurfaceCard.copy(alpha = 0.8f))
                 }
             )
             .border(
                 width = 1.dp,
-                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else StitchTokens.GlassBorder,
+                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else StitchTokens.Semantic.BorderSubtle,
                 shape = shape
             )
             .clip(shape)

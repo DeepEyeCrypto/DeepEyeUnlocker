@@ -14,13 +14,13 @@ import kotlin.math.pow
 import kotlinx.coroutines.sync.withLock
 import com.deepeye.otg.data.device.ProtocolRouter
 import com.deepeye.otg.data.device.DeviceProtocol
-import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Single source of truth for USB connection lifecycle.
  * Lives in ViewModel — survives Activity recreation.
  */
-class UsbLifecycleManager(
+class UsbLifecycleManager @Inject constructor(
     private val context: Context,
     private val usbManager: UsbManager,
     private val scope: CoroutineScope,
@@ -77,7 +77,7 @@ class UsbLifecycleManager(
                     snapshot.manufacturerName, 
                     snapshot.productName
                 )
-                Timber.d("[ROUTER] vid=0x${device.vendorId.toString(16)} protocol=${routingResult.protocol} confidence=${routingResult.confidence}")
+                Log.d(TAG, "[ROUTER] vid=0x${device.vendorId.toString(16)} protocol=${routingResult.protocol} confidence=${routingResult.confidence}")
 
                 // Dispatch to specific protocol session (Stage 201.3)
                 when (routingResult.protocol) {
@@ -89,8 +89,8 @@ class UsbLifecycleManager(
                     DeviceProtocol.UNKNOWN      -> showUnknownDevice(device)
                 }
 
-                Timber.i("[PROTOCOL] Device attached: ${device.productName} (VID=0x${Integer.toHexString(device.vendorId)})")
-                Timber.i("[PROTOCOL] Route Result: ${routingResult.protocol} | Confidence: ${routingResult.confidence} | Reason: ${routingResult.reason}")
+                Log.i(TAG, "[PROTOCOL] Device attached: ${device.productName} (VID=0x${Integer.toHexString(device.vendorId)})")
+                Log.i(TAG, "[PROTOCOL] Route Result: ${routingResult.protocol} | Confidence: ${routingResult.confidence} | Reason: ${routingResult.reason}")
 
                 val newState = UsbLifecycleState.DeviceDetected(
                     device = device,
@@ -278,7 +278,7 @@ class UsbLifecycleManager(
                     session.missedPings++
                     if (session.missedPings >= MAX_MISSED_PINGS) {
                         lifecycleMutex.withLock {
-                            Timber.e("[LIFECYCLE] Watchdog failure: missed ${session.missedPings} pings. Attempting recovery.")
+                            Log.e(TAG, "[LIFECYCLE] Watchdog failure: missed ${session.missedPings} pings. Attempting recovery.")
                             coordinator.transition(ConnectionState.Recovering, "Watchdog timeout")
                             onDeviceDetached(session.device)
                             if (retryCount < MAX_RETRY_COUNT) {
@@ -346,27 +346,27 @@ class UsbLifecycleManager(
     // ── Session Dispatching (Stage 201.3) ───────────────────────
 
     private fun startMtkV6Session(device: UsbDevice) {
-        Timber.i("[SESSION] Starting MTK V6 (Dimensity) session for ${device.productName}")
+        Log.i(TAG, "[SESSION] Starting MTK V6 (Dimensity) session for ${device.productName}")
         // Next: Implement V6 handshake trigger
     }
 
     private fun startMtkBromSession(device: UsbDevice) {
-        Timber.i("[SESSION] Starting MTK Classic BROM session for ${device.productName}")
+        Log.i(TAG, "[SESSION] Starting MTK Classic BROM session for ${device.productName}")
     }
 
     private fun startQcEdlSession(device: UsbDevice) {
-        Timber.i("[SESSION] Starting Qualcomm EDL (Sahara/Firehose) session for ${device.productName}")
+        Log.i(TAG, "[SESSION] Starting Qualcomm EDL (Sahara/Firehose) session for ${device.productName}")
     }
 
     private fun startSamsungSession(device: UsbDevice) {
-        Timber.i("[SESSION] Starting Samsung ODIN session for ${device.productName}")
+        Log.i(TAG, "[SESSION] Starting Samsung ODIN session for ${device.productName}")
     }
 
     private fun askUserToSelect(device: UsbDevice) {
-        Timber.w("[SESSION] Ambiguous protocol (MTK/QC) for ${device.productName}. Awaiting User choice.")
+        Log.w(TAG, "[SESSION] Ambiguous protocol (MTK/QC) for ${device.productName}. Awaiting User choice.")
     }
 
     private fun showUnknownDevice(device: UsbDevice) {
-        Timber.w("[SESSION] Unknown device 0x${device.vendorId.toString(16)}. Showing generic support.")
+        Log.w(TAG, "[SESSION] Unknown device 0x${device.vendorId.toString(16)}. Showing generic support.")
     }
 }
