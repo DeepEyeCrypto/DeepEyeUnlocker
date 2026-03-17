@@ -94,17 +94,23 @@ data class DeepEyeOperation(
         // Testing Harness
         val TEST_HARNESS = DeepEyeOperation("op_test_harness", "Test Harness", "Test", "Integration testing", policyTier = PolicyTier.SAFE)
 
+        // MTK Brom Actions (Phase 6)
+        val MTK_BROM_EXPLOIT = DeepEyeOperation("mtk_brom_exploit", "MTK Brom Exploit", "Brom Exploit", "Execute BROM handshake & exploit", policyTier = PolicyTier.RESTRICTED, dangerous = true)
+        val MTK_READ_BACKUP = DeepEyeOperation("mtk_read_backup", "MTK Read Backup", "Read Backup", "Read partitions via Brom", policyTier = PolicyTier.SAFE)
+        val MTK_BL_UNLOCK = DeepEyeOperation("mtk_bl_unlock", "MTK BL Unlock", "Unlock BL", "Unlock Bootloader via Brom", policyTier = PolicyTier.POLICY, dangerous = true)
+        val MTK_SECURITY_BACKUP = DeepEyeOperation("mtk_security_backup", "MTK Security Backup", "Backup Security", "Backup NVRAM/EFS/Metadata", policyTier = PolicyTier.SAFE)
+
         // Forensic Intelligence (VulnIntel-AI)
         val AUTO_EXPLOIT = DeepEyeOperation("op_auto_exploit", "Auto-Exploit Compromise", "Auto-Exploit", "Telemetry-driven compromise", policyTier = PolicyTier.RESTRICTED, dangerous = true)
 
         fun values(): Array<DeepEyeOperation> = arrayOf(
-            WRITE_FIRMWARE, READ_FIRMWARE, BACKUP_EFS, RESTORE_EFS, PARTITION_MANAGER,
-            FACTORY_RESET, DEMO_UNLOCK, SAFE_WIPE, ERASE_FRP, MTK_METAMODE_FRP,
-            REMOVE_MI_CLOUD, EFRP_MDM_HOOK, REMOVE_SCREEN_LOCK, LOCK_STATE_ANALYSIS,
-            UNLOCK_BOOTLOADER, MDM_REMOVE, IMEI_CHECK, IMEI_RESTORE, MODEM_REPAIR,
-            NETWORK_UNLOCK, DEEP_DEVICE_INFO, ADB_ENABLE, ONE_CLICK_ROOT, APP_MANAGER,
+            MTK_BROM_EXPLOIT, MTK_READ_BACKUP, MTK_BL_UNLOCK, MTK_SECURITY_BACKUP,
             SAFE_DUMP, DELETED_DATA_CARVING, FORENSIC_ACQUISITION, BROWSE_FS, RAM_IMAGING, TEST_HARNESS, AUTO_EXPLOIT, CLEAR_LOGS
         )
+
+        fun valueOfFeatureId(featureId: String): DeepEyeOperation {
+            return values().find { it.id == featureId } ?: DeepEyeOperation(featureId, featureId, featureId, "Dynamic Operation")
+        }
     }
 }
 

@@ -1,4 +1,12 @@
 mod commands;
+mod shsh;
+mod diagnostics;
+mod restore;
+mod purple;
+mod toolbox;
+mod cve;
+mod vault;
+mod identity;
 
 use commands::ios_backup::{ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack};
 use commands::adb::stream_adb_logs;
@@ -16,10 +24,47 @@ use commands::ticket::{ios_parse_activation_record, ios_activation_record_state,
 use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
 use commands::extraction::{ios_mount_ramdisk, ios_mass_extract};
 
+use shsh::{
+    get_ecid, get_board_config, save_shsh_all_signed, save_shsh_specific,
+    save_shsh_with_generator, list_saved_shsh, check_signed_versions,
+    futurerestore, futurerestore_no_baseband
+};
+
+use diagnostics::{
+    run_diagnostics, get_battery_stats, get_thermal_state,
+    device_shutdown, device_restart, device_sleep
+};
+
+use restore::{
+    restore_local_ipsw, restore_latest, exit_recovery, get_recovery_info
+};
+
+use purple::{
+    enter_purple_mode, purple_read_sn, purple_write_sn, purple_read_all
+};
+
+use toolbox::{
+    toolbox_block_ota, toolbox_factory_reset, toolbox_get_logs, toolbox_backup_device
+};
+
+use cve::{
+    query_cve_database, run_intelligence_scan
+};
+
+use vault::{
+    push_to_cloud_vault, pull_from_cloud_vault, list_cloud_vault
+};
+
+use identity::{
+    check_imei_intel, get_full_identity
+};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             ios_backup_info,
@@ -60,7 +105,41 @@ pub fn run() {
             ios_poll_orchestrator,
             ios_inject_surgical_patch,
             ios_mount_ramdisk,
-            ios_mass_extract
+            ios_mass_extract,
+            get_ecid,
+            get_board_config,
+            save_shsh_all_signed,
+            save_shsh_specific,
+            save_shsh_with_generator,
+            list_saved_shsh,
+            check_signed_versions,
+            futurerestore,
+            futurerestore_no_baseband,
+            run_diagnostics,
+            get_battery_stats,
+            get_thermal_state,
+            device_shutdown,
+            device_restart,
+            device_sleep,
+            restore_local_ipsw,
+            restore_latest,
+            exit_recovery,
+            get_recovery_info,
+            enter_purple_mode,
+            purple_read_sn,
+            purple_write_sn,
+            purple_read_all,
+            toolbox_block_ota,
+            toolbox_factory_reset,
+            toolbox_get_logs,
+            toolbox_backup_device,
+            query_cve_database,
+            run_intelligence_scan,
+            push_to_cloud_vault,
+            pull_from_cloud_vault,
+            list_cloud_vault,
+            check_imei_intel,
+            get_full_identity
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

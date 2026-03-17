@@ -85,59 +85,67 @@ fun MainScreen(
                     )
                 }
 
-            // Debug Overlay (Top Layer)
-            DebugOverlayPanel(viewModel)
+                // Debug Overlay (Top Layer)
+                DebugOverlayPanel(viewModel)
 
-            // Dynamic Layer: Changes between Disconnected and Active modes
-            AnimatedContent(
-                targetState = currentNav,
-                modifier = Modifier.weight(1f),
-                transitionSpec = {
-                    (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
-                },
-                label = "NavTransition"
-            ) { target ->
-                when (target) {
-                    NavTarget.DASHBOARD -> {
-                        TargetDashboardScreen(viewModel, hazeState)
-                    }
-                    NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
-                    NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
-                    NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
-                    NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
-                    NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
-                    NavTarget.TERMINAL -> TerminalScreen(viewModel)
-                    NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
-                        viewModel = cveViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
-                    )
-                    NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
-                        viewModel = fuzzViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
-                    )
-                    NavTarget.HID_RESEARCH -> HidResearchScreen(
-                        viewModel = hidViewModel,
-                        onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
-                    )
-                    NavTarget.STORAGE -> StorageScreen()
-                    NavTarget.SETTINGS -> SettingsScreen(viewModel)
-                    NavTarget.IMEI_REPAIR -> {
-                        val aiAnalysis by viewModel.aiAnalysis.collectAsState()
-                        val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
-                        val ci1 by viewModel.currentImei1.collectAsState()
-                        val ci2 by viewModel.currentImei2.collectAsState()
-                        
-                        ImeiRepairScreen(
-                            onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
-                            onRead = { viewModel.readImei() },
-                            currentImei1 = ci1,
-                            currentImei2 = ci2,
-                            hazeState = hazeState,
-                            perfMode = perfMode,
-                            aiAnalysis = aiAnalysis,
-                            isAiProcessing = aiIsProcessing
+                // Dynamic Layer: Changes between Disconnected and Active modes
+                AnimatedContent(
+                    targetState = currentNav,
+                    modifier = Modifier.weight(1f),
+                    transitionSpec = {
+                        (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
+                    },
+                    label = "NavTransition"
+                ) { target ->
+                    when (target) {
+                        NavTarget.DASHBOARD -> {
+                            TargetDashboardScreen(viewModel, hazeState)
+                        }
+                        NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
+                        NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
+                        NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
+                        NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
+                        NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
+                        NavTarget.TERMINAL -> TerminalScreen(viewModel)
+                        NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
+                            viewModel = cveViewModel,
+                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
                         )
-                    }
+                        NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
+                            viewModel = fuzzViewModel,
+                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+                        )
+                        NavTarget.HID_RESEARCH -> HidResearchScreen(
+                            viewModel = hidViewModel,
+                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+                        )
+                        NavTarget.STORAGE -> StorageScreen()
+                        NavTarget.SETTINGS -> SettingsScreen(viewModel)
+                        NavTarget.IMEI_REPAIR -> {
+                            val aiAnalysis by viewModel.aiAnalysis.collectAsState()
+                            val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
+                            val ci1 by viewModel.currentImei1.collectAsState()
+                            val ci2 by viewModel.currentImei2.collectAsState()
+                            
+                            ImeiRepairScreen(
+                                onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
+                                onRead = { viewModel.readImei() },
+                                currentImei1 = ci1,
+                                currentImei2 = ci2,
+                                hazeState = hazeState,
+                                perfMode = perfMode,
+                                aiAnalysis = aiAnalysis,
+                                isAiProcessing = aiIsProcessing
+                            )
+                        }
+                        NavTarget.MISSION_HUB -> {
+                            MissionHubScreen(
+                                onNavigateBack = { viewModel.setNav(NavTarget.DASHBOARD) },
+                                onExecuteAction = { actionId ->
+                                    viewModel.queueOperation(actionId)
+                                }
+                            )
+                        }
                         else -> {
                             DisconnectedView(hazeState)
                         }
@@ -560,6 +568,7 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
                     val target = when (hub) {
                         MissionHub.COMMAND -> NavTarget.DASHBOARD
                         MissionHub.LAB -> NavTarget.LAB_HOME
+                        MissionHub.BYPASS -> NavTarget.MISSION_HUB
                         MissionHub.INTEL -> NavTarget.CVE_INTELLIGENCE
                         MissionHub.ARCHIVE -> NavTarget.SETTINGS
                     }

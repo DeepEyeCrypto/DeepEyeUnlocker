@@ -1,49 +1,42 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2026.27.0",
-  "identifier": "com.deepeye.unlocker.desktop",
-  "bundle": {
-    "active": true,
-    "icon": [],
-    "resources": [
-      "python/**/*"
-    ]
+  "version": "1.0.0",
+  "identifier": "com.deepeye.unlocker",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "DeepEye Unlocker — Desktop Console",
-        "width": 1280,
-        "height": 900
+        "label": "main",
+        "title": "DeepEye Unlocker",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "center": true
       }
     ],
     "security": {
       "csp": null
     }
   },
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../dist"
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ]
   },
   "plugins": {
     "shell": {
-      "open": true,
-      "scope": [
-        {
-          "name": "python3",
-          "cmd": "python3",
-          "args": true,
-          "sidecar": false
-        },
-        {
-          "name": "adb",
-          "cmd": "adb",
-          "args": true,
-          "sidecar": false
-        }
-      ]
+      "open": true
     }
   }
 }

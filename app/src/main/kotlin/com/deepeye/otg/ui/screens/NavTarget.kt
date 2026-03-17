@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 enum class MissionHub(val label: String, val icon: ImageVector) {
     COMMAND("Command", Icons.Default.Terminal),
     LAB("Lab", Icons.Default.Science),
+    BYPASS("Bypass", Icons.Default.FlashOn),
     INTEL("Intel", Icons.Default.Public),
     ARCHIVE("Archive", Icons.Default.Inventory2)
 }
@@ -25,6 +26,8 @@ enum class NavTarget(val hub: MissionHub) {
     PARTITION_EXPLORER(MissionHub.LAB),
     FILE_EXPLORER(MissionHub.LAB),
     FORENSICS_LAB(MissionHub.LAB),
+    
+    MISSION_HUB(MissionHub.BYPASS),
     
     CVE_INTELLIGENCE(MissionHub.INTEL),
     FUZZ_DASHBOARD(MissionHub.INTEL),

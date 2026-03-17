@@ -1,56 +1,54 @@
-import React from 'react';
+const SECTIONS = [
+  { id: "activation",  label: "Activation",    icon: "🔓" },
+  { id: "vault",       label: "Cloud Vault",   icon: "☁️" },
+  { id: "identity",    label: "Identity",      icon: "🆔" },
+  { id: "fmi",         label: "FMI / iCloud",  icon: "☁️" },
+  { id: "jailbreak",   label: "Jailbreak",     icon: "⚡" },
+  { id: "purple",      label: "Purple Mode",   icon: "🟣" },
+  { id: "bootfiles",   label: "Boot Files",    icon: "📦" },
+  { id: "extraction",  label: "Forensics",     icon: "📂" },
+  { id: "cve",         label: "CVE Intel",     icon: "🧠" },
+  { id: "toolbox",     label: "Toolbox",       icon: "🛠️" },
+  { id: "shsh",        label: "SHSH Blobs",    icon: "💾" },
+  { id: "diagnostics", label: "Diagnostics",   icon: "🔬" },
+  { id: "restore",     label: "Restore / IPSW",icon: "🔄" },
+];
 
-interface SidebarProps {
-    currentTab: string;
-    setTab: (tab: string) => void;
+interface Props { active: string; onSelect: (id: string) => void; }
+
+export default function Sidebar({ active, onSelect }: Props) {
+  return (
+    <div className="glass" style={{
+      width: 200, height: "100%", padding: "16px 10px",
+      display: "flex", flexDirection: "column", gap: 4,
+      borderRadius: 16, flexShrink: 0,
+    }}>
+      <div style={{ padding: "0 8px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", marginBottom: 4 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#a78bfa" }}>👁️ DeepEye</div>
+        <div style={{ fontSize: 10, color: "#475569" }}>Unlocker v1.0 · All Features</div>
+      </div>
+
+      {SECTIONS.map(s => (
+        <button key={s.id} onClick={() => onSelect(s.id)} style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "9px 12px", borderRadius: 10, border: "none",
+          background: active === s.id
+            ? "linear-gradient(135deg, rgba(124,58,237,0.4), rgba(37,99,235,0.3))"
+            : "transparent",
+          color: active === s.id ? "#e2e8f0" : "#64748b",
+          cursor: "pointer", fontSize: 12.5, fontWeight: 500,
+          transition: "all 0.2s", textAlign: "left",
+          borderLeft: active === s.id ? "2px solid #a78bfa" : "2px solid transparent",
+        }}>
+          <span>{s.icon}</span><span>{s.label}</span>
+        </button>
+      ))}
+
+      {/* Version footer */}
+      <div style={{ marginTop: "auto", padding: "12px 8px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ fontSize: 10, color: "#334155" }}>F3arRa1n Compatible</div>
+        <div style={{ fontSize: 10, color: "#334155" }}>No Tiers · No Credits</div>
+      </div>
+    </div>
+  );
 }
-
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setTab }) => {
-    const tabs = [
-        { id: 'ios-backup', label: 'IOS BACKUP', color: 'text-blue-500' },
-        { id: 'adb', label: 'ADB TERMINAL', color: 'text-emerald-500' },
-        { id: 'bypass-advanced', label: 'ADVANCED BYPASS', color: 'text-fuchsia-400' },
-        { id: 'identity', label: 'IDENTITY AUDIT', color: 'text-blue-400' },
-        { id: 'tickets', label: 'TICKET ENGINE', color: 'text-emerald-400' },
-        { id: 'orchestrator', label: 'EXPLOIT CHAIN', color: 'text-indigo-500' },
-        { id: 'dfu', label: 'RESTORE ENGINE', color: 'text-blue-400' },
-        { id: 'activation', label: 'ACTIVATION LOCK', color: 'text-purple-400' },
-        { id: 'apple-id', label: 'APPLE ID AUDIT', color: 'text-green-400' },
-        { id: 'screentime', label: 'SCREEN TIME', color: 'text-amber-400' },
-        { id: 'mdm', label: 'MDM POLICIES', color: 'text-cyan-400' },
-        { id: 'bypass', label: 'HELLO BYPASS', color: 'text-red-400' },
-        { id: 'ramdisk', label: 'RAMDISK MASTER', color: 'text-indigo-400' },
-        { id: 'deep-extraction', label: 'MASS EXTRACTION', color: 'text-indigo-500' },
-        { id: 'vault', label: 'DEEPVAULT EXPORT', color: 'text-blue-300' },
-    ];
-
-    return (
-        <div className="w-64 h-screen bg-black/80 backdrop-blur-3xl border-r border-white/5 flex flex-col p-6 space-y-8 select-none">
-            <div className="flex items-center gap-3 px-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-blue-900/40">D</div>
-                <div className="font-bold tracking-[0.2em] text-sm text-white/90">DEEPEYE UNLOCKER</div>
-            </div>
-
-            <nav className="flex-1 space-y-1">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setTab(tab.id)}
-                        className={`w-full flex items-center px-4 py-3 rounded-xl transition-all font-mono text-[10px] tracking-widest uppercase ${
-                            currentTab === tab.id 
-                            ? 'bg-white/10 text-white border border-white/5 shadow-inner' 
-                            : `text-gray-500 hover:bg-white/5 hover:${tab.color}`
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </nav>
-
-            <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 text-[9px] text-gray-500 font-mono">
-                SESSION: <span className="text-green-400">ACTIVE</span><br/>
-                STATION: <span className="text-white">macOS_FORENSIC_01</span>
-            </div>
-        </div>
-    );
-};

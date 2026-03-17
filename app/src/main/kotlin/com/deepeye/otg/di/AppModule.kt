@@ -105,6 +105,64 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideJailbreakEngine(
+        usbLifecycleManager: UsbLifecycleManager
+    ): com.deepeye.otg.engine.JailbreakEngine {
+        return com.deepeye.otg.engine.JailbreakEngine(usbLifecycleManager)
+    }
+
+    @Provides
+    @Singleton
+    fun providePurpleEngine(
+        usbLifecycleManager: UsbLifecycleManager
+    ): com.deepeye.otg.engine.PurpleEngine {
+        return com.deepeye.otg.engine.PurpleEngine(usbLifecycleManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTokenManager(
+        @ApplicationContext context: Context
+    ): com.deepeye.otg.engine.TokenManager {
+        return com.deepeye.otg.engine.TokenManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloudVaultManager(): com.deepeye.otg.engine.CloudVaultManager {
+        return com.deepeye.otg.engine.CloudVaultManager()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMtkEngine(
+        usbLifecycleManager: com.deepeye.otg.usb.UsbLifecycleManager
+    ): com.deepeye.otg.engine.MtkEngine {
+        return com.deepeye.otg.engine.MtkEngine(usbLifecycleManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideActivationEngine(
+        usbManager: android.hardware.usb.UsbManager,
+        jailbreakEngine: com.deepeye.otg.engine.JailbreakEngine,
+        purpleEngine: com.deepeye.otg.engine.PurpleEngine,
+        tokenManager: com.deepeye.otg.engine.TokenManager,
+        cloudVaultManager: com.deepeye.otg.engine.CloudVaultManager,
+        cveDatabase: com.deepeye.otg.intelligence.vulndb.CveDatabase
+    ): com.deepeye.otg.engine.ActivationEngine {
+        return com.deepeye.otg.engine.ActivationEngine(
+            usbManager, 
+            jailbreakEngine, 
+            purpleEngine, 
+            tokenManager,
+            cloudVaultManager,
+            cveDatabase
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager {
         return SettingsManager(context)
     }

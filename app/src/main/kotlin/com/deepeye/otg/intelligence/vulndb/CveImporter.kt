@@ -16,21 +16,24 @@ class CveImporter(private val cveDao: CveDao) {
     private fun buildSeedEntries(): List<CveEntry> = listOf(
         CveEntry(
             cveId = "CVE-2024-43093",
-            title = "Android Framework privilege escalation via path traversal",
-            bugClass = BugClass.PathTraversal,
-            component = "Android Framework (DocumentsUI)",
-            affectedVersions = listOf("12", "12L", "13", "14", "15"),
-            patchedInSpl = "2024-11-01",
-            cvssScore = 7.8,
-            cwe = "CWE-22",
+            title = "Malicious app can bypass Android lockscreen protection",
+            bugClass = BugClass.LogicFlaw,
+            component = "Android Framework — System component (DocumentsUI)",
+            affectedVersions = listOf("12", "13", "14", "15"),
+            patchedInSpl = "2025-03-01",
+            cvssScore = 8.5, // HIGH
+            cwe = "CWE-284",
             exploitedInWild = true,
             cisaKev = true,
-            primitive = "Elevated read/write to Android/data, Android/obb, Android/sandbox subdirectories",
-            detectionMethod = "Check SPL >= 2024-11-01 via ro.build.version.security_patch",
-            mitigation = "Apply November 2024 Android security update",
+            primitive = "Malicious app bypasses protective sandbox -> local escalation of privilege -> lockscreen protection bypass",
+            detectionMethod = "Check ro.build.version.security_patch >= 2025-03-01",
+            mitigation = "Update to March 2025 SPL; Audit installed APKs; Avoid untrusted sideloads.",
             confidence = ConfidenceLevel.HIGH,
-            sources = listOf("https://source.android.com/security/bulletin/2024-11-01"),
-            notes = "Linked to commercial mobile spyware campaigns targeting journalists and activists."
+            sources = listOf(
+                "https://source.android.com/security/bulletin/2025-03-01",
+                "Google TAG / Amnesty International Analysis"
+            ),
+            notes = "[CONFIRMED] Chained with CVE-2024-50302 in Cellebrite-linked campaigns. Enables full device unlock without PIN if app is sideloaded."
         ),
         CveEntry(
             cveId = "CVE-2024-43047",
@@ -139,6 +142,48 @@ class CveImporter(private val cveDao: CveDao) {
             confidence = ConfidenceLevel.MEDIUM,
             sources = listOf("https://corp.mediatek.com/product-security-bulletin/January-2025"),
             notes = "Critical for MTK Engine. Assume unpatched if vendor SPL < 2025-01-01."
+        ),
+        CveEntry(
+            cveId = "CVE-2025-24200",
+            title = "Physical attacker can disable USB Restricted Mode on a locked iPhone/iPad",
+            bugClass = BugClass.LogicFlaw,
+            component = "AccessoryManager / USB Restricted Mode (iOS kernel)",
+            affectedVersions = listOf("iOS < 18.3.1", "iPadOS < 18.3.1", "iPadOS < 17.7.5"),
+            patchedInSpl = "22D72", // Using Build ID for iOS mapping
+            cvssScore = 4.6,
+            cwe = "CWE-285",
+            exploitedInWild = true,
+            cisaKev = true,
+            primitive = "USB Restricted Mode disable on locked device -> enables GrayKey/Cellebrite UFED full USB extraction without passcode",
+            detectionMethod = "Check iOS build >= 22D72 (iOS 18.3.1) or sw_vers -buildVersion",
+            mitigation = "Update to iOS 18.3.1+; Enable Lockdown Mode; Maintain physical custody/Faraday bag.",
+            confidence = ConfidenceLevel.HIGH,
+            sources = listOf(
+                "https://support.apple.com/en-us/111900",
+                "https://blog.quarkslab.com/first-analysis-of-apples-usb-restricted-mode.html"
+            ),
+            notes = "CONFIRMED: Targeted in sophisticated attacks. Inferred: Vector for Cellebrite UFED v9+ / GrayKey."
+        ),
+        CveEntry(
+            cveId = "CVE-2024-50302",
+            title = "Linux kernel HID driver info leak used in Cellebrite exploit chain",
+            bugClass = BugClass.OOBRead,
+            component = "Linux kernel — HID driver (USB subsystem)",
+            affectedVersions = listOf("Android 12, 13, 14, 15 (kernel < 6.1.119)"),
+            patchedInSpl = "2025-03-01",
+            cvssScore = 8.0, // HIGH (Estimated)
+            cwe = "CWE-908",
+            exploitedInWild = true,
+            cisaKev = false,
+            primitive = "HID report buffer leak -> extract lockscreen credentials/keys -> full device unlock without PIN",
+            detectionMethod = "Check ro.build.version.security_patch >= 2025-03-01 or kernel >= 6.1.119",
+            mitigation = "Apply March 2025 SPL; Disable USB debugging; Power off device if seized.",
+            confidence = ConfidenceLevel.HIGH,
+            sources = listOf(
+                "https://source.android.com/security/bulletin/2025-03-01",
+                "Amnesty International Security Lab report, Dec 2024"
+            ),
+            notes = "Used by Serbian authorities with Cellebrite UFED. Stage 2 in chain (Turbo Link emulation)."
         )
     )
 

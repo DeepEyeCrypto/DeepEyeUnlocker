@@ -41,7 +41,10 @@ class UsbViewModel @javax.inject.Inject constructor(
     private val tunnelManager: com.deepeye.otg.service.TunnelManager,
     private val fuzzDao: FuzzDao,
     private val cveDao: com.deepeye.otg.intelligence.vulndb.CveDao,
-    private val exploitOrchestrator: com.deepeye.otg.exploit.UniversalExploitOrchestrator
+    private val exploitOrchestrator: com.deepeye.otg.exploit.UniversalExploitOrchestrator,
+    private val activationEngine: com.deepeye.otg.engine.ActivationEngine,
+    private val mtkEngine: com.deepeye.otg.engine.MtkEngine,
+    private val vaultManager: com.deepeye.otg.engine.CloudVaultManager
 ) : ViewModel() {
 
     val tunnelStatus = tunnelManager.status
@@ -127,6 +130,9 @@ class UsbViewModel @javax.inject.Inject constructor(
     private val _showActivation = MutableStateFlow(false)
     val showActivation = _showActivation.asStateFlow()
 
+    val activationStatus = activationEngine.status
+    val isActivationProcessing = activationEngine.isProcessing
+
     fun setActivationVisibility(visible: Boolean) {
         _showActivation.value = visible
     }
@@ -191,6 +197,7 @@ class UsbViewModel @javax.inject.Inject constructor(
     val selectedMode: StateFlow<ConnectionMode> = _selectedMode.asStateFlow()
 
     val lifecycleState: StateFlow<UsbLifecycleState> = lifecycleManager.state
+    val vaultStatus = vaultManager.syncStatus
     val sessions: StateFlow<Map<String, UsbLifecycleState>> = lifecycleManager.sessions
     
     private val _selectedDeviceKey = MutableStateFlow<String?>(null)
@@ -980,6 +987,15 @@ class UsbViewModel @javax.inject.Inject constructor(
     }
 
     fun queueOperation(featureId: String) {
+        if (featureId.startsWith("act_") || featureId.startsWith("fmi_") || 
+            featureId.startsWith("jb_") || featureId.startsWith("adv_") || 
+            featureId.startsWith("tool_")) {
+            viewModelScope.launch {
+                activationEngine.executeActivation(featureId)
+            }
+            return
+        }
+        
         if (featureId == "op_test_harness") {
             enterTestHarness()
             return
