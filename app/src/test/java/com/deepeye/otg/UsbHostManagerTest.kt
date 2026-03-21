@@ -210,7 +210,7 @@ class UsbHostManagerTest {
     fun protocol_enum_includes_all_expected_types() {
         val expected = setOf(
             "UNKNOWN", "QUALCOMM_EDL", "MTK_BROM", "MTK_PRELOADER",
-            "FASTBOOT", "SAMSUNG_ODIN", "ADB", "MTP_ONLY"
+            "FASTBOOT", "SAMSUNG_ODIN", "UNISOC_FDL", "ADB", "MTP_ONLY"
         )
         val actual = DetectedProtocol.values().map { it.name }.toSet()
         assertEquals("DetectedProtocol enum must contain all expected protocols", expected, actual)

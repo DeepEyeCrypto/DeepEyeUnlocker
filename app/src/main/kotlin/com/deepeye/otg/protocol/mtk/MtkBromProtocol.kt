@@ -1,6 +1,6 @@
 package com.deepeye.otg.protocol.mtk
 
-import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 import com.deepeye.otg.usb.UsbTransport
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -31,7 +31,7 @@ object MtkBromProtocol {
      * Handshake logic: Echo Cmd ^ 0xFF.
      */
     suspend fun handshake(transport: UsbTransport): Boolean {
-        Log.i(TAG, "Executing initial handshake sequence...")
+        SafeLog.i(TAG, "Executing initial handshake sequence...")
         for (byte in HANDSHAKE_SEQ) {
             val sendRes = transport.send(byteArrayOf(byte), timeoutMs = HANDSHAKE_TIMEOUT_MS)
             if (sendRes.isFailure) return false
@@ -42,7 +42,7 @@ object MtkBromProtocol {
             val actual = recvRes.getOrNull()?.get(0)
             val expected = (byte.toInt() xor 0xFF).toByte()
             if (actual != expected) {
-                Log.e(TAG, "Mirror mismatch: expected 0x%02X, got 0x%02X".format(expected, actual))
+                SafeLog.e(TAG, "Mirror mismatch: expected 0x%02X, got 0x%02X".format(expected, actual))
                 return false
             }
         }
@@ -60,7 +60,7 @@ object MtkBromProtocol {
         val data = recvRes.getOrNull()
         if (data != null && data.size >= 2) {
             val hwCode = ((data[0].toInt() and 0xFF) shl 8) or (data[1].toInt() and 0xFF)
-            Log.i(TAG, "Chipset HW_CODE: 0x%04X".format(hwCode))
+            SafeLog.i(TAG, "Chipset HW_CODE: 0x%04X".format(hwCode))
             return hwCode
         }
         return null
@@ -92,7 +92,7 @@ object MtkBromProtocol {
     }
 
     suspend fun sendDa(transport: UsbTransport, address: Long, daData: ByteArray): Result<Unit> {
-        Log.i(TAG, "Injecting DA (%d bytes) to SRAM 0x%08X".format(daData.size, address))
+        SafeLog.i(TAG, "Injecting DA (%d bytes) to SRAM 0x%08X".format(daData.size, address))
         
         val cmd = ByteBuffer.allocate(13).order(ByteOrder.BIG_ENDIAN)
         cmd.put(CMD_SEND_DA)
@@ -112,7 +112,7 @@ object MtkBromProtocol {
             return Result.failure(MtkError.TransportFailure("send_da_payload", "unable to stream DA payload"))
         }
 
-        Log.i(TAG, "DA payload transmitted, awaiting checksum verification")
+        SafeLog.i(TAG, "DA payload transmitted, awaiting checksum verification")
         return Result.success(Unit)
     }
 
@@ -135,7 +135,7 @@ object MtkBromProtocol {
 
         val actual = ((checksumBytes[0].toInt() and 0xFF) shl 8) or (checksumBytes[1].toInt() and 0xFF)
         val matches = expected == actual
-        Log.i(
+        SafeLog.i(
             TAG,
             "[MTK_BROM] da_checksum expected=0x%04X actual=0x%04X result=%s sessionId=%s"
                 .format(expected, actual, if (matches) "OK" else "MISMATCH", sessionId)
@@ -152,7 +152,7 @@ object MtkBromProtocol {
      * JUMP_DA (0xD5): Executes the injected code.
      */
     suspend fun jumpDa(transport: UsbTransport, address: Long): Boolean {
-        Log.i(TAG, "Finalizing JUMP to SRAM 0x%08X".format(address))
+        SafeLog.i(TAG, "Finalizing JUMP to SRAM 0x%08X".format(address))
         val cmd = ByteBuffer.allocate(5).order(ByteOrder.BIG_ENDIAN)
         cmd.put(CMD_JUMP_DA)
         cmd.putInt(address.toInt())
@@ -163,11 +163,11 @@ object MtkBromProtocol {
         // Wait for DA to send initial SYNC byte (0x5A)
         val sync = transport.receive(1, timeoutMs = 500)
         if (sync.isSuccess && sync.getOrNull()?.get(0) == 0x5A.toByte()) {
-            Log.i(TAG, "DA initialized and took control")
+            SafeLog.i(TAG, "DA initialized and took control")
             return true
         }
         
-        Log.w(TAG, "DA executed but SYNC mismatch (Expected 0x5A)")
+        SafeLog.w(TAG, "DA executed but SYNC mismatch (Expected 0x5A)")
         return true // Still might be alive
     }
 

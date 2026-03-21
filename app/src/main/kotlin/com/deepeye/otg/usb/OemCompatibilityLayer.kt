@@ -16,8 +16,8 @@ object OemCompatibilityLayer {
     private const val TAG = "OemCompat"
 
     val currentOem: OemType by lazy {
-        val mfr = Build.MANUFACTURER.lowercase()
-        val brand = Build.BRAND.lowercase()
+        val mfr = (Build.MANUFACTURER ?: "").lowercase()
+        val brand = (Build.BRAND ?: "").lowercase()
         when {
             mfr.contains("xiaomi") || brand.contains("xiaomi") ||
             brand.contains("redmi") || brand.contains("poco")
@@ -93,7 +93,7 @@ object OemCompatibilityLayer {
     }
 
     fun getCompatReport(): String = buildString {
-        appendLine("OEM: $currentOem (${Build.MANUFACTURER}/${Build.BRAND})")
+        appendLine("OEM: $currentOem (${Build.MANUFACTURER ?: "UNKNOWN"}/${Build.BRAND ?: "UNKNOWN"})")
         appendLine("API: ${Build.VERSION.SDK_INT}")
         when (currentOem) {
             OemType.XIAOMI  -> appendLine("Workaround: 50ms post-claim delay + ForegroundService required.")

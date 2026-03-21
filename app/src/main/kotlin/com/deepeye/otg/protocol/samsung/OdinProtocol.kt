@@ -1,6 +1,6 @@
 package com.deepeye.otg.protocol.samsung
 
-import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 import com.deepeye.otg.usb.TransferResult
 import com.deepeye.otg.usb.UsbTransport
 import java.nio.ByteBuffer
@@ -35,7 +35,7 @@ object OdinProtocol {
      * Handshake logic for Samsung Download Mode.
      */
     suspend fun handshake(transport: UsbTransport): Boolean {
-        Log.i(TAG, "Executing Odin handshake...")
+        SafeLog.i(TAG, "Executing Odin handshake...")
         
         // 1. Send "ODIN" to start
         val start = ODIN_SIGNATURE.toByteArray()
@@ -45,7 +45,7 @@ object OdinProtocol {
         val res = transport.read(8)
         if (res is TransferResult.Success && res.data != null) {
             val response = String(res.data)
-            Log.i(TAG, "Odin Response: $response")
+            SafeLog.i(TAG, "Odin Response: $response")
             return response.contains("LOKE") || response.contains("ODIN")
         }
         
@@ -62,7 +62,7 @@ object OdinProtocol {
         val head = transport.read(4) 
         if (head is TransferResult.Success && head.data != null) {
             val size = ByteBuffer.wrap(head.data).order(ByteOrder.LITTLE_ENDIAN).getInt()
-            Log.i(TAG, "PIT Size: $size bytes")
+            SafeLog.i(TAG, "PIT Size: $size bytes")
             
             val data = transport.read(size)
             if (data is TransferResult.Success) return data.data
@@ -92,7 +92,7 @@ object OdinProtocol {
                 } else {
                     val status = ByteBuffer.wrap(data, 0, 4).order(ByteOrder.LITTLE_ENDIAN).int
                     val ok = status == 0
-                    Log.i(
+                    SafeLog.i(
                         TAG,
                         "[SAMSUNG] chunk=${chunkIndex ?: -1} ack=${if (ok) "OK" else "REJECTED"} sessionId=$sessionId"
                     )
@@ -118,6 +118,8 @@ object OdinProtocol {
         chunkSize: Int = DEFAULT_CHUNK_SIZE,
         sessionId: String = "unknown"
     ): Result<Unit> {
+        // PHYSICAL_DEVICE_REQUIRED: verify Odin flash ACK flow on a real Samsung Download Mode target.
+        // Unit test covers protocol contract only.
         require(chunkSize > 0) { "chunkSize must be > 0" }
 
         var chunkIndex = 0

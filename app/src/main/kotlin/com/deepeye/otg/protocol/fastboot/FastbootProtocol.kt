@@ -1,6 +1,6 @@
 package com.deepeye.otg.protocol.fastboot
 
-import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 import com.deepeye.otg.usb.UsbTransport
 import java.nio.charset.StandardCharsets
 
@@ -30,7 +30,7 @@ object FastbootProtocol {
             return FastbootResponse(ResponseType.FAIL, "Command too long: ${command.length} bytes")
         }
 
-        Log.d(TAG, "Fastboot CMD: $command")
+        SafeLog.d(TAG, "Fastboot CMD: $command")
         val sendRes = transport.send(command.toByteArray(StandardCharsets.US_ASCII))
         if (sendRes.isFailure) return FastbootResponse(ResponseType.FAIL, "Send failed: ${sendRes.exceptionOrNull()?.message}")
 
@@ -47,7 +47,7 @@ object FastbootProtocol {
             val packet = readSinglePacket(transport)
             when (packet.type) {
                 ResponseType.INFO -> {
-                    Log.i(TAG, "Fastboot INFO: ${packet.message}")
+                    SafeLog.i(TAG, "Fastboot INFO: ${packet.message}")
                     infoMessages += packet.message
                 }
 
@@ -97,7 +97,7 @@ object FastbootProtocol {
     suspend fun getAllVariables(transport: UsbTransport): Map<String, String> {
         val response = executeCommand(transport, "getvar:all")
         if (response.type == ResponseType.FAIL) {
-            Log.w(TAG, "Fastboot getvar:all failed: ${response.message}")
+            SafeLog.w(TAG, "Fastboot getvar:all failed: ${response.message}")
             return emptyMap()
         }
 

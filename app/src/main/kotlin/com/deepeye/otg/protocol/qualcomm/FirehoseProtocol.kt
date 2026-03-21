@@ -1,6 +1,6 @@
 package com.deepeye.otg.protocol.qualcomm
 
-import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 import com.deepeye.otg.usb.TransferResult
 import com.deepeye.otg.usb.UsbTransport
 
@@ -36,7 +36,7 @@ object FirehoseProtocol {
             |<configure MemoryName="emmc" MaxPayloadSizeToTargetInBytes="$maxPayloadSize" />
             |</data>""".trimMargin()
         
-        Log.i(TAG, "Sending Firehose configuration...")
+        SafeLog.i(TAG, "Sending Firehose configuration...")
         return sendCommandResult(transport, xml).isSuccess
     }
 
@@ -118,7 +118,7 @@ object FirehoseProtocol {
                     if (response.contains("</data>", ignoreCase = true) ||
                         response.contains("</response>", ignoreCase = true)
                     ) {
-                        Log.d(
+                        SafeLog.d(
                             TAG,
                             "[QC_EDL] firehose rx len=${response.length} ack=${isAckResponse(response)} sessionId=$sessionId"
                         )
@@ -141,6 +141,8 @@ object FirehoseProtocol {
         maxPacketSize: Int,
         sessionId: String = "unknown"
     ): Result<Unit> {
+        // PHYSICAL_DEVICE_REQUIRED: verify Firehose ZLP behavior on real Qualcomm hardware.
+        // Unit test covers protocol contract only.
         require(maxPacketSize > 0) { "maxPacketSize must be > 0" }
 
         var offset = 0
@@ -160,7 +162,7 @@ object FirehoseProtocol {
             if (!zlpResult.isSuccess) {
                 return Result.failure(FirehoseError.WriteFailed("upload_data_zlp"))
             }
-            Log.d(TAG, "[QC_EDL] ZLP sent after final chunk sessionId=$sessionId")
+            SafeLog.d(TAG, "[QC_EDL] ZLP sent after final chunk sessionId=$sessionId")
         }
 
         return Result.success(Unit)

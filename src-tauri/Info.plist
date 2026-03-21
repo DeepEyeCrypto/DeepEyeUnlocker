@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- PHYSICAL_DEVICE_REQUIRED: verify macOS notarization with Apple Developer ID on a release signing machine. -->
+<!-- Unit/build checks cover bundle structure and signing configuration only. -->
+<plist version="1.0">
+<dict>
+    <key>NSUSBDeviceUsageDescription</key>
+    <string>DeepEye Unlocker requires USB device access to communicate with iPhone, iPad, and Android recovery targets.</string>
+</dict>
+</plist>

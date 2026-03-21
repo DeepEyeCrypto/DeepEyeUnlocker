@@ -1,9 +1,9 @@
 package com.deepeye.otg.usb
 
 import android.hardware.usb.UsbConstants
-import android.util.Log
 import com.deepeye.otg.domain.models.DeviceMode
 import com.deepeye.otg.domain.models.ProtocolFamily
+import com.deepeye.otg.logging.SafeLog
 
 data class DetectionResult(
     val deviceMode: DeviceMode,
@@ -118,7 +118,7 @@ class ProtocolDetector {
                 "Matched Apple normal-mode VID/PID 0x05AC:0x${"%04X".format(pid)}"
             )
             else -> {
-                Log.w(TAG, "[MODE] known-vendor-unknown-pid vendor=APPLE vid=0x05AC pid=0x${"%04X".format(pid)}")
+                SafeLog.w(TAG, "[MODE] known-vendor-unknown-pid vendor=APPLE vid=0x05AC pid=0x${"%04X".format(pid)}")
                 DetectionResult(DeviceMode.UNKNOWN, ProtocolFamily.UNKNOWN, 0, "Known Apple VID but unknown PID")
             }
         }
@@ -155,7 +155,7 @@ class ProtocolDetector {
             )
             vid == 0x0E8D -> {
                 // Known MTK vendor VID with an unknown PID – explicitly log and return UNKNOWN
-                Log.w(
+                SafeLog.w(
                     TAG,
                     "[MODE] known-vendor-unknown-pid vendor=MTK vid=0x${"%04X".format(vid)} pid=0x${"%04X".format(pid)} reason=\"Unknown MTK PID\""
                 )
@@ -190,7 +190,7 @@ class ProtocolDetector {
             )
         } else if (vid == 0x05C6) {
             // Known Qualcomm vendor VID with an unknown PID – explicitly log and return UNKNOWN
-            Log.w(
+            SafeLog.w(
                 TAG,
                 "[MODE] known-vendor-unknown-pid vendor=QUALCOMM vid=0x${"%04X".format(vid)} pid=0x${"%04X".format(pid)} reason=\"Unknown Qualcomm PID\""
             )
@@ -214,7 +214,7 @@ class ProtocolDetector {
                 "Matched UniSoc FDL VID/PID 0x1782:${"%04X".format(pid)}"
             )
             else -> {
-                Log.w(
+                SafeLog.w(
                     TAG,
                     "[MODE] known-vendor-unknown-pid vendor=UNISOC vid=0x1782 pid=0x${"%04X".format(pid)} reason=\"Unknown UniSoc PID\""
                 )
@@ -250,7 +250,7 @@ class ProtocolDetector {
                 "Matched Samsung download-mode text heuristic"
             )
         } else if (snapshot.vendorId == 0x04E8) {
-            Log.w(
+            SafeLog.w(
                 TAG,
                 "[MODE] known-vendor-unknown-pid vendor=SAMSUNG vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)}"
             )
@@ -294,7 +294,7 @@ class ProtocolDetector {
         val adbInterface = snapshot.interfaces.find { it.isExplicitAdb } ?: return null
 
         if (!adbInterface.hasBulkBidirectional) {
-            Log.w(
+            SafeLog.w(
                 TAG,
                 "[MODE] adb-signature-rejected intf=${adbInterface.id} reason=missing-bulk-pair"
             )
@@ -338,7 +338,7 @@ class ProtocolDetector {
     }
 
     private fun logSnapshot(s: UsbDescriptorSnapshot) {
-        Log.i(
+        SafeLog.i(
             TAG,
             "[MODE] attach vid=0x${"%04X".format(s.vendorId)} pid=0x${"%04X".format(s.productId)} " +
                 "devClass=0x${"%02X".format(s.deviceClass)} devSubclass=0x${"%02X".format(s.deviceSubclass)} " +
@@ -348,7 +348,7 @@ class ProtocolDetector {
             val epSummary = intf.endpoints.joinToString(",") { ep ->
                 "addr=0x${"%02X".format(ep.address)}:type=${ep.type}:dir=${ep.direction}"
             }
-            Log.i(
+            SafeLog.i(
                 TAG,
                 "[MODE] intf[$idx] class=0x${"%02X".format(intf.interfaceClass)} " +
                     "subclass=0x${"%02X".format(intf.interfaceSubclass)} " +
@@ -358,7 +358,7 @@ class ProtocolDetector {
     }
 
     private fun logResult(snapshot: UsbDescriptorSnapshot, result: DetectionResult) {
-        Log.i(
+        SafeLog.i(
             TAG,
             "[MODE] classify mode=${result.deviceMode} family=${result.protocolFamily} confidence=${result.confidence} reason=\"${result.reason}\""
         )
@@ -367,7 +367,7 @@ class ProtocolDetector {
             val summary = snapshot.interfaces.joinToString(" | ") {
                 "${"%02X".format(it.interfaceClass)}/${"%02X".format(it.interfaceSubclass)}/${"%02X".format(it.interfaceProtocol)}"
             }
-            Log.w(
+            SafeLog.w(
                 TAG,
                 "[MODE] unknown-summary vid=0x${"%04X".format(snapshot.vendorId)} pid=0x${"%04X".format(snapshot.productId)} intfTuples=\"$summary\""
             )

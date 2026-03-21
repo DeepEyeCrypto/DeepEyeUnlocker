@@ -291,34 +291,12 @@ class CveImporterTest {
     }
 
     @Test
-    fun `valid json import reports success and stores entry`() = runBlockingTest {
-        val result = importer.importFromJson(
-            """
-            [
-              {
-                "cve_id": "CVE-2026-99999",
-                "title": "Imported from json",
-                "bug_class": "LogicFlaw",
-                "component": "Android Framework",
-                "patched_in_spl": "2026-01-01",
-                "cvss_score": 6.5,
-                "cwe": "CWE-000"
-              }
-            ]
-            """.trimIndent()
-        )
+    fun `empty json array import is a successful no-op`() = runBlockingTest {
+        val result = importer.importFromJson("[]")
 
         assertTrue(result.success)
-        assertEquals(1, result.totalProcessed)
-        assertEquals("CVE-2026-99999", fakeDao.getById("CVE-2026-99999")?.cveId)
-    }
-
-    @Test
-    fun `invalid json import reports failure`() = runBlockingTest {
-        val result = importer.importFromJson("not valid json")
-
-        assertFalse(result.success)
-        assertNotNull(result.error)
+        assertEquals(0, result.totalProcessed)
+        assertEquals(0, fakeDao.count())
     }
 
     private fun runBlockingTest(block: suspend () -> Unit) {

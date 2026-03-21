@@ -1,6 +1,7 @@
 package com.deepeye.otg.usb
 
 import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,13 @@ object UsbLogger {
         }
         
         val line = "[$timestamp] $priorityChar/$tag: $msg"
-        Log.println(priority, tag, msg)
+        when (priority) {
+            Log.DEBUG -> SafeLog.d(tag, msg)
+            Log.INFO -> SafeLog.i(tag, msg)
+            Log.WARN -> SafeLog.w(tag, msg)
+            Log.ERROR -> SafeLog.e(tag, msg)
+            else -> SafeLog.d(tag, msg)
+        }
 
         // Atomic update for terminal flow to avoid race conditions
         val currentLogs = _logBuffer.value.toMutableList()

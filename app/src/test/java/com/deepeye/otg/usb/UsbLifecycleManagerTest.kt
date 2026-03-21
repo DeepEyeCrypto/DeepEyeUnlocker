@@ -7,9 +7,9 @@ import com.deepeye.otg.usb.UsbLifecycleState.Error
 import com.deepeye.otg.usb.UsbLifecycleState.PermissionDenied
 import com.deepeye.otg.usb.UsbLifecycleState.PermissionPending
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -57,12 +57,12 @@ class UsbLifecycleManagerTest {
         val lifecycle = UsbLifecycleManager(
             context = context,
             usbManager = usbManager,
-            scope = TestScope(this.coroutineContext),
+            scope = this,
             coordinator = SessionCoordinator()
         )
 
         lifecycle.onDeviceAttached(device)
-        advanceUntilIdle()
+        runCurrent()
 
         // We should now be pending permission
         val pendingState = lifecycle.state.value
@@ -70,7 +70,7 @@ class UsbLifecycleManagerTest {
 
         // Advance virtual time by 10 seconds to trigger timeout
         advanceTimeBy(10_000L)
-        advanceUntilIdle()
+        runCurrent()
 
         val stateAfterTimeout = lifecycle.state.value
         assertTrue(
@@ -90,26 +90,26 @@ class UsbLifecycleManagerTest {
         val lifecycle = UsbLifecycleManager(
             context = context,
             usbManager = usbManager,
-            scope = TestScope(this.coroutineContext),
+            scope = this,
             coordinator = SessionCoordinator()
         )
 
         lifecycle.onDeviceAttached(device)
-        advanceUntilIdle()
+        runCurrent()
 
         val pendingState = lifecycle.state.value
         assertTrue(pendingState is PermissionPending)
 
         // Simulate explicit permission denial before timeout fires
         lifecycle.onPermissionResult(device, granted = false)
-        advanceUntilIdle()
+        runCurrent()
 
         val deniedState = lifecycle.state.value
         assertTrue(deniedState is PermissionDenied)
 
         // Even after advancing time beyond the timeout, state must remain PermissionDenied
         advanceTimeBy(10_000L)
-        advanceUntilIdle()
+        runCurrent()
 
         val finalState = lifecycle.state.value
         assertTrue(finalState is PermissionDenied)

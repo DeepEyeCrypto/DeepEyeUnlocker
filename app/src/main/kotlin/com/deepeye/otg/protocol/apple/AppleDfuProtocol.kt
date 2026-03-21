@@ -189,6 +189,8 @@ object AppleDfuProtocol {
      * Standard handshake to confirm device is responsive to DFU commands.
      */
     suspend fun handshake(transport: UsbTransport): Boolean {
+        // PHYSICAL_DEVICE_REQUIRED: verify DFU / checkm8 behavior on a real A11 device.
+        // Unit test covers protocol contract only.
         Log.i(TAG, "Initiating Apple DFU handshake...")
         val status = getStatus(transport)
         if (status != null) {

@@ -6,6 +6,7 @@ import android.content.Context
 import com.deepeye.otg.data.ConnectionMode
 import com.deepeye.otg.data.UsbDeviceDatabase
 import com.deepeye.otg.data.UsbDeviceSignature
+import com.deepeye.otg.logging.SafeLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
@@ -208,7 +209,7 @@ class UsbSessionManager(
             activeEndpoints?.let { activeConnection?.releaseInterface(it.usbInterface) }
             activeConnection?.close()
         } catch (e: Exception) {
-            Log.d(TAG, "Cleanup exception: ${e.message}")
+            SafeLog.d(TAG, "Cleanup exception: ${e.message}")
         } finally {
             activeDevice = null
             activeConnection = null

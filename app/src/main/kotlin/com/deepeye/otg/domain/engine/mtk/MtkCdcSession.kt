@@ -5,8 +5,8 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
-import android.util.Log
 import com.deepeye.otg.domain.models.*
+import com.deepeye.otg.logging.SafeLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -52,7 +52,7 @@ class MtkCdcSession(
         if (!v6SyncComplete) {
             val syncResult = sendV6Sync()
             if (syncResult.isFailure) {
-                Log.e(TAG, "[MTK_V6] sync failed sessionId=$sessionId", syncResult.exceptionOrNull())
+                SafeLog.e(TAG, "[MTK_V6] sync failed sessionId=$sessionId", syncResult.exceptionOrNull())
                 return false
             }
         }
@@ -60,7 +60,7 @@ class MtkCdcSession(
     }
 
     suspend fun initialize(): Result<MtkDeviceInfo> {
-        Log.d(TAG, "[MTK_DETECT] vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} sessionId=$sessionId")
+        SafeLog.d(TAG, "[MTK_DETECT] vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} sessionId=$sessionId")
         
         // 1. Claim Interfaces
         if (!ensureInterfacesClaimed()) {
@@ -75,14 +75,14 @@ class MtkCdcSession(
 
         // 3. Attempt BROM Handshake
         if (handshake()) {
-            Log.d(TAG, "[MTK_BROM] handshake complete mode=BROM sessionId=$sessionId")
+            SafeLog.d(TAG, "[MTK_BROM] handshake complete mode=BROM sessionId=$sessionId")
             
             // 4. Identify Chip
             val info = readChipInfo()
             deviceInfo = info
             return Result.success(info)
         } else {
-            Log.w(TAG, "[MTK_BROM] handshake failed sessionId=$sessionId mode=META")
+            SafeLog.w(TAG, "[MTK_BROM] handshake failed sessionId=$sessionId mode=META")
             return Result.failure(Exception("BROM Handshake failed — device likely in META mode"))
         }
     }
@@ -145,11 +145,13 @@ class MtkCdcSession(
         }
 
         cdcSetupComplete = true
-        Log.d(TAG, "[MTK_V6] cdc_setup baudRate=115200 dtr=true sessionId=$sessionId")
+        SafeLog.d(TAG, "[MTK_V6] cdc_setup baudRate=115200 dtr=true sessionId=$sessionId")
         return Result.success(Unit)
     }
 
     suspend fun sendV6Sync(): Result<ByteArray> {
+        // PHYSICAL_DEVICE_REQUIRED: verify MTK V6 hello packet timing on Realme 14x on real hardware.
+        // Unit test covers protocol contract only.
         if (!cdcSetupComplete) {
             return Result.failure(V6Error.SyncAttemptedBeforeSetup)
         }
@@ -165,7 +167,7 @@ class MtkCdcSession(
 
         val hello = readBulk(64, timeout = 5000) ?: return Result.failure(V6Error.HelloReadFailed)
         v6SyncComplete = true
-        Log.d(TAG, "[MTK_V6] sync_sent bytes=${syncBytes.size} helloLen=${hello.size} sessionId=$sessionId")
+        SafeLog.d(TAG, "[MTK_V6] sync_sent bytes=${syncBytes.size} helloLen=${hello.size} sessionId=$sessionId")
         return Result.success(hello)
     }
 
@@ -179,7 +181,7 @@ class MtkCdcSession(
             val rx = readBulk(1)
             val rxByte = rx?.get(0) ?: 0x00.toByte()
 
-            Log.d(TAG, "[MTK_BROM] handshake step=${step+1} sent=0x${send.toUByte().toString(16)} rx=0x${rxByte.toUByte().toString(16)} sessionId=$sessionId")
+            SafeLog.d(TAG, "[MTK_BROM] handshake step=${step+1} sent=0x${send.toUByte().toString(16)} rx=0x${rxByte.toUByte().toString(16)} sessionId=$sessionId")
             
             if (rxByte != expected) return false
         }
@@ -207,7 +209,7 @@ class MtkCdcSession(
 
         val name = MtkChipDatabase.getChipName(hwCode)
         
-        Log.d(TAG, "[MTK_BROM] chipId hwCode=0x${hwCode.toString(16)} chip=$name secureBoot=$secureBoot SLA=$sla DAA=$daa sessionId=$sessionId")
+        SafeLog.d(TAG, "[MTK_BROM] chipId hwCode=0x${hwCode.toString(16)} chip=$name secureBoot=$secureBoot SLA=$sla DAA=$daa sessionId=$sessionId")
 
         return MtkDeviceInfo(
             sessionId = sessionId,
@@ -257,7 +259,7 @@ class MtkCdcSession(
      * Feature 1: Read / Backup
      */
     fun executeReadBackup(partition: String, offset: Long, size: Long): Flow<Pair<Float, String>> = flow {
-        Log.d(TAG, "[FLASH_READ] partition=$partition offset=0x${offset.toString(16)} size=$size sessionId=$sessionId")
+        SafeLog.d(TAG, "[FLASH_READ] partition=$partition offset=0x${offset.toString(16)} size=$size sessionId=$sessionId")
         
         var bytesRead = 0L
         val countPerCmd = 128 // 512 bytes per command
@@ -266,7 +268,7 @@ class MtkCdcSession(
         while (bytesRead < size) {
             val res = read32(offset + bytesRead, countPerCmd)
             if (res.isFailure) {
-                Log.e(TAG, "[FLASH_READ] failed at offset 0x${(offset + bytesRead).toString(16)} sessionId=$sessionId")
+                SafeLog.e(TAG, "[FLASH_READ] failed at offset 0x${(offset + bytesRead).toString(16)} sessionId=$sessionId")
                 throw res.exceptionOrNull() ?: Exception("Read failure")
             }
             
@@ -275,7 +277,7 @@ class MtkCdcSession(
             emit(progress to "Acquiring $partition: ${bytesRead / 1024} KB")
             
             if (bytesRead % (chunkSize * 10) == 0L) {
-                Log.d(TAG, "[FLASH_READ] progress=${progress.toInt()}% bytesRead=$bytesRead sessionId=$sessionId")
+                SafeLog.d(TAG, "[FLASH_READ] progress=${progress.toInt()}% bytesRead=$bytesRead sessionId=$sessionId")
             }
         }
         emit(100f to "Backup Complete ($partition)")
@@ -292,14 +294,14 @@ class MtkCdcSession(
         )
         
         targets.forEachIndexed { index, (name, addr) ->
-            Log.d(TAG, "[MTK_BROM] security-backup start partition=$name sessionId=$sessionId")
+            SafeLog.d(TAG, "[MTK_BROM] security-backup start partition=$name sessionId=$sessionId")
             emit((index.toFloat() / targets.size) * 100 to "Backing up $name...")
             
             // Just read first 1MB for security partitions as typical
             executeReadBackup(name, addr, 1 * 1024 * 1024L).collect {
                 // Pipe progress if needed or just wait
             }
-            Log.d(TAG, "[MTK_BROM] security-backup done partition=$name sessionId=$sessionId")
+            SafeLog.d(TAG, "[MTK_BROM] security-backup done partition=$name sessionId=$sessionId")
         }
         emit(100f to "Security Backup Complete")
     }
@@ -308,7 +310,7 @@ class MtkCdcSession(
      * Feature 4: Partition Manager (GPT Parser)
      */
     suspend fun executePartitionManager(): Result<List<PartitionEntry>> {
-        Log.d(TAG, "[MTK_BROM] parsing partition table sessionId=$sessionId")
+        SafeLog.d(TAG, "[MTK_BROM] parsing partition table sessionId=$sessionId")
         // 1. Read GPT Header (LBA 1, typically 0x200)
         // 2. Parse Partition Entries (typically starts at 0x400)
         

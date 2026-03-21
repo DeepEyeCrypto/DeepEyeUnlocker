@@ -5,6 +5,8 @@
 # ── JNI Bridge — CRITICAL: keep all native methods ──────────
 -keep class com.deepeye.otg.NativeBridge { *; }
 -keep class com.deepeye.otg.repair.NvBridge { *; }
+-keep class com.deepeye.otg.usb.IRecoveryBridge { *; }
+-keep class com.deepeye.otg.usb.IRecoveryBridge$Companion { *; }
 -keepclassmembers class com.deepeye.otg.NativeBridge {
     native <methods>;
 }
@@ -29,13 +31,18 @@
 # ── USB + Protocol core ─────────────────────────────────────
 # [HARDENED] Allowing obfuscation of internal states
 -keep class com.deepeye.otg.usb.UsbTransport { *; }
+-keep class com.deepeye.otg.protocol.** { *; }
 -keep class com.deepeye.otg.protocol.ProtocolDetector { *; }
 -keep class com.deepeye.otg.protocol.mtk.MtkSession { *; }
 -keep class com.deepeye.otg.protocol.qualcomm.QcomSession { *; }
 
 # ── Domain Models — CRITICAL for state-driven UI ──────────
 -keep class com.deepeye.otg.domain.models.** { *; }
+-keep class com.deepeye.otg.domain.engine.** { *; }
 -keep class com.deepeye.otg.policy.** { *; }
+-keep class com.deepeye.otg.data.gsmg.** { *; }
+-keep class com.deepeye.otg.data.hardware.** { *; }
+-keep class com.deepeye.otg.intelligence.vulndb.** { *; }
 
 # ── Service layer — OBFUSCATE forensic logic ───────────────
 -keep class com.deepeye.otg.service.MassExtractor { *; }
@@ -59,6 +66,22 @@
 # ── Sealed class & Enums ────────────────────────────────────
 -keep class com.deepeye.otg.usb.SessionState { *; }
 -keep class com.deepeye.otg.usb.SessionState$* { *; }
+-keep class com.deepeye.otg.data.gsmg.BypassEvent { *; }
+-keep class com.deepeye.otg.data.gsmg.BypassEvent$** { *; }
+-keep class com.deepeye.otg.usb.IosOtgError { *; }
+-keep class com.deepeye.otg.usb.IosOtgError$** { *; }
+-keep class com.deepeye.otg.protocol.mtk.MtkBromProtocol$MtkError { *; }
+-keep class com.deepeye.otg.protocol.mtk.MtkBromProtocol$MtkError$** { *; }
+-keepclassmembers enum com.deepeye.otg.** {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ── Reflection-backed JSON fields ───────────────────────────
+-keepclassmembers class * {
+    @com.squareup.moshi.Json <fields>;
+}
+-dontwarn com.squareup.moshi.**
 
 # ── Remove debug/verbose logging in release ─────────────────
 -assumenosideeffects class android.util.Log {

@@ -1,6 +1,6 @@
 package com.deepeye.otg.intelligence.vulndb
 
-import android.util.Log
+import com.deepeye.otg.logging.SafeLog
 
 /**
  * Thread-safe logger that avoids android.util.Log for JVM-only zones
@@ -8,15 +8,15 @@ import android.util.Log
  */
 object LogSafe {
     fun i(tag: String, msg: String) {
-        Log.i(tag, msg)
+        SafeLog.i(tag, msg)
     }
     fun w(tag: String, msg: String) {
-        Log.w(tag, msg)
+        SafeLog.w(tag, msg)
     }
     fun e(tag: String, msg: String, tr: Throwable? = null) {
-        Log.e(tag, msg, tr)
+        SafeLog.e(tag, msg, tr)
     }
     fun d(tag: String, msg: String) {
-        Log.d(tag, msg)
+        SafeLog.d(tag, msg)
     }
 }

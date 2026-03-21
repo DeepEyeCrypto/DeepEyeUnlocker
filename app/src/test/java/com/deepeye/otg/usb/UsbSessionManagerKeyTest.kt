@@ -9,7 +9,7 @@ import org.mockito.Mockito
 
 /**
  * Lightweight test to validate that UsbSessionManager's internal deviceKey
- * format matches the required "${vendorId}:${productId}:${deviceId}" contract.
+ * format matches the current decimal "vendorId:productId:deviceId" contract.
  */
 class UsbSessionManagerKeyTest {
 
@@ -28,7 +28,7 @@ class UsbSessionManagerKeyTest {
         method.isAccessible = true
 
         val key = method.invoke(manager, device) as String
-        assertEquals("18D1:4EE7:7", key.uppercase())
+        assertEquals("6353:20199:7", key)
     }
 }
 
