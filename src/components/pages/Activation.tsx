@@ -44,8 +44,8 @@ export default function ActivationPage() {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>Detection Engine ({deviceState})</div>
           <div style={{ fontSize: 11, color: "#94a3b8" }}>Identify lock type before running exploit</div>
         </div>
-        <button className="btn primary" onClick={checkState} disabled={status === "running"}>
-          🔍 Check Device State
+        <button className="btn primary" style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={checkState} disabled={status === "running"}>
+          <span>🔍</span> <span>Check Device State</span>
         </button>
       </div>
 
