@@ -15,6 +15,7 @@ data class DeviceSession(
     val usbInterface: UsbInterface,
     val endpoints: ResolvedEndpoints,
     val transport: BulkTransport,
+    val sessionId: String,
     val deviceKey: String,
     val detection: DetectionResult,
     val snapshot: UsbDescriptorSnapshot,
@@ -23,11 +24,6 @@ data class DeviceSession(
 ) {
     fun close() {
         watchdogJob?.cancel()
-        try {
-            connection.releaseInterface(usbInterface)
-            connection.close()
-        } catch (e: Exception) {
-            // Best effort
-        }
+        transport.close()
     }
 }

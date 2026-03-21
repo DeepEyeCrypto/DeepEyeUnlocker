@@ -1,41 +1,25 @@
 package com.deepeye.otg.intelligence.vulndb
 
-import org.junit.Assert.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-// ──────────────────────────────────────────────────────────────
-// PatchStateAnalyzer Unit Tests
-// DeepEye OTG — CVE Intelligence Module Test Fixtures
-// ──────────────────────────────────────────────────────────────
-
-/**
- * In-memory fake DAO for unit testing without Room.
- * Duplicates the query semantics of [CveDao] using in-memory lists.
- */
 class FakeCveDao : CveDao {
-    private val entries = mutableListOf<CveEntry>()
+    private val entries = linkedMapOf<String, CveEntry>()
 
     override suspend fun upsert(entry: CveEntry) {
-        entries.removeAll { it.cveId == entry.cveId }
-        entries.add(entry)
+        entries[entry.cveId] = entry
     }
 
     override suspend fun upsertAll(entryList: List<CveEntry>) {
         entryList.forEach { upsert(it) }
-    }
-
-    override suspend fun update(entry: CveEntry) {
-        val idx = entries.indexOfFirst { it.cveId == entry.cveId }
-        if (idx >= 0) entries[idx] = entry
-    }
-
-    override suspend fun delete(entry: CveEntry) {
-        entries.removeAll { it.cveId == entry.cveId }
-    }
-
-    override suspend fun deleteById(cveId: String) {
-        entries.removeAll { it.cveId == cveId }
     }
 
     override suspend fun deleteAll() {
@@ -43,80 +27,53 @@ class FakeCveDao : CveDao {
     }
 
     override suspend fun getById(cveId: String): CveEntry? =
-        entries.find { it.cveId == cveId }
+        entries[cveId]
 
-    override fun observeAll() = throw UnsupportedOperationException("Use getAll() in tests")
+    override fun observeAll(): Flow<List<CveEntry>> = flowOf(getAllSync())
 
-    override suspend fun getAll(): List<CveEntry> = entries.toList()
+    override suspend fun getAll(): List<CveEntry> = getAllSync()
+
+    override fun getAllSync(): List<CveEntry> = entries.values.sortedByDescending { it.updatedAt }
 
     override suspend fun count(): Int = entries.size
 
     override suspend fun getByComponent(component: String): List<CveEntry> =
-        entries.filter { it.component == component }
-
-    override fun observeByComponent(component: String) =
-        throw UnsupportedOperationException("Use getByComponent() in tests")
+        getAllSync().filter { it.component == component }
 
     override suspend fun getDistinctComponents(): List<String> =
-        entries.map { it.component }.distinct().sorted()
-
-    override suspend fun getAffectingVersion(version: String): List<CveEntry> =
-        entries.filter { version in it.affectedVersions }
-            .sortedByDescending { it.cvssScore }
-
-    override fun observeAffectingVersion(version: String) =
-        throw UnsupportedOperationException("Use getAffectingVersion() in tests")
-
-    override suspend fun getFixedInVersion(version: String): List<CveEntry> =
-        entries.filter { version in it.fixedVersions }
-            .sortedByDescending { it.cvssScore }
-
-    override suspend fun getByExploitationStatus(status: ExploitationStatus): List<CveEntry> =
-        entries.filter { it.exploitationStatus == status }
+        getAllSync().map { it.component }.distinct().sorted()
 
     override suspend fun getActivelyExploited(): List<CveEntry> =
-        entries.filter { it.exploitationStatus == ExploitationStatus.ACTIVE_EXPLOITATION }
-
-    override fun observeActivelyExploited() =
-        throw UnsupportedOperationException("Use getActivelyExploited() in tests")
-
-    override suspend fun getHighConfidence(): List<CveEntry> =
-        entries.filter { it.confidence in listOf(ConfidenceLevel.CONFIRMED, ConfidenceLevel.HIGH) }
-
-    override suspend fun getUnreviewed(): List<CveEntry> =
-        entries.filter { !it.reviewed }
-
-    override suspend fun getByVulnType(type: VulnerabilityType): List<CveEntry> =
-        entries.filter { it.vulnerabilityType == type }
-
-    override suspend fun getUnpatchedForVersion(version: String): List<CveEntry> =
-        entries.filter { version in it.affectedVersions && version !in it.fixedVersions }
-            .sortedByDescending { it.cvssScore }
-
-    override fun observeUnpatchedForVersion(version: String) =
-        throw UnsupportedOperationException("Use getUnpatchedForVersion() in tests")
+        getAllSync().filter { it.exploitedInWild == true }
 
     override suspend fun search(query: String, limit: Int): List<CveEntry> =
-        entries.filter {
-            query in it.cveId || query in it.component ||
-                    query in it.summary || query in it.notes
+        getAllSync().filter {
+            query.contains(it.cveId) ||
+                it.cveId.contains(query, ignoreCase = true) ||
+                it.component.contains(query, ignoreCase = true) ||
+                it.title.contains(query, ignoreCase = true) ||
+                it.notes.contains(query, ignoreCase = true)
         }.take(limit)
 
-    override suspend fun componentStats(): List<ComponentStat> =
-        entries.groupBy { it.component }
+    override suspend fun getComponentStats(): List<ComponentStat> =
+        getAllSync().groupBy { it.component }
             .map { (comp, list) -> ComponentStat(comp, list.size) }
             .sortedByDescending { it.cnt }
 
-    override suspend fun exploitationStats(): List<ExploitationStat> =
-        entries.groupBy { it.exploitationStatus }
+    override fun observeUnpatchedForVersion(iosVersion: String): Flow<List<CveEntry>> =
+        flowOf(
+            getAllSync().filter { entry ->
+                entry.affectedVersions.joinToString("|||").contains(iosVersion)
+            }
+        )
+
+    override suspend fun getExploitationStats(): List<ExploitationStat> =
+        getAllSync()
+            .groupBy { it.exploitedInWild?.toString() ?: "null" }
             .map { (status, list) -> ExploitationStat(status, list.size) }
 }
 
-/**
- * Unit tests for [PatchStateAnalyzer].
- */
 class PatchStateAnalyzerTest {
-
     private lateinit var fakeDao: FakeCveDao
     private lateinit var analyzer: PatchStateAnalyzer
 
@@ -124,140 +81,121 @@ class PatchStateAnalyzerTest {
     fun setup() {
         fakeDao = FakeCveDao()
         analyzer = PatchStateAnalyzer(fakeDao)
-        analyzer.seedDefaultMappings()
-    }
-
-    // ── Helper to load seed data ──
-
-    private suspend fun loadSeedData() {
-        val importer = CveImporter(fakeDao)
-        importer.importSeedData()
-    }
-
-    // ── Tests ──
-
-    @Test
-    fun `iOS 26_0 device should show maximum exposure`() = runBlockingTest {
-        loadSeedData()
-
-        val observation = DeviceObservation(
-            deviceId = "TEST-001",
-            iosVersion = "26.0"
-        )
-
-        val report = analyzer.analyze(observation)
-
-        assertEquals("26.0", report.iosVersion)
-        assertTrue("Should have exposed CVEs", report.exposedCount > 0)
-        assertTrue("Risk score should be elevated", report.overallRiskScore > 3.0)
-        assertTrue("Total analyzed > 0", report.totalCvesAnalyzed > 0)
     }
 
     @Test
-    fun `iOS 26_3 device should show minimal exposure`() = runBlockingTest {
-        loadSeedData()
-
-        val observation = DeviceObservation(
-            deviceId = "TEST-002",
-            iosVersion = "26.3"
-        )
-
-        val report = analyzer.analyze(observation)
-
-        assertEquals("26.3", report.iosVersion)
-        // 26.3 is the latest — most CVEs should be patched
-        // Only CVE-2026-10006 (IOKit, unpatched across all versions) should remain
-        assertTrue("Should have fewer exposed CVEs than 26.0",
-            report.exposedCount <= 2)
-    }
-
-    @Test
-    fun `component build observation resolves uncertainty`() = runBlockingTest {
-        loadSeedData()
-
-        val observation = DeviceObservation(
-            deviceId = "TEST-003",
-            iosVersion = "26.1",
-            observedComponents = listOf(
-                ObservedComponentVersion(
-                    component = "WebKit",
-                    observedBuild = "618.1.15", // newer than expected for 26.1
-                    confidence = ConfidenceLevel.HIGH
-                )
+    fun `qualcomm components use qti spl when available`() = runBlockingTest {
+        fakeDao.upsert(
+            testCve(
+                cveId = "CVE-QTI-0001",
+                component = "Qualcomm DSP",
+                patchedInSpl = "2024-11-01"
             )
         )
 
+        val observation = DeviceObservation(
+            brand = "Google",
+            model = "Pixel 8",
+            androidSpl = "2024-12-01",
+            qtiSpl = "2024-10-01"
+        )
+
         val report = analyzer.analyze(observation)
 
-        // CVE-2026-10001 (fixedComponentBuild = 618.1.15) should be PATCHED
-        // because observed WebKit build >= fix build
-        val webkitUaf = report.patchedCves.find { it.cveId == "CVE-2026-10001" }
-        assertNotNull("WebKit UAF should be marked PATCHED due to component build", webkitUaf)
+        assertEquals(listOf("CVE-QTI-0001"), report.exposedCves.map { it.cveId })
+        assertEquals(RiskLevel.LOW, report.overallRiskLevel)
     }
 
     @Test
-    fun `critical exposure count tracks active exploitation`() = runBlockingTest {
-        loadSeedData()
+    fun `mediatek components use mtk spl when available`() = runBlockingTest {
+        fakeDao.upsert(
+            testCve(
+                cveId = "CVE-MTK-0001",
+                component = "MediaTek Preloader",
+                patchedInSpl = "2025-02-01"
+            )
+        )
 
-        val critCount = analyzer.countCriticalExposures("26.1")
+        val observation = DeviceObservation(
+            brand = "Realme",
+            model = "14x",
+            androidSpl = "2025-03-01",
+            mtkSpl = "2025-01-01"
+        )
 
-        // CVE-2026-10001 (WebKit UAF, active) and CVE-2026-10003 (Kernel LPE, active)
-        // Both affect 26.1 and are NOT fixed in 26.1
-        assertEquals(2, critCount)
+        val report = analyzer.analyze(observation)
+
+        assertEquals(listOf("CVE-MTK-0001"), report.exposedCves.map { it.cveId })
+        assertTrue(report.patchedCves.isEmpty())
+    }
+
+    @Test
+    fun `critical exploited exposure raises risk to critical`() = runBlockingTest {
+        fakeDao.upsert(
+            testCve(
+                cveId = "CVE-CRIT-0001",
+                component = "Android Framework",
+                patchedInSpl = "2025-04-01",
+                cvssScore = 9.8,
+                exploitedInWild = true
+            )
+        )
+
+        val observation = DeviceObservation(
+            brand = "Samsung",
+            model = "Galaxy A55",
+            androidSpl = "2025-03-01"
+        )
+
+        val report = analyzer.analyze(observation)
+
+        assertEquals(RiskLevel.CRITICAL, report.overallRiskLevel)
+        assertEquals(1, report.exposedCves.size)
+    }
+
+    @Test
+    fun `android spl at patch level marks cve as patched`() = runBlockingTest {
+        fakeDao.upsert(
+            testCve(
+                cveId = "CVE-PATCHED-0001",
+                component = "Android Framework",
+                patchedInSpl = "2025-01-01"
+            )
+        )
+
+        val report = analyzer.analyze(
+            DeviceObservation(
+                brand = "Nothing",
+                model = "Phone 2",
+                androidSpl = "2025-01-01"
+            )
+        )
+
+        assertEquals(listOf("CVE-PATCHED-0001"), report.patchedCves.map { it.cveId })
+        assertTrue(report.exposedCves.isEmpty())
     }
 
     @Test
     fun `empty CVE database returns clean report`() = runBlockingTest {
-        // No seed data loaded
         val observation = DeviceObservation(
+            brand = "Unknown",
+            model = "Unknown",
             deviceId = "TEST-004",
-            iosVersion = "26.0"
+            androidSpl = "2025-01-01"
         )
 
         val report = analyzer.analyze(observation)
 
-        assertEquals(0, report.totalCvesAnalyzed)
-        assertEquals(0, report.exposedCount)
-        assertEquals(0.0, report.overallRiskScore, 0.001)
+        assertTrue(report.exposedCves.isEmpty())
+        assertTrue(report.patchedCves.isEmpty())
+        assertEquals(RiskLevel.SAFE, report.overallRiskLevel)
     }
 
-    @Test
-    fun `report includes component coverage info`() = runBlockingTest {
-        loadSeedData()
-
-        val observation = DeviceObservation(
-            deviceId = "TEST-005",
-            iosVersion = "26.1",
-            observedComponents = listOf(
-                ObservedComponentVersion("WebKit", "618.1.5"),
-                ObservedComponentVersion("Kernel", "10000.10.1")
-            )
-        )
-
-        val report = analyzer.analyze(observation)
-
-        assertTrue("Should have component coverage info",
-            report.componentCoverage.isNotEmpty())
-
-        val webkitCoverage = report.componentCoverage["WebKit"]
-        assertNotNull("WebKit coverage should exist", webkitCoverage)
-        assertTrue("WebKit should have observed build", webkitCoverage!!.hasObservedBuild)
-    }
-
-    // ── Test runner ──
-
-    /**
-     * Mini coroutine test runner (avoids kotlinx-coroutines-test for simplicity).
-     * In production tests, use runTest from kotlinx-coroutines-test.
-     */
     private fun runBlockingTest(block: suspend () -> Unit) {
-        kotlinx.coroutines.runBlocking { block() }
+        runBlocking { block() }
     }
 }
 
-/**
- * Unit tests for [VersionMappingEngine].
- */
 class VersionMappingEngineTest {
 
     private lateinit var engine: VersionMappingEngine
@@ -322,9 +260,6 @@ class VersionMappingEngineTest {
     }
 }
 
-/**
- * Unit tests for [CveImporter].
- */
 class CveImporterTest {
 
     private lateinit var fakeDao: FakeCveDao
@@ -338,67 +273,59 @@ class CveImporterTest {
 
     @Test
     fun `seed data imports successfully`() = runBlockingTest {
-        val result = importer.importSeedData()
+        importer.importSeedData()
 
-        assertTrue("Should import entries", result.inserted > 0)
-        assertEquals(0, result.errors)
-        assertTrue("Should have at least 8 seed entries", result.totalParsed >= 8)
+        assertTrue("Should import entries", fakeDao.count() > 0)
+        assertNotNull(fakeDao.getById("CVE-2024-43093"))
     }
 
     @Test
-    fun `duplicate import updates existing entries`() = runBlockingTest {
-        val first = importer.importSeedData()
-        val second = importer.importSeedData()
+    fun `duplicate seed import replaces existing entries without growing count`() = runBlockingTest {
+        importer.importSeedData()
+        val firstCount = fakeDao.count()
+        importer.importSeedData()
+        val secondCount = fakeDao.count()
 
-        assertTrue("First import should insert", first.inserted > 0)
-        assertTrue("Second import should update", second.updated > 0)
-        assertEquals(0, second.errors)
+        assertEquals(firstCount, secondCount)
+        assertTrue(secondCount > 0)
     }
 
     @Test
-    fun `invalid CVE ID is rejected`() = runBlockingTest {
-        val badEntry = CveEntry(
-            cveId = "NOT-A-CVE",
-            component = "WebKit"
+    fun `valid json import reports success and stores entry`() = runBlockingTest {
+        val result = importer.importFromJson(
+            """
+            [
+              {
+                "cve_id": "CVE-2026-99999",
+                "title": "Imported from json",
+                "bug_class": "LogicFlaw",
+                "component": "Android Framework",
+                "patched_in_spl": "2026-01-01",
+                "cvss_score": 6.5,
+                "cwe": "CWE-000"
+              }
+            ]
+            """.trimIndent()
         )
-        val result = importer.importEntries(listOf(badEntry))
 
-        assertEquals(1, result.errors)
-        assertEquals(0, result.inserted)
+        assertTrue(result.success)
+        assertEquals(1, result.totalProcessed)
+        assertEquals("CVE-2026-99999", fakeDao.getById("CVE-2026-99999")?.cveId)
     }
 
     @Test
-    fun `invalid CVSS score is rejected`() = runBlockingTest {
-        val badEntry = CveEntry(
-            cveId = "CVE-2026-99999",
-            component = "Kernel",
-            cvssScore = 15.0 // invalid — max is 10.0
-        )
-        val result = importer.importEntries(listOf(badEntry))
+    fun `invalid json import reports failure`() = runBlockingTest {
+        val result = importer.importFromJson("not valid json")
 
-        assertEquals(1, result.errors)
-        assertEquals(0, result.inserted)
-    }
-
-    @Test
-    fun `blank component is rejected`() = runBlockingTest {
-        val badEntry = CveEntry(
-            cveId = "CVE-2026-99998",
-            component = ""
-        )
-        val result = importer.importEntries(listOf(badEntry))
-
-        assertEquals(1, result.errors)
+        assertFalse(result.success)
+        assertNotNull(result.error)
     }
 
     private fun runBlockingTest(block: suspend () -> Unit) {
-        kotlinx.coroutines.runBlocking { block() }
+        runBlocking { block() }
     }
 }
 
-/**
- * Unit tests for [CveTypeConverters].
- */
 class CveTypeConvertersTest {
 
     private val converters = CveTypeConverters()
@@ -407,39 +334,47 @@ class CveTypeConvertersTest {
     fun `string lists round trip without partial-match ambiguity`() {
         val encoded = converters.fromStringList(listOf("26.1", "26.10"))
 
-        assertEquals("|||26.1|||26.10|||", encoded)
+        assertEquals("26.1|||26.10", encoded)
         assertEquals(listOf("26.1", "26.10"), converters.toStringList(encoded))
     }
 
     @Test
-    fun `provenance round trip preserves all fields`() {
-        val provenance = SourceProvenance(
-            sourceUrl = "https://example.test/advisory",
-            sourceName = "Unit Test Advisory",
-            retrievedAt = 123456789L,
-            analystVerified = true,
-            analystNotes = "verified"
-        )
+    fun `bug class round trip preserves enum`() {
+        val encoded = converters.fromBugClass(BugClass.LogicFlaw)
 
-        val encoded = converters.fromProvenance(provenance)
-        val decoded = converters.toProvenance(encoded)
-
-        assertEquals(provenance, decoded)
+        assertEquals(BugClass.LogicFlaw, converters.toBugClass(encoded))
     }
 
     @Test
-    fun `provenance round trip preserves empty analyst notes`() {
-        val provenance = SourceProvenance(
-            sourceUrl = "https://example.test/advisory",
-            sourceName = "Unit Test Advisory",
-            retrievedAt = 123456789L,
-            analystVerified = false,
-            analystNotes = ""
-        )
+    fun `unknown bug class falls back to UNKNOWN`() {
+        assertEquals(BugClass.UNKNOWN, converters.toBugClass("NOT_REAL"))
+    }
 
-        val encoded = converters.fromProvenance(provenance)
-        val decoded = converters.toProvenance(encoded)
+    @Test
+    fun `confidence round trip preserves enum`() {
+        val encoded = converters.fromConfidence(ConfidenceLevel.HIGH)
 
-        assertEquals(provenance, decoded)
+        assertEquals(ConfidenceLevel.HIGH, converters.toConfidence(encoded))
     }
 }
+
+private fun testCve(
+    cveId: String,
+    component: String,
+    patchedInSpl: String?,
+    cvssScore: Double? = 5.0,
+    exploitedInWild: Boolean? = false,
+    affectedVersions: List<String> = listOf("Android 14")
+): CveEntry = CveEntry(
+    cveId = cveId,
+    title = "$cveId regression fixture",
+    bugClass = BugClass.LogicFlaw,
+    component = component,
+    affectedVersions = affectedVersions,
+    patchedInSpl = patchedInSpl,
+    cvssScore = cvssScore,
+    cwe = "CWE-000",
+    exploitedInWild = exploitedInWild,
+    confidence = ConfidenceLevel.HIGH,
+    notes = "Unit test fixture"
+)

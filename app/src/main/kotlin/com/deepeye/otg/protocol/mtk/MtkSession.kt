@@ -43,12 +43,20 @@ class MtkSession(private val transport: UsbTransport) {
         Log.i("MtkSession", "Starting DA Injection Chain...")
         
         // 1. Send DA to SRAM
-        if (!MtkBromProtocol.loadDa(transport, address, daBytes)) {
+        val sendDaResult = MtkBromProtocol.sendDa(transport, address, daBytes)
+        if (sendDaResult.isFailure) {
             Log.e("MtkSession", "SRAM injection failed")
             return false
         }
+
+        // 2. Verify DA checksum before execution jump
+        val checksumResult = MtkBromProtocol.verifyDaChecksum(transport, daBytes, sessionId = "mtk-session")
+        if (checksumResult.isFailure) {
+            Log.e("MtkSession", "DA checksum verification failed", checksumResult.exceptionOrNull())
+            return false
+        }
         
-        // 2. Transmit JUMP command
+        // 3. Transmit JUMP command only after checksum verification
         if (!MtkBromProtocol.jumpDa(transport, address)) {
             Log.e("MtkSession", "Execution jump failed")
             return false

@@ -15,6 +15,15 @@ import kotlinx.coroutines.flow.flowOn
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+sealed class V6Error(message: String) : Exception(message) {
+    object InterfaceClaimFailed : V6Error("Failed to claim CDC control/data interfaces")
+    object EndpointDiscoveryFailed : V6Error("Failed to resolve CDC bulk endpoints")
+    object CdcSetupFailed : V6Error("CDC-ACM setup failed")
+    object SyncAttemptedBeforeSetup : V6Error("CDC setup must complete before V6 sync")
+    object SyncTransferFailed : V6Error("Failed to send V6 sync bytes")
+    object HelloReadFailed : V6Error("Failed to read V6 hello packet")
+}
+
 /**
  * MtkCdcSession — MediaTek CDC_SERIAL protocol handler
  * Optimized for OPLUS VID=0x22D9 (hw_code=0x1209)
@@ -29,27 +38,39 @@ class MtkCdcSession(
     private var controlInterface: UsbInterface? = null
     private var bulkIn: UsbEndpoint? = null
     private var bulkOut: UsbEndpoint? = null
+    private var cdcSetupComplete = false
+    private var v6SyncComplete = false
 
     private var deviceInfo: MtkDeviceInfo? = null
 
     /**
      * Entry point: Identify mode and attempt BROM handshake
      */
-    suspend fun setupCdc(): Boolean = setupCdcAcm()
+    suspend fun setupCdc(): Boolean = setupCdcAcm().isSuccess
 
-    suspend fun handshake(): Boolean = performHandshake()
+    suspend fun handshake(): Boolean {
+        if (!v6SyncComplete) {
+            val syncResult = sendV6Sync()
+            if (syncResult.isFailure) {
+                Log.e(TAG, "[MTK_V6] sync failed sessionId=$sessionId", syncResult.exceptionOrNull())
+                return false
+            }
+        }
+        return performHandshake()
+    }
 
     suspend fun initialize(): Result<MtkDeviceInfo> {
         Log.d(TAG, "[MTK_DETECT] vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} sessionId=$sessionId")
         
         // 1. Claim Interfaces
-        if (!claimInterfaces()) {
-            return Result.failure(Exception("Failed to claim USB interfaces"))
+        if (!ensureInterfacesClaimed()) {
+            return Result.failure(V6Error.InterfaceClaimFailed)
         }
 
         // 2. Setup CDC-ACM Line Coding
-        if (!setupCdc()) {
-            return Result.failure(Exception("CDC-ACM setup failed"))
+        val cdcSetup = setupCdcAcm()
+        if (cdcSetup.isFailure) {
+            return Result.failure(cdcSetup.exceptionOrNull() ?: V6Error.CdcSetupFailed)
         }
 
         // 3. Attempt BROM Handshake
@@ -68,40 +89,84 @@ class MtkCdcSession(
 
     private fun claimInterfaces(): Boolean {
         // Find interfaces (CDC Control #0, CDC Data #1)
+        if (controlInterface != null && dataInterface != null && bulkIn != null && bulkOut != null) {
+            return true
+        }
+
         controlInterface = device.getInterface(0)
         dataInterface = device.getInterface(1)
 
-        if (connection.claimInterface(controlInterface, true) && 
-            connection.claimInterface(dataInterface, true)) {
-            
-            // Find Endpoints on IF#1
-            for (i in 0 until dataInterface!!.endpointCount) {
-                val ep = dataInterface!!.getEndpoint(i)
-                if (ep.type == UsbConstants.USB_ENDPOINT_XFER_BULK) {
-                    if (ep.direction == UsbConstants.USB_DIR_IN) bulkIn = ep
-                    else bulkOut = ep
-                }
-            }
-            return bulkIn != null && bulkOut != null
+        val control = controlInterface ?: return false
+        val data = dataInterface ?: return false
+
+        if (!connection.claimInterface(control, true)) {
+            return false
         }
-        return false
+        if (!connection.claimInterface(data, true)) {
+            return false
+        }
+
+        // Find Endpoints on IF#1
+        for (i in 0 until data.endpointCount) {
+            val ep = data.getEndpoint(i)
+            if (ep.type == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                if (ep.direction == UsbConstants.USB_DIR_IN) bulkIn = ep
+                else bulkOut = ep
+            }
+        }
+        return bulkIn != null && bulkOut != null
     }
 
-    private fun setupCdcAcm(): Boolean {
+    fun setupCdcAcm(): Result<Unit> {
+        if (!ensureInterfacesClaimed()) {
+            cdcSetupComplete = false
+            return Result.failure(V6Error.InterfaceClaimFailed)
+        }
+
         // SET_LINE_CODING (0x20)
         val coding = connection.controlTransfer(
             0x21, 0x20, 0, 0,
             MtkBromCommands.CDC_LINE_CODING_115200,
             MtkBromCommands.CDC_LINE_CODING_115200.size,
-            2000
+            3000
         )
+        if (coding < 0) {
+            cdcSetupComplete = false
+            return Result.failure(V6Error.CdcSetupFailed)
+        }
 
         // SET_CONTROL_LINE_STATE (0x22) -> DTR=1, RTS=1 (0x0003)
         val lineState = connection.controlTransfer(
             0x21, 0x22, 0x0003, 0, null, 0, 2000
         )
+        if (lineState < 0) {
+            cdcSetupComplete = false
+            return Result.failure(V6Error.CdcSetupFailed)
+        }
 
-        return coding >= 0 && lineState >= 0
+        cdcSetupComplete = true
+        Log.d(TAG, "[MTK_V6] cdc_setup baudRate=115200 dtr=true sessionId=$sessionId")
+        return Result.success(Unit)
+    }
+
+    suspend fun sendV6Sync(): Result<ByteArray> {
+        if (!cdcSetupComplete) {
+            return Result.failure(V6Error.SyncAttemptedBeforeSetup)
+        }
+        if (!ensureInterfacesClaimed()) {
+            return Result.failure(V6Error.EndpointDiscoveryFailed)
+        }
+
+        val syncBytes = ByteArray(16) { 0x55.toByte() }
+        val sent = writeBulk(syncBytes, timeout = 2000)
+        if (sent != syncBytes.size) {
+            return Result.failure(V6Error.SyncTransferFailed)
+        }
+
+        val hello = readBulk(64, timeout = 5000) ?: return Result.failure(V6Error.HelloReadFailed)
+        v6SyncComplete = true
+        Log.d(TAG, "[MTK_V6] sync_sent bytes=${syncBytes.size} helloLen=${hello.size} sessionId=$sessionId")
+        return Result.success(hello)
     }
 
     private suspend fun performHandshake(): Boolean {
@@ -276,5 +341,9 @@ class MtkCdcSession(
     fun release() {
         connection.releaseInterface(controlInterface)
         connection.releaseInterface(dataInterface)
+    }
+
+    private fun ensureInterfacesClaimed(): Boolean {
+        return claimInterfaces() && bulkIn != null && bulkOut != null
     }
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -77,45 +78,18 @@ interface UsbTransport {
  */
 class BulkTransport(
     private val connection: UsbDeviceConnection,
-    private val endpoints: ResolvedEndpoints
+    private val endpoints: ResolvedEndpoints,
+    override val deviceInfo: UsbDescriptorSnapshot
 ) : UsbTransport {
 
     private val mutex = Mutex()
     private val MAX_CHUNK = 16384
     private val MAX_RETRIES = 3
     private val BASE_DELAY_MS = 100L
+    private val closed = AtomicBoolean(false)
 
     override val isOpen: Boolean
-        get() = runCatching { connection.fileDescriptor >= 0 }.getOrDefault(false)
-
-    override val deviceInfo: UsbDescriptorSnapshot = UsbDescriptorSnapshot(
-        vendorId = 0,
-        productId = 0,
-        deviceClass = 0,
-        deviceSubclass = 0,
-        deviceProtocol = 0,
-        manufacturerName = null,
-        productName = null,
-        interfaceCount = 1,
-        interfaces = listOf(
-            UsbInterfaceSnapshot(
-                id = endpoints.interfaceIndex,
-                interfaceClass = endpoints.usbInterface.interfaceClass,
-                interfaceSubclass = endpoints.usbInterface.interfaceSubclass,
-                interfaceProtocol = endpoints.usbInterface.interfaceProtocol,
-                endpointCount = endpoints.usbInterface.endpointCount,
-                endpoints = (0 until endpoints.usbInterface.endpointCount).map { idx ->
-                    val ep = endpoints.usbInterface.getEndpoint(idx)
-                    UsbEndpointSnapshot(
-                        address = ep.address,
-                        type = ep.type,
-                        direction = ep.direction,
-                        maxPacketSize = ep.maxPacketSize
-                    )
-                }
-            )
-        )
-    )
+        get() = !closed.get() && runCatching { connection.fileDescriptor >= 0 }.getOrDefault(false)
 
     override suspend fun open(): Result<Unit> = withContext(Dispatchers.IO) {
         if (!isOpen) Result.failure(IllegalStateException("USB connection not open"))
@@ -182,6 +156,10 @@ class BulkTransport(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
+
         runCatching {
             connection.releaseInterface(endpoints.usbInterface)
         }
@@ -225,7 +203,8 @@ class BulkTransport(
                 val received = connection.bulkTransfer(inEp, buffer, expectedSize, timeout)
                 
                 when {
-                    received >= 0 -> return@withLock TransferResult.Success(received, buffer.copyOf(received), attempt)
+                    received > 0 || expectedSize == 0 -> return@withLock TransferResult.Success(received, buffer.copyOf(received), attempt)
+                    received == 0 -> return@withLock TransferResult.Timeout
                     else -> {
                         if (isStalled(inEp)) clearStall(inEp)
                         if (!isOpen) return@withLock TransferResult.DeviceGone
@@ -274,12 +253,23 @@ class BulkTransport(
     }
 
     private fun chunkedWrite(data: ByteArray, ep: UsbEndpoint, timeout: Int): TransferResult {
+        if (data.isEmpty()) {
+            if (!isOpen) return TransferResult.DeviceGone
+            val sent = connection.bulkTransfer(ep, data, 0, timeout)
+            return if (sent >= 0) {
+                TransferResult.Success(0, data)
+            } else {
+                if (isStalled(ep)) TransferResult.Stall else TransferResult.IOError("Transfer error $sent")
+            }
+        }
+
         var offset = 0
         while (offset < data.size) {
             if (!isOpen) return TransferResult.DeviceGone
             val chunkLen = min(MAX_CHUNK, data.size - offset)
             val sent = connection.bulkTransfer(ep, data, offset, chunkLen, timeout)
             if (sent < 0) return if (isStalled(ep)) TransferResult.Stall else TransferResult.IOError("Transfer error $sent")
+            if (sent == 0) return TransferResult.Timeout
             offset += sent
         }
         return TransferResult.Success(data.size, data)

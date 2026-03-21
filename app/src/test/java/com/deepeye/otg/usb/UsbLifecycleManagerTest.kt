@@ -57,7 +57,8 @@ class UsbLifecycleManagerTest {
         val lifecycle = UsbLifecycleManager(
             context = context,
             usbManager = usbManager,
-            scope = TestScope(this.coroutineContext)
+            scope = TestScope(this.coroutineContext),
+            coordinator = SessionCoordinator()
         )
 
         lifecycle.onDeviceAttached(device)
@@ -89,7 +90,8 @@ class UsbLifecycleManagerTest {
         val lifecycle = UsbLifecycleManager(
             context = context,
             usbManager = usbManager,
-            scope = TestScope(this.coroutineContext)
+            scope = TestScope(this.coroutineContext),
+            coordinator = SessionCoordinator()
         )
 
         lifecycle.onDeviceAttached(device)

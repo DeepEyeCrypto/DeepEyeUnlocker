@@ -15,6 +15,7 @@ import kotlinx.coroutines.sync.withLock
 import com.deepeye.otg.data.device.ProtocolRouter
 import com.deepeye.otg.data.device.DeviceProtocol
 import javax.inject.Inject
+import java.util.UUID
 
 /**
  * Single source of truth for USB connection lifecycle.
@@ -44,25 +45,41 @@ class UsbLifecycleManager @Inject constructor(
     private var pendingPermissionDeviceKey: String? = null
     private var permissionTimeoutJob: Job? = null
     private val detector = ProtocolDetector()
-    private var retryCount = 0
     private val MAX_RETRY_COUNT = 5
     private val BASE_BACKOFF_MS = 500L
+    private val retryCounts = mutableMapOf<String, Int>()
+    private val sessionIds = mutableMapOf<String, String>()
 
     private fun deviceKey(device: UsbDevice): String =
         "${device.vendorId}:${device.productId}:${device.deviceId}"
+
+    private fun sessionIdFor(key: String): String =
+        sessionIds.getOrPut(key) { UUID.randomUUID().toString() }
+
+    private fun retryCountFor(key: String): Int = retryCounts[key] ?: 0
+
+    private fun resetRetryCount(key: String) {
+        retryCounts.remove(key)
+    }
+
+    private fun clearTracking(key: String) {
+        retryCounts.remove(key)
+        sessionIds.remove(key)
+    }
 
     fun onDeviceAttached(device: UsbDevice) {
         scope.launch {
             lifecycleMutex.withLock {
                 val newKey = deviceKey(device)
+                val sessionId = sessionIdFor(newKey)
 
                 if (activeSessions.containsKey(newKey)) {
-                    Log.i(TAG, "[MODE] attach ignored; session already active key=$newKey")
+                    UsbLogger.info(TAG, "[USB_LIFECYCLE] attach_ignored reason=already_active key=$newKey sessionId=$sessionId")
                     return@withLock
                 }
 
                 if (_state.value is UsbLifecycleState.PermissionPending && pendingPermissionDeviceKey == newKey) {
-                    Log.i(TAG, "[MODE] attach ignored; permission pending key=$newKey")
+                    UsbLogger.info(TAG, "[USB_LIFECYCLE] attach_ignored reason=permission_pending key=$newKey sessionId=$sessionId")
                     return@withLock
                 }
 
@@ -77,20 +94,16 @@ class UsbLifecycleManager @Inject constructor(
                     snapshot.manufacturerName, 
                     snapshot.productName
                 )
-                Log.d(TAG, "[ROUTER] vid=0x${device.vendorId.toString(16)} protocol=${routingResult.protocol} confidence=${routingResult.confidence}")
-
-                // Dispatch to specific protocol session (Stage 201.3)
-                when (routingResult.protocol) {
-                    DeviceProtocol.MTK_V6       -> startMtkV6Session(device)
-                    DeviceProtocol.MTK_BROM     -> startMtkBromSession(device)
-                    DeviceProtocol.QC_EDL       -> startQcEdlSession(device)
-                    DeviceProtocol.SAMSUNG_ODIN -> startSamsungSession(device)
-                    DeviceProtocol.MTK_OR_QC    -> askUserToSelect(device)
-                    DeviceProtocol.UNKNOWN      -> showUnknownDevice(device)
+                UsbLogger.info(
+                    TAG,
+                    "[ROUTER] detectedMode=$mode protocolHint=${routingResult.protocol} confidence=${routingResult.confidence} vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} sessionId=$sessionId"
+                )
+                if (mode == ConnectionMode.UNKNOWN && routingResult.protocol != DeviceProtocol.UNKNOWN) {
+                    UsbLogger.warn(
+                        TAG,
+                        "[ROUTER] descriptor_unknown protocolHint=${routingResult.protocol} reason=\"${routingResult.reason}\" sessionId=$sessionId"
+                    )
                 }
-
-                Log.i(TAG, "[PROTOCOL] Device attached: ${device.productName} (VID=0x${Integer.toHexString(device.vendorId)})")
-                Log.i(TAG, "[PROTOCOL] Route Result: ${routingResult.protocol} | Confidence: ${routingResult.confidence} | Reason: ${routingResult.reason}")
 
                 val newState = UsbLifecycleState.DeviceDetected(
                     device = device,
@@ -113,7 +126,7 @@ class UsbLifecycleManager @Inject constructor(
                 updateSessionState(newKey, newState)
 
                 if (usbManager.hasPermission(device)) {
-                    openConnection(device, mode, detection, snapshot, newKey)
+                    openConnection(device, mode, detection, snapshot, newKey, sessionId)
                 } else {
                     pendingPermissionDeviceKey = newKey
                     val permState = UsbLifecycleState.PermissionPending(device)
@@ -128,7 +141,7 @@ class UsbLifecycleManager @Inject constructor(
                         delay(10_000L)
                         lifecycleMutex.withLock {
                             if (pendingPermissionDeviceKey == newKey) {
-                                Log.w(TAG, "[MODE] permission-timeout key=$newKey")
+                                UsbLogger.warn(TAG, "[USB_LIFECYCLE] permission_timeout key=$newKey sessionId=$sessionId")
                                 val err = UsbLifecycleState.Error("Permission timeout", true)
                                 coordinator.transition(ConnectionState.Failed("TIMEOUT", "Permission timeout"), "timeout for $newKey")
                                 _state.value = err
@@ -159,7 +172,7 @@ class UsbLifecycleManager @Inject constructor(
                 if (granted) {
                     val snapshot = UsbSnapshotFactory.from(device)
                     val detection = detector.detect(snapshot)
-                    openConnection(device, detection.toConnectionMode(), detection, snapshot, key)
+                    openConnection(device, detection.toConnectionMode(), detection, snapshot, key, sessionIdFor(key))
                 } else {
                     val denied = UsbLifecycleState.PermissionDenied(device, device.productName ?: "Unknown")
                     _state.value = denied
@@ -173,6 +186,7 @@ class UsbLifecycleManager @Inject constructor(
         scope.launch {
             lifecycleMutex.withLock {
                 val key = deviceKey(device)
+                val sessionId = sessionIds[key] ?: "nosession"
                 activeSessions[key]?.close()
                 activeSessions.remove(key)
                 
@@ -187,7 +201,7 @@ class UsbLifecycleManager @Inject constructor(
                     _state.value = _sessions.value.values.lastOrNull() ?: UsbLifecycleState.Idle
                     coordinator.transition(ConnectionState.Disconnected, "One device detached")
                 }
-                Log.i(TAG, "[MODE] detached key=$key activeSessions=${activeSessions.size}")
+                UsbLogger.info(TAG, "[USB_LIFECYCLE] detached key=$key activeSessions=${activeSessions.size} sessionId=$sessionId")
             }
         }
     }
@@ -197,14 +211,15 @@ class UsbLifecycleManager @Inject constructor(
         mode: ConnectionMode,
         detection: DetectionResult,
         snapshot: UsbDescriptorSnapshot,
-        key: String
+        key: String,
+        sessionId: String
     ) = withContext(Dispatchers.IO) {
         val conn = OemCompatibilityLayer.openDeviceWithRetry(usbManager, device) ?: run {
             val err = UsbLifecycleState.Error("Cannot open device", true)
-            if (retryCount < MAX_RETRY_COUNT) {
+            if (retryCountFor(key) < MAX_RETRY_COUNT) {
                 scheduleReconnect(device, key, "OPEN_FAIL")
             } else {
-                coordinator.transition(ConnectionState.Failed("OPEN_FAIL", "Cannot open connection"), "Failed to open $key after $retryCount retries")
+                coordinator.transition(ConnectionState.Failed("OPEN_FAIL", "Cannot open connection"), "Failed to open $key after ${retryCountFor(key)} retries")
             }
             _state.value = err
             updateSessionState(key, err)
@@ -235,7 +250,8 @@ class UsbLifecycleManager @Inject constructor(
             connection = conn,
             usbInterface = endpoints.usbInterface,
             endpoints = endpoints,
-            transport = BulkTransport(conn, endpoints),
+            transport = BulkTransport(conn, endpoints, snapshot),
+            sessionId = sessionId,
             deviceKey = key,
             detection = detection,
             snapshot = snapshot
@@ -257,13 +273,15 @@ class UsbLifecycleManager @Inject constructor(
             descriptorSnapshot = snapshot,
             brand = device.manufacturerName ?: "Unknown",
             chipset = device.productName ?: "Generic",
-            endpoints = endpoints
+            endpoints = endpoints,
+            sessionId = sessionId
         )
 
         _state.value = connectedState
-        retryCount = 0 // Reset on success
+        resetRetryCount(key)
         coordinator.transition(ConnectionState.Ready, "Session established")
         updateSessionState(key, connectedState)
+        UsbLogger.info(TAG, "[USB_LIFECYCLE] connected mode=$mode key=$key sessionId=$sessionId")
         startWatchdog(session)
     }
 
@@ -278,10 +296,10 @@ class UsbLifecycleManager @Inject constructor(
                     session.missedPings++
                     if (session.missedPings >= MAX_MISSED_PINGS) {
                         lifecycleMutex.withLock {
-                            Log.e(TAG, "[LIFECYCLE] Watchdog failure: missed ${session.missedPings} pings. Attempting recovery.")
+                            UsbLogger.error(TAG, "[USB_LIFECYCLE] watchdog_failed missedPings=${session.missedPings} sessionId=${session.sessionId}")
                             coordinator.transition(ConnectionState.Recovering, "Watchdog timeout")
                             onDeviceDetached(session.device)
-                            if (retryCount < MAX_RETRY_COUNT) {
+                            if (retryCountFor(session.deviceKey) < MAX_RETRY_COUNT) {
                                 scheduleReconnect(session.device, session.deviceKey, "WATCHDOG_FAIL")
                             }
                         }
@@ -329,16 +347,20 @@ class UsbLifecycleManager @Inject constructor(
     fun destroy() {
         activeSessions.values.forEach { it.close() }
         activeSessions.clear()
+        retryCounts.clear()
+        sessionIds.clear()
         _sessions.value = emptyMap()
         _state.value = UsbLifecycleState.Idle
     }
 
     private fun scheduleReconnect(device: UsbDevice, key: String, reason: String) {
         scope.launch {
-            val backoff = (BASE_BACKOFF_MS * 2.0.pow(retryCount.toDouble())).toLong()
-            coordinator.transition(ConnectionState.Recovering, "Retrying $reason ($retryCount/$MAX_RETRY_COUNT) in ${backoff}ms")
+            val attempt = retryCountFor(key)
+            val backoff = (BASE_BACKOFF_MS * 2.0.pow(attempt.toDouble())).toLong()
+            coordinator.transition(ConnectionState.Recovering, "Retrying $reason ($attempt/$MAX_RETRY_COUNT) in ${backoff}ms")
+            UsbLogger.warn(TAG, "[USB_LIFECYCLE] reconnect_scheduled reason=$reason attempt=$attempt backoffMs=$backoff sessionId=${sessionIdFor(key)}")
             delay(backoff)
-            retryCount++
+            retryCounts[key] = attempt + 1
             onDeviceAttached(device)
         }
     }

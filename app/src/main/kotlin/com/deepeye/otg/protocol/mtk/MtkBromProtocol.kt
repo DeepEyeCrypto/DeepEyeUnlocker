@@ -11,8 +11,21 @@ import java.nio.ByteOrder
  */
 object MtkBromProtocol {
     private const val TAG = "MtkBromProtocol"
+    private const val HANDSHAKE_TIMEOUT_MS = 2_000
+    private const val SEND_DA_TIMEOUT_MS = 15_000
+    private const val CMD_WRITE32 = 0xD4.toByte()
+    private const val CMD_SEND_DA = 0xD7.toByte()
+    private const val CMD_JUMP_DA = 0xD5.toByte()
 
     private val HANDSHAKE_SEQ = byteArrayOf(0xA0.toByte(), 0x0A.toByte(), 0x50.toByte(), 0x05.toByte())
+
+    sealed class MtkError(message: String) : Exception(message) {
+        data class DaChecksumMismatch(val expected: Int, val actual: Int) :
+            MtkError("DA checksum mismatch expected=0x%04X actual=0x%04X".format(expected, actual))
+
+        data class TransportFailure(val operation: String, val details: String) :
+            MtkError("$operation failed: $details")
+    }
 
     /**
      * Handshake logic: Echo Cmd ^ 0xFF.
@@ -20,10 +33,10 @@ object MtkBromProtocol {
     suspend fun handshake(transport: UsbTransport): Boolean {
         Log.i(TAG, "Executing initial handshake sequence...")
         for (byte in HANDSHAKE_SEQ) {
-            val sendRes = transport.send(byteArrayOf(byte), timeoutMs = 200)
+            val sendRes = transport.send(byteArrayOf(byte), timeoutMs = HANDSHAKE_TIMEOUT_MS)
             if (sendRes.isFailure) return false
 
-            val recvRes = transport.receive(1, timeoutMs = 200)
+            val recvRes = transport.receive(1, timeoutMs = HANDSHAKE_TIMEOUT_MS)
             if (recvRes.isFailure) return false
 
             val actual = recvRes.getOrNull()?.get(0)
@@ -54,11 +67,11 @@ object MtkBromProtocol {
     }
 
     /**
-     * Write 32-bit Memory Value (0xD5).
+     * Write 32-bit Memory Value (0xD4).
      */
     suspend fun write32(transport: UsbTransport, address: Long, value: Int): Boolean {
         val cmd = ByteBuffer.allocate(9).order(ByteOrder.BIG_ENDIAN)
-        cmd.put(0xD5.toByte()) // WRITE32
+        cmd.put(CMD_WRITE32)
         cmd.putInt(address.toInt())
         cmd.putInt(1) // count
         
@@ -74,38 +87,74 @@ object MtkBromProtocol {
      * SEND_DA (0xD7): Injects Download Agent.
      */
     suspend fun loadDa(transport: UsbTransport, address: Long, daData: ByteArray): Boolean {
+        return sendDa(transport, address, daData).isSuccess &&
+            verifyDaChecksum(transport, daData).isSuccess
+    }
+
+    suspend fun sendDa(transport: UsbTransport, address: Long, daData: ByteArray): Result<Unit> {
         Log.i(TAG, "Injecting DA (%d bytes) to SRAM 0x%08X".format(daData.size, address))
         
         val cmd = ByteBuffer.allocate(13).order(ByteOrder.BIG_ENDIAN)
-        cmd.put(0xD7.toByte()) // SEND_DA
+        cmd.put(CMD_SEND_DA)
         cmd.putInt(address.toInt())
         cmd.putInt(daData.size)
         cmd.putInt(0) // sig_len (0 for unsigned/early DAs)
         
-        if (transport.send(cmd.array()).isFailure) return false
-        if (transport.receive(2).isFailure) return false // Command Accept ACK
-        
-        // Stream binary data
-        if (transport.send(daData, timeoutMs = 15000).isFailure) return false
-        
-        // Finalized ACK from ROM
-        val finalAck = transport.receive(2)
-        if (finalAck.isFailure) {
-            Log.e(TAG, "DA transmission failed verification")
-            return false
+        if (transport.send(cmd.array()).isFailure) {
+            return Result.failure(MtkError.TransportFailure("send_da_command", "unable to send SEND_DA header"))
+        }
+        if (transport.receive(2).isFailure) {
+            return Result.failure(MtkError.TransportFailure("send_da_command", "missing SEND_DA accept ACK"))
         }
         
-        Log.i(TAG, "DA uploaded successfully")
-        return true
+        // Stream binary data
+        if (transport.send(daData, timeoutMs = SEND_DA_TIMEOUT_MS).isFailure) {
+            return Result.failure(MtkError.TransportFailure("send_da_payload", "unable to stream DA payload"))
+        }
+
+        Log.i(TAG, "DA payload transmitted, awaiting checksum verification")
+        return Result.success(Unit)
+    }
+
+    suspend fun verifyDaChecksum(
+        transport: UsbTransport,
+        daBytes: ByteArray,
+        sessionId: String = "unknown"
+    ): Result<Unit> {
+        val expected = computeDaChecksum(daBytes)
+        val checksumBytes = transport.receive(2).getOrElse {
+            return Result.failure(
+                MtkError.TransportFailure("verify_da_checksum", it.message ?: "missing checksum bytes")
+            )
+        }
+        if (checksumBytes.size < 2) {
+            return Result.failure(
+                MtkError.TransportFailure("verify_da_checksum", "short checksum response (${checksumBytes.size} bytes)")
+            )
+        }
+
+        val actual = ((checksumBytes[0].toInt() and 0xFF) shl 8) or (checksumBytes[1].toInt() and 0xFF)
+        val matches = expected == actual
+        Log.i(
+            TAG,
+            "[MTK_BROM] da_checksum expected=0x%04X actual=0x%04X result=%s sessionId=%s"
+                .format(expected, actual, if (matches) "OK" else "MISMATCH", sessionId)
+        )
+
+        return if (matches) {
+            Result.success(Unit)
+        } else {
+            Result.failure(MtkError.DaChecksumMismatch(expected, actual))
+        }
     }
 
     /**
-     * JUMP_DA (0xD9): Executes the injected code.
+     * JUMP_DA (0xD5): Executes the injected code.
      */
     suspend fun jumpDa(transport: UsbTransport, address: Long): Boolean {
         Log.i(TAG, "Finalizing JUMP to SRAM 0x%08X".format(address))
         val cmd = ByteBuffer.allocate(5).order(ByteOrder.BIG_ENDIAN)
-        cmd.put(0xD9.toByte()) // JUMP_DA
+        cmd.put(CMD_JUMP_DA)
         cmd.putInt(address.toInt())
         
         if (transport.send(cmd.array()).isFailure) return false
@@ -120,5 +169,11 @@ object MtkBromProtocol {
         
         Log.w(TAG, "DA executed but SYNC mismatch (Expected 0x5A)")
         return true // Still might be alive
+    }
+
+    private fun computeDaChecksum(daBytes: ByteArray): Int {
+        return daBytes.fold(0) { acc, byte ->
+            (acc + (byte.toInt() and 0xFF)) and 0xFFFF
+        }
     }
 }

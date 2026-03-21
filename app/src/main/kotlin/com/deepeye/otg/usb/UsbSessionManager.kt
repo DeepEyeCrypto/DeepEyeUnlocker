@@ -146,7 +146,8 @@ class UsbSessionManager(
                 activeDeviceKey = deviceKey(device)
                 
                 // Initialize Serial Transfer Queue
-                activeTransport = BulkTransport(connection, endpoints)
+                val snapshot = UsbSnapshotFactory.from(device)
+                activeTransport = BulkTransport(connection, endpoints, snapshot)
 
                 // Setup Health Watchdog
                 watchdog?.stop()

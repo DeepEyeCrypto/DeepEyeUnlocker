@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * High-level session for ADB operations (Stage 7.2).
@@ -15,6 +18,8 @@ class AdbSession(
 ) {
     companion object {
         private const val TAG = "DeepEye-ADB"
+        private const val HEADER_LENGTH = 24
+        private const val MAX_MESSAGE_DATA = 1024 * 1024
     }
 
     private val _isConnected = MutableStateFlow(false)
@@ -69,18 +74,66 @@ class AdbSession(
     }
 
     private suspend fun receiveMessage(): AdbMessage? {
-        val headerRes = transport.read(24)
-        if (headerRes !is TransferResult.Success || headerRes.data == null) return null
-        
-        val msg = AdbMessage.parseHeader(headerRes.data)
-        val dataLen = java.nio.ByteBuffer.wrap(headerRes.data).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt(12)
-        
+        val header = readExact(HEADER_LENGTH) ?: run {
+            Log.e(TAG, "Failed to read full ADB header")
+            return null
+        }
+
+        val buffer = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
+        val command = buffer.int
+        val arg0 = buffer.int
+        val arg1 = buffer.int
+        val dataLen = buffer.int
+        val checksum = buffer.int
+        val magic = buffer.int
+
+        if (magic != AdbProtocol.generateMagic(command)) {
+            Log.e(TAG, "ADB header magic mismatch command=$command magic=$magic")
+            return null
+        }
+
+        if (dataLen < 0 || dataLen > MAX_MESSAGE_DATA) {
+            Log.e(TAG, "ADB payload length out of range len=$dataLen")
+            return null
+        }
+
         val data = if (dataLen > 0) {
-            val dataRes = transport.read(dataLen)
-            if (dataRes is TransferResult.Success) dataRes.data else null
-        } else null
-        
-        return msg.copy(data = data)
+            readExact(dataLen) ?: run {
+                Log.e(TAG, "Failed to read full ADB payload len=$dataLen")
+                return null
+            }
+        } else {
+            null
+        }
+
+        if (AdbProtocol.generateChecksum(data) != checksum) {
+            Log.e(TAG, "ADB payload checksum mismatch len=$dataLen")
+            return null
+        }
+
+        return AdbMessage(command = command, arg0 = arg0, arg1 = arg1, data = data)
+    }
+
+    private suspend fun readExact(expectedSize: Int): ByteArray? {
+        if (expectedSize == 0) return ByteArray(0)
+
+        val output = ByteArrayOutputStream(expectedSize)
+        while (output.size() < expectedSize) {
+            val remaining = expectedSize - output.size()
+            when (val result = transport.read(remaining)) {
+                is TransferResult.Success -> {
+                    val chunk = result.data
+                    if (chunk == null || chunk.isEmpty()) {
+                        return null
+                    }
+                    output.write(chunk)
+                }
+
+                else -> return null
+            }
+        }
+
+        return output.toByteArray()
     }
 
     private suspend fun handleAuth(token: ByteArray?): Boolean {
@@ -97,7 +150,10 @@ class AdbSession(
             signature
         )
 
-        transport.write(authMsg.serialize())
+        if (!transport.write(authMsg.serialize()).isSuccess) {
+            Log.e(TAG, "Failed to send ADB AUTH signature")
+            return false
+        }
 
         val resp = receiveMessage() ?: return false
         if (resp.command == AdbProtocol.A_CNXN) {
@@ -114,7 +170,10 @@ class AdbSession(
                 0,
                 pubKey + byteArrayOf(0)
             )
-            transport.write(pubKeyMsg.serialize())
+            if (!transport.write(pubKeyMsg.serialize()).isSuccess) {
+                Log.e(TAG, "Failed to send ADB AUTH public key")
+                return false
+            }
 
             val finalResp = receiveMessage() ?: return false
             if (finalResp.command == AdbProtocol.A_CNXN) {
@@ -137,7 +196,10 @@ class AdbSession(
             (destination + "\u0000").toByteArray()
         )
 
-        transport.write(openMsg.serialize())
+        if (!transport.write(openMsg.serialize()).isSuccess) {
+            Log.e(TAG, "Failed to open ADB destination=$destination")
+            return null
+        }
         
         val resp = receiveMessage()
         if (resp != null && resp.command == AdbProtocol.A_OKAY) {
@@ -160,7 +222,10 @@ class AdbSession(
             AdbProtocol.A_WRTE -> {
                 // Acknowledge WRITE (OKAY)
                 val okay = AdbMessage(AdbProtocol.A_OKAY, localId, rId, null)
-                transport.write(okay.serialize())
+                if (!transport.write(okay.serialize()).isSuccess) {
+                    Log.e(TAG, "Failed to acknowledge ADB WRTE localId=$localId")
+                    return null
+                }
                 return msg.data?.let { String(it) }
             }
             AdbProtocol.A_CLSE -> {
