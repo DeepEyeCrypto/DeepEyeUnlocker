@@ -12,6 +12,7 @@ const SECTIONS = [
   { id: "shsh",        label: "SHSH Blobs",    icon: "💾" },
   { id: "diagnostics", label: "Diagnostics",   icon: "🔬" },
   { id: "restore",     label: "Restore / IPSW",icon: "🔄" },
+  { id: "advanced",    label: "Advanced",       icon: "🚀" },
 ];
 
 interface Props { active: string; onSelect: (id: string) => void; }

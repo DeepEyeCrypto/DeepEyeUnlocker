@@ -9,9 +9,9 @@ interface DfuState {
 
 export const DfuRestore: React.FC = () => {
   const [state, setState] = useState<DfuState>({ mode: 'Unknown' });
-  const [status, setStatus] = useState("Idle");
+  const [, setStatus] = useState("Idle");
   const [logs, setLogs] = useState<string[]>([]);
-  const [udid, setUdid] = useState("");
+  const [udid] = useState("");
 
   useEffect(() => {
     const unlistenProgress = listen<string>('dfu-progress', (event) => {

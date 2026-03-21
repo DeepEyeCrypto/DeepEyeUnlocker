@@ -8,8 +8,8 @@ interface ActivationRecord {
     unique_device_id?: string;
     device_class?: string;
     activation_state: string;
-    ticket_present: bool;
-    ticket_valid: bool;
+    ticket_present: boolean;
+    ticket_valid: boolean;
     ticket_source: string;
     signed_fields: string[];
 }
@@ -17,7 +17,7 @@ interface ActivationRecord {
 export const TicketEngine: React.FC = () => {
     const [path, setPath] = useState("");
     const [record, setRecord] = useState<ActivationRecord | null>(null);
-    const [status, setStatus] = useState("Idle");
+    const [, setStatus] = useState("Idle");
 
     const parseTicket = async () => {
         try {

@@ -1,6 +1,6 @@
 {
   "name": "deep-eye-unlocker",
-  "version": "1.0.0",
+  "version": "2026.30.0",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -10,10 +10,10 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-shell": "^2.0.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
-    "@tauri-apps/plugin-fs": "^2.0.0",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.4.5",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -21,8 +21,8 @@
     "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
     "typescript": "^5.4.5",
-    "vite": "^5.2.11",
-    "@vitejs/plugin-react": "^4.3.0"
+    "vite": "^5.2.11"
   }
 }

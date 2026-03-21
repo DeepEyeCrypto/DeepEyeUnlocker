@@ -121,10 +121,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideTokenManager(
-        @ApplicationContext context: Context
-    ): com.deepeye.otg.engine.TokenManager {
-        return com.deepeye.otg.engine.TokenManager(context)
+    fun provideTokenManager(): com.deepeye.otg.engine.TokenManager {
+        return com.deepeye.otg.engine.TokenManager()
     }
 
     @Provides

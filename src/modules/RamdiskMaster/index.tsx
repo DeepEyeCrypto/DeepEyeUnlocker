@@ -12,7 +12,7 @@ export const RamdiskMaster: React.FC = () => {
     const [state, setState] = useState<PwnState | null>(null);
     const [status, setStatus] = useState("Idle");
     const [logs, setLogs] = useState<string[]>([]);
-    const [udid, setUdid] = useState("");
+    const [udid] = useState("");
 
     useEffect(() => {
         const unlistenProgress = listen<string>('pwn-progress', (event) => {

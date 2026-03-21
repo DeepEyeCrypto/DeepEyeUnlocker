@@ -3,6 +3,7 @@ use tauri::{AppHandle, Manager, Emitter};
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
 pub enum ActivationType {
     GsmSignal,
     NoSignalTethered,

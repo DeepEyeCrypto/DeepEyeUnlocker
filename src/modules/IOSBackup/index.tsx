@@ -1,7 +1,7 @@
 import React, { useMemo, useState, type CSSProperties } from 'react'
 
 import { DEFAULT_WORDLIST, useBackupModule } from './hooks/useBackupModule'
-import type { BackupInfo, BackupMode, CommandResult, CrackFoundPayload, ScreenTimeResult } from './types'
+import type { BackupInfo, BackupMode, CrackFoundPayload, ScreenTimeResult } from './types'
 
 const glassPanelStyle: CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
@@ -79,7 +79,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
-const isBackupInfo = (value: CommandResult['data']): value is BackupInfo => {
+const isBackupInfo = (value: any): value is BackupInfo => {
   return (
     isRecord(value) &&
     typeof value.device_name === 'string' &&
@@ -88,7 +88,7 @@ const isBackupInfo = (value: CommandResult['data']): value is BackupInfo => {
   )
 }
 
-const isScreenTimeResult = (value: CommandResult['data']): value is ScreenTimeResult => {
+const isScreenTimeResult = (value: any): value is ScreenTimeResult => {
   return (
     isRecord(value) &&
     typeof value.method === 'string' &&
@@ -97,7 +97,7 @@ const isScreenTimeResult = (value: CommandResult['data']): value is ScreenTimeRe
   )
 }
 
-const isCrackFoundPayload = (value: CommandResult['data']): value is CrackFoundPayload => {
+const isCrackFoundPayload = (value: any): value is CrackFoundPayload => {
   return isRecord(value) && typeof value.password === 'string'
 }
 
@@ -142,11 +142,11 @@ const IOSBackupLayer: React.FC = () => {
       return 'red'
     }
 
-    if (isCrackFoundPayload(result.data)) {
+    if (result.data && isCrackFoundPayload(result.data)) {
       return 'green'
     }
 
-    if (isScreenTimeResult(result.data)) {
+    if (result.data && isScreenTimeResult(result.data)) {
       return result.data.success ? 'green' : 'yellow'
     }
 
@@ -215,31 +215,32 @@ const IOSBackupLayer: React.FC = () => {
       )
     }
 
-    if (isBackupInfo(result.data)) {
+    if (result.data && isBackupInfo(result.data)) {
+      const info = result.data
       return (
         <div style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
             <div>
               <div style={labelStyle}>Device Name</div>
-              <div style={{ color: '#f8fafc', fontSize: 15 }}>{result.data.device_name}</div>
+              <div style={{ color: '#f8fafc', fontSize: 15 }}>{info.device_name}</div>
             </div>
             <div>
               <div style={labelStyle}>iOS Version</div>
-              <div style={{ color: '#f8fafc', fontSize: 15 }}>{result.data.ios_version}</div>
+              <div style={{ color: '#f8fafc', fontSize: 15 }}>{info.ios_version}</div>
             </div>
             <div>
               <div style={labelStyle}>Encryption</div>
-              <div style={{ color: result.data.encrypted ? '#facc15' : '#86efac', fontSize: 15 }}>
-                {result.data.encrypted ? 'ACTIVE (SECURE)' : 'INACTIVE (OPEN)'}
+              <div style={{ color: info.encrypted ? '#facc15' : '#86efac', fontSize: 15 }}>
+                {info.encrypted ? 'ACTIVE (SECURE)' : 'INACTIVE (OPEN)'}
               </div>
             </div>
             <div>
               <div style={labelStyle}>Last Backup</div>
-              <div style={{ color: '#cbd5e1', fontSize: 15 }}>{result.data.last_backup}</div>
+              <div style={{ color: '#cbd5e1', fontSize: 15 }}>{info.last_backup}</div>
             </div>
           </div>
 
-          {(result.data.serial || result.data.udid) && (
+          {(info.serial || info.udid) && (
             <div
               style={{
                 borderRadius: 18,
@@ -250,14 +251,14 @@ const IOSBackupLayer: React.FC = () => {
                 gap: 8,
               }}
             >
-              {result.data.serial && (
+              {info.serial && (
                 <div style={{ color: '#cbd5e1', fontSize: 12 }}>
-                  <span style={{ color: 'rgba(196,181,253,0.76)' }}>SERIAL</span> — {result.data.serial}
+                  <span style={{ color: 'rgba(196,181,253,0.76)' }}>SERIAL</span> — {info.serial}
                 </div>
               )}
-              {result.data.udid && (
+              {info.udid && (
                 <div style={{ color: '#cbd5e1', fontSize: 12, wordBreak: 'break-all' }}>
-                  <span style={{ color: 'rgba(196,181,253,0.76)' }}>UDID</span> — {result.data.udid}
+                  <span style={{ color: 'rgba(196,181,253,0.76)' }}>UDID</span> — {info.udid}
                 </div>
               )}
             </div>
@@ -266,24 +267,25 @@ const IOSBackupLayer: React.FC = () => {
       )
     }
 
-    if (isScreenTimeResult(result.data)) {
+    if (result.data && isScreenTimeResult(result.data)) {
+      const st = result.data
       return (
         <div style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
             <div>
               <div style={labelStyle}>Method</div>
-              <div style={{ color: '#e9d5ff', fontSize: 15 }}>{result.data.method}</div>
+              <div style={{ color: '#e9d5ff', fontSize: 15 }}>{st.method}</div>
             </div>
             <div>
               <div style={labelStyle}>Passcode</div>
-              <div style={{ color: result.data.passcode ? '#86efac' : '#fcd34d', fontSize: 15 }}>
-                {result.data.passcode ?? 'Not recovered'}
+              <div style={{ color: st.passcode ? '#86efac' : '#fcd34d', fontSize: 15 }}>
+                {st.passcode ?? 'Not recovered'}
               </div>
             </div>
             <div>
               <div style={labelStyle}>Success</div>
-              <div style={{ color: result.data.success ? '#86efac' : '#fcd34d', fontSize: 15 }}>
-                {result.data.success ? 'TRUE' : 'FALSE'}
+              <div style={{ color: st.success ? '#86efac' : '#fcd34d', fontSize: 15 }}>
+                {st.success ? 'TRUE' : 'FALSE'}
               </div>
             </div>
           </div>
@@ -299,13 +301,13 @@ const IOSBackupLayer: React.FC = () => {
               lineHeight: 1.7,
             }}
           >
-            {result.data.detail}
+            {st.detail}
           </div>
         </div>
       )
     }
 
-    if (isCrackFoundPayload(result.data)) {
+    if (result.data && isCrackFoundPayload(result.data)) {
       return (
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ color: '#86efac', fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
@@ -383,7 +385,7 @@ const IOSBackupLayer: React.FC = () => {
                 alignSelf: 'center',
                 padding: '10px 14px',
                 borderRadius: 999,
-                background: 'rgba(76, 29, 149, 0.2)',
+                background: 'rgba(76, 29, 148, 0.2)',
                 border: '1px solid rgba(196,181,253,0.18)',
                 color: '#ddd6fe',
                 fontSize: 11,

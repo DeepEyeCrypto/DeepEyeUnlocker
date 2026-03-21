@@ -6,12 +6,12 @@ interface ActivationTypeMatrix {
     device_udid: string;
     chip_generation: string;
     ios_version: string;
-    imei_present: bool;
-    imei_valid: bool;
-    is_meid_cdma: bool;
+    imei_present: boolean;
+    imei_valid: boolean;
+    is_meid_cdma: boolean;
     eligible_types: string[];
     recommended_type: string;
-    temp_test_viable: bool;
+    temp_test_viable: boolean;
 }
 
 interface BypassStep {

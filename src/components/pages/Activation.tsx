@@ -5,7 +5,7 @@ import Terminal from "../Terminal";
 export default function ActivationPage() {
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState<"idle"|"running"|"success"|"error">("idle");
-  const [deviceState, setDeviceState] = useState<any>(null);
+  const [deviceState, setDeviceState] = useState<string>("unknown");
 
   const run = async (id: string, args: Record<string, any> = {}) => {
     setStatus("running"); setOutput("");
@@ -41,7 +41,7 @@ export default function ActivationPage() {
 
       <div className="glass" style={{ padding: 16, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>Detection Engine</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>Detection Engine ({deviceState})</div>
           <div style={{ fontSize: 11, color: "#94a3b8" }}>Identify lock type before running exploit</div>
         </div>
         <button className="btn primary" onClick={checkState} disabled={status === "running"}>

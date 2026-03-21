@@ -139,12 +139,7 @@ fun MainScreen(
                             )
                         }
                         NavTarget.MISSION_HUB -> {
-                            MissionHubScreen(
-                                onNavigateBack = { viewModel.setNav(NavTarget.DASHBOARD) },
-                                onExecuteAction = { actionId ->
-                                    viewModel.queueOperation(actionId)
-                                }
-                            )
+                            com.deepeye.otg.ui.gsmg.BypassScreen()
                         }
                         else -> {
                             DisconnectedView(hazeState)

@@ -17,6 +17,7 @@ import CveDashboard from "./components/pages/CveDashboard";
 import VaultPage from "./components/pages/Vault";
 import IdentityPage from "./components/pages/Identity";
 import MassExtraction from "./components/pages/MassExtraction";
+import AdvancedPage from "./components/pages/Advanced";
 
 const PAGES: Record<string, JSX.Element> = {
   activation: <Activation />,
@@ -32,6 +33,7 @@ const PAGES: Record<string, JSX.Element> = {
   vault:       <VaultPage />,
   identity:    <IdentityPage />,
   extraction:  <MassExtraction />,
+  advanced:    <AdvancedPage />,
 };
 
 export default function App() {

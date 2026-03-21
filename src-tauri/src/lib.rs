@@ -7,6 +7,15 @@ mod toolbox;
 mod cve;
 mod vault;
 mod identity;
+mod nonce;
+mod afc;
+mod backup;
+mod frida;
+mod sideloader;
+mod ssh_tunnel;
+mod crash_logs;
+mod ipsw_dl;
+mod developer;
 
 use commands::ios_backup::{ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack};
 use commands::adb::stream_adb_logs;
@@ -57,6 +66,53 @@ use vault::{
 
 use identity::{
     check_imei_intel, get_full_identity
+};
+
+use nonce::{
+    get_current_nonce, set_nonce_generator, set_nonce_from_blob,
+    get_generator_from_blob, clear_nonce, set_nonce_checkra1n
+};
+
+use afc::{
+    mount_afc2, list_directory, get_file_info, read_file,
+    write_file, delete_path, make_directory, pull_file, push_file
+};
+
+use backup::{
+    create_backup, backup_encrypted, restore_backup, list_backups,
+    delete_backup, change_backup_password, extract_app_data, restore_app_data
+};
+
+use frida::{
+    frida_ps, frida_attach, frida_spawn, frida_run_script,
+    frida_kill_process, frida_list_exports, inject_dylib,
+    dump_app_memory, ssl_kill_switch
+};
+
+use sideloader::{
+    install_ipa, sign_and_install, list_installed_apps,
+    uninstall_app, get_app_info, reinstall_app
+};
+
+use ssh_tunnel::{
+    start_ssh_tunnel, stop_ssh_tunnel, check_tunnel_status,
+    run_ssh_command, run_su_command, ssh_upload_file,
+    ssh_download_file, install_sileo_pkg
+};
+
+use crash_logs::{
+    pull_crash_logs, list_crash_logs, read_crash_log,
+    clear_crash_logs, symbolicate_log
+};
+
+use ipsw_dl::{
+    get_signed_firmwares, get_all_firmwares, download_ipsw,
+    get_download_progress, verify_ipsw_sha1
+};
+
+use developer::{
+    mount_dev_disk_image, unmount_dev_disk_image, check_dev_disk_mounted,
+    list_processes, get_screenshot
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -139,7 +195,68 @@ pub fn run() {
             pull_from_cloud_vault,
             list_cloud_vault,
             check_imei_intel,
-            get_full_identity
+            get_full_identity,
+            get_current_nonce,
+            set_nonce_generator,
+            set_nonce_from_blob,
+            get_generator_from_blob,
+            clear_nonce,
+            set_nonce_checkra1n,
+            mount_afc2,
+            list_directory,
+            get_file_info,
+            read_file,
+            write_file,
+            delete_path,
+            make_directory,
+            pull_file,
+            push_file,
+            create_backup,
+            backup_encrypted,
+            restore_backup,
+            list_backups,
+            delete_backup,
+            change_backup_password,
+            extract_app_data,
+            restore_app_data,
+            frida_ps,
+            frida_attach,
+            frida_spawn,
+            frida_run_script,
+            frida_kill_process,
+            frida_list_exports,
+            inject_dylib,
+            dump_app_memory,
+            ssl_kill_switch,
+            install_ipa,
+            sign_and_install,
+            list_installed_apps,
+            uninstall_app,
+            get_app_info,
+            reinstall_app,
+            start_ssh_tunnel,
+            stop_ssh_tunnel,
+            check_tunnel_status,
+            run_ssh_command,
+            run_su_command,
+            ssh_upload_file,
+            ssh_download_file,
+            install_sileo_pkg,
+            pull_crash_logs,
+            list_crash_logs,
+            read_crash_log,
+            clear_crash_logs,
+            symbolicate_log,
+            get_signed_firmwares,
+            get_all_firmwares,
+            download_ipsw,
+            get_download_progress,
+            verify_ipsw_sha1,
+            mount_dev_disk_image,
+            unmount_dev_disk_image,
+            check_dev_disk_mounted,
+            list_processes,
+            get_screenshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

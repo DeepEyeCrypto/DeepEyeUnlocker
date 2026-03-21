@@ -8,14 +8,14 @@ interface DeviceIdentity {
     serial?: string;
     board_id?: string;
     chip_id?: string;
-    is_cdma: bool;
-    imei_valid: bool;
+    is_cdma: boolean;
+    imei_valid: boolean;
 }
 
 export const IdentityForensics: React.FC = () => {
     const [udid, setUdid] = useState("");
     const [identity, setIdentity] = useState<DeviceIdentity | null>(null);
-    const [status, setStatus] = useState("Idle");
+    const [, setStatus] = useState("Idle");
 
     const fetchIdentity = async () => {
         try {

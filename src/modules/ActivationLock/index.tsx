@@ -3,8 +3,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 interface ActivationState {
-    locked: bool,
-    fmi_enabled: bool,
+    locked: boolean,
+    fmi_enabled: boolean,
     apple_id_bound: string | null,
     removal_path: 'None' | 'DfuRestore' | 'DirectFmiOff' | 'Checkra1n' | 'A12Ramdisk',
     model: string,
