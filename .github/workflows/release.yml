@@ -67,6 +67,9 @@ jobs:
           echo "✅ Keystore valid"
 
       # ── Build signed release APK ──────────────────────────
+      - name: Remove local org.gradle.java.home
+        run: sed -i '/org.gradle.java.home/d' gradle.properties || true
+
       - name: Build signed release APK
         env:
           KEYSTORE_PATH:  ${{ env.KEYSTORE_PATH }}

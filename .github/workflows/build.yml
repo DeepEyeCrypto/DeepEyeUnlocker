@@ -29,6 +29,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Remove local org.gradle.java.home
+        run: sed -i '/org.gradle.java.home/d' gradle.properties || true
+
       - name: Grant execute permission
         run: chmod +x gradlew
 
