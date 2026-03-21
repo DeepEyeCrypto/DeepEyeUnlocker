@@ -15,16 +15,23 @@ interface DeviceIdentity {
 export const IdentityForensics: React.FC = () => {
     const [udid, setUdid] = useState("");
     const [identity, setIdentity] = useState<DeviceIdentity | null>(null);
-    const [, setStatus] = useState("Idle");
+    const [status, setStatus] = useState("Idle");
+    const [error, setError] = useState<string | null>(null);
 
     const fetchIdentity = async () => {
+        if (!udid && !identity) {
+            setError("Please enter a UDID or connect a device first.");
+            return;
+        }
         try {
+            setError(null);
             setStatus("Querying...");
             const res = await invoke<DeviceIdentity>('ios_device_identity', { udid });
             setIdentity(res);
             setStatus("Complete");
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
+            setError(e.toString());
             setStatus("Error");
         }
     };
@@ -63,6 +70,12 @@ export const IdentityForensics: React.FC = () => {
                 </button>
             </div>
 
+            {error && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 animate-in fade-in duration-300">
+                    <span className="font-bold underline uppercase mr-2 text-[10px]">Critical Error:</span> {error}
+                </div>
+            )}
+
             {identity && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 animate-in zoom-in duration-300">
                     {[
@@ -74,7 +87,10 @@ export const IdentityForensics: React.FC = () => {
                         { label: "UDID", val: identity.udid, col: "text-blue-300" },
                     ].map((item, i) => (
                         <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-1">
-                            <div className="text-[8px] text-gray-500 font-black uppercase tracking-widest">{item.label}</div>
+                            <div className="flex justify-between">
+                                <div className="text-[8px] text-gray-500 font-black uppercase tracking-widest">{item.label}</div>
+                                {status === "Querying..." && <div className="animate-pulse size-1.5 rounded-full bg-blue-500" />}
+                            </div>
                             <div className={`font-bold break-all text-[11px] ${item.col}`}>{item.val || 'N/A'}</div>
                         </div>
                     ))}

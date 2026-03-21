@@ -5,10 +5,12 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -52,15 +54,13 @@ fun MainScreen(
     hidViewModel: com.deepeye.otg.viewmodel.research.HidResearchViewModel = hiltViewModel(),
     onRemoteShare: () -> Unit
 ) {
-    val lifecycleState by viewModel.lifecycleState.collectAsState()
     val sessions by viewModel.sessions.collectAsState()
     val selectedKey by viewModel.selectedDeviceKey.collectAsState()
-    val sessionState by viewModel.domainSessionState.collectAsState()
     val currentNav by viewModel.currentNav.collectAsState()
     val perfMode by viewModel.performanceMode.collectAsState()
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -69,82 +69,66 @@ fun MainScreen(
                 )
             )
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            // V3.0 Command Rail
-            MissionNavigationRail(viewModel)
+        val compactLayout = maxWidth < 700.dp
+        val fabBottomPadding = if (compactLayout) 88.dp else 32.dp
+        val fabSize = if (compactLayout) 56.dp else 64.dp
 
-            Column(modifier = Modifier.weight(1f)) {
-                // Consolidated Mission Top Bar (Stage 200.2)
+        if (compactLayout) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 if (currentNav != NavTarget.SETTINGS) {
                     MissionTopBar(
                         viewModel = viewModel,
                         sessions = sessions,
                         selectedKey = selectedKey,
                         onSelect = { viewModel.selectDevice(it) },
-                        onRemoteShare = onRemoteShare
+                        onRemoteShare = onRemoteShare,
+                        compactMode = true
                     )
                 }
 
-                // Debug Overlay (Top Layer)
                 DebugOverlayPanel(viewModel)
 
-                // Dynamic Layer: Changes between Disconnected and Active modes
-                AnimatedContent(
-                    targetState = currentNav,
+                MissionNavContent(
                     modifier = Modifier.weight(1f),
-                    transitionSpec = {
-                        (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(fadeOut(tween(300)) + scaleOut(targetScale = 1.05f))
-                    },
-                    label = "NavTransition"
-                ) { target ->
-                    when (target) {
-                        NavTarget.DASHBOARD -> {
-                            TargetDashboardScreen(viewModel, hazeState)
-                        }
-                        NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
-                        NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
-                        NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
-                        NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
-                        NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
-                        NavTarget.TERMINAL -> TerminalScreen(viewModel)
-                        NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
-                            viewModel = cveViewModel,
-                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+                    currentNav = currentNav,
+                    viewModel = viewModel,
+                    hazeState = hazeState,
+                    perfMode = perfMode,
+                    cveViewModel = cveViewModel,
+                    fuzzViewModel = fuzzViewModel,
+                    hidViewModel = hidViewModel
+                )
+
+                MissionNavigationBar(viewModel = viewModel)
+            }
+        } else {
+            Row(modifier = Modifier.fillMaxSize()) {
+                MissionNavigationRail(viewModel)
+
+                Column(modifier = Modifier.weight(1f)) {
+                    if (currentNav != NavTarget.SETTINGS) {
+                        MissionTopBar(
+                            viewModel = viewModel,
+                            sessions = sessions,
+                            selectedKey = selectedKey,
+                            onSelect = { viewModel.selectDevice(it) },
+                            onRemoteShare = onRemoteShare,
+                            compactMode = false
                         )
-                        NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
-                            viewModel = fuzzViewModel,
-                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
-                        )
-                        NavTarget.HID_RESEARCH -> HidResearchScreen(
-                            viewModel = hidViewModel,
-                            onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
-                        )
-                        NavTarget.STORAGE -> StorageScreen()
-                        NavTarget.SETTINGS -> SettingsScreen(viewModel)
-                        NavTarget.IMEI_REPAIR -> {
-                            val aiAnalysis by viewModel.aiAnalysis.collectAsState()
-                            val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
-                            val ci1 by viewModel.currentImei1.collectAsState()
-                            val ci2 by viewModel.currentImei2.collectAsState()
-                            
-                            ImeiRepairScreen(
-                                onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
-                                onRead = { viewModel.readImei() },
-                                currentImei1 = ci1,
-                                currentImei2 = ci2,
-                                hazeState = hazeState,
-                                perfMode = perfMode,
-                                aiAnalysis = aiAnalysis,
-                                isAiProcessing = aiIsProcessing
-                            )
-                        }
-                        NavTarget.MISSION_HUB -> {
-                            com.deepeye.otg.ui.gsmg.BypassScreen()
-                        }
-                        else -> {
-                            DisconnectedView(hazeState)
-                        }
                     }
+
+                    DebugOverlayPanel(viewModel)
+
+                    MissionNavContent(
+                        modifier = Modifier.weight(1f),
+                        currentNav = currentNav,
+                        viewModel = viewModel,
+                        hazeState = hazeState,
+                        perfMode = perfMode,
+                        cveViewModel = cveViewModel,
+                        fuzzViewModel = fuzzViewModel,
+                        hidViewModel = hidViewModel
+                    )
                 }
             }
         }
@@ -154,13 +138,85 @@ fun MainScreen(
             onClick = onRemoteShare,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 32.dp, end = 24.dp)
-                .size(64.dp),
+                .padding(bottom = fabBottomPadding, end = 16.dp)
+                .size(fabSize),
             containerColor = StitchTokens.Primary,
             contentColor = Color.White,
             shape = CircleShape
         ) {
             Icon(Icons.Default.CloudSync, "Remote Share")
+        }
+    }
+}
+
+@Composable
+private fun MissionNavContent(
+    modifier: Modifier = Modifier,
+    currentNav: NavTarget,
+    viewModel: UsbViewModel,
+    hazeState: HazeState,
+    perfMode: Boolean,
+    cveViewModel: CveDashboardViewModel,
+    fuzzViewModel: com.deepeye.otg.viewmodel.research.FuzzDashboardViewModel,
+    hidViewModel: com.deepeye.otg.viewmodel.research.HidResearchViewModel
+) {
+    AnimatedContent(
+        targetState = currentNav,
+        modifier = modifier,
+        transitionSpec = {
+            (fadeIn(tween(400)) + scaleIn(initialScale = 0.95f)).togetherWith(
+                fadeOut(tween(300)) + scaleOut(targetScale = 1.05f)
+            )
+        },
+        label = "NavTransition"
+    ) { target ->
+        when (target) {
+            NavTarget.DASHBOARD -> {
+                TargetDashboardScreen(viewModel, hazeState)
+            }
+            NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
+            NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
+            NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
+            NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
+            NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
+            NavTarget.TERMINAL -> TerminalScreen(viewModel)
+            NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
+                viewModel = cveViewModel,
+                onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+            )
+            NavTarget.FUZZ_DASHBOARD -> FuzzDashboardScreen(
+                viewModel = fuzzViewModel,
+                onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+            )
+            NavTarget.HID_RESEARCH -> HidResearchScreen(
+                viewModel = hidViewModel,
+                onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
+            )
+            NavTarget.STORAGE -> StorageScreen()
+            NavTarget.SETTINGS -> SettingsScreen(viewModel)
+            NavTarget.IMEI_REPAIR -> {
+                val aiAnalysis by viewModel.aiAnalysis.collectAsState()
+                val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
+                val ci1 by viewModel.currentImei1.collectAsState()
+                val ci2 by viewModel.currentImei2.collectAsState()
+
+                ImeiRepairScreen(
+                    onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
+                    onRead = { viewModel.readImei() },
+                    currentImei1 = ci1,
+                    currentImei2 = ci2,
+                    hazeState = hazeState,
+                    perfMode = perfMode,
+                    aiAnalysis = aiAnalysis,
+                    isAiProcessing = aiIsProcessing
+                )
+            }
+            NavTarget.MISSION_HUB -> {
+                com.deepeye.otg.ui.gsmg.BypassScreen()
+            }
+            else -> {
+                DisconnectedView(hazeState)
+            }
         }
     }
 }
@@ -215,7 +271,12 @@ private fun DisconnectedView(hazeState: HazeState) {
         Spacer(modifier = Modifier.height(60.dp))
         
         // Status Chips
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             StatusChip(Icons.Default.CheckCircle, "USB Host Mode ✓", Color(0xFF4ADE80))
             StatusChip(Icons.Default.Info, "Root Optional", StitchTokens.Primary)
             StatusChip(Icons.Default.Cable, "OTG Cable Required", Color(0xFFFBBF24))
@@ -559,16 +620,7 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
             val isSelected = currentNav.hub == hub
             NavigationRailItem(
                 selected = isSelected,
-                onClick = {
-                    val target = when (hub) {
-                        MissionHub.COMMAND -> NavTarget.DASHBOARD
-                        MissionHub.LAB -> NavTarget.LAB_HOME
-                        MissionHub.BYPASS -> NavTarget.MISSION_HUB
-                        MissionHub.INTEL -> NavTarget.CVE_INTELLIGENCE
-                        MissionHub.ARCHIVE -> NavTarget.SETTINGS
-                    }
-                    viewModel.setNav(target)
-                },
+                onClick = { viewModel.setNav(defaultTargetForHub(hub)) },
                 icon = {
                     Icon(
                         imageVector = hub.icon,
@@ -590,4 +642,51 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
             )
         }
     }
+}
+
+@Composable
+private fun MissionNavigationBar(viewModel: UsbViewModel) {
+    val currentNav by viewModel.currentNav.collectAsState()
+
+    NavigationBar(
+        containerColor = StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.96f),
+        tonalElevation = 0.dp
+    ) {
+        MissionHub.entries.forEach { hub ->
+            val isSelected = currentNav.hub == hub
+
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { viewModel.setNav(defaultTargetForHub(hub)) },
+                icon = {
+                    Icon(
+                        imageVector = hub.icon,
+                        contentDescription = hub.label
+                    )
+                },
+                label = {
+                    Text(
+                        text = hub.label,
+                        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp)
+                    )
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    selectedTextColor = StitchTokens.Primary,
+                    indicatorColor = StitchTokens.Primary.copy(alpha = 0.12f),
+                    unselectedIconColor = StitchTokens.TextSecondary,
+                    unselectedTextColor = StitchTokens.TextSecondary
+                )
+            )
+        }
+    }
+}
+
+private fun defaultTargetForHub(hub: MissionHub): NavTarget = when (hub) {
+    MissionHub.COMMAND -> NavTarget.DASHBOARD
+    MissionHub.LAB -> NavTarget.LAB_HOME
+    MissionHub.BYPASS -> NavTarget.MISSION_HUB
+    MissionHub.INTEL -> NavTarget.CVE_INTELLIGENCE
+    MissionHub.ARCHIVE -> NavTarget.SETTINGS
 }

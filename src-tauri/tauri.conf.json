@@ -33,6 +33,9 @@
     "targets": "all",
     "icon": [
       "icons/icon.png"
+    ],
+    "resources": [
+      "python/**/*"
     ]
   },
   "plugins": {

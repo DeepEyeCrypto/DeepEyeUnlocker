@@ -1,3 +1,14 @@
+## [2026.30.0] — 2026-03-22
+
+### ✨ Stable Release — Platform Synchronization & Hardware Bridge
+- **Unified Bridge**: Synchronized versions across Android (v20300) and Desktop (2026.30.0).
+- **Resource Orchestration**: Fixed production bundling of Python forensic scripts in macOS/Windows packages.
+- **Hardware Telemetry**: Replaced UI placeholders in `DeviceBar` with real-time `ios_poll_orchestrator` and `ios_device_identity` telemetry.
+- **Identity Forensic Audit**: Hardened the Forensic Dashboard with robust error handling for sub-millisecond device extraction.
+- **Liquid Glass v2.1**: Polished glassmorphism tokens for better contrast on high-DPI displays.
+
+---
+
 ## [2026.28.0] — 2026-03-15
 
 ### 🔓 Owned Device Mode — Policy Bypass & UI Fixes

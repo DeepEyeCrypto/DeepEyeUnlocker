@@ -5,9 +5,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -141,91 +143,202 @@ fun MissionTopBar(
     sessions: Map<String, UsbLifecycleState>,
     selectedKey: String?,
     onSelect: (String) -> Unit,
-    onRemoteShare: () -> Unit
+    onRemoteShare: () -> Unit,
+    compactMode: Boolean = false
 ) {
+    val showDebug by viewModel.showDebugPanel.collectAsState()
+    val selectedSession = selectedKey?.let(sessions::get)
+    val selectedLabel = when (selectedSession) {
+        is UsbLifecycleState.Connected -> selectedSession.deviceName
+        is UsbLifecycleState.DeviceDetected -> selectedSession.brand
+        is UsbLifecycleState.Connecting -> "Establishing link"
+        is UsbLifecycleState.PermissionPending -> "USB permission pending"
+        is UsbLifecycleState.PermissionDenied -> "USB permission denied"
+        is UsbLifecycleState.Error -> selectedSession.message
+        is UsbLifecycleState.Dead -> selectedSession.reason
+        else -> if (sessions.isEmpty()) "Awaiting target" else "${sessions.size} target(s) available"
+    }
+
     Surface(
         color = StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.8f),
-        modifier = Modifier.fillMaxWidth().statusBarsPadding().height(64.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(if (compactMode) 104.dp else 72.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Left: Mission Queue
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(
-                        text = "MISSION_QUEUE",
-                        style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
-                        color = StitchTokens.TextSecondary
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        items(sessions.toList()) { (key, state) ->
-                            val isSelected = key == selectedKey
-                            val protocol = when (state) {
-                                is UsbLifecycleState.Connected -> state.protocolFamily
-                                is UsbLifecycleState.DeviceDetected -> state.protocolFamily
-                                is UsbLifecycleState.Connecting -> state.protocolFamily
-                                else -> ProtocolFamily.UNKNOWN
-                            }
-                            val accent = if (state.isConnected || state is UsbLifecycleState.DeviceDetected) 
-                                protocol.getAccentColor() 
-                            else StitchTokens.Semantic.StatusIdle
+        if (compactMode) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "MISSION_QUEUE",
+                            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
+                            color = StitchTokens.TextSecondary
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = selectedLabel,
+                            style = StitchTokens.BodyMedium,
+                            color = StitchTokens.TextPrimary,
+                            maxLines = 1
+                        )
+                    }
 
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isSelected) accent.copy(alpha = 0.15f) else Color.Transparent)
-                                    .border(1.dp, if (isSelected) accent else Color.White.copy(0.1f), CircleShape)
-                                    .clickable { onSelect(key) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (state.isConnected) Icons.Default.Smartphone else Icons.Default.Usb,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = if (isSelected) accent else StitchTokens.TextSecondary
-                                )
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = onRemoteShare,
+                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                        ) {
+                            Icon(Icons.Default.CloudSync, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(
+                            onClick = { viewModel.toggleDebugPanel() },
+                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                        ) {
+                            Icon(
+                                Icons.Default.BugReport,
+                                null,
+                                modifier = Modifier.size(18.dp),
+                                tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(
+                            onClick = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) },
+                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                        ) {
+                            Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
                         }
                     }
                 }
-            }
-            
-            // Center: Telemetry Badges (Visible on larger screens or when connected)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TelemetryBadge(label = "LINK", value = "SOLID", color = StitchTokens.AccentSuccess)
-                Spacer(Modifier.width(16.dp))
-                TelemetryBadge(label = "STORE", value = "85%", color = StitchTokens.AccentWarning)
-            }
 
-            // Right: Global Actions
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = { viewModel.toggleDebugPanel() },
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                SessionSelectorRow(
+                    sessions = sessions,
+                    selectedKey = selectedKey,
+                    onSelect = onSelect,
+                    compactMode = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val showDebug by viewModel.showDebugPanel.collectAsState()
-                    Icon(
-                        Icons.Default.BugReport, 
-                        null, 
-                        modifier = Modifier.size(18.dp),
-                        tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
+                    Column {
+                        Text(
+                            text = "MISSION_QUEUE",
+                            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
+                            color = StitchTokens.TextSecondary
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = selectedLabel,
+                            style = StitchTokens.BodyMedium,
+                            color = StitchTokens.TextPrimary,
+                            maxLines = 1
+                        )
+                    }
+                    Spacer(Modifier.width(20.dp))
+                    SessionSelectorRow(
+                        sessions = sessions,
+                        selectedKey = selectedKey,
+                        onSelect = onSelect,
+                        compactMode = false,
+                        modifier = Modifier.weight(1f)
                     )
                 }
-                Spacer(Modifier.width(8.dp))
-                IconButton(
-                    onClick = onSelectSettings@{ viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) },
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                ) {
-                    Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
+
+                if (sessions.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TelemetryBadge(label = "LINK", value = "SOLID", color = StitchTokens.AccentSuccess)
+                        Spacer(Modifier.width(16.dp))
+                        TelemetryBadge(label = "TARGETS", value = sessions.size.toString(), color = StitchTokens.AccentWarning)
+                    }
+                    Spacer(Modifier.width(16.dp))
                 }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { viewModel.toggleDebugPanel() },
+                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                    ) {
+                        Icon(
+                            Icons.Default.BugReport,
+                            null,
+                            modifier = Modifier.size(18.dp),
+                            tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) },
+                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
+                    ) {
+                        Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionSelectorRow(
+    sessions: Map<String, UsbLifecycleState>,
+    selectedKey: String?,
+    onSelect: (String) -> Unit,
+    compactMode: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        sessions.forEach { (key, state) ->
+            val isSelected = key == selectedKey
+            val protocol = when (state) {
+                is UsbLifecycleState.Connected -> state.protocolFamily
+                is UsbLifecycleState.DeviceDetected -> state.protocolFamily
+                is UsbLifecycleState.Connecting -> state.protocolFamily
+                else -> ProtocolFamily.UNKNOWN
+            }
+            val accent = if (state.isConnected || state is UsbLifecycleState.DeviceDetected) {
+                protocol.getAccentColor()
+            } else {
+                StitchTokens.Semantic.StatusIdle
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(if (compactMode) 32.dp else 28.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) accent.copy(alpha = 0.15f) else Color.Transparent)
+                    .border(1.dp, if (isSelected) accent else Color.White.copy(alpha = 0.1f), CircleShape)
+                    .clickable { onSelect(key) },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (state.isConnected) Icons.Default.Smartphone else Icons.Default.Usb,
+                    contentDescription = null,
+                    modifier = Modifier.size(if (compactMode) 16.dp else 14.dp),
+                    tint = if (isSelected) accent else StitchTokens.TextSecondary
+                )
             }
         }
     }

@@ -91,7 +91,7 @@ cd DeepEyeUnlocker
 # Synchronize dependencies and build
 ./gradlew assembleRelease
 ```
-*Output: `app/build/outputs/apk/release/DeepEyeUnlocker_v2026.27.0.apk`*
+*Output: `app/build/outputs/apk/release/DeepEyeUnlocker_v2026.30.0.apk`*
 
 ---
 
