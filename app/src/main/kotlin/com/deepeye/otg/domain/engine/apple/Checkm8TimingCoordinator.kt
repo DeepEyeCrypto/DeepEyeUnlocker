@@ -3,6 +3,7 @@ package com.deepeye.otg.domain.engine.apple
 import android.content.Context
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
 import timber.log.Timber
 
 @Serializable

@@ -176,6 +176,3 @@ data class V6Partition(
     val offset: Long,
     val size: Long
 )
-
-// Utility extension
-fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }

@@ -176,3 +176,8 @@
 
 # ── Suppress noisy R8 notes ──────────────
 -dontnote **
+
+# ── JADX Legacy / AWT Suppressions ────────
+-dontwarn java.awt.**
+-dontwarn javax.imageio.**
+-dontwarn com.google.j2objc.annotations.**
