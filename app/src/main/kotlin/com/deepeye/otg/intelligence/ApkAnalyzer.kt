@@ -6,7 +6,8 @@ import timber.log.Timber
 import java.io.File
 
 import jadx.api.JavaClass
-import jadx.api.JavaResource
+import jadx.api.ResourceFile
+import jadx.api.ResourceType
 
 /**
  * ApkAnalyzer provides automated intelligence for APK files using JADX.
@@ -30,9 +31,9 @@ class ApkAnalyzer(private val apkFile: File) {
         val decompiler = JadxDecompiler(args)
         decompiler.load()
         
-        onProgress("Decompiling resources...")
-        val resources: List<JavaResource> = decompiler.resources
-        val manifest = resources.find { it.originalName == "AndroidManifest.xml" }?.content?.toString()
+        onProgress("Extracting manifest...")
+        val manifestResource = decompiler.resources.find { it.type == ResourceType.MANIFEST }
+        val manifest = manifestResource?.loadContent()?.toString()
         
         onProgress("Scanning for sensitive keys...")
         val foundKeys = mutableMapOf<String, String>()
