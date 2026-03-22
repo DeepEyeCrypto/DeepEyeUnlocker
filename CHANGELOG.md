@@ -1,3 +1,13 @@
+## [2026.31.0] — 2026-03-22
+
+### ✨ MTK V6 & Checkm8 — Intelligence Orchestration
+- **MTK V6 Protocol**: Stable implementation of the V6 forensic protocol, including DA selection and high-speed memory extraction.
+- **Checkm8 Exploit Platform**: Initial orchestration for the checkm8 exploit on target Apple hardware (iPhone X/8/7).
+- **Intelligence Suite**: Introduced `AnomalyDetector` (TFLite) for signal pattern analysis and `ApkAnalyzer` (JADX) for automated application deconstruction.
+- **Bypass V5 synchronization**: Full alignment of the backend bypass engine with the UI orchestration layer.
+
+---
+
 ## [2026.30.0] — 2026-03-22
 
 ### ✨ Stable Release — Platform Synchronization & Hardware Bridge

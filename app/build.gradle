@@ -6,6 +6,13 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// Add Java toolchain for Java 17 compatibility (Java 25 parsing issue)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 // ── Load signing properties (gitignored) ────────────────────
 def keystorePropsFile = rootProject.file("keystore.properties")
 def keystoreProps = new Properties()
@@ -23,8 +30,8 @@ android {
         applicationId "com.deepeye.otg"
         minSdk 26
         targetSdk 35
-        versionCode 20300
-        versionName "2026.30.0"
+        versionCode 20310
+        versionName "2026.31.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -144,7 +151,13 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    // Stage 3: JADX libraries for APK Analysis (temporarily disabled for build)
+    // implementation("com.github.skylot:jadx-core:1.5.0")
+    // implementation("com.github.skylot:jadx-dex-input:1.5.0")
+
+    // Stage 5: TensorFlow Lite for AI Anomaly Detection
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'com.google.android.material:material:1.11.0'
