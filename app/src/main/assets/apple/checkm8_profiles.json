@@ -1,0 +1,42 @@
+[
+  {
+    "chipId": 35168,
+    "name": "A7",
+    "heapAddress": 6442450944,
+    "payloadAddress": 6442516480,
+    "sprayCount": 1024,
+    "holeSize": 4096
+  },
+  {
+    "chipId": 28672,
+    "name": "A8",
+    "heapAddress": 6442450944,
+    "payloadAddress": 6442516480,
+    "sprayCount": 1024,
+    "holeSize": 4096
+  },
+  {
+    "chipId": 32768,
+    "name": "A9",
+    "heapAddress": 6442450944,
+    "payloadAddress": 6442516480,
+    "sprayCount": 1024,
+    "holeSize": 4096
+  },
+  {
+    "chipId": 32784,
+    "name": "A10",
+    "heapAddress": 6442450944,
+    "payloadAddress": 6442516480,
+    "sprayCount": 2048,
+    "holeSize": 8192
+  },
+  {
+    "chipId": 32789,
+    "name": "A11",
+    "heapAddress": 6442450944,
+    "payloadAddress": 6442516480,
+    "sprayCount": 2048,
+    "holeSize": 8192
+  }
+]

@@ -15,15 +15,6 @@ import kotlinx.coroutines.flow.flowOn
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-sealed class V6Error(message: String) : Exception(message) {
-    object InterfaceClaimFailed : V6Error("Failed to claim CDC control/data interfaces")
-    object EndpointDiscoveryFailed : V6Error("Failed to resolve CDC bulk endpoints")
-    object CdcSetupFailed : V6Error("CDC-ACM setup failed")
-    object SyncAttemptedBeforeSetup : V6Error("CDC setup must complete before V6 sync")
-    object SyncTransferFailed : V6Error("Failed to send V6 sync bytes")
-    object HelloReadFailed : V6Error("Failed to read V6 hello packet")
-}
-
 /**
  * MtkCdcSession — MediaTek CDC_SERIAL protocol handler
  * Optimized for OPLUS VID=0x22D9 (hw_code=0x1209)

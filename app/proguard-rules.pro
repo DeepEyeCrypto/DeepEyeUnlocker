@@ -102,3 +102,77 @@
 -keepattributes SourceFile,LineNumberTable
 -keepattributes RuntimeVisibleAnnotations
 -renamesourcefileattribute SourceFile
+
+# ── Kotlin ────────────────────────────────
+-keep class kotlin.Metadata { *; }
+-dontwarn kotlin.**
+-dontwarn kotlinx.**
+-keepattributes *Annotation*, InnerClasses
+-keepattributes Signature, Exceptions
+
+# ── Coroutines ────────────────────────────
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-dontwarn kotlinx.coroutines.**
+
+# ── Hilt / Dagger ─────────────────────────
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep @dagger.hilt.android.lifecycle.HiltViewModel
+      class * extends androidx.lifecycle.ViewModel
+
+# ── Room (if used) ────────────────────────
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-keep @androidx.room.Dao class *
+-dontwarn androidx.room.**
+
+# ── Moshi / Gson ─────────────────────────
+-keepclassmembers class * {
+    @com.squareup.moshi.Json <fields>;
+}
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-dontwarn com.squareup.moshi.**
+
+# ── Timber ───────────────────────────────
+-dontwarn timber.log.**
+
+# ── USB / JNI Bridge ─────────────────────
+-keep class com.deepeye.otg.usb.** { *; }
+-keep class com.deepeye.otg.usb.IRecoveryBridge { *; }
+-keep class com.deepeye.otg.usb.IRecoveryBridge$* { *; }
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# ── Domain / Engine ──────────────────────
+-keep class com.deepeye.otg.data.gsmg.** { *; }
+-keep class com.deepeye.otg.data.hardware.** { *; }
+-keep class com.deepeye.otg.domain.engine.** { *; }
+-keep class com.deepeye.otg.protocol.** { *; }
+-keep class com.deepeye.otg.intelligence.** { *; }
+
+# ── Sealed classes ────────────────────────
+-keep class com.deepeye.otg.data.gsmg.BypassEvent$* { *; }
+-keep class com.deepeye.otg.usb.IosOtgError$* { *; }
+-keep class com.deepeye.otg.usb.ConnectionState$* { *; }
+
+# ── Enums ─────────────────────────────────
+-keepclassmembers enum com.deepeye.otg.** {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ── ViewModels ────────────────────────────
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+
+# ── Suppress noisy R8 notes ──────────────
+-dontnote **

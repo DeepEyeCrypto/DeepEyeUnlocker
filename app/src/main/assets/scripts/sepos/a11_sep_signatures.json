@@ -1,0 +1,21 @@
+{
+  "A11": {
+    "functions": [
+      {
+        "name": "sep_panic",
+        "signature": "55 48 89 E5 48 81 EC 80 00 00 00",
+        "offset": "0x1234"
+      },
+      {
+        "name": "sep_early_init",
+        "signature": "48 83 EC 08 48 8B 05 ?? ?? ?? ??",
+        "offset": "0x5678"
+      },
+      {
+        "name": "sep_aes_encrypt",
+        "signature": "41 57 41 56 41 55 41 54 53 48 81 EC",
+        "offset": "0xABCD"
+      }
+    ]
+  }
+}

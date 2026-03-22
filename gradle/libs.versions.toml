@@ -1,12 +1,12 @@
 [versions]
-agp = "8.3.0"
-kotlin = "1.9.22"
-compose-bom = "2024.02.00"
+agp = "8.6.0"
+kotlin = "2.0.21"
+compose-bom = "2024.09.00"
 lifecycle = "2.7.0"
-activity-compose = "1.8.2"
-core-ktx = "1.12.0"
-hilt = "2.51"
-coroutines = "1.7.3"
+activity-compose = "1.9.0"
+core-ktx = "1.13.0"
+hilt = "2.51.1"
+coroutines = "1.8.0"
 room = "2.6.1"
 datastore = "1.0.0"
 retrofit = "2.9.0"
@@ -19,8 +19,8 @@ navigation = "2.7.7"
 hilt-nav = "1.2.0"
 
 [plugins]
-android-application = { id = "com.android.application", version = "${agp}" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version = "${kotlin}" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
