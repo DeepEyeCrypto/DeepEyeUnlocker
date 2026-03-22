@@ -1,0 +1,478 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/Users/enayat/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/native-platform-0.22-milestone-27.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Initialized native services in: /Users/enayat/.gradle/native
+Initialized jansi services in: /Users/enayat/.gradle/native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'command '/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java''. Working directory: /Users/enayat/.gradle/.tmp/tmp-jvm10029167889603109290probe Command: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java''
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home, JAVA_VERSION=17.0.18, JAVA_VENDOR=Eclipse Adoptium, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=17.0.18+8, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=17.0.18+8, VM_VENDOR=Eclipse Adoptium, OS_ARCH=x86_64}
+Starting process 'Gradle build daemon'. Working directory: /Users/enayat/.gradle/daemon/8.12 Command: /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=1024m -Xmx8192m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant -cp /Users/enayat/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/gradle-daemon-main-8.12.jar -javaagent:/Users/enayat/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/agents/gradle-instrumentation-agent-8.12.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.12
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 5.345 secs.
+The client will now receive all logging from the daemon (pid: 2073). The daemon log file: /Users/enayat/.gradle/daemon/8.12/daemon-2073.out.log
+Daemon will be stopped at the end of the build 
+Using 4 worker leases.
+Received JVM installation metadata from '/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home': {JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home, JAVA_VERSION=17.0.18, JAVA_VENDOR=Eclipse Adoptium, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=17.0.18+8, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=17.0.18+8, VM_VENDOR=Eclipse Adoptium, OS_ARCH=x86_64}
+Watching the file system is configured to be enabled if available
+Now considering [/Users/enayat/Documents/DeepEyeUnlocker] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/Users/enayat/Documents/DeepEyeUnlocker/settings.gradle.kts'.
+Projects loaded. Root project using build file '/Users/enayat/Documents/DeepEyeUnlocker/build.gradle.kts'.
+Included projects: [root project 'DeepEyeUnlocker', project ':app']
+
+> Configure project :
+Evaluating root project 'DeepEyeUnlocker' using build file '/Users/enayat/Documents/DeepEyeUnlocker/build.gradle.kts'.
+
+> Configure project :app
+Evaluating project ':app' using build file '/Users/enayat/Documents/DeepEyeUnlocker/app/build.gradle'.
+Resolved plugin [id: 'com.android.application']
+Resolved plugin [id: 'org.jetbrains.kotlin.android']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose']
+Resolved plugin [id: 'com.google.dagger.hilt.android']
+Resolved plugin [id: 'com.google.devtools.ksp']
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+C/C++: android.ndkVersion from module build.gradle is [25.1.8937393]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is /usr/local/share/android-commandlinetools
+Parsed shrinker version: 8.2.47
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+All projects evaluated.
+Task path ':app:minifyReleaseWithR8' matched project ':app'
+Task name matched 'minifyReleaseWithR8'
+Selected primary task 'minifyReleaseWithR8' from project :app
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+Tasks to be executed: [task ':app:preBuild', task ':app:preReleaseBuild', task ':app:checkReleaseDuplicateClasses', task ':app:mergeReleaseArtProfile', task ':app:buildKotlinToolingMetadata', task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:generateReleaseBuildConfig', task ':app:checkReleaseAarMetadata', task ':app:generateReleaseResValues', task ':app:mapReleaseSourceSetPaths', task ':app:generateReleaseResources', task ':app:mergeReleaseResources', task ':app:packageReleaseResources', task ':app:parseReleaseLocalResources', task ':app:createReleaseCompatibleScreenManifests', task ':app:extractDeepLinksRelease', task ':app:processReleaseMainManifest', task ':app:processReleaseManifest', task ':app:processReleaseManifestForPackage', task ':app:processReleaseResources', task ':app:kspReleaseKotlin', task ':app:compileReleaseKotlin', task ':app:javaPreCompileRelease', task ':app:compileReleaseJavaWithJavac', task ':app:hiltAggregateDepsRelease', task ':app:hiltJavaCompileRelease', task ':app:transformReleaseClassesWithAsm', task ':app:expandReleaseArtProfileWildcards', task ':app:extractProguardFiles', task ':app:mergeReleaseGeneratedProguardFiles', task ':app:processReleaseJavaRes', task ':app:mergeReleaseJavaResource', task ':app:minifyReleaseWithR8']
+Tasks that were excluded: []
+Resolve mutations for :app:preBuild (Thread[Execution worker,5,main]) started.
+:app:preBuild (Thread[Execution worker,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preReleaseBuild (Thread[Execution worker,5,main]) started.
+:app:preReleaseBuild (Thread[Execution worker,5,main]) started.
+
+> Task :app:preReleaseBuild UP-TO-DATE
+Skipping task ':app:preReleaseBuild' as it has no actions.
+Resolve mutations for :app:checkReleaseDuplicateClasses (Thread[included builds,5,main]) started.
+:app:checkReleaseDuplicateClasses (Thread[included builds,5,main]) started.
+
+> Task :app:checkReleaseDuplicateClasses
+Caching disabled for task ':app:checkReleaseDuplicateClasses' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkReleaseDuplicateClasses' as it is up-to-date.
+
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+Resolve mutations for :app:mergeReleaseArtProfile (Thread[included builds,5,main]) started.
+:app:mergeReleaseArtProfile (Thread[included builds,5,main]) started.
+
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+Caching disabled for task ':app:mergeReleaseArtProfile' because:
+  Build cache is disabled
+  Tasks that merge files into a directory/jar without further processing usually do not benefit from caching. Also, their outputs are usually large, which would consume a lot of space when cached.
+Skipping task ':app:mergeReleaseArtProfile' as it is up-to-date.
+Resolve mutations for :app:buildKotlinToolingMetadata (Thread[Execution worker,5,main]) started.
+:app:buildKotlinToolingMetadata (Thread[Execution worker,5,main]) started.
+
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+Caching disabled for task ':app:buildKotlinToolingMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:buildKotlinToolingMetadata' as it is up-to-date.
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:generateReleaseBuildConfig (Thread[Execution worker,5,main]) started.
+:app:generateReleaseBuildConfig (Thread[Execution worker,5,main]) started.
+
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+Caching disabled for task ':app:generateReleaseBuildConfig' because:
+  Build cache is disabled
+Skipping task ':app:generateReleaseBuildConfig' as it is up-to-date.
+Resolve mutations for :app:checkReleaseAarMetadata (Thread[Execution worker,5,main]) started.
+:app:checkReleaseAarMetadata (Thread[Execution worker,5,main]) started.
+
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+Caching disabled for task ':app:checkReleaseAarMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkReleaseAarMetadata' as it is up-to-date.
+Resolve mutations for :app:generateReleaseResValues (Thread[Execution worker,5,main]) started.
+:app:generateReleaseResValues (Thread[Execution worker,5,main]) started.
+
+> Task :app:generateReleaseResValues UP-TO-DATE
+Caching disabled for task ':app:generateReleaseResValues' because:
+  Build cache is disabled
+Skipping task ':app:generateReleaseResValues' as it is up-to-date.
+Resolve mutations for :app:mapReleaseSourceSetPaths (Thread[Execution worker,5,main]) started.
+:app:mapReleaseSourceSetPaths (Thread[Execution worker,5,main]) started.
+
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+Caching disabled for task ':app:mapReleaseSourceSetPaths' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mapReleaseSourceSetPaths' as it is up-to-date.
+Resolve mutations for :app:generateReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+:app:generateReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:generateReleaseResources UP-TO-DATE
+Skipping task ':app:generateReleaseResources' as it has no actions.
+Resolve mutations for :app:mergeReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+:app:mergeReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:mergeReleaseResources UP-TO-DATE
+Caching disabled for task ':app:mergeReleaseResources' because:
+  Build cache is disabled
+Skipping task ':app:mergeReleaseResources' as it is up-to-date.
+Resolve mutations for :app:packageReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+:app:packageReleaseResources (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:packageReleaseResources UP-TO-DATE
+Caching disabled for task ':app:packageReleaseResources' because:
+  Build cache is disabled
+Skipping task ':app:packageReleaseResources' as it is up-to-date.
+Resolve mutations for :app:parseReleaseLocalResources (Thread[Execution worker,5,main]) started.
+:app:parseReleaseLocalResources (Thread[Execution worker,5,main]) started.
+
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+Caching disabled for task ':app:parseReleaseLocalResources' because:
+  Build cache is disabled
+Skipping task ':app:parseReleaseLocalResources' as it is up-to-date.
+Resolve mutations for :app:createReleaseCompatibleScreenManifests (Thread[Execution worker,5,main]) started.
+:app:createReleaseCompatibleScreenManifests (Thread[Execution worker,5,main]) started.
+
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+Caching disabled for task ':app:createReleaseCompatibleScreenManifests' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createReleaseCompatibleScreenManifests' as it is up-to-date.
+Resolve mutations for :app:extractDeepLinksRelease (Thread[Execution worker,5,main]) started.
+:app:extractDeepLinksRelease (Thread[Execution worker,5,main]) started.
+
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+Caching disabled for task ':app:extractDeepLinksRelease' because:
+  Build cache is disabled
+Skipping task ':app:extractDeepLinksRelease' as it is up-to-date.
+Resolve mutations for :app:processReleaseMainManifest (Thread[Execution worker,5,main]) started.
+:app:processReleaseMainManifest (Thread[Execution worker,5,main]) started.
+
+> Task :app:processReleaseMainManifest UP-TO-DATE
+Caching disabled for task ':app:processReleaseMainManifest' because:
+  Build cache is disabled
+Skipping task ':app:processReleaseMainManifest' as it is up-to-date.
+Resolve mutations for :app:processReleaseManifest (Thread[Execution worker,5,main]) started.
+:app:processReleaseManifest (Thread[included builds,5,main]) started.
+
+> Task :app:processReleaseManifest UP-TO-DATE
+Caching disabled for task ':app:processReleaseManifest' because:
+  Build cache is disabled
+Skipping task ':app:processReleaseManifest' as it is up-to-date.
+Resolve mutations for :app:processReleaseManifestForPackage (Thread[included builds,5,main]) started.
+:app:processReleaseManifestForPackage (Thread[Execution worker,5,main]) started.
+
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+Custom actions are attached to task ':app:processReleaseManifestForPackage'.
+Caching disabled for task ':app:processReleaseManifestForPackage' because:
+  Build cache is disabled
+Skipping task ':app:processReleaseManifestForPackage' as it is up-to-date.
+Resolve mutations for :app:processReleaseResources (Thread[Execution worker,5,main]) started.
+:app:processReleaseResources (Thread[Execution worker,5,main]) started.
+
+> Task :app:processReleaseResources UP-TO-DATE
+Caching disabled for task ':app:processReleaseResources' because:
+  Build cache is disabled
+Skipping task ':app:processReleaseResources' as it is up-to-date.
+Resolve mutations for :app:kspReleaseKotlin (Thread[included builds,5,main]) started.
+:app:kspReleaseKotlin (Thread[included builds,5,main]) started.
+
+> Task :app:kspReleaseKotlin UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/kotlin', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/kotlin', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/java', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/java', not found
+Caching disabled for task ':app:kspReleaseKotlin' because:
+  Build cache is disabled
+Skipping task ':app:kspReleaseKotlin' as it is up-to-date.
+Resolve mutations for :app:compileReleaseKotlin (Thread[included builds,5,main]) started.
+:app:compileReleaseKotlin (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:compileReleaseKotlin UP-TO-DATE
+Caching disabled for task ':app:compileReleaseKotlin' because:
+  Build cache is disabled
+Skipping task ':app:compileReleaseKotlin' as it is up-to-date.
+Resolve mutations for :app:javaPreCompileRelease (Thread[included builds,5,main]) started.
+:app:javaPreCompileRelease (Thread[included builds,5,main]) started.
+
+> Task :app:javaPreCompileRelease UP-TO-DATE
+Caching disabled for task ':app:javaPreCompileRelease' because:
+  Build cache is disabled
+Skipping task ':app:javaPreCompileRelease' as it is up-to-date.
+Resolve mutations for :app:compileReleaseJavaWithJavac (Thread[included builds,5,main]) started.
+:app:compileReleaseJavaWithJavac (Thread[included builds,5,main]) started.
+
+> Task :app:compileReleaseJavaWithJavac UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+Custom actions are attached to task ':app:compileReleaseJavaWithJavac'.
+Caching disabled for task ':app:compileReleaseJavaWithJavac' because:
+  Build cache is disabled
+Skipping task ':app:compileReleaseJavaWithJavac' as it is up-to-date.
+No compile result for :app:compileReleaseJavaWithJavac
+Resolve mutations for :app:hiltAggregateDepsRelease (Thread[included builds,5,main]) started.
+:app:hiltAggregateDepsRelease (Thread[included builds,5,main]) started.
+
+> Task :app:hiltAggregateDepsRelease UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+Caching disabled for task ':app:hiltAggregateDepsRelease' because:
+  Build cache is disabled
+Skipping task ':app:hiltAggregateDepsRelease' as it is up-to-date.
+Resolve mutations for :app:hiltJavaCompileRelease (Thread[Execution worker Thread 2,5,main]) started.
+:app:hiltJavaCompileRelease (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:hiltJavaCompileRelease UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+Caching disabled for task ':app:hiltJavaCompileRelease' because:
+  Build cache is disabled
+Skipping task ':app:hiltJavaCompileRelease' as it is up-to-date.
+No compile result for :app:hiltJavaCompileRelease
+Resolve mutations for :app:transformReleaseClassesWithAsm (Thread[Execution worker Thread 2,5,main]) started.
+:app:transformReleaseClassesWithAsm (Thread[Execution worker Thread 2,5,main]) started.
+
+> Task :app:transformReleaseClassesWithAsm UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+Caching disabled for task ':app:transformReleaseClassesWithAsm' because:
+  Build cache is disabled
+Skipping task ':app:transformReleaseClassesWithAsm' as it is up-to-date.
+Resolve mutations for :app:expandReleaseArtProfileWildcards (Thread[included builds,5,main]) started.
+:app:expandReleaseArtProfileWildcards (Thread[included builds,5,main]) started.
+
+> Task :app:expandReleaseArtProfileWildcards UP-TO-DATE
+Caching disabled for task ':app:expandReleaseArtProfileWildcards' because:
+  Build cache is disabled
+Skipping task ':app:expandReleaseArtProfileWildcards' as it is up-to-date.
+Resolve mutations for :app:extractProguardFiles (Thread[included builds,5,main]) started.
+:app:extractProguardFiles (Thread[included builds,5,main]) started.
+
+> Task :app:extractProguardFiles UP-TO-DATE
+Caching disabled for task ':app:extractProguardFiles' because:
+  Build cache is disabled
+  Tasks that execute quickly usually do not benefit from caching.
+Skipping task ':app:extractProguardFiles' as it is up-to-date.
+Resolve mutations for :app:mergeReleaseGeneratedProguardFiles (Thread[included builds,5,main]) started.
+:app:mergeReleaseGeneratedProguardFiles (Thread[included builds,5,main]) started.
+
+> Task :app:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+Caching disabled for task ':app:mergeReleaseGeneratedProguardFiles' because:
+  Build cache is disabled
+  Tasks that merge files into a directory/jar without further processing usually do not benefit from caching. Also, their outputs are usually large, which would consume a lot of space when cached.
+Skipping task ':app:mergeReleaseGeneratedProguardFiles' as it is up-to-date.
+Resolve mutations for :app:processReleaseJavaRes (Thread[included builds,5,main]) started.
+:app:processReleaseJavaRes (Thread[included builds,5,main]) started.
+
+> Task :app:processReleaseJavaRes UP-TO-DATE
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/resources', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/resources', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/main/resources', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/src/release/resources', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/generated/ksp/release/classes', not found
+Caching disabled for task ':app:processReleaseJavaRes' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:processReleaseJavaRes' as it is up-to-date.
+Resolve mutations for :app:mergeReleaseJavaResource (Thread[Execution worker,5,main]) started.
+:app:mergeReleaseJavaResource (Thread[Execution worker,5,main]) started.
+
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+Caching disabled for task ':app:mergeReleaseJavaResource' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mergeReleaseJavaResource' as it is up-to-date.
+Resolve mutations for :app:minifyReleaseWithR8 (Thread[Execution worker,5,main]) started.
+:app:minifyReleaseWithR8 (Thread[Execution worker,5,main]) started.
+
+> Task :app:minifyReleaseWithR8
+Caching disabled for task ':app:minifyReleaseWithR8' because:
+  Build cache is disabled
+Task ':app:minifyReleaseWithR8' is not up-to-date because:
+  Output property 'mappingFile' file /Users/enayat/Documents/DeepEyeUnlocker/app/build/outputs/mapping/release/mapping.txt has been removed.
+  Output property 'outputArtProfile' file /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/merged_art_profile/release/baseline-prof.txt has been removed.
+  Output property 'outputDex' file /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex has been removed.
+  and more...
+R8 is a new Android code shrinker. If you experience any issues, please file a bug at
+https://issuetracker.google.com, using 'Shrinker (R8)' as component name.
+Current version is: 8.2.47 (build 62baf24ba2b71f4e5bc04c7f01930bc5d47b02be from go/r8bot (luci-r8-custom-ci-archive-0-19z6)).
+
+file or directory '/Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/generated_proguard_file/release/proguard.txt', not found
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:15:1-15: R8: Ignoring option: -optimizations
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:16:1-22: R8: Ignoring option: -optimizationpasses
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:32:1-33:1: R8: Proguard configuration rule does not match anything: `-keep public class com.google.vending.licensing.ILicensingService {
+  <init>();
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:33:1-34:1: R8: Proguard configuration rule does not match anything: `-keep public class com.android.vending.licensing.ILicensingService {
+  <init>();
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:34:1-35:1: R8: Proguard configuration rule does not match anything: `-keep public class com.google.android.vending.licensing.ILicensingService {
+  <init>();
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:66:1-68:2: R8: Proguard configuration rule does not match anything: `-keepclassmembers class * {
+  @android.webkit.JavascriptInterface <methods>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:82:1-83:1: R8: Proguard configuration rule does not match anything: `-keep class android.support.annotation.Keep {
+  <init>();
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:85:1-52: R8: Proguard configuration rule does not match anything: `-keep @android.support.annotation.Keep class * {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:86:1-45: R8: Proguard configuration rule does not match anything: `-keep @androidx.annotation.Keep class * {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:88:1-90:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @android.support.annotation.Keep <methods>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:92:1-94:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @androidx.annotation.Keep <methods>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:96:1-98:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @android.support.annotation.Keep <fields>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:100:1-102:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @androidx.annotation.Keep <fields>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:104:1-106:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @android.support.annotation.Keep <init>(...);
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:108:1-110:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
+  @androidx.annotation.Keep <init>(...);
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:8:1-55: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.usb.IRecoveryBridge {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:9:1-65: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.usb.IRecoveryBridge$Companion {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:24:1-25:1: R8: Proguard configuration rule does not match anything: `-keep @com.google.dagger.hilt.android.HiltAndroidApp class * {
+  <init>();
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:29:1-65: R8: Proguard configuration rule does not match anything: `-keep class * implements dagger.hilt.internal.UnsafeCasts {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:35:1-61: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.protocol.ProtocolDetector {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:52:1-58: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.exploit.ExploitPayload {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:71:1-51: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.usb.IosOtgError {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:72:1-54: R8: Proguard configuration rule does not match anything: `-keep class com.deepeye.otg.usb.IosOtgError$** {
+  *;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/proguard-rules.pro:81:1-83:2: R8: Proguard configuration rule does not match anything: `-keepclassmembers class * {
+  @com.squareup.moshi.Json <fields>;
+}`
+INFO: /Users/enayat/Documents/DeepEyeUnlocker/app/build/intermediates/aapt_proguard_file/release/aapt_rules.txt:11:1-97: R8: Proguard configuration rule does not match anything: `-keep class android.widget.Space {
+  <init>(android.content.Context,android.util.AttributeSet);
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/e6aa84cc1b14837b7fbe7e3dc8fd9ea1/transformed/jetified-hilt-android-2.51.1/proguard.txt:5:1-7:1: R8: Proguard configuration rule does not match anything: `-keep,allowrepackaging,allowobfuscation,allowshrinking @dagger.hilt.android.EarlyEntryPoint class * {
+  <init>();
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/e6aa84cc1b14837b7fbe7e3dc8fd9ea1/transformed/jetified-hilt-android-2.51.1/proguard.txt:7:1-8:1: R8: Proguard configuration rule does not match anything: `-keep,allowrepackaging,allowobfuscation,allowshrinking @dagger.hilt.internal.ComponentEntryPoint class * {
+  <init>();
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/15cbe25248b7ef023d002f9364255991/transformed/navigation-common-2.5.1/proguard.txt:16:1-19:2: R8: Proguard configuration rule does not match anything: `-if public class ** implements androidx.navigation.NavArgs
+-keepclassmembers public class <1> {
+  ** fromBundle(android.os.Bundle);
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/0655f23b9d8657cbc9b1b9790ac2eaaf/transformed/jetified-lifecycle-viewmodel-release/proguard.txt:5:1-7:2: R8: Proguard configuration rule does not match anything: `-keepclassmembers,allowrepackaging,allowobfuscation class * extends androidx.lifecycle.AndroidViewModel {
+  <init>(android.app.Application);
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/7a1d1958167594a745b5568aa7cd88cb/transformed/jetified-lifecycle-runtime-release/proguard.txt:10:1-12:2: R8: Proguard configuration rule does not match anything: `-keep class * implements androidx.lifecycle.GeneratedAdapter {
+  <init>(...);
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/7a1d1958167594a745b5568aa7cd88cb/transformed/jetified-lifecycle-runtime-release/proguard.txt:14:1-16:2: R8: Proguard configuration rule does not match anything: `-keepclassmembers class ** {
+  @androidx.lifecycle.OnLifecycleEvent *;
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/9da9a84ae4927ba8ada6d720daae019d/transformed/jetified-lifecycle-viewmodel-savedstate-2.8.5/proguard.txt:5:1-7:2: R8: Proguard configuration rule does not match anything: `-keepclassmembers,allowrepackaging,allowobfuscation class * extends androidx.lifecycle.AndroidViewModel {
+  <init>(android.app.Application,androidx.lifecycle.SavedStateHandle);
+}`
+INFO: /Users/enayat/.gradle/caches/8.12/transforms/2a146dfebf53cdbc147f0b650615cc64/transformed/jetified-lifecycle-runtime-compose-release/proguard.txt:13:1-18:2: R8: Proguard configuration rule does not match anything: `-if public class androidx.compose.ui.platform.AndroidCompositionLocals_androidKt {
+  public static *** getLocalLifecycleOwner();
+}
+-keep public class androidx.compose.ui.platform.AndroidCompositionLocals_androidKt {
+  public static *** getLocalLifecycleOwner();
+}`

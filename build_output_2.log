@@ -1,0 +1,83 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/Users/enayat/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/native-platform-0.22-milestone-27.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/BypassOperationEngine.kt:185:29 'when' expression must be exhaustive. Add the 'DIRECT_UNLOCK', 'CODE_GENERATE', 'AT_COMMAND', 'DIAG_UNLOCK', 'FIRMWARE_FLASH_MTK', 'FIRMWARE_FLASH_QC', 'FIRMWARE_FLASH_SPD', ... branches or an 'else' branch.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:11:21 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:11:21 Not enough information to infer type argument for 'T'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:54:13 No parameter with name 'confidence' found.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:54:44 Unresolved reference 'CALCULATED'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:55:13 No value passed for parameter 'freeOptions'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:55:13 No value passed for parameter 'signalOptions'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:55:13 No value passed for parameter 'device'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:80:45 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Boolean' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:80:68 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.String' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:80:74 Too many arguments for 'constructor(name: String, met: Boolean, fixHint: String): Prerequisite'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:85:44 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Boolean' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:85:66 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.String' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:85:87 Too many arguments for 'constructor(name: String, met: Boolean, fixHint: String): Prerequisite'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:90:58 Unresolved reference 'ADB_REMONT'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:91:49 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Boolean' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:91:64 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.String' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:91:85 Too many arguments for 'constructor(name: String, met: Boolean, fixHint: String): Prerequisite'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:93:29 Unresolved reference 'EDL_EML'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:94:49 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.Boolean' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:94:61 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.String' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:94:82 Too many arguments for 'constructor(name: String, met: Boolean, fixHint: String): Prerequisite'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:103:56 Argument type mismatch: actual type is 'kotlin.collections.MutableList<kotlin.String>', but 'kotlin.Boolean' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:103:66 Argument type mismatch: actual type is 'kotlin.String', but 'kotlin.collections.List<kotlin.String>' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:103:66 No value passed for parameter 'warnings'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:103:66 No value passed for parameter 'sessionId'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:108:31 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:108:31 Not enough information to infer type argument for 'T'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:118:35 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:118:35 Not enough information to infer type argument for 'T'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:122:33 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/data/gsmg/UnifiedBypassRegistry.kt:122:33 Not enough information to infer type argument for 'T'.
+
+> Task :app:compileDebugKotlin FAILED
+w: Detected multiple Kotlin daemon sessions at 
+
+[Incubating] Problems report is available at: file:///Users/enayat/Documents/DeepEyeUnlocker/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 3m 36s
+15 actionable tasks: 1 executed, 14 up-to-date

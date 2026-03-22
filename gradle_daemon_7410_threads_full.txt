@@ -1,0 +1,8 @@
+7410:
+com.sun.tools.attach.AttachNotSupportedException: pid: 7410, state is not ready to participate in attach handshake!
+	at jdk.attach/sun.tools.attach.VirtualMachineImpl.checkCatchesAndSendQuitTo(Native Method)
+	at jdk.attach/sun.tools.attach.VirtualMachineImpl.<init>(VirtualMachineImpl.java:97)
+	at jdk.attach/sun.tools.attach.AttachProviderImpl.attachVirtualMachine(AttachProviderImpl.java:58)
+	at jdk.attach/com.sun.tools.attach.VirtualMachine.attach(VirtualMachine.java:207)
+	at jdk.jcmd/sun.tools.jcmd.JCmd.executeCommandForPid(JCmd.java:113)
+	at jdk.jcmd/sun.tools.jcmd.JCmd.main(JCmd.java:97)

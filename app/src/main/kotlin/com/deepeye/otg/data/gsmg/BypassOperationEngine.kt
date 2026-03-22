@@ -2,13 +2,14 @@ package com.deepeye.otg.data.gsmg
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 import java.util.UUID
 
 // =============================================================================
-// BypassOperationEngine.kt — Production-grade execution engine v3.0
+// BypassOperationEngine.kt — Production-grade execution engine v4.0
 // Flow-based event stream, retry with exponential backoff, step tracking
 // =============================================================================
 
@@ -65,7 +66,7 @@ object BypassOperationEngine {
         while (attempt < MAX_RETRIES && !succeeded) {
             attempt++
             try {
-                executeSteps(feature, device, sessionId) { event -> emit(event) }
+                executeSteps(this, feature, sessionId)
                 succeeded = true
             } catch (e: Exception) {
                 val retryable = isRetryable(e, feature.mechanism)
@@ -114,16 +115,15 @@ object BypassOperationEngine {
     // ─── Step executor ────────────────────────────────────────────────────────
 
     private suspend fun executeSteps(
+        collector: FlowCollector<BypassEvent>,
         feature:   BypassFeature,
-        device:    DeviceState,
         sessionId: String,
-        emit:      suspend (BypassEvent) -> Unit,
     ) {
         val steps = feature.executionSteps
         val total = steps.size
 
         steps.forEach { step ->
-            emit(BypassEvent.StepBegin(feature.id, step, sessionId))
+            collector.emit(BypassEvent.StepBegin(feature.id, step, sessionId))
 
             Timber.d("[ENGINE] step ${step.stepNum}/$total " +
                      "title=${step.title} auto=${step.isAutomatic} " +
@@ -132,7 +132,7 @@ object BypassOperationEngine {
             if (step.isAutomatic) {
                 simulateMechanismStep(feature.mechanism, step)
             } else {
-                emit(BypassEvent.NeedUserAction(
+                collector.emit(BypassEvent.NeedUserAction(
                     featureId   = feature.id,
                     instruction = step.instruction,
                     timeoutSecs = step.timeoutSecs,
@@ -142,8 +142,8 @@ object BypassOperationEngine {
             }
 
             val pct = (step.stepNum * 100) / total
-            emit(BypassEvent.StepDone(feature.id, step.stepNum, sessionId))
-            emit(BypassEvent.ProgressUpdate(
+            collector.emit(BypassEvent.StepDone(feature.id, step.stepNum, sessionId))
+            collector.emit(BypassEvent.ProgressUpdate(
                 featureId    = feature.id,
                 pct          = pct,
                 currentPhase = step.title,
@@ -154,7 +154,7 @@ object BypassOperationEngine {
         }
 
         // Final event
-        emit(BypassEvent.Completed(
+        collector.emit(BypassEvent.Completed(
             featureId     = feature.id,
             signalEnabled = feature.signalAfter,
             iServices     = feature.iServicesAfter,
@@ -210,6 +210,7 @@ object BypassOperationEngine {
             BypassMechanism.NVRAM_INJECTION  -> 600L
 
             BypassMechanism.ADB_EXPLOIT      -> 800L
+            else                             -> 1000L
         }
         delay(delayMs)
     }
@@ -237,17 +238,23 @@ object BypassOperationEngine {
     }
 
     private fun buildCompletionNotes(feature: BypassFeature): List<String> = buildList {
-        if (!feature.untethered)
+        if (!feature.untethered) {
             add("Tethered — re-run after full power cycle to restore bypass")
-        if (feature.signalAfter && !feature.iServicesAfter)
+        }
+        if (feature.signalAfter && !feature.iServicesAfter) {
             add("Run iServices Fix to enable FaceTime + iMessage")
-        if (feature.category == FeatureCategory.ICLOUD_BYPASS && !feature.signalAfter)
+        }
+        if (feature.category == FeatureCategory.ICLOUD_BYPASS && !feature.signalAfter) {
             add("WiFi only — SIM/calls not available with this bypass type")
-        if (feature.requiresJailbreak)
+        }
+        if (feature.requiresJailbreak) {
             add("Jailbreak semi-tethered — re-run iRa1n after hard reboot")
-        if (feature.dataLoss)
+        }
+        if (feature.dataLoss) {
             add("Device factory reset — set up as new iPhone")
-        if (feature.untethered)
+        }
+        if (feature.untethered) {
             add("Bypass persistent — survives reboots")
+        }
     }
 }

@@ -86,7 +86,10 @@ android {
         release {
             debuggable false
             minifyEnabled true
-            shrinkResources true
+            // Resource shrink is currently stalling release packaging after R8.
+            // Keep code shrinking enabled, but skip resource shrinking so
+            // assembleRelease can complete deterministically.
+            shrinkResources false
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

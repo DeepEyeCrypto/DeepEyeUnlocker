@@ -1,6 +1,14 @@
-# ── Optimization — ENABLE for production build (Stage J) ──────
-# Remove -dontoptimize to allow R8 to perform structural shrinking
-# -dontoptimize
+# ── Optimization — keep shrinking/obfuscation, disable optimizer ──────
+# R8 repeatedly spends many minutes in IR optimization on the current
+# release graph. Keep minification enabled, but skip optimizer passes so
+# release packaging can complete deterministically.
+-dontoptimize
+
+# ── Obfuscation — keep shrinking, skip rename phase ───────────────────
+# The current release graph also spends excessive time in R8 naming/
+# obfuscation passes. Disabling obfuscation keeps code shrinking active
+# while avoiding the rename stage that blocks release packaging.
+-dontobfuscate
 
 # ── JNI Bridge — CRITICAL: keep all native methods ──────────
 -keep class com.deepeye.otg.NativeBridge { *; }
