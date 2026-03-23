@@ -13,6 +13,7 @@ import androidx.room.Room
 import com.deepeye.otg.data.db.AppDatabase
 import com.deepeye.otg.engine.RamdiskForensicEngine
 import com.deepeye.otg.usb.AdbManager
+import com.deepeye.otg.usb.AdbSession
 import com.deepeye.otg.usb.HardwareManager
 import com.deepeye.otg.usb.SessionCoordinator
 import com.deepeye.otg.usb.UsbLifecycleManager
@@ -201,6 +202,15 @@ object AppModule {
     @Singleton
     fun provideAdbManager(lifecycleManager: UsbLifecycleManager): AdbManager {
         return AdbManager(lifecycleManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdbSession(lifecycleManager: UsbLifecycleManager): AdbSession {
+        // AdbSession is transport-agnostic at construction time.
+        // Actual USB transport is acquired from lifecycleManager at session.connect() time.
+        // We use a deferred null-safe transport wrapper so DI graph resolves at startup.
+        return AdbSession(lifecycleManager.getTransportOrNull())
     }
 
     @Provides
