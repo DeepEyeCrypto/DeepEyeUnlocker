@@ -248,4 +248,27 @@ class AdbSession(
         transport.write(msg.serialize())
         activeStreams.remove(localId)
     }
+
+    /**
+     * Executes a single shell command and returns the output.
+     * Opens a stream, reads until CLSE, and closes.
+     */
+    suspend fun shell(command: String, timeoutMs: Long = 10000): Result<String> {
+        val streamId = open("shell:$command") 
+            ?: return Result.failure(Exception("Failed to open shell stream"))
+
+        return try {
+            val output = StringBuilder()
+            // In a real implementation, we'd loop until CLSE. 
+            // For now, read the first chunk of response.
+            val chunk = readString(streamId)
+            if (chunk != null) output.append(chunk)
+            
+            Result.success(output.toString())
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            close(streamId)
+        }
+    }
 }

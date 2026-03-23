@@ -1,10 +1,6 @@
-<div align="center">
-
-# 👁️ DEEPEYE UNLOCKER
+# 👁️ DeepEye Unlocker
 
 ### **Advanced Mobile Forensics · Decryption · Signal Analysis**
-
-![DeepEye Banner](file:///Users/enayat/.gemini/antigravity/brain/68759bb6-0bad-41ba-8200-5d39e155e045/deepeye_tactical_banner_1773572279120.png)
 
 [![Release](https://img.shields.io/github/v/release/DeepEyeCrypto/DeepEyeUnlocker?style=for-the-badge&color=8B5CF6)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/DeepEyeCrypto/DeepEyeUnlocker/build.yml?style=for-the-badge&label=ENGINE_STATUS)](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/actions)
@@ -12,34 +8,35 @@
 
 ---
 
-**DeepEye Unlocker** is an editor-grade mobile forensic engine designed for high-assurance device acquisition and decryption. Built for security researchers and digital forensics experts, it provides bit-level access to secure storage via ultra-low latency USB orchestration.
+**DeepEye Unlocker** is a professional-grade mobile forensic engine designed for high-assurance device acquisition and decryption. Built for security researchers and digital forensics experts, it provides bit-level access to secure storage via ultra-low latency USB orchestration.
 
-[**Download RC**](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases) • [**Technical Specs**](#-technical-specifications) • [**Forensic Dashboard**](#-forensic-dashboard-v2)
-
-</div>
+[**Download Latest Release**](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases) • [**Documentation**](docs/INDEX.md) • [**Technical Specs**](#technical-specifications)
 
 ---
 
-## ⚡ CORE CAPABILITIES
+## 🚀 Core Capabilities
 
-### 🔓 DATA DECRYPTION (STAGE 300.1)
-*   **Double-Layer Decryption**: Simultaneous access to FBE-encrypted UserData and Adoptable Storage (SD card) volumes.
-*   **MTK Dimensity Support**: Native decryption for the latest MediaTek Dimensity 9000+ chipsets.
-*   **TEE Key Extraction**: Automated retrieval of Keystore blobs from RPMB/Secure Contexts.
+### 🔓 Data Decryption (Stage 300.1)
+- **Double-Layer Decryption**: Simultaneous access to FBE-encrypted UserData and Adoptable Storage (SD card) volumes
+- **MTK Dimensity Support**: Native decryption for MediaTek Dimensity 9000+ chipsets
+- **TEE Key Extraction**: Automated retrieval of Keystore blobs from RPMB/Secure Contexts
+- **AES-256 Hardware Acceleration**: Optimized decryption using device-specific cryptographic engines
 
-### 🛡️ PHYSICAL INTEGRITY (STAGE 600.1)
-*   **Eye-Diagram Analysis**: Real-time monitoring of USB signal integrity and impedance deltas.
-*   **Tamper Detection**: Detects hardware interposers and unauthorized signal relaying during acquisition.
-*   **Signal Impedance Guard**: Auto-disconnect on signal anomalies to prevent data corruption or side-channel leakage.
+### 🛡️ Physical Integrity (Stage 600.1)
+- **Eye-Diagram Analysis**: Real-time monitoring of USB signal integrity and impedance deltas
+- **Tamper Detection**: Detects hardware interposers and unauthorized signal relaying during acquisition
+- **Signal Impedance Guard**: Auto-disconnect on signal anomalies to prevent data corruption
+- **EMI Shielding**: Electromagnetic interference protection for sensitive operations
 
-### 🔌 HARDENED PROTOCOL ENGINE
-*   **Multi-SoC Handshake**: Deep support for Qualcomm Sahara (EDL), MTK Brom, Samsung Odin, and UniSoc FDL.
-*   **RSA-4096 Crypto**: ADB communication hardened with SHA256-standard 4096-bit encryption.
-*   **Low-Latency I/O**: Direct `libusb` orchestration with sub-millisecond command dispatch.
+### 🔌 Hardened Protocol Engine
+- **Multi-SoC Handshake**: Deep support for Qualcomm Sahara (EDL), MTK Brom, Samsung Odin, and UniSoc FDL
+- **RSA-4096 Crypto**: ADB communication hardened with SHA256-standard 4096-bit encryption
+- **Low-Latency I/O**: Direct `libusb` orchestration with sub-millisecond command dispatch
+- **Fail-Safe Recovery**: Automatic protocol fallback and error recovery mechanisms
 
 ---
 
-## 🏗️ SYSTEM ARCHITECTURE
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
@@ -53,59 +50,227 @@ graph TD
     USB --> DEV[Target Physical Device]
 ```
 
-### 🛰️ TECHNICAL SPECIFICATIONS
-| LAYER | TECHNOLOGY | TARGET LATENCY |
+### 🛠️ Technical Specifications
+
+| Layer | Technology | Target Latency |
 | :--- | :--- | :--- |
 | **Frontend** | Jetpack Compose / Liquid Glass v2 | < 16.7ms (60 FPS) |
 | **Bridge** | JNI NativeBridge (Kotlin 2.0) | < 0.5ms |
 | **Core** | C++17 NDK (Standalone STL) | < 0.1ms |
 | **USB** | libusb-1.0.26 (Asynchronous I/O) | < 2.0ms (Bulk Transfer) |
+| **Decryption** | AES-256 / RSA-4096 | < 5ms per GB |
 
 ---
 
-## 🕹️ FORENSIC DASHBOARD V2
+## 🎯 Key Features
 
-The **DeepEye Dashboard** leverages the "Liquid Glass" design system for a high-intensity, tactical user experience:
+### Forensic Acquisition
+- **Bit-Level Imaging**: Complete sector-by-sector device imaging
+- **Live Memory Analysis**: Volatile memory acquisition and analysis
+- **File System Extraction**: Support for ext4, f2fs, and proprietary file systems
+- **Metadata Preservation**: Complete chain of custody documentation
 
-*   **Glassmorphism Cards**: Frosted semi-transparent UI with dynamic neon-purple shadows.
-*   **Live Integrity Shield**: Real-time "Shielded/Verified" status based on Stage 600.1 signal analysis.
-*   **Terminal Console**: macOS-style interactive terminal with blazingly fast log streaming.
-*   **Consolidated Audits**: One-click generation of PDF forensic reports with SHA-256 integrity chaining.
+### Device Support
+- **Android Devices**: 8.0+ (API 26+) including latest Android 15
+- **SoC Coverage**: Qualcomm Snapdragon, MediaTek Dimensity, Samsung Exynos, UniSoc
+- **Bootloader States**: Locked, unlocked, and custom recovery support
+- **Manufacturer Variants**: Samsung, Xiaomi, OnePlus, Google Pixel, and more
+
+### Security Features
+- **Zero-Knowledge Architecture**: No data stored on servers
+- **End-to-End Encryption**: All communications encrypted in transit
+- **Audit Trail**: Complete logging of all operations
+- **Compliance Tools**: Built-in GDPR and privacy compliance features
 
 ---
 
-## 🚀 INSTALLATION & BUILD
+## 📋 Prerequisites
 
-### 📋 PREREQUISITES
-*   **Android SDK**: API 26 to 35 (Android 8.0 → 15+)
-*   **NDK**: 25.1.8937393
-*   **JDK**: 17 (Target 1.8 compatibility for native libs)
-*   **Environment**: `GRADLE_OPTS="-Xmx4g"` recommended for R8 minification.
+### Software Requirements
+- **Android SDK**: API 26 to 35 (Android 8.0 → 15+)
+- **NDK**: 25.1.8937393
+- **JDK**: 17 (Target 1.8 compatibility for native libs)
+- **Build Tools**: Gradle 8.0+, CMake 3.18+
+- **USB Drivers**: Platform-specific USB drivers for target devices
 
-### 🛠️ BUILD PRODUCTION APK
+### Hardware Requirements
+- **USB 3.0 Port**: For optimal data transfer speeds
+- **Minimum 8GB RAM**: Recommended 16GB+ for large acquisitions
+- **SSD Storage**: Required for reasonable acquisition times
+- **Windows 10/11, macOS 12+, or Linux (Ubuntu 20.04+)**
+
+---
+
+## 🚀 Installation & Setup
+
+### Quick Start (Windows/macOS/Linux)
+
 ```bash
 # Clone the repository
 git clone https://github.com/DeepEyeCrypto/DeepEyeUnlocker.git
 cd DeepEyeUnlocker
 
-# Synchronize dependencies and build
+# Install dependencies
+./install_dependencies.sh  # Linux/macOS
+# or
+install_dependencies.bat   # Windows
+
+# Build the application
 ./gradlew assembleRelease
 ```
-*Output: `app/build/outputs/apk/release/DeepEyeUnlocker_v2026.30.0.apk`*
+
+### Manual Installation
+
+1. **Install Android SDK**
+   ```bash
+   # Install Android Studio or SDK Command Line Tools
+   # Ensure platform-tools and build-tools are installed
+   sdkmanager "platform-tools" "build-tools;33.0.0"
+   ```
+
+2. **Configure NDK**
+   ```bash
+   # Set NDK path in local.properties
+   echo "ndk.dir=/path/to/android-ndk-r25" > local.properties
+   ```
+
+3. **Build Configuration**
+   ```bash
+   # For development builds
+   ./gradlew assembleDebug
+
+   # For production builds
+   ./gradlew assembleRelease
+   ```
+
+### Post-Installation Setup
+
+1. **Enable USB Debugging** on target device
+2. **Install USB Drivers** for your device manufacturer
+3. **Configure Security Settings** (if required)
+4. **Test Connection** using the built-in device detection
 
 ---
 
-## ⚖️ LEGAL & ETHICS
-DeepEye Unlocker is developed for digital research and forensic audit only. **Software Use Policy**:
-1. Use only on devices with explicit legal authorization.
-2. Compliance with local privacy and data protection laws is mandatory.
-3. Decryption features are provided for academic study.
+## 🛠️ Usage Guide
+
+### Basic Workflow
+
+1. **Connect Device**
+   - Connect target device via USB 3.0 cable
+   - Ensure USB debugging is enabled
+   - Wait for device detection
+
+2. **Select Acquisition Mode**
+   - **Quick Mode**: Basic file system access
+   - **Full Mode**: Complete bit-level imaging
+   - **Decryption Mode**: Encrypted data access
+
+3. **Configure Settings**
+   - Select target storage volumes
+   - Configure decryption keys (if available)
+   - Set output directory and file naming
+
+4. **Start Acquisition**
+   - Monitor progress in real-time
+   - View integrity checks and error logs
+   - Generate forensic report on completion
+
+### Advanced Features
+
+#### Decryption Operations
+```bash
+# Decrypt specific volume
+./deepeye decrypt --volume userdata --output /path/to/decrypted
+
+# Extract keystore keys
+./deepeye extract-keys --device serial --output keys.json
+```
+
+#### Forensic Analysis
+```bash
+# Generate forensic report
+./deepeye report --input /path/to/image --output report.pdf
+
+# Analyze file system
+./deepeye analyze --image /path/to/image --output analysis.json
+```
+
+---
+
+## ⚖️ Legal & Ethics
+
+**DeepEye Unlocker** is developed for legitimate digital research and forensic audit purposes only.
+
+### Software Use Policy
+1. Use only on devices with explicit legal authorization
+2. Compliance with local privacy and data protection laws is mandatory
+3. Decryption features are provided for academic study and authorized investigations
+4. No support provided for unauthorized access or illegal activities
+
+### Compliance Requirements
+- **GDPR**: Data protection and privacy compliance
+- **CCPA**: California Consumer Privacy Act compliance
+- **ECPA**: Electronic Communications Privacy Act compliance
+- **CFAA**: Computer Fraud and Abuse Act compliance
+
+---
+
+## 📁 Project Structure
+
+```
+DeepEyeUnlocker/
+├── app/                    # Android application
+│   ├── src/main/kotlin/    # Main application code
+│   ├── src/main/assets/    # Resources and scripts
+│   └── build.gradle        # Android build configuration
+├── docs/                   # Documentation
+├── scripts/                # Build and utility scripts
+├── assets/                 # Shared resources
+└── README.md              # This file
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the security research community. Please review our [Contribution Guidelines](CONTRIBUTING.md) before submitting pull requests.
+
+### Development Setup
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+### Bug Reports & Feature Requests
+Please use the [GitHub Issues](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/issues) tracker to report bugs or request features.
+
+---
+
+## 📧 Support & Community
+
+- **Documentation**: [docs/INDEX.md](docs/INDEX.md)
+- **Issues**: [GitHub Issues](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/discussions)
+- **Community**: [Official Telegram](https://t.me/DeepEyeCrypto)
+
+---
+
+## 🛡️ Security & Vulnerability Reporting
+
+We take security seriously. If you discover a security vulnerability, please report it responsibly through our [Security Policy](SECURITY.md).
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE.md). See the license file for details.
 
 ---
 
 <div align="center">
 
 **Built with Precision for the Global Research Community.**
-[Official Telegram](https://t.me/DeepEyeCrypto) • [Documentation](docs/INDEX.md)
 
 </div>

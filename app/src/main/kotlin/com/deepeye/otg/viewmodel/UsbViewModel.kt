@@ -15,6 +15,7 @@ import com.deepeye.otg.ui.toUiState
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.data.*
 import com.deepeye.otg.domain.models.*
+import com.deepeye.otg.domain.models.ProtocolFamily
 import com.deepeye.otg.fuzz.hid.HidFuzzCoordinator
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*

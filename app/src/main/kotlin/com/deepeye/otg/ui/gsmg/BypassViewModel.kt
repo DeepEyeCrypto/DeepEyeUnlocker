@@ -66,7 +66,9 @@ data class BypassUiState(
 )
 
 @HiltViewModel
-class BypassViewModel @Inject constructor() : ViewModel() {
+class BypassViewModel @Inject constructor(
+    private val engine: BypassOperationEngine
+) : ViewModel() {
 
     private val _state = MutableStateFlow(BypassUiState())
     val state: StateFlow<BypassUiState> = _state.asStateFlow()
@@ -312,7 +314,7 @@ class BypassViewModel @Inject constructor() : ViewModel() {
         )
 
         executeJob = viewModelScope.launch {
-            BypassOperationEngine.execute(feature, device, sessionId).collect { event ->
+            engine.execute(feature, device, null, sessionId).collect { event ->
                 val updatedEvents = ArrayList(_state.value.activeEvents)
                 updatedEvents.add(event)
                 val eventState = _state.value
