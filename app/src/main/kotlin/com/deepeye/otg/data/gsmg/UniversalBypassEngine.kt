@@ -60,8 +60,8 @@ class UniversalBypassEngine @Inject constructor(
 
     // ── Executor pool ────────────────────────────────────────────────────
 
-    private val mtkV6     by lazy { RealMtkV6Executor(usbManager) }
-    private val mtkBrom   by lazy { RealMtkBromExecutor(usbManager) }
+    private val mtkV6     by lazy { RealMtkV6Executor(usbManager, context) }
+    private val mtkBrom   by lazy { RealMtkBromExecutor(usbManager, context) }
     private val qcEdl     by lazy { RealQcEdlExecutor(usbManager, context) }
     private val samsungOdin by lazy { RealSamsungOdinExecutor(usbManager) }
     private val adbExec   by lazy { RealAdbExecutor(adbSession) }

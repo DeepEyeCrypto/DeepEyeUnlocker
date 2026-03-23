@@ -24,8 +24,11 @@ import timber.log.Timber
 // Post-handshake: device sends 8 bytes (hwCode[2] hwSub[2] hwVer[2] swVer[2])
 // =============================================================================
 
+import android.content.Context
+
 class RealMtkBromExecutor(
     private val usbManager: UsbManager,
+    private val context:    Context,
 ) {
     companion object {
         // BROM handshake bytes (exact — never change)
@@ -455,4 +458,28 @@ class RealMtkBromExecutor(
 
     data class BromChipInfo(val hwCode: Int, val hwSub: Int, val chipName: String)
     data class TargetConfig(val secureBoot: Boolean, val slaRequired: Boolean, val daaRequired: Boolean)
+
+    private fun loadDa(hwCode: Int, context: Context): ByteArray? {
+        // Try chip-specific first
+        val specific = when (hwCode) {
+            0x6765 -> "da/mt6765_da.bin"
+            0x6769 -> "da/mt6769_da.bin"
+            0x6768 -> "da/mt6768_da.bin"
+            0x6785 -> "da/mt6785_da.bin"
+            0x6762 -> "da/mt6762_da.bin"
+            0x6761 -> "da/mt6761_da.bin"
+            0x6580 -> "da/mt6580_da.bin"
+            else   -> null
+        }
+        specific?.let { path ->
+            runCatching { return context.assets.open(path).readBytes() }
+        }
+
+        // Fallback: MTK_DA_V5.bin (covers all classic BROM chips)
+        runCatching { return context.assets.open("da/MTK_DA_V5.bin").readBytes() }
+
+        Timber.e("[MTK_BROM] NO DA found!\n" +
+                 "Add mtkclient/Loader/MTK_DA_V5.bin to assets/da/")
+        return null
+    }
 }

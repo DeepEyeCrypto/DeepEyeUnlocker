@@ -36,8 +36,11 @@ import java.util.UUID
 //  11. Issue partition operations via DA commands
 // =============================================================================
 
+import android.content.Context
+
 class RealMtkV6Executor(
     private val usbManager: UsbManager,
+    private val context:    Context,
 ) {
     companion object {
         // IF#0 CDC-ACM control transfers
@@ -582,4 +585,69 @@ class RealMtkV6Executor(
         val serialNumber: String,
         val rawFeatures:  String,
     )
+
+    private fun loadDaForChip(hwCode: Int, context: Context): ByteArray? {
+        // Strategy 1: Chip-specific DA (most precise)
+        val chipSpecific = chipSpecificDaPath(hwCode)
+        if (chipSpecific != null) {
+            runCatching {
+                val data = context.assets.open(chipSpecific).readBytes()
+                Timber.d("[MTK_V6] loaded chip-specific DA: $chipSpecific size=${data.size}")
+                return data
+            }
+        }
+
+        // Strategy 2: MTK_DA_V6.bin (mtkclient format — covers ALL V6 chips)
+        runCatching {
+            val data = context.assets.open("da/MTK_DA_V6.bin").readBytes()
+            Timber.d("[MTK_V6] loaded MTK_DA_V6.bin size=${data.size} hw_code=0x${hwCode.toString(16)}")
+            return data
+        }
+
+        // Strategy 3: MTK_DA_V5.bin fallback
+        runCatching {
+            val data = context.assets.open("da/MTK_DA_V5.bin").readBytes()
+            Timber.d("[MTK_V6] loaded MTK_DA_V5.bin (fallback) size=${data.size}")
+            return data
+        }
+
+        Timber.e("[MTK_V6] NO DA found for hw_code=0x${hwCode.toString(16)}\n" +
+                 "Add one of these to app/src/main/assets/da/:\n" +
+                 "  MTK_DA_V6.bin (from mtkclient/Loader/ or SP Flash Tool V6)\n" +
+                 "  MTK_DA_V5.bin (from mtkclient/Loader/ or SP Flash Tool V5)")
+        return null
+    }
+
+    private fun chipSpecificDaPath(hwCode: Int): String? = when (hwCode) {
+        0x1209 -> "da/mt6835t_da.bin"    // Realme 14x
+        0x6833 -> "da/mt6833_da.bin"     // Samsung A24
+        0x6769 -> "da/mt6769_da.bin"     // Samsung A14/A15
+        0x6765 -> "da/mt6765_da.bin"     // Samsung A06/Infinix
+        0x6768 -> "da/mt6768_da.bin"     // Samsung A23/Motorola
+        else   -> null
+    }
+
+    private fun loadPayload(hwCode: Int, context: Context): ByteArray? {
+        // Chip-specific exploit payload from mtkclient/payloads/
+        val payloadName = when (hwCode) {
+            0x1209 -> "mt6835_payload.bin"    // Realme 14x
+            0x6833 -> "mt6833_payload.bin"    // Dimensity 700
+            0x6855 -> "mt6855_payload.bin"    // Dimensity 7050
+            0x6877 -> "mt6877_payload.bin"    // Dimensity 900
+            0x6893 -> "mt6893_payload.bin"    // Dimensity 1200
+            0x6895 -> "mt6895_payload.bin"    // Dimensity 8100
+            0x6765 -> "mt6765_payload.bin"    // Helio G35
+            0x6769 -> "mt6769_payload.bin"    // Helio G85
+            0x6768 -> "mt6768_payload.bin"    // Helio P65
+            0x6785 -> "mt6785_payload.bin"    // Helio G95
+            else   -> null
+        }
+        payloadName ?: return null
+
+        return runCatching {
+            context.assets.open("payloads/$payloadName").readBytes()
+        }.onFailure {
+            Timber.w("[MTK_V6] payload not found: payloads/$payloadName")
+        }.getOrNull()
+    }
 }

@@ -46,7 +46,7 @@ class BypassOperationEngine @Inject constructor(
 
     // ── Executors (one per protocol layer) ────────────────────────────────
 
-    private val mtkV6Executor     by lazy { RealMtkV6Executor(usbManager) }
+    private val mtkV6Executor     by lazy { RealMtkV6Executor(usbManager, context) }
     private val adbExecutor       by lazy { RealAdbExecutor(adbSession) }
     private val serverExecutor    by lazy { RealServerBypassExecutor() }
 

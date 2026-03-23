@@ -14,7 +14,11 @@ import com.deepeye.otg.data.db.AppDatabase
 import com.deepeye.otg.engine.RamdiskForensicEngine
 import com.deepeye.otg.usb.AdbManager
 import com.deepeye.otg.usb.AdbSession
+import com.deepeye.otg.usb.BulkTransport
 import com.deepeye.otg.usb.HardwareManager
+import com.deepeye.otg.usb.TransferResult
+import com.deepeye.otg.usb.UsbDescriptorSnapshot
+import com.deepeye.otg.usb.UsbTransport
 import com.deepeye.otg.usb.SessionCoordinator
 import com.deepeye.otg.usb.UsbLifecycleManager
 import com.deepeye.otg.usb.IosSessionCoordinator
@@ -207,10 +211,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAdbSession(lifecycleManager: UsbLifecycleManager): AdbSession {
-        // AdbSession is transport-agnostic at construction time.
-        // Actual USB transport is acquired from lifecycleManager at session.connect() time.
-        // We use a deferred null-safe transport wrapper so DI graph resolves at startup.
-        return AdbSession(lifecycleManager.getTransportOrNull())
+        // AdbSession requires a UsbTransport. At app startup no device is connected yet,
+        // so we use a deferred-resolve pattern: return a session wrapping the lifecycle
+        // manager's transport, gracefully handling the null case.
+        // The session's connect() will fail gracefully until a device is actually attached.
+        val transport: UsbTransport = lifecycleManager.getTransport() ?: NoOpUsbTransport
+        return AdbSession(transport)
     }
 
     @Provides
@@ -311,4 +317,36 @@ object AppModule {
     fun provideFuzzDao(db: AppDatabase): FuzzDao {
         return db.fuzzDao()
     }
+}
+
+/**
+ * No-op UsbTransport used as the initial placeholder for singletons that require AdbSession
+ * before any real USB device is connected. AdbSession.connect() will fail gracefully when
+ * using this transport — the real transport is set by UsbLifecycleManager on device attach.
+ */
+private object NoOpUsbTransport : UsbTransport {
+    private val stub = UsbDescriptorSnapshot(0, 0, 0, 0, 0, null, null, 0, emptyList())
+
+    override val isOpen: Boolean = false
+    override val deviceInfo: UsbDescriptorSnapshot = stub
+
+    override suspend fun open() = Result.failure<Unit>(UnsupportedOperationException("NoOp"))
+    override suspend fun send(data: ByteArray, timeoutMs: Int) = Result.failure<Int>(UnsupportedOperationException("NoOp"))
+    override suspend fun receive(length: Int, timeoutMs: Int)  = Result.failure<ByteArray>(UnsupportedOperationException("NoOp"))
+    override suspend fun sendAndReceive(
+        data: ByteArray, receiveLength: Int, sendTimeout: Int, receiveTimeout: Int
+    ) = Result.failure<ByteArray>(UnsupportedOperationException("NoOp"))
+    override suspend fun controlTransfer(
+        requestType: Int, request: Int, value: Int, index: Int,
+        buffer: ByteArray?, length: Int, timeout: Int
+    ) = Result.failure<Int>(UnsupportedOperationException("NoOp"))
+    override fun close() = Unit
+    override suspend fun write(data: ByteArray, timeoutMs: Int?) =
+        TransferResult.NullConnection("NoOp transport — no device connected")
+    override suspend fun read(expectedSize: Int, timeoutMs: Int?) =
+        TransferResult.NullConnection("NoOp transport — no device connected")
+    override suspend fun control(
+        requestType: Int, request: Int, value: Int, index: Int,
+        data: ByteArray?, timeoutMs: Int?
+    ) = TransferResult.NullConnection("NoOp transport — no device connected")
 }

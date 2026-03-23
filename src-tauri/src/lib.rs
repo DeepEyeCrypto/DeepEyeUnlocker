@@ -32,6 +32,14 @@ use commands::identity::{ios_device_identity, ios_imei_state};
 use commands::ticket::{ios_parse_activation_record, ios_activation_record_state, ios_scan_tickets};
 use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
 use commands::extraction::{ios_mount_ramdisk, ios_mass_extract};
+use commands::checkm8::run_checkm8;
+use commands::ios_bypass::ios_bypass_full;
+
+// Server bypass URL (configure per deployment)
+pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
+    Some(v) => v,
+    None => "https://api.deepeye.bypass/v2",
+};
 
 use shsh::{
     get_ecid, get_board_config, save_shsh_all_signed, save_shsh_specific,
@@ -256,7 +264,9 @@ pub fn run() {
             unmount_dev_disk_image,
             check_dev_disk_mounted,
             list_processes,
-            get_screenshot
+            get_screenshot,
+            run_checkm8,
+            ios_bypass_full
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -128,8 +128,8 @@ class FirmwareAssetManager @Inject constructor(
 
     companion object {
         /** Covers ALL Dimensity chips: MT6833–MT6991 (V6 protocol) */
-        const val ALLINONE_V6      = "da/MTK_AllInOne_DA_V6.bin"
+        const val ALLINONE_V6      = "da/MTK_DA_V6.bin"
         /** Covers ALL Helio / Classic chips: MT6572–MT6785 (BROM Classic) */
-        const val ALLINONE_CLASSIC = "da/MTK_AllInOne_DA.bin"
+        const val ALLINONE_CLASSIC = "da/MTK_DA_V5.bin"
     }
 }
