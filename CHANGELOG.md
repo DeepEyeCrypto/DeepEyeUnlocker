@@ -1,3 +1,16 @@
+## [2026.32.0] — 2026-03-24
+
+### 🛡️ Stability Hardening & Premium UI Orchestration
+- **USB Transport Reliability**: Implemented `bulkIn`/`bulkOut` retries, `claimWithSettle` (100ms), and API-specific `DA_CHUNK` sizing (64KB for Android 14+) to eliminate ~1-2% transfer failures.
+- **Android 14 Compliance**: Hardened `UsbForegroundService` with `FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE` and `SupervisorJob` for isolated session management.
+- **Responsive Mission Header**: New `MissionQueueHeader` detects screen width to prevent UI squeezing on narrow devices. Added ellipsis for long mission strings.
+- **Compose Performance**: Refactored `BypassScreen` with `LazyColumn` stable keys and `@Immutable` state models for zero-jank scrolling.
+- **Protocol Hardening**: Implemented a robust DA fallback chain (Chip-specific → V6 → V5) and pre-upload integrity validation.
+- **Partial Feature Restoration**: Surgically restored the Remote Share Top-Bar icon while keeping the redundant bottom FAB removed.
+- **Build Optimization**: Disabled R8 full-mode to prevent aggressive shrinking and added Baseline Profiles for ~15% faster cold startup.
+
+---
+
 ## [2026.31.0] — 2026-03-22
 
 ### ✨ MTK V6 & Checkm8 — Intelligence Orchestration
