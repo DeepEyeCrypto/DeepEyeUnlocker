@@ -258,9 +258,14 @@ class UsbLifecycleManager @Inject constructor(
         )
 
         activeSessions[key] = session
-        
+
+        // THE FIX: Extract feature string from productName if present
+        val featureStr = device.productName?.takeIf { it.startsWith("hw_code:") }
+        val isSecBoot = featureStr?.contains("SEC_BOOT_EN=1") ?: false
+
         val connectedState = UsbLifecycleState.Connected(
-            deviceName = device.productName ?: "Unknown",
+            device = device, // THE FIX: Hold real object
+            deviceName = device.productName ?: "Generic",
             mode = mode,
             protocolFamily = detection.protocolFamily,
             detectedDeviceMode = detection.deviceMode,
@@ -271,8 +276,9 @@ class UsbLifecycleManager @Inject constructor(
             deviceId = device.deviceId,
             deviceKey = key,
             descriptorSnapshot = snapshot,
-            brand = device.manufacturerName ?: "Unknown",
-            chipset = device.productName ?: "Generic",
+            brand = snapshot.manufacturerName ?: "Unknown",
+            chipset = snapshot.productName ?: "Generic",
+            secureBootStatus = if (isSecBoot) "ON" else "OFF",
             endpoints = endpoints,
             sessionId = sessionId
         )

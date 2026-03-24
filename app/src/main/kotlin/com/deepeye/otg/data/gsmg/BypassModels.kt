@@ -1,5 +1,8 @@
 package com.deepeye.otg.data.gsmg
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+
 // =============================================================================
 // BypassModels.kt v4.0
 // Full type system for all 7 tools:
@@ -167,6 +170,7 @@ enum class ConfidenceLevel { CONFIRMED, INFERRED, HYPOTHESIS }
 
 // ── Core Feature Model ────────────────────────────────────────────────────────
 
+@Immutable
 data class ExecutionStep(
     val stepNum:     Int,
     val title:       String,
@@ -175,6 +179,7 @@ data class ExecutionStep(
     val timeoutSecs: Int = 30,
 )
 
+@Stable
 data class BypassFeature(
     val id:                  String,
     val displayName:         String,
@@ -213,6 +218,7 @@ data class BypassFeature(
 
 // ── Device State ──────────────────────────────────────────────────────────────
 
+@Immutable
 data class DeviceState(
     val sessionId:    String,
     val ecid:         String?,
@@ -249,6 +255,7 @@ data class Prerequisite(
     val fixHint: String,
 )
 
+@Stable
 data class ExecutionPlan(
     val feature:       BypassFeature,
     val device:        DeviceState,
@@ -282,3 +289,15 @@ sealed class BypassEvent {
     data class RetryingNow(val featureId: String, val attempt: Int, val maxAttempts: Int, val backoffMs: Long, val sessionId: String) : BypassEvent()
     data class WarningIssued(val featureId: String, val message: String, val sessionId: String) : BypassEvent()
 }
+
+enum class DevicePlatform {
+    IOS,
+    ANDROID,
+    UNKNOWN,
+}
+
+data class FeatureFilters(
+    val searchQuery: String = "",
+    val freeOnly: Boolean = false,
+    val signalOnly: Boolean = false,
+)

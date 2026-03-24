@@ -36,7 +36,14 @@ class UsbBroadcastReceiver(
                 val granted = intent.getBooleanExtra(
                     android.hardware.usb.UsbManager.EXTRA_PERMISSION_GRANTED, false
                 )
-                lifecycleManager.onPermissionResult(device, granted)
+                
+                scope.launch(Dispatchers.IO) {
+                    if (granted) {
+                        // High-assurance: Wait for USB stack to stabilize after permission pop-up
+                        kotlinx.coroutines.delay(200)
+                    }
+                    lifecycleManager.onPermissionResult(device, granted)
+                }
             }
         }
     }

@@ -47,6 +47,7 @@ sealed class UsbLifecycleState {
 
     // ── Active session ───────────────────────────────────────
     data class Connected(
+        val device: UsbDevice? = null, // THE FIX: Hold real object for engine use
         val deviceName: String,
         val mode: ConnectionMode,
         val protocolFamily: ProtocolFamily,

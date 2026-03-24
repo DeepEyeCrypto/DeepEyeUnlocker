@@ -104,6 +104,12 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideFirmwareAssetManager(@ApplicationContext context: Context): com.deepeye.otg.assets.FirmwareAssetManager {
+        return com.deepeye.otg.assets.FirmwareAssetManager(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideAppScope(application: Application): CoroutineScope {
         return (application as com.deepeye.otg.DeepEyeApplication).appScope
     }

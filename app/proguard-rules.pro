@@ -1,183 +1,22 @@
-# ── Optimization — keep shrinking/obfuscation, disable optimizer ──────
-# R8 repeatedly spends many minutes in IR optimization on the current
-# release graph. Keep minification enabled, but skip optimizer passes so
-# release packaging can complete deterministically.
--dontoptimize
+# DeepEye Unlocker — ProGuard Rules (v2026.32.0)
 
-# ── Obfuscation — keep shrinking, skip rename phase ───────────────────
-# The current release graph also spends excessive time in R8 naming/
-# obfuscation passes. Disabling obfuscation keeps code shrinking active
-# while avoiding the rename stage that blocks release packaging.
--dontobfuscate
+# 1. Compose Stability
+-keepclassmembers class * extends androidx.compose.runtime.Immutable { *; }
+-keepclassmembers class * extends androidx.compose.runtime.Stable { *; }
+-keep @androidx.compose.runtime.Composable class * { *; }
 
-# ── JNI Bridge — CRITICAL: keep all native methods ──────────
--keep class com.deepeye.otg.NativeBridge { *; }
--keep class com.deepeye.otg.repair.NvBridge { *; }
--keep class com.deepeye.otg.usb.IRecoveryBridge { *; }
--keep class com.deepeye.otg.usb.IRecoveryBridge$Companion { *; }
--keepclassmembers class com.deepeye.otg.NativeBridge {
-    native <methods>;
-}
--keepclassmembers class com.deepeye.otg.repair.NvBridge {
-    native <methods>;
-}
-
-# ── Keep all classes with native methods ────────────────────
--keepclasseswithmembernames class * {
-    native <methods>;
-}
-
-# ── Hilt / Dagger — CRITICAL for dependency injection ───────
--keep class * extends android.app.Application
--keep @com.google.dagger.hilt.android.HiltAndroidApp class *
--keep @dagger.hilt.android.lifecycle.HiltViewModel class *
--keep class com.deepeye.otg.di.** { *; }
--keep class com.deepeye.otg.Hilt_* { *; }
--keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
--keep class * implements dagger.hilt.internal.UnsafeCasts { *; }
-
-# ── USB + Protocol core ─────────────────────────────────────
-# [HARDENED] Allowing obfuscation of internal states
--keep class com.deepeye.otg.usb.UsbTransport { *; }
--keep class com.deepeye.otg.protocol.** { *; }
--keep class com.deepeye.otg.protocol.ProtocolDetector { *; }
--keep class com.deepeye.otg.protocol.mtk.MtkSession { *; }
--keep class com.deepeye.otg.protocol.qualcomm.QcomSession { *; }
-
-# ── Domain Models — CRITICAL for state-driven UI ──────────
--keep class com.deepeye.otg.domain.models.** { *; }
--keep class com.deepeye.otg.domain.engine.** { *; }
--keep class com.deepeye.otg.policy.** { *; }
+# 2. Protocol Models (Sacred)
 -keep class com.deepeye.otg.data.gsmg.** { *; }
--keep class com.deepeye.otg.data.hardware.** { *; }
--keep class com.deepeye.otg.intelligence.vulndb.** { *; }
+-keep class com.deepeye.otg.domain.models.** { *; }
+-keep class com.deepeye.otg.protocol.** { *; }
 
-# ── Service layer — OBFUSCATE forensic logic ───────────────
--keep class com.deepeye.otg.service.MassExtractor { *; }
--keep class com.deepeye.otg.service.ReportManager { *; }
-
-# ── Exploit Research — STRIP metadata (Stage J) ────────────
--keep class com.deepeye.otg.exploit.ExploitPayload { *; }
--keepattributes *Annotation*,Signature
--dontwarn com.deepeye.otg.exploit.**
-
-# ── OkHttp + Okio ───────────────────────────────────────────
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-
-# ── Zip4j ───────────────────────────────────────────────────
--keep class net.lingala.zip4j.** { *; }
--dontwarn net.lingala.zip4j.**
-
-# ── Sealed class & Enums ────────────────────────────────────
--keep class com.deepeye.otg.usb.SessionState { *; }
--keep class com.deepeye.otg.usb.SessionState$* { *; }
--keep class com.deepeye.otg.data.gsmg.BypassEvent { *; }
--keep class com.deepeye.otg.data.gsmg.BypassEvent$** { *; }
--keep class com.deepeye.otg.usb.IosOtgError { *; }
--keep class com.deepeye.otg.usb.IosOtgError$** { *; }
--keep class com.deepeye.otg.protocol.mtk.MtkBromProtocol$MtkError { *; }
--keep class com.deepeye.otg.protocol.mtk.MtkBromProtocol$MtkError$** { *; }
--keepclassmembers enum com.deepeye.otg.** {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
-
-# ── Reflection-backed JSON fields ───────────────────────────
--keepclassmembers class * {
-    @com.squareup.moshi.Json <fields>;
-}
--dontwarn com.squareup.moshi.**
-
-# ── Remove debug/verbose logging in release ─────────────────
--assumenosideeffects class android.util.Log {
-    public static int d(...);
-    public static int v(...);
-    public static int i(java.lang.String, java.lang.String);
-}
-
-# ── Kotlin metadata ─────────────────────────────────────────
--keepattributes SourceFile,LineNumberTable
--keepattributes RuntimeVisibleAnnotations
--renamesourcefileattribute SourceFile
-
-# ── Kotlin ────────────────────────────────
--keep class kotlin.Metadata { *; }
--dontwarn kotlin.**
--dontwarn kotlinx.**
--keepattributes *Annotation*, InnerClasses
--keepattributes Signature, Exceptions
-
-# ── Coroutines ────────────────────────────
--keepclassmembers class kotlinx.coroutines.** {
-    volatile <fields>;
-}
--keepclassmembernames class kotlinx.** {
-    volatile <fields>;
-}
--dontwarn kotlinx.coroutines.**
-
-# ── Hilt / Dagger ─────────────────────────
--keep class dagger.hilt.** { *; }
--keep class javax.inject.** { *; }
--keep @dagger.hilt.android.lifecycle.HiltViewModel
-      class * extends androidx.lifecycle.ViewModel
-
-# ── Room (if used) ────────────────────────
--keep class * extends androidx.room.RoomDatabase
--keep @androidx.room.Entity class *
--keep @androidx.room.Dao class *
--dontwarn androidx.room.**
-
-# ── Moshi / Gson ─────────────────────────
--keepclassmembers class * {
-    @com.squareup.moshi.Json <fields>;
-}
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
--dontwarn com.squareup.moshi.**
-
-# ── Timber ───────────────────────────────
+# 3. Timber/Logging
+-keep class timber.log.Timber { *; }
 -dontwarn timber.log.**
 
-# ── USB / JNI Bridge ─────────────────────
--keep class com.deepeye.otg.usb.** { *; }
--keep class com.deepeye.otg.usb.IRecoveryBridge { *; }
--keep class com.deepeye.otg.usb.IRecoveryBridge$* { *; }
--keepclasseswithmembernames class * {
-    native <methods>;
-}
+# 4. Hilt/Dagger
+-keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
+-keep class * implements dagger.hilt.internal.ComponentEntryPoint { *; }
 
-# ── Domain / Engine ──────────────────────
--keep class com.deepeye.otg.data.gsmg.** { *; }
--keep class com.deepeye.otg.data.hardware.** { *; }
--keep class com.deepeye.otg.domain.engine.** { *; }
--keep class com.deepeye.otg.protocol.** { *; }
--keep class com.deepeye.otg.intelligence.** { *; }
-
-# ── Sealed classes ────────────────────────
--keep class com.deepeye.otg.data.gsmg.BypassEvent$* { *; }
--keep class com.deepeye.otg.usb.IosOtgError$* { *; }
--keep class com.deepeye.otg.usb.ConnectionState$* { *; }
-
-# ── Enums ─────────────────────────────────
--keepclassmembers enum com.deepeye.otg.** {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
-
-# ── ViewModels ────────────────────────────
--keep class * extends androidx.lifecycle.ViewModel {
-    <init>();
-}
-
-# ── Suppress noisy R8 notes ──────────────
--dontnote **
-
-# ── JADX Legacy / AWT Suppressions ────────
--dontwarn java.awt.**
--dontwarn javax.imageio.**
--dontwarn com.google.j2objc.annotations.**
+# 5. USB/Hardware
+-keep class android.hardware.usb.** { *; }

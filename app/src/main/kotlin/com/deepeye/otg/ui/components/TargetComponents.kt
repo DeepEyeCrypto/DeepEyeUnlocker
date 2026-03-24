@@ -22,6 +22,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.ProtocolFamily
@@ -139,12 +141,11 @@ fun ConnectionAuraCard(
 
 @Composable
 fun MissionTopBar(
-    viewModel: com.deepeye.otg.viewmodel.UsbViewModel,
+    viewModel: UsbViewModel,
     sessions: Map<String, UsbLifecycleState>,
     selectedKey: String?,
     onSelect: (String) -> Unit,
-    onRemoteShare: () -> Unit,
-    compactMode: Boolean = false
+    compactMode: Boolean
 ) {
     val showDebug by viewModel.showDebugPanel.collectAsState()
     val selectedSession = selectedKey?.let(sessions::get)
@@ -163,136 +164,25 @@ fun MissionTopBar(
         color = StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.8f),
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (compactMode) 104.dp else 72.dp)
+            .height(if (compactMode) 136.dp else 104.dp) // Adjusted heights for new responsive header
     ) {
-        if (compactMode) {
-            Column(
+        Column(modifier = Modifier.fillMaxSize()) {
+            MissionQueueHeader(
+                queueTitle = "MISSION_QUEUE",
+                queueValue = selectedLabel
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            SessionSelectorRow(
+                sessions = sessions,
+                selectedKey = selectedKey,
+                onSelect = onSelect,
+                compactMode = compactMode,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "MISSION_QUEUE",
-                            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
-                            color = StitchTokens.TextSecondary
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = selectedLabel,
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextPrimary,
-                            maxLines = 1
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = onRemoteShare,
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                        ) {
-                            Icon(Icons.Default.CloudSync, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        IconButton(
-                            onClick = { viewModel.toggleDebugPanel() },
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                        ) {
-                            Icon(
-                                Icons.Default.BugReport,
-                                null,
-                                modifier = Modifier.size(18.dp),
-                                tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
-                            )
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        IconButton(
-                            onClick = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) },
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                        ) {
-                            Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
-                        }
-                    }
-                }
-
-                SessionSelectorRow(
-                    sessions = sessions,
-                    selectedKey = selectedKey,
-                    onSelect = onSelect,
-                    compactMode = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        } else {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "MISSION_QUEUE",
-                            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
-                            color = StitchTokens.TextSecondary
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = selectedLabel,
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextPrimary,
-                            maxLines = 1
-                        )
-                    }
-                    Spacer(Modifier.width(20.dp))
-                    SessionSelectorRow(
-                        sessions = sessions,
-                        selectedKey = selectedKey,
-                        onSelect = onSelect,
-                        compactMode = false,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                if (sessions.isNotEmpty()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TelemetryBadge(label = "LINK", value = "SOLID", color = StitchTokens.AccentSuccess)
-                        Spacer(Modifier.width(16.dp))
-                        TelemetryBadge(label = "TARGETS", value = sessions.size.toString(), color = StitchTokens.AccentWarning)
-                    }
-                    Spacer(Modifier.width(16.dp))
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(
-                        onClick = { viewModel.toggleDebugPanel() },
-                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                    ) {
-                        Icon(
-                            Icons.Default.BugReport,
-                            null,
-                            modifier = Modifier.size(18.dp),
-                            tint = if (showDebug) StitchTokens.Primary else StitchTokens.TextSecondary
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    IconButton(
-                        onClick = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) },
-                        modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.05f))
-                    ) {
-                        Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = StitchTokens.TextSecondary)
-                    }
-                }
-            }
+                    .fillMaxWidth()
+                    .padding(horizontal = if (compactMode) 16.dp else 24.dp)
+            )
         }
     }
 }
@@ -351,4 +241,131 @@ private fun TelemetryBadge(label: String, value: String, color: Color) {
         Spacer(Modifier.width(4.dp))
         Text(text = value, style = StitchTokens.MonoCode.copy(fontSize = 10.sp), color = color)
     }
+}
+
+@Composable
+fun MissionQueueHeader(
+    queueTitle: String,
+    queueValue: String,
+    modifier: Modifier = Modifier,
+) {
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.5f))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        val compact = maxWidth < 390.dp
+
+        if (compact) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                HeaderTextBlock(
+                    title = queueTitle,
+                    value = queueValue,
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                HeaderTextBlock(
+                    title = queueTitle,
+                    value = queueValue,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderTextBlock(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            color = StitchTokens.TextSecondary,
+            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            color = StitchTokens.TextPrimary,
+            style = StitchTokens.BodyMedium,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun BottomActionButtons(
+    compact: Boolean,
+    onBug: () -> Unit,
+    onSettings: () -> Unit,
+) {
+    val buttonSize = if (compact) 38.dp else 42.dp
+    val iconSize = if (compact) 18.dp else 20.dp
+    val spacing = if (compact) 6.dp else 8.dp
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(spacing),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CircleActionButton(
+            size = buttonSize,
+            iconSize = iconSize,
+            onClick = onBug
+        ) {
+            Icon(
+                imageVector = Icons.Default.BugReport,
+                contentDescription = "Bug Tools",
+                tint = StitchTokens.Primary,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+
+        CircleActionButton(
+            size = buttonSize,
+            iconSize = iconSize,
+            onClick = onSettings
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = StitchTokens.TextSecondary,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CircleActionButton(
+    size: Dp,
+    iconSize: Dp,
+    onClick: () -> Unit,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.08f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+        content = content
+    )
 }

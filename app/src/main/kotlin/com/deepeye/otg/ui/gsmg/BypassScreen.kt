@@ -13,9 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,8 +29,10 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,88 +59,105 @@ private val textMuted = Color(0xFF707070)
 
 @Composable
 fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
-    val stateFlow = viewModel.state.collectAsState()
-    val uiState: BypassUiState by stateFlow
-    val scrollState = rememberScrollState()
+    // High-assurance: lifecycle-aware state collection
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    
     val activePlan = uiState.activePlan
     val errorMessage = uiState.errorMessage
     val successMessage = uiState.successMessage
+
+    // Optimization: derived state for heavy list counts
+    val featureCountText by remember {
+        derivedStateOf { "${uiState.displayedFeatures.size} / ${uiState.totalAvailable} features" }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(screenBg)
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SummaryCard(
-                uiState = uiState,
-                onSelectPlatform = viewModel::onSelectPlatform,
-            )
+            item(key = "summary") {
+                SummaryCard(
+                    uiState = uiState,
+                    onSelectPlatform = viewModel::onSelectPlatform,
+                )
+            }
 
             val connectedDevice = uiState.device
             if (connectedDevice != null) {
-                DeviceCard(device = connectedDevice)
+                item(key = "device_${connectedDevice.sessionId}") {
+                    DeviceCard(device = connectedDevice)
+                }
             }
 
             val recommendation = uiState.recommendation
             val bestRecommendation = recommendation?.best
             if (recommendation != null && bestRecommendation != null) {
-                RecommendationCard(
-                    feature = bestRecommendation,
-                    reasoning = recommendation.reasoning,
-                    wantSignal = uiState.wantSignal,
-                    wantFree = uiState.wantFree,
-                    wantUntethered = uiState.wantUntethered,
-                    onExecute = { viewModel.onRequestExecute(bestRecommendation) },
-                    onToggleSignal = {
-                        viewModel.onRefineRecommendation(
-                            !uiState.wantSignal,
-                            uiState.wantFree,
-                            uiState.wantUntethered,
-                        )
-                    },
-                    onToggleFree = {
-                        viewModel.onRefineRecommendation(
-                            uiState.wantSignal,
-                            !uiState.wantFree,
-                            uiState.wantUntethered,
-                        )
-                    },
-                    onToggleUntethered = {
-                        viewModel.onRefineRecommendation(
-                            uiState.wantSignal,
-                            uiState.wantFree,
-                            !uiState.wantUntethered,
-                        )
-                    },
+                item(key = "recommendation_${bestRecommendation.id}") {
+                    RecommendationCard(
+                        feature = bestRecommendation,
+                        reasoning = recommendation.reasoning,
+                        wantSignal = uiState.wantSignal,
+                        wantFree = uiState.wantFree,
+                        wantUntethered = uiState.wantUntethered,
+                        onExecute = { viewModel.onRequestExecute(bestRecommendation) },
+                        onToggleSignal = {
+                            viewModel.onRefineRecommendation(
+                                !uiState.wantSignal,
+                                uiState.wantFree,
+                                uiState.wantUntethered,
+                            )
+                        },
+                        onToggleFree = {
+                            viewModel.onRefineRecommendation(
+                                uiState.wantSignal,
+                                !uiState.wantFree,
+                                uiState.wantUntethered,
+                            )
+                        },
+                        onToggleUntethered = {
+                            viewModel.onRefineRecommendation(
+                                uiState.wantSignal,
+                                uiState.wantFree,
+                                !uiState.wantUntethered,
+                            )
+                        },
+                    )
+                }
+            }
+
+            item(key = "filter") {
+                FilterCard(
+                    uiState = uiState,
+                    onSearch = viewModel::onSearch,
+                    onBrandFilter = viewModel::onBrandFilter,
+                    onToggleFreeOnly = viewModel::onToggleFreeOnly,
+                    onToggleSignalOnly = viewModel::onToggleSignalOnly,
+                    onToggleUntethered = viewModel::onToggleUntethered,
+                    onToggleNoDataLoss = viewModel::onToggleNoDataLoss,
+                    onToggleNoJailbreak = viewModel::onToggleNoJailbreak,
+                    onToggleOfflineOnly = viewModel::onToggleOfflineOnly,
                 )
             }
 
-            FilterCard(
-                uiState = uiState,
-                onSearch = viewModel::onSearch,
-                onBrandFilter = viewModel::onBrandFilter,
-                onToggleFreeOnly = viewModel::onToggleFreeOnly,
-                onToggleSignalOnly = viewModel::onToggleSignalOnly,
-                onToggleUntethered = viewModel::onToggleUntethered,
-                onToggleNoDataLoss = viewModel::onToggleNoDataLoss,
-                onToggleNoJailbreak = viewModel::onToggleNoJailbreak,
-                onToggleOfflineOnly = viewModel::onToggleOfflineOnly,
-            )
+            item(key = "count_header") {
+                Text(
+                    text = featureCountText,
+                    color = textMuted,
+                    fontSize = 11.sp,
+                )
+            }
 
-            Text(
-                text = "${uiState.displayedFeatures.size} / ${uiState.totalAvailable} features",
-                color = textMuted,
-                fontSize = 11.sp,
-            )
-
-            for (feature in uiState.displayedFeatures) {
+            items(
+                items = uiState.displayedFeatures,
+                key = { it.id }
+            ) { feature ->
                 FeatureCard(
                     feature = feature,
                     isActive = uiState.activeFeatureId == feature.id,
@@ -145,7 +165,9 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(120.dp))
+            item {
+                Spacer(modifier = Modifier.height(120.dp))
+            }
         }
 
         if (uiState.isExecuting) {

@@ -52,7 +52,6 @@ fun MainScreen(
     cveViewModel: CveDashboardViewModel = hiltViewModel(),
     fuzzViewModel: com.deepeye.otg.viewmodel.research.FuzzDashboardViewModel = hiltViewModel(),
     hidViewModel: com.deepeye.otg.viewmodel.research.HidResearchViewModel = hiltViewModel(),
-    onRemoteShare: () -> Unit
 ) {
     val sessions by viewModel.sessions.collectAsState()
     val selectedKey by viewModel.selectedDeviceKey.collectAsState()
@@ -81,7 +80,6 @@ fun MainScreen(
                         sessions = sessions,
                         selectedKey = selectedKey,
                         onSelect = { viewModel.selectDevice(it) },
-                        onRemoteShare = onRemoteShare,
                         compactMode = true
                     )
                 }
@@ -99,7 +97,9 @@ fun MainScreen(
                     hidViewModel = hidViewModel
                 )
 
-                MissionNavigationBar(viewModel = viewModel)
+                MissionNavigationBar(
+                    viewModel = viewModel
+                )
             }
         } else {
             Row(modifier = Modifier.fillMaxSize()) {
@@ -112,7 +112,6 @@ fun MainScreen(
                             sessions = sessions,
                             selectedKey = selectedKey,
                             onSelect = { viewModel.selectDevice(it) },
-                            onRemoteShare = onRemoteShare,
                             compactMode = false
                         )
                     }
@@ -131,20 +130,6 @@ fun MainScreen(
                     )
                 }
             }
-        }
-
-        // Remote Relay FAB
-        FloatingActionButton(
-            onClick = onRemoteShare,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = fabBottomPadding, end = 16.dp)
-                .size(fabSize),
-            containerColor = StitchTokens.Primary,
-            contentColor = Color.White,
-            shape = CircleShape
-        ) {
-            Icon(Icons.Default.CloudSync, "Remote Share")
         }
     }
 }
@@ -648,10 +633,17 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
 private fun MissionNavigationBar(viewModel: UsbViewModel) {
     val currentNav by viewModel.currentNav.collectAsState()
 
-    NavigationBar(
-        containerColor = StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.96f),
-        tonalElevation = 0.dp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.96f)),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        NavigationBar(
+            modifier = Modifier.weight(1f),
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp
+        ) {
         MissionHub.entries.forEach { hub ->
             val isSelected = currentNav.hub == hub
 
@@ -678,6 +670,18 @@ private fun MissionNavigationBar(viewModel: UsbViewModel) {
                     unselectedIconColor = StitchTokens.TextSecondary,
                     unselectedTextColor = StitchTokens.TextSecondary
                 )
+            )
+        }
+        } // Close NavigationBar content
+        
+        Row(
+            modifier = Modifier.padding(end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            com.deepeye.otg.ui.components.BottomActionButtons(
+                compact = true,
+                onBug = { viewModel.toggleDebugPanel() },
+                onSettings = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) }
             )
         }
     }

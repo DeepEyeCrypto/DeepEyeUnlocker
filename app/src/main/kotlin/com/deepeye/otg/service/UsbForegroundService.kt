@@ -3,11 +3,14 @@ package com.deepeye.otg.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.*
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.deepeye.otg.ui.OtgActivity
 import com.deepeye.otg.usb.SessionCoordinator
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.*
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -28,6 +31,11 @@ class UsbForegroundService : Service() {
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
+
+    // Session-specific scope isolation (v2026.32.0)
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private var activeSessionJob: Job? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -59,15 +67,33 @@ class UsbForegroundService : Service() {
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info) // Safe generic icon
-            .setContentTitle("DeepEye Unlocker")
-            .setContentText("Active USB session: Maintaining connection stability.")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setContentIntent(pendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Kill Session", stopPending)
             .build()
 
-        startForeground(NOTIF_ID, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceCompat.startForeground(
+                this, NOTIF_ID, notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            )
+        } else {
+            startForeground(NOTIF_ID, notification)
+        }
+    }
+
+    /**
+     * High-assurance session launcher.
+     * Ensures any previous hanging session is killed before starting new one.
+     */
+    fun launchSession(block: suspend CoroutineScope.() -> Unit) {
+        activeSessionJob?.cancel() // Kill lingering session
+        activeSessionJob = serviceScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                Timber.e("[SVC] Session crashed: ${e.message}")
+            } finally {
+                Timber.d("[SVC] Session completed/cleaned")
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -84,6 +110,7 @@ class UsbForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        serviceJob.cancel() // Kill all active coroutines
         wakeLock?.let {
             if (it.isHeld) it.release()
         }

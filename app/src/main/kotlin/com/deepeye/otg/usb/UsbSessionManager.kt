@@ -49,7 +49,9 @@ class UsbSessionManager(
     private val connectMutex = Mutex()
     private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private var activeDevice: UsbDevice? = null
+    var currentUsbDevice: UsbDevice? = null
+        private set
+
     private var activeConnection: UsbDeviceConnection? = null
     private var activeEndpoints: ResolvedEndpoints? = null
     private var activeDeviceKey: String? = null
@@ -122,7 +124,7 @@ class UsbSessionManager(
     private suspend fun openConnection(device: UsbDevice, mode: ConnectionMode) = withContext(Dispatchers.IO) {
         connectMutex.withLock {
             try {
-                closeDeviceInternal()
+                closeSessionInternal()
 
                 val connection = UsbPermissionGuard.safeOpenDevice(usbManager, device)
                     ?: run {
@@ -141,7 +143,7 @@ class UsbSessionManager(
                     UsbLogger.warn(TAG, "Exclusive interface claim failed (force claim still alive)")
                 }
 
-                activeDevice = device
+                currentUsbDevice = device
                 activeConnection = connection
                 activeEndpoints = endpoints
                 activeDeviceKey = deviceKey(device)
@@ -198,12 +200,12 @@ class UsbSessionManager(
     fun closeDevice() {
         sessionScope.launch(Dispatchers.IO) {
             connectMutex.withLock {
-                closeDeviceInternal()
+                closeSessionInternal()
             }
         }
     }
 
-    private fun closeDeviceInternal() {
+    private fun closeSessionInternal() {
         try {
             watchdog?.stop()
             activeEndpoints?.let { activeConnection?.releaseInterface(it.usbInterface) }
@@ -211,7 +213,7 @@ class UsbSessionManager(
         } catch (e: Exception) {
             SafeLog.d(TAG, "Cleanup exception: ${e.message}")
         } finally {
-            activeDevice = null
+            currentUsbDevice = null
             activeConnection = null
             activeEndpoints = null
             activeTransport = null

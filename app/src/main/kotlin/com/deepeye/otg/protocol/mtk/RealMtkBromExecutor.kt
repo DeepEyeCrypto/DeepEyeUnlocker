@@ -3,7 +3,9 @@ package com.deepeye.otg.protocol.mtk
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
+import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
+import android.os.Build
 import com.deepeye.otg.data.gsmg.ProtocolResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,7 +52,13 @@ class RealMtkBromExecutor(
         private const val TIMEOUT_BYTE   = 2000
         private const val TIMEOUT_CHUNK  = 5000
         private const val TIMEOUT_ERASE  = 30_000
-        private const val DA_CHUNK_SIZE  = 4096
+        private const val TIMEOUT_ERASE  = 30_000
+        
+        // DA chunk size fix for Android P (API 28+)
+        private val DA_CHUNK_SIZE = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+            65536      // 64KB — safe on API 28+
+        else
+            16384      // 16KB — max on API < 28
     }
 
     // ── FRP erase ─────────────────────────────────────────────────────────
@@ -79,12 +87,14 @@ class RealMtkBromExecutor(
                     reason = "Bulk IN not found on IF#1", sessionId = sessionId)
 
             // Claim interfaces
-            if (!conn.claimInterface(device.getInterface(0), true)) {
+            val iface0 = device.getInterface(0)
+            if (!claimWithSettle(conn, iface0, sessionId)) {
                 return@withContext ProtocolResult.UsbTransportError(
                     reason = "Cannot claim IF#0", sessionId = sessionId)
             }
             if (device.interfaceCount > 1) {
-                conn.claimInterface(device.getInterface(1), true)
+                val iface1 = device.getInterface(1)
+                claimWithSettle(conn, iface1, sessionId)
             }
 
             // Phase 1: BROM handshake
@@ -162,7 +172,8 @@ class RealMtkBromExecutor(
         try {
             val epOut = findBulkOut(device, sessionId) ?: return@withContext ProtocolResult.UsbTransportError("No bulk OUT", sessionId = sessionId)
             val epIn  = findBulkIn(device, sessionId) ?: return@withContext ProtocolResult.UsbTransportError("No bulk IN", sessionId = sessionId)
-            conn.claimInterface(device.getInterface(0), true)
+            
+            claimWithSettle(conn, device.getInterface(0), sessionId)
 
             val info = performHandshake(conn, epOut, epIn, sessionId)
                 .getOrElse { return@withContext it as ProtocolResult }
@@ -194,7 +205,7 @@ class RealMtkBromExecutor(
         // Send 4 bytes + verify XOR responses one at a time
         for (i in BROM_HS_SEND.indices) {
             val sent = byteArrayOf(BROM_HS_SEND[i])
-            val n    = conn.bulkTransfer(epOut, sent, 1, TIMEOUT_BYTE)
+            val n    = conn.bulkOut(epOut, sent, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
             if (n != 1) {
                 Timber.e("[MTK_BROM] hs step=$i send FAILED n=$n " +
                          "sessionId=$sessionId")
@@ -206,7 +217,7 @@ class RealMtkBromExecutor(
             }
 
             val rx = ByteArray(1)
-            val r  = conn.bulkTransfer(epIn, rx, 1, TIMEOUT_BYTE)
+            val r  = conn.bulkIn(epIn, rx, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
             Timber.d("[MTK_BROM] hs step=$i sent=0x${BROM_HS_SEND[i].toString(16)} " +
                      "rx=0x${rx[0].toString(16)} expected=0x${BROM_HS_EXPECT[i].toString(16)} " +
                      "sessionId=$sessionId")
@@ -224,7 +235,7 @@ class RealMtkBromExecutor(
 
         // Read 8-byte chip info
         val info = ByteArray(8)
-        val n    = conn.bulkTransfer(epIn, info, 8, TIMEOUT_BYTE)
+        val n    = conn.bulkIn(epIn, info, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         if (n < 8) {
             return Result.failure(ProtocolResult.ProtocolHandshakeFailed(
                 reason    = "Chip info recv $n/8 bytes",
@@ -256,12 +267,12 @@ class RealMtkBromExecutor(
         sessionId: String,
     ): Result<TargetConfig> {
         val cmd = byteArrayOf(CMD_GET_TARGET)
-        val n   = conn.bulkTransfer(epOut, cmd, 1, TIMEOUT_BYTE)
+        val n   = conn.bulkOut(epOut, cmd, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         if (n != 1) return Result.failure(ProtocolResult.UsbTransportError(
             reason = "GET_TARGET send failed", sessionId = sessionId) as Exception)
 
         val buf = ByteArray(4)
-        conn.bulkTransfer(epIn, buf, 4, TIMEOUT_BYTE)
+        conn.bulkIn(epIn, buf, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
 
         val config = ((buf[0].toInt() and 0xFF) shl 24) or
                      ((buf[1].toInt() and 0xFF) shl 16) or
@@ -306,7 +317,7 @@ class RealMtkBromExecutor(
         header[9]  = 0x00; header[10] = 0x00  // sigLen = 0
         header[11] = 0x00; header[12] = 0x00
 
-        val hn = conn.bulkTransfer(epOut, header, header.size, TIMEOUT_BYTE)
+        val hn = conn.bulkOut(epOut, header, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         if (hn != header.size) return Result.failure(
             ProtocolResult.UsbTransportError(
                 reason = "SEND_DA header failed: $hn", sessionId = sessionId,
@@ -314,7 +325,7 @@ class RealMtkBromExecutor(
 
         // Read ACK
         val ack = ByteArray(1)
-        conn.bulkTransfer(epIn, ack, 1, TIMEOUT_BYTE)
+        conn.bulkIn(epIn, ack, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         if (ack[0] != ACK) return Result.failure(
             ProtocolResult.ProtocolHandshakeFailed(
                 reason       = "SEND_DA no ACK: 0x${ack[0].toString(16)}",
@@ -331,7 +342,7 @@ class RealMtkBromExecutor(
             val chunk = daBytes.copyOfRange(offset, offset + len)
             chunk.forEach { csum = (csum + (it.toInt() and 0xFF)) and 0xFFFF }
 
-            val n = conn.bulkTransfer(epOut, chunk, len, TIMEOUT_CHUNK)
+            val n = conn.bulkOut(epOut, chunk, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_CHUNK)
             if (n < 0) return Result.failure(ProtocolResult.UsbTransportError(
                 reason = "DA data failed at offset=$offset", sessionId = sessionId,
                 transferred = n) as Exception)
@@ -343,12 +354,12 @@ class RealMtkBromExecutor(
 
         // ZLP if needed
         if (total % epOut.maxPacketSize == 0) {
-            conn.bulkTransfer(epOut, ByteArray(0), 0, 2000)
+            conn.bulkOut(epOut, ByteArray(0), timeoutMs = 2000, sessionId = sessionId, tag = "MTK_BROM")
         }
 
         // Read 2-byte BE checksum from device
         val csBuf = ByteArray(2)
-        conn.bulkTransfer(epIn, csBuf, 2, TIMEOUT_BYTE)
+        conn.bulkIn(epIn, csBuf, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         val deviceCs = ((csBuf[0].toInt() and 0xFF) shl 8) or (csBuf[1].toInt() and 0xFF)
 
         if (deviceCs != csum) {
@@ -378,12 +389,12 @@ class RealMtkBromExecutor(
         cmd[3] = ((DA_LOAD_ADDR ushr 8)  and 0xFF).toByte()
         cmd[4] = (DA_LOAD_ADDR           and 0xFF).toByte()
 
-        val n = conn.bulkTransfer(epOut, cmd, cmd.size, TIMEOUT_BYTE)
+        val n = conn.bulkOut(epOut, cmd, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         if (n != cmd.size) return Result.failure(ProtocolResult.UsbTransportError(
             reason = "JUMP_DA send failed: $n", sessionId = sessionId) as Exception)
 
         val ack = ByteArray(1)
-        conn.bulkTransfer(epIn, ack, 1, TIMEOUT_BYTE)
+        conn.bulkIn(epIn, ack, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         Timber.d("[MTK_BROM] jump_da ack=0x${ack[0].toString(16)} sessionId=$sessionId")
 
         return if (ack[0] == ACK) Result.success(Unit)
@@ -404,11 +415,11 @@ class RealMtkBromExecutor(
         val nameBytes = ("frp\u0000").toByteArray(Charsets.UTF_8)
         val cmd = byteArrayOf(0x71.toByte()) + nameBytes
 
-        val n = conn.bulkTransfer(epOut, cmd, cmd.size, TIMEOUT_BYTE)
+        val n = conn.bulkOut(epOut, cmd, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_BYTE)
         Timber.d("[MTK_BROM] erase_frp cmd sent=$n sessionId=$sessionId")
 
         val result = ByteArray(1)
-        val r = conn.bulkTransfer(epIn, result, 1, TIMEOUT_ERASE)
+        val r = conn.bulkIn(epIn, result, sessionId = sessionId, tag = "MTK_BROM", timeoutMs = TIMEOUT_ERASE)
         Timber.d("[MTK_BROM] erase_frp result=0x${result[0].toString(16)} " +
                  "recv=$r sessionId=$sessionId")
 
@@ -481,5 +492,60 @@ class RealMtkBromExecutor(
         Timber.e("[MTK_BROM] NO DA found!\n" +
                  "Add mtkclient/Loader/MTK_DA_V5.bin to assets/da/")
         return null
+    }
+
+    // ── Stability Helpers (v2026.32.0) ──────────────────────────────────
+
+    private fun claimWithSettle(
+        conn:      UsbDeviceConnection,
+        iface:     UsbInterface,
+        sessionId: String,
+    ): Boolean {
+        val claimed = conn.claimInterface(iface, true)
+        if (claimed) {
+            Thread.sleep(100)  // settle time
+            Timber.d("[MTK_BROM] interface ${iface.id} claimed sessionId=$sessionId")
+        } else {
+            Timber.e("[MTK_BROM] claim FAILED iface=${iface.id} sessionId=$sessionId")
+        }
+        return claimed
+    }
+
+    private fun UsbDeviceConnection.bulkOut(
+        ep:        UsbEndpoint,
+        data:      ByteArray,
+        len:       Int        = data.size,
+        timeoutMs: Int        = 5000,
+        sessionId: String     = "",
+        tag:       String     = "USB",
+    ): Int {
+        var result = bulkTransfer(ep, data, len, timeoutMs)
+        if (result < 0) {
+            Thread.sleep(50)
+            result = bulkTransfer(ep, data, len, timeoutMs)
+            if (result < 0) {
+                Timber.e("[$tag] bulkOut FAILED twice n=$result sessionId=$sessionId")
+            }
+        }
+        return result
+    }
+
+    private fun UsbDeviceConnection.bulkIn(
+        ep:        UsbEndpoint,
+        buf:       ByteArray,
+        len:       Int        = buf.size,
+        timeoutMs: Int        = 5000,
+        sessionId: String     = "",
+        tag:       String     = "USB",
+    ): Int {
+        var result = bulkTransfer(ep, buf, len, timeoutMs)
+        if (result < 0) {
+            Thread.sleep(50)
+            result = bulkTransfer(ep, buf, len, timeoutMs)
+            if (result < 0) {
+                Timber.e("[$tag] bulkIn FAILED twice n=$result sessionId=$sessionId")
+            }
+        }
+        return result
     }
 }
