@@ -104,29 +104,29 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                     RecommendationCard(
                         feature = bestRecommendation,
                         reasoning = recommendation.reasoning,
-                        wantSignal = uiState.wantSignal,
-                        wantFree = uiState.wantFree,
-                        wantUntethered = uiState.wantUntethered,
+                        wantSignal = uiState.filters.signalOnly,
+                        wantFree = uiState.filters.freeOnly,
+                        wantUntethered = uiState.filters.isUntethered,
                         onExecute = { viewModel.onRequestExecute(bestRecommendation) },
                         onToggleSignal = {
                             viewModel.onRefineRecommendation(
-                                !uiState.wantSignal,
-                                uiState.wantFree,
-                                uiState.wantUntethered,
+                                !uiState.filters.signalOnly,
+                                uiState.filters.freeOnly,
+                                uiState.filters.isUntethered,
                             )
                         },
                         onToggleFree = {
                             viewModel.onRefineRecommendation(
-                                uiState.wantSignal,
-                                !uiState.wantFree,
-                                uiState.wantUntethered,
+                                uiState.filters.signalOnly,
+                                !uiState.filters.freeOnly,
+                                uiState.filters.isUntethered,
                             )
                         },
                         onToggleUntethered = {
                             viewModel.onRefineRecommendation(
-                                uiState.wantSignal,
-                                uiState.wantFree,
-                                !uiState.wantUntethered,
+                                uiState.filters.signalOnly,
+                                uiState.filters.freeOnly,
+                                !uiState.filters.isUntethered,
                             )
                         },
                     )

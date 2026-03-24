@@ -304,8 +304,9 @@ data class FeatureFilters(
     val searchQuery: String = "",
     val freeOnly: Boolean = false,
     val signalOnly: Boolean = false,
-    val untethered: Boolean = false,
+    val isUntethered: Boolean = false,
     val offlineOnly: Boolean = false,
     val noDataLoss: Boolean = false,
     val noJailbreak: Boolean = false,
+    val brandFilter: String = "",
 )

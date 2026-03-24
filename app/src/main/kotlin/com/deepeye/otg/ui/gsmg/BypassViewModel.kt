@@ -23,16 +23,18 @@ import javax.inject.Inject
 data class BypassUiState(
     val device:             DeviceState?          = null,
     val displayedFeatures:  List<BypassFeature>   = emptyList(),
-    val totalAvailable:     Int                   = 0,
     val selectedPlatform:   DevicePlatform        = DevicePlatform.UNKNOWN,
     val filters:            FeatureFilters        = FeatureFilters(),
     val isExecuting:        Boolean               = false,
+    val errorMessage:       String?               = null,
+    val successMessage:     String?               = null,
     val latestEvent:        BypassEvent?          = null,
     val activeFeatureId:    String?               = null,
     val activePlan:         ExecutionPlan?        = null,
     val showPlanDialog:     Boolean               = false,
-    val errorMessage:       String?               = null,
-    val successMessage:     String?               = null,
+    val freeCount:          Int                   = 0,
+    val signalCount:        Int                   = 0,
+    val totalAvailable:     Int                   = 0,
 )
 
 @HiltViewModel
@@ -132,7 +134,9 @@ class BypassViewModel @Inject constructor(
 
         _state.update { it.copy(
             displayedFeatures = applyFilters(filtered, it.filters, it.selectedPlatform),
-            totalAvailable    = filtered.size
+            totalAvailable    = filtered.size,
+            freeCount         = filtered.count { feat -> feat.isFree },
+            signalCount       = filtered.count { feat -> feat.signalAfter }
         )}
     }
 
@@ -246,7 +250,19 @@ class BypassViewModel @Inject constructor(
     fun onToggleOfflineOnly() = _state.update { it.copy(filters = it.filters.copy(offlineOnly = !it.filters.offlineOnly)) }
     fun onToggleNoDataLoss() = _state.update { it.copy(filters = it.filters.copy(noDataLoss = !it.filters.noDataLoss)) }
     fun onToggleNoJailbreak() = _state.update { it.copy(filters = it.filters.copy(noJailbreak = !it.filters.noJailbreak)) }
-    fun onSelectPlatform(p: DevicePlatform) = _state.update { it.copy(selectedPlatform = p) }
+
+    fun onRefineRecommendation(signalOnly: Boolean, freeOnly: Boolean, untetheredOnly: Boolean) {
+        _state.update { 
+            it.copy(filters = it.filters.copy(
+                signalOnly = signalOnly,
+                freeOnly = freeOnly,
+                isUntethered = untetheredOnly
+            ))
+        }
+        refreshFeatures()
+    }
+    fun onToggleNoDataLoss() = _state.update { it.copy(filters = it.filters.copy(noDataLoss = !it.filters.noDataLoss)) }
+    fun onToggleNoJailbreak() = _state.update { it.copy(filters = it.filters.copy(noJailbreak = !it.filters.noJailbreak)) }
 
     // ── Internal Filtering ────────────────────────────────────
     private fun applyFilters(
@@ -279,5 +295,10 @@ class BypassViewModel @Inject constructor(
             
             true
         }
+    }
+
+    fun onBrandFilter(brand: String) {
+        _state.update { it.copy(filters = it.filters.copy(brandFilter = brand)) }
+        refreshFeatures()
     }
 }
