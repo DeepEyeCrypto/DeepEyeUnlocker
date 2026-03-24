@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.deepeye.otg.data.gsmg.DevicePlatform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -269,7 +270,7 @@ private fun SummaryCard(
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Badge(text = "${uiState.freeCount} FREE", color = success)
                 Badge(text = "${uiState.signalCount} SIGNAL", color = accent)
-                Badge(text = "${UnifiedBypassRegistry.untetheredCount} UNTETHERED", color = warning)
+                Badge(text = "${UnifiedBypassRegistry.isUntetheredCount} UNTETHERED", color = warning)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -357,7 +358,7 @@ private fun RecommendationCard(
                 Badge(text = feature.connectionMode, color = connectionColor(feature.connectionMode))
                 Badge(text = feature.riskLevel.name, color = riskColor(feature.riskLevel))
                 if (feature.signalAfter) Badge(text = "SIGNAL", color = success)
-                if (feature.untethered) Badge(text = "UNTETHERED", color = warning)
+                if (feature.isUntethered) Badge(text = "UNTETHERED", color = warning)
                 if (feature.isFree) Badge(text = "FREE", color = success)
             }
 
@@ -437,7 +438,7 @@ private fun FilterCard(
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 ToggleBadge(text = "Free", active = uiState.filters.freeOnly, onClick = onToggleFreeOnly)
                 ToggleBadge(text = "Signal", active = uiState.filters.signalOnly, onClick = onToggleSignalOnly)
-                ToggleBadge(text = "Untethered", active = uiState.filters.untethered, onClick = onToggleUntethered)
+                ToggleBadge(text = "Untethered", active = uiState.filters.isUntethered, onClick = onToggleUntethered)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -484,7 +485,7 @@ private fun FeatureCard(
                 Badge(text = feature.connectionMode, color = connectionColor(feature.connectionMode))
                 Badge(text = feature.chipRange.displayName, color = textMuted)
                 if (feature.signalAfter) Badge(text = "SIGNAL", color = success)
-                if (feature.untethered) Badge(text = "UNTETHERED", color = warning)
+                if (feature.isUntethered) Badge(text = "UNTETHERED", color = warning)
                 if (feature.dataLoss) Badge(text = "DATA LOSS", color = danger)
             }
 
@@ -653,6 +654,7 @@ private fun PlatformBadge(
         DevicePlatform.IOS -> "iOS"
         DevicePlatform.ANDROID -> "Android"
         DevicePlatform.MODEM_ROUTER -> "Modem"
+        else -> "All"
     }
     val color = if (selected) accent else textMuted
 

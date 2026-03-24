@@ -1,0 +1,10 @@
+# DeepEye Unlocker Baseline Profile
+# Hot paths for startup and scrolling optimization
+
+Lcom/deepeye/otg/DeepEyeApplication;
+Lcom/deepeye/otg/ui/OtgActivity;
+Lcom/deepeye/otg/ui/gsmg/BypassScreenKt;
+Lcom/deepeye/otg/ui/gsmg/BypassViewModel;
+Lcom/deepeye/otg/usb/UsbLifecycleManager;
+Lcom/deepeye/otg/usb/UsbSessionManager;
+Lcom/deepeye/otg/protocol/mtk/RealMtkV6Executor;

@@ -674,16 +674,16 @@ private fun MissionNavigationBar(viewModel: UsbViewModel) {
         }
         } // Close NavigationBar content
         
-        Row(
-            modifier = Modifier.padding(end = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            com.deepeye.otg.ui.components.BottomActionButtons(
-                compact = true,
-                onBug = { viewModel.toggleDebugPanel() },
-                onSettings = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) }
-            )
-        }
+            Row(
+                modifier = Modifier.padding(end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                com.deepeye.otg.ui.components.BottomActionButtons(
+                    compact = true,
+                    onBug = { viewModel.toggleDebugPanel() },
+                    onSettings = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) }
+                )
+            }
     }
 }
 

@@ -1,5 +1,11 @@
 # DeepEye Unlocker v2026.31.0
 
+## [Unreleased]
+### Added
+- New device support for Xiaomi 13 Ultra- EDL protocol enhancements for Qualcomm SD 8 Gen 2
+
+### Removed- RemoteShare functionality due to security concerns
+
 ### Highlights
 
 #### 🔓 MTK V6 Protocol Support
@@ -19,6 +25,5 @@ Introducing the DeepEye Intelligence Suite:
 - **Anomaly Detection**: Real-time TFLite-powered signal analysis to detect device-side traps.
 - **APK Analysis**: Seamless JADX integration for automated application deconstruction and sensitive key discovery.
 
-### Build Metrics
-- **Android**: `app-release.apk` (v20310)
+### Build Metrics- **Android**: `app-release.apk` (v20310)
 - **Desktop**: macOS DMG (Aarch64/x64)

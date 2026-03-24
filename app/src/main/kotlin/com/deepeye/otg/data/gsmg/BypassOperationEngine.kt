@@ -690,7 +690,7 @@ class BypassOperationEngine @Inject constructor(
                     featureId     = feature.id,
                     signalEnabled = feature.signalAfter,
                     iServices     = feature.iServicesAfter,
-                    untethered    = feature.untethered,
+                    isUntethered    = feature.isUntethered,
                     notes         = buildCompletionNotes(feature, result),
                     sessionId     = sessionId,
                 ))
@@ -762,7 +762,7 @@ class BypassOperationEngine @Inject constructor(
                 add("${result.accountType} removed successfully")
             else -> {}
         }
-        if (!feature.untethered)
+        if (!feature.isUntethered)
             add("Tethered — re-run after full power cycle")
         if (feature.signalAfter && !feature.iServicesAfter)
             add("Run iServices Fix for FaceTime + iMessage")

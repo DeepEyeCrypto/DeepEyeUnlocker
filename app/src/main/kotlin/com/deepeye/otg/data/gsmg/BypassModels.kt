@@ -197,8 +197,11 @@ data class BypassFeature(
     val dataLoss:            Boolean,
     val signalAfter:         Boolean,
     val iServicesAfter:      Boolean,
-    val untethered:          Boolean,
+    val isUntethered:        Boolean,
+    val isOffline:           Boolean,
+    val noDataLoss:          Boolean,
     val isFree:              Boolean,
+    val successSteps:        List<String>,
     val costCredits:         Int,
     val requiresInternet:    Boolean,
     val requiresDfu:         Boolean,
@@ -293,6 +296,7 @@ sealed class BypassEvent {
 enum class DevicePlatform {
     IOS,
     ANDROID,
+    MODEM_ROUTER,
     UNKNOWN,
 }
 
@@ -300,4 +304,8 @@ data class FeatureFilters(
     val searchQuery: String = "",
     val freeOnly: Boolean = false,
     val signalOnly: Boolean = false,
+    val untethered: Boolean = false,
+    val offlineOnly: Boolean = false,
+    val noDataLoss: Boolean = false,
+    val noJailbreak: Boolean = false,
 )

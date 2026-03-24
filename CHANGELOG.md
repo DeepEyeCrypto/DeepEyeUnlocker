@@ -1,3 +1,12 @@
+## [2026.32.3] — 2026-03-24
+
+### 🛠️ CI Stabilization & Model Fixes
+- **CI/CD Fix**: Resolved regression in GitHub Actions build caused by missing model fields and syntax corruption.
+- **Model Refactor**: Added missing `isOffline`, `isUntethered`, `noDataLoss`, and `isFree` properties to `BypassFeature`.
+- **UI Stabilization**: Fixed `BypassScreen.kt` and `MainScreen.kt` to align with the new consolidated Bottom Bar architecture.
+- **Protocol Support**: Added `DevicePlatform.MODEM_ROUTER` to `BypassModels.kt` for expanded hardware support.
+- **Registry Fix**: Restored `UnifiedBypassRegistry.kt` integrity after automated properties injection.
+
 ## [2026.32.2] — 2026-03-24
 
 ### 🚀 Bottom Bar UI Migration & System Stabilization

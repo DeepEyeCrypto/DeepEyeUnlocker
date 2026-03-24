@@ -78,7 +78,7 @@ class BypassViewModel @Inject constructor(
         featureStr: String? = null,
     ) {
         Timber.d("[BypassVM] onUsbDeviceConnected: ${usbDevice.deviceName} featureStr=$featureStr")
-        _connectedUsbDevice.value = usbDevice
+        _connectedUsbDevice = usbDevice
 
         // 1. Detect Protocol (TECHNICAL: V6, EDL, BROM etc)
         // Check interface for ADB/Fastboot detection if possible
@@ -237,6 +237,16 @@ class BypassViewModel @Inject constructor(
     fun onDismissPlan() = _state.update { it.copy(showPlanDialog = false) }
     fun onClearError() = _state.update { it.copy(errorMessage = null) }
     fun onClearSuccess() = _state.update { it.copy(successMessage = null) }
+    
+    // ── Filter Toggles ────────────────────────────────────────
+    fun onUpdateSearch(q: String) = _state.update { it.copy(filters = it.filters.copy(searchQuery = q)) }
+    fun onToggleFreeOnly() = _state.update { it.copy(filters = it.filters.copy(freeOnly = !it.filters.freeOnly)) }
+    fun onToggleSignalOnly() = _state.update { it.copy(filters = it.filters.copy(signalOnly = !it.filters.signalOnly)) }
+    fun onToggleUntethered() = _state.update { it.copy(filters = it.filters.copy(isUntethered = !it.filters.isUntethered)) }
+    fun onToggleOfflineOnly() = _state.update { it.copy(filters = it.filters.copy(offlineOnly = !it.filters.offlineOnly)) }
+    fun onToggleNoDataLoss() = _state.update { it.copy(filters = it.filters.copy(noDataLoss = !it.filters.noDataLoss)) }
+    fun onToggleNoJailbreak() = _state.update { it.copy(filters = it.filters.copy(noJailbreak = !it.filters.noJailbreak)) }
+    fun onSelectPlatform(p: DevicePlatform) = _state.update { it.copy(selectedPlatform = p) }
 
     // ── Internal Filtering ────────────────────────────────────
     private fun applyFilters(
@@ -263,6 +273,9 @@ class BypassViewModel @Inject constructor(
             // Boolean toggles
             if (f.freeOnly && !feature.isFree) return@filter false
             if (f.signalOnly && !feature.signalAfter) return@filter false
+            if (f.offlineOnly && !feature.isOffline) return@filter false
+            if (f.isUntethered && !feature.isUntethered) return@filter false
+            if (f.noDataLoss && !feature.noDataLoss) return@filter false
             
             true
         }
