@@ -1,3 +1,10 @@
+## [2026.32.4] — 2026-03-24
+
+### 🛠️ Registry Sanitization & CI Survival
+- **Registry Sanitization**: Surgically removed duplicate property assignments and displaced logic blocks in `UnifiedBypassRegistry.kt` using a custom Python script.
+- **CI/CD Stabilization**: Ensured 100% syntactic correctness to satisfy strict GitHub Actions Kotlin compiler checks.
+- **Dependency Integrity**: Verified KSP and Kotlin compilation pass without metadata corruption.
+
 ## [2026.32.3] — 2026-03-24
 
 ### 🛠️ CI Stabilization & Model Fixes
