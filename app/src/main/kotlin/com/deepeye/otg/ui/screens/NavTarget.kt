@@ -26,6 +26,7 @@ enum class NavTarget(val hub: MissionHub) {
     PARTITION_EXPLORER(MissionHub.LAB),
     FILE_EXPLORER(MissionHub.LAB),
     FORENSICS_LAB(MissionHub.LAB),
+    REMOTE_SHARE(MissionHub.LAB),
     
     MISSION_HUB(MissionHub.BYPASS),
     

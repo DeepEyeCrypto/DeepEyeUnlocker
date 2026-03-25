@@ -178,6 +178,15 @@ private fun MissionNavContent(
                 onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
             )
             NavTarget.STORAGE -> StorageScreen()
+            NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.RemoteShareScreen(
+                status = "Ready",
+                subStatus = "Tap START RELAY to share your USB connection",
+                sessionCode = null,
+                isDeviceDetected = false,
+                onStartSharing = { /* TODO: wire relay */ },
+                onConnectRemote = { /* TODO: wire operator */ },
+                onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
+            )
             NavTarget.SETTINGS -> SettingsScreen(viewModel)
             NavTarget.IMEI_REPAIR -> {
                 val aiAnalysis by viewModel.aiAnalysis.collectAsState()
@@ -681,6 +690,7 @@ private fun MissionNavigationBar(viewModel: UsbViewModel) {
                 com.deepeye.otg.ui.components.BottomActionButtons(
                     compact = true,
                     onBug = { viewModel.toggleDebugPanel() },
+                    onRemoteShare = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.REMOTE_SHARE) },
                     onSettings = { viewModel.setNav(com.deepeye.otg.ui.screens.NavTarget.SETTINGS) }
                 )
             }

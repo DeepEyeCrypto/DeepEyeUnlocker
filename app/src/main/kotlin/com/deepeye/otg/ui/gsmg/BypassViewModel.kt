@@ -178,7 +178,11 @@ class BypassViewModel @Inject constructor(
     }
 
     fun onRequestExecute(feature: BypassFeature) {
-        val deviceState = _state.value.device ?: return
+        val deviceState = _state.value.device
+        if (deviceState == null) {
+            _state.update { it.copy(errorMessage = "Connect a device first — No USB target detected") }
+            return
+        }
         
         // Inject physical device handle into engine
         val plan = UnifiedBypassRegistry.buildPlan(

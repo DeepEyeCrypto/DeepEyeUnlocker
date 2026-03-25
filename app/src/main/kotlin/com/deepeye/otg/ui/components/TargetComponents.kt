@@ -318,6 +318,7 @@ private fun HeaderTextBlock(
 fun BottomActionButtons(
     compact: Boolean,
     onBug: () -> Unit,
+    onRemoteShare: () -> Unit = {},
     onSettings: () -> Unit,
 ) {
     val buttonSize = if (compact) 38.dp else 42.dp
@@ -337,6 +338,19 @@ fun BottomActionButtons(
                 imageVector = Icons.Default.BugReport,
                 contentDescription = "Bug Tools",
                 tint = StitchTokens.Primary,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+
+        CircleActionButton(
+            size = buttonSize,
+            iconSize = iconSize,
+            onClick = onRemoteShare
+        ) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = "Remote Share",
+                tint = Color(0xFF6750A4),
                 modifier = Modifier.size(iconSize)
             )
         }
