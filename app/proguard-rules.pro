@@ -20,3 +20,12 @@
 
 # 5. USB/Hardware
 -keep class android.hardware.usb.** { *; }
+
+# 6. Suppress R8 missing-class warnings (Hilt/Guava transitive deps)
+-dontwarn com.google.j2objc.annotations.**
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn javax.inject.**
+-dontwarn sun.misc.Unsafe
+-dontwarn org.checkerframework.**
+-dontwarn afu.org.checkerframework.**

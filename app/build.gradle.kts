@@ -1,8 +1,9 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp") // Keep KSP plugin
-    id("io.gitlab.arturbosch.detekt") // Add Detekt plugin
+    id("com.google.devtools.ksp")
+    id("dagger.hilt.android.plugin")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
@@ -22,9 +23,33 @@ android {
         }
     }
 
+    // ── Signing ────────────────────────────────────────────────────────
+    // CI: reads env vars set by GitHub Actions (KEYSTORE_PATH, STORE_PASSWORD, etc.)
+    // Local: reads keystore.properties file in project root
+    val keystorePropsFile = rootProject.file("keystore.properties")
+    val keystoreProps = java.util.Properties().apply {
+        if (keystorePropsFile.exists()) load(keystorePropsFile.inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(
+                System.getenv("KEYSTORE_PATH")
+                    ?: keystoreProps.getProperty("STORE_FILE", "keystore/deepeye-release.jks")
+            )
+            storePassword = System.getenv("STORE_PASSWORD")
+                ?: keystoreProps.getProperty("STORE_PASSWORD", "")
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: keystoreProps.getProperty("KEY_ALIAS", "")
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: keystoreProps.getProperty("KEY_PASSWORD", "")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
