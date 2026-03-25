@@ -180,7 +180,7 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.FRP_MTK_META,
             BypassMechanism.FRP_MTK_BROM -> {
                 requireUsb(usbDevice, sessionId)
-                val usb = usbDevice!!
+                val usb = usbDevice ?: return
 
                 // Detect hw_code from device state
                 val hwCode = parseHwCode(device.chipName)
@@ -215,12 +215,11 @@ class BypassOperationEngine @Inject constructor(
             // ── MTK META mode (OPPO/Realme/Vivo safe format) ─────────────
             BypassMechanism.RAMDISK_DELETE -> {
                 requireUsb(usbDevice, sessionId)
-                // META mode FRP via MtkMetaExecutor
-                // PHYSICAL_DEVICE_REQUIRED: verify META mode entry on OPPO MTK
-                throw ProtocolException(
-                    "MTK META FRP: MtkMetaExecutor not yet wired. " +
-                    "Wire MtkMetaSession.eraseFrpMeta() here.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "MTK META FRP: Wire MtkMetaSession.eraseFrpMeta()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1 — PHYSICAL_DEVICE_REQUIRED",
                 )
             }
 
@@ -335,13 +334,12 @@ class BypassOperationEngine @Inject constructor(
 
             // ── QC EDL (Samsung/Xiaomi/OPPO QC FRP) ──────────────────────
             BypassMechanism.FRP_QC_EDL -> {
-                // PHYSICAL_DEVICE_REQUIRED: QcEdlSession.eraseFrp()
-                // Wire QcEdlSession here when implementing v2026.31 Stage
-                throw ProtocolException(
-                    "QC EDL FRP: Wire QcEdlSession.eraseFrpEdl() from " +
-                    "FirehoseSession after programmer upload. " +
-                    "See v2026.31.0 Stage 1 QC implementation.",
-                    layer = "NOT_IMPLEMENTED",
+                requireUsb(usbDevice, sessionId)
+                ProtocolResult.NotImplementedYet(
+                    reason      = "QC EDL FRP: Wire QcEdlSession.eraseFrpEdl() from FirehoseSession",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1 QC implementation",
                 )
             }
 
@@ -349,11 +347,12 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.FRP_SAMSUNG_MTP,
             BypassMechanism.FRP_SAMSUNG_MODEM,
             BypassMechanism.FRP_DOWNLOAD_MODE -> {
-                // PHYSICAL_DEVICE_REQUIRED: OdinSession.eraseFrp()
-                throw ProtocolException(
-                    "Samsung FRP: Wire OdinSession.eraseFrp() after " +
-                    "OdinProtocol PIT parse. See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                requireUsb(usbDevice, sessionId)
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Samsung FRP: Wire OdinSession.eraseFrp() after PIT parse",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
@@ -361,22 +360,22 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.FRP_SPD,
             BypassMechanism.SPD_DOWNLOAD_MODE,
             BypassMechanism.UNISOC_META -> {
-                throw ProtocolException(
-                    "UniSoc FRP: Wire SpdSession.eraseFrp(). " +
-                    "See v2026.31.0 Stage 3.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "UniSoc FRP: Wire SpdSession.eraseFrp()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── iOS DFU restore / IPSW flash ─────────────────────────────
             BypassMechanism.DFU_RESTORE,
             BypassMechanism.CUSTOM_IPSW -> {
-                // Wire idevicerestore subprocess via tauri_plugin_shell (macOS)
-                // or via RamdiskUploader (Android OTG)
-                throw ProtocolException(
-                    "DFU Restore: Wire idevicerestore subprocess or " +
-                    "RamdiskUploader.uploadIpsw(). See v2026.31.0 Stage 4.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "DFU Restore: Wire idevicerestore or RamdiskUploader.uploadIpsw()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 4",
                 )
             }
 
@@ -386,11 +385,11 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.CHECKM8_RAMDISK,
             BypassMechanism.IRAIN -> {
                 requireUsb(usbDevice, sessionId)
-                // Wire Checkm8TimingCoordinator from v2026.31 Stage 2
-                throw ProtocolException(
-                    "checkm8: Wire Checkm8TimingCoordinator.triggerExploit(). " +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "checkm8: Wire Checkm8TimingCoordinator.triggerExploit()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
@@ -399,19 +398,21 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.RAMDISK_WRITE,
             BypassMechanism.RAMDISK_READ -> {
                 requireUsb(usbDevice, sessionId)
-                throw ProtocolException(
-                    "Ramdisk: Wire RamdiskUploader.upload() after checkm8. " +
-                    "See v2026.31.0 Stage 4.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Ramdisk: Wire RamdiskUploader.upload() after checkm8",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 4",
                 )
             }
 
             // ── NVRAM injection ───────────────────────────────────────────
             BypassMechanism.NVRAM_INJECTION -> {
-                throw ProtocolException(
-                    "NVRAM: Wire NvramWriter.writeBypassFlag() via ramdisk. " +
-                    "See v2026.31.0 Stage 4.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "NVRAM: Wire NvramWriter.writeBypassFlag() via ramdisk",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 4",
                 )
             }
 
@@ -420,47 +421,50 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.ACTIVATION_RECORD_PATCH,
             BypassMechanism.INTEGRITY_PATCH -> {
                 requireUsb(usbDevice, sessionId)
-                throw ProtocolException(
-                    "Activation patch: Wire ActivationPatcher.patchRecord(). " +
-                    "Requires ideviceactivation library via subprocess. " +
-                    "See v2026.31.0 Stage 4.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Activation patch: Wire ActivationPatcher.patchRecord()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 4",
                 )
             }
 
             // ── MDM removal (iOS) ─────────────────────────────────────────
             BypassMechanism.MDM_PAYJOY_REMOVE -> {
-                // META mode MDM removal for Infinix/Tecno
-                throw ProtocolException(
-                    "MDM: Wire MtkMetaSession.removeMdm(). " +
-                    "See v2026.31.0 Stage 3.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "MDM: Wire MtkMetaSession.removeMdm()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── IMEI repair ───────────────────────────────────────────────
             BypassMechanism.IMEI_REPAIR_MTK -> {
                 requireUsb(usbDevice, sessionId)
-                throw ProtocolException(
-                    "IMEI Repair: Wire MtkV6Executor.writeImei() via DA. " +
-                    "DA must be loaded first. See v2026.31.0 Stage 1.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "IMEI Repair: Wire MtkV6Executor.writeImei() via DA",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1",
                 )
             }
 
             BypassMechanism.IMEI_REPAIR_QC -> {
-                throw ProtocolException(
-                    "IMEI QC: Wire QcDiagSession.writeImei() NV item 550. " +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "IMEI QC: Wire QcDiagSession.writeImei() NV item 550",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
             BypassMechanism.IMEI_REPAIR_SAMSUNG -> {
-                throw ProtocolException(
-                    "IMEI Samsung: Wire SamsungEfsManager.writeImei(). " +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "IMEI Samsung: Wire SamsungEfsManager.writeImei()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
@@ -475,19 +479,21 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.EFS_BACKUP_RESTORE,
             BypassMechanism.RPMB_BACKUP,
             BypassMechanism.RPMB_RESTORE -> {
-                throw ProtocolException(
-                    "EFS/RPMB: Wire MtkV6Executor.backupPartition() or " +
-                    "QcEdlSession.readPartition(). See v2026.31.0 Stage 1.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "EFS/RPMB: Wire MtkV6Executor.backupPartition() or QcEdlSession.readPartition()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1",
                 )
             }
 
             // ── NV read/write ─────────────────────────────────────────────
             BypassMechanism.NV_READ_WRITE -> {
-                throw ProtocolException(
-                    "NV: Wire QcDiagSession.nvRead/nvWrite(). " +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "NV: Wire QcDiagSession.nvRead/nvWrite()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
@@ -514,9 +520,11 @@ class BypassOperationEngine @Inject constructor(
 
             // ── OPPO ID ───────────────────────────────────────────────────
             BypassMechanism.OPPO_ID_REMOVE -> {
-                throw ProtocolException(
-                    "OPPO ID: Wire OppoAccountRemover via ADB or EDL.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "OPPO ID: Wire OppoAccountRemover via ADB or EDL",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
@@ -529,18 +537,21 @@ class BypassOperationEngine @Inject constructor(
             }
 
             BypassMechanism.DRK_REPAIR -> {
-                throw ProtocolException(
-                    "DRK: Wire SamsungDrkRepair via ADB. " +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "DRK: Wire SamsungDrkRepair via ADB",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
 
             // ── Voice enable (modem) ──────────────────────────────────────
             BypassMechanism.VOICE_ENABLE -> {
-                throw ProtocolException(
-                    "Voice enable: Wire AT+CFUN=1 command via ModemSession.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Voice enable: Wire AT+CFUN=1 via ModemSession",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
@@ -552,27 +563,31 @@ class BypassOperationEngine @Inject constructor(
             // ── SLA auth (Infinix/Tecno V5) ───────────────────────────────
             BypassMechanism.SLA_AUTH -> {
                 requireUsb(usbDevice, sessionId)
-                throw ProtocolException(
-                    "SLA V5: Wire InfinixSlaAuthenticator.authenticate() via BROM. " +
-                    "See v2026.31.0 Stage 3.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "SLA V5: Wire InfinixSlaAuthenticator.authenticate() via BROM",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── eMMC health ───────────────────────────────────────────────
             BypassMechanism.EMMC_HEALTH_CHECK -> {
-                throw ProtocolException(
-                    "eMMC Health: Wire MtkMetaSession.readExtCsd(). " +
-                    "512-byte EXT_CSD register read.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "eMMC Health: Wire MtkMetaSession.readExtCsd()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── Partition manager ─────────────────────────────────────────
             BypassMechanism.PARTITION_MANAGER -> {
-                throw ProtocolException(
-                    "Partition: Wire MtkV6Executor.readPartitionList().",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Partition: Wire MtkV6Executor.readPartitionList()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1",
                 )
             }
 
@@ -583,50 +598,58 @@ class BypassOperationEngine @Inject constructor(
 
             // ── Huawei fastboot ───────────────────────────────────────────
             BypassMechanism.FIRMWARE_FLASH_HUAWEI -> {
-                throw ProtocolException(
-                    "Huawei Flash: Wire HuaweiFlasher.flashDgtks(). " +
-                    "See v2026.31.0 Stage 5.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "Huawei Flash: Wire HuaweiFlasher.flashDgtks()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 5",
                 )
             }
 
             // ── MTK/QC/SPD firmware flash ─────────────────────────────────
             BypassMechanism.FIRMWARE_FLASH_MTK -> {
                 requireUsb(usbDevice, sessionId)
-                throw ProtocolException(
-                    "MTK Flash: Wire MtkV6Executor.flashFirmware() via DA. " +
-                    "Scatter file required. See v2026.31.0 Stage 1.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "MTK Flash: Wire MtkV6Executor.flashFirmware() via DA",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1",
                 )
             }
             BypassMechanism.FIRMWARE_FLASH_QC -> {
-                throw ProtocolException(
-                    "QC Flash: Wire FirehoseSession.programPartitions(). " +
-                    "Programmer binary required. See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "QC Flash: Wire FirehoseSession.programPartitions()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
             BypassMechanism.FIRMWARE_FLASH_SPD,
             BypassMechanism.FIRMWARE_FLASH_ODIN -> {
-                throw ProtocolException(
-                    "SPD/ODIN Flash: Wire respective session flash methods. " +
-                    "See v2026.31.0 Stage 3.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "SPD/ODIN Flash: Wire respective session flash methods",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── MAC repair ────────────────────────────────────────────────
             BypassMechanism.MAC_REPAIR -> {
-                throw ProtocolException(
-                    "MAC Repair: Wire MtkV6Executor.writeMac() via DA NVRAM.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "MAC Repair: Wire MtkV6Executor.writeMac() via DA NVRAM",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 1",
                 )
             }
 
             BypassMechanism.IMEI_REPAIR_SPD -> {
-                throw ProtocolException(
-                    "IMEI SPD: Wire SpdSession.writeImei().",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "IMEI SPD: Wire SpdSession.writeImei()",
+                    mechanism   = feature.mechanism.name,
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
         }
@@ -690,7 +713,7 @@ class BypassOperationEngine @Inject constructor(
                     featureId     = feature.id,
                     signalEnabled = feature.signalAfter,
                     iServices     = feature.iServicesAfter,
-                    isUntethered    = feature.isUntethered,
+                    untethered    = feature.isUntethered,
                     notes         = buildCompletionNotes(feature, result),
                     sessionId     = sessionId,
                 ))

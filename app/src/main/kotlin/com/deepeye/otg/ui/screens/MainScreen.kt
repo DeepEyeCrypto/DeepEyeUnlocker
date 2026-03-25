@@ -369,7 +369,7 @@ private fun OperationCatalog(
             items(group.operations.chunked(2)) { pair ->
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                     pair.forEach { op ->
-                        val availability = AvailabilityEngine.availabilityFor(
+                        val availability = com.deepeye.otg.domain.engine.AvailabilityEngine.availabilityFor(
                             operation = op,
                             sessionState = sessionState,
                             userRole = userRole

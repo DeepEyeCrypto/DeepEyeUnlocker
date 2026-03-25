@@ -35,6 +35,7 @@ data class BypassUiState(
     val freeCount:          Int                   = 0,
     val signalCount:        Int                   = 0,
     val totalAvailable:     Int                   = 0,
+    val recommendation:     RecommendationResult? = null,
 )
 
 @HiltViewModel
@@ -261,8 +262,6 @@ class BypassViewModel @Inject constructor(
         }
         refreshFeatures()
     }
-    fun onToggleNoDataLoss() = _state.update { it.copy(filters = it.filters.copy(noDataLoss = !it.filters.noDataLoss)) }
-    fun onToggleNoJailbreak() = _state.update { it.copy(filters = it.filters.copy(noJailbreak = !it.filters.noJailbreak)) }
 
     // ── Internal Filtering ────────────────────────────────────
     private fun applyFilters(

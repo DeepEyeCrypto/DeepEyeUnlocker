@@ -188,7 +188,7 @@ class UniversalBypassEngine @Inject constructor(
             // ── MTK V6 (Dimensity — Realme 14x, OPPO, Vivo, Samsung MTK V6) ──
             ProtocolFamily.MTK_V6 -> {
                 requireUsb(usbDevice, sessionId)
-                val usb    = usbDevice!!
+                val usb = usbDevice ?: return
                 val hwCode = detection.hwCode.takeIf { it != 0 }
                     ?: 0x1209  // fallback: Realme 14x
                 val da = loadDaForChip(hwCode, "MTK_V6")
@@ -220,7 +220,7 @@ class UniversalBypassEngine @Inject constructor(
             // ── MTK BROM Classic (Helio — Infinix, Tecno, Nokia MTK, older) ─
             ProtocolFamily.MTK_BROM_CLASSIC -> {
                 requireUsb(usbDevice, sessionId)
-                val usb    = usbDevice!!
+                val usb    = usbDevice ?: return
                 val hwCode = detection.hwCode.takeIf { it != 0 } ?: 0x6765
                 val da = loadDaForChip(hwCode, "MTK_BROM")
                     ?: throw ProtocolException(
@@ -263,12 +263,12 @@ class UniversalBypassEngine @Inject constructor(
                             "DA missing for Samsung MTK hw_code=0x${hwCode.toString(16)}",
                             layer = "DA_LOAD",
                         )
-                    mtkBrom.eraseFrp(usbDevice!!, da, sessionId) { pct, phase ->
+                    mtkBrom.eraseFrp(usbDevice ?: return, da, sessionId) { pct, phase ->
                         progress(pct, phase)
                     }
                 } else {
                     // Samsung ODIN (Exynos or QC via ODIN)
-                    samsungOdin.eraseFrp(usbDevice!!, sessionId) { pct, phase ->
+                    samsungOdin.eraseFrp(usbDevice ?: return, sessionId) { pct, phase ->
                         progress(pct, phase)
                     }
                 }
@@ -288,7 +288,7 @@ class UniversalBypassEngine @Inject constructor(
 
                 Timber.d("[UNIVERSAL] qc_prog=$programmer sessionId=$sessionId")
 
-                qcEdl.eraseFrp(usbDevice!!, programmer, sessionId) { pct, phase ->
+                qcEdl.eraseFrp(usbDevice ?: return, programmer, sessionId) { pct, phase ->
                     progress(pct, phase)
                 }
             }
@@ -380,25 +380,24 @@ class UniversalBypassEngine @Inject constructor(
 
             // ── UniSoc / SPD ──────────────────────────────────────────────
             ProtocolFamily.SPD_UNISOC -> {
-                // PHYSICAL_DEVICE_REQUIRED: SPD protocol confirmation
-                throw ProtocolException(
-                    "UniSoc: Wire SpdSession.eraseFrp().\n" +
-                    "Supported chips: T606, T610, T616, T618, T700, SC9832, SC9863\n" +
-                    "See v2026.31.0 Stage 3.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "UniSoc: Wire SpdSession.eraseFrp()",
+                    mechanism   = "SPD_UNISOC",
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 3",
                 )
             }
 
             // ── Huawei HiSilicon ──────────────────────────────────────────
             ProtocolFamily.HUAWEI_HISI -> {
-                // Try ADB first, fallback to NOT_IMPLEMENTED
                 if (device.adbAvailable) {
                     adbExec.removeHuaweiId(sessionId)
                 } else {
-                    throw ProtocolException(
-                        "Huawei HiSilicon: Enable ADB first, or wire HisiliconSession.\n" +
-                        "See v2026.31.0 Stage 5.",
-                        layer = "NOT_IMPLEMENTED",
+                    ProtocolResult.NotImplementedYet(
+                        reason      = "Huawei HiSilicon: Enable ADB first, or wire HisiliconSession",
+                        mechanism   = "HUAWEI_HISI",
+                        sessionId   = sessionId,
+                        trackerNote = "See v2026.31.0 Stage 5",
                     )
                 }
             }
@@ -433,17 +432,18 @@ class UniversalBypassEngine @Inject constructor(
                         "DA missing for Samsung MTK hw_code=0x${hwCode.toString(16)}",
                         layer = "DA_LOAD",
                     )
-                mtkBrom.eraseFrp(usbDevice!!, da, sessionId) { pct, phase ->
+                mtkBrom.eraseFrp(usbDevice ?: return, da, sessionId) { pct, phase ->
                     progress(pct, phase)
                 }
             }
 
             // ── QC DIAG ───────────────────────────────────────────────────
             ProtocolFamily.QC_DIAG -> {
-                throw ProtocolException(
-                    "QC DIAG: Wire QcDiagSession for IMEI/NV operations.\n" +
-                    "See v2026.31.0 Stage 2.",
-                    layer = "NOT_IMPLEMENTED",
+                ProtocolResult.NotImplementedYet(
+                    reason      = "QC DIAG: Wire QcDiagSession for IMEI/NV operations",
+                    mechanism   = "QC_DIAG",
+                    sessionId   = sessionId,
+                    trackerNote = "See v2026.31.0 Stage 2",
                 )
             }
         }
@@ -475,7 +475,7 @@ class UniversalBypassEngine @Inject constructor(
                     featureId     = feature.id,
                     signalEnabled = feature.signalAfter,
                     iServices     = feature.iServicesAfter,
-                    untethered    = feature.untethered,
+                    untethered    = feature.isUntethered,
                     notes         = buildNotes(feature, result),
                     sessionId     = sessionId,
                 ))
@@ -598,7 +598,7 @@ class UniversalBypassEngine @Inject constructor(
             is ProtocolResult.ActivationBypassed -> add("Bypassed via ${result.method}")
             else -> {}
         }
-        if (!feature.untethered) add("Tethered — re-run after power cycle")
+        if (!feature.isUntethered) add("Tethered — re-run after power cycle")
         if (feature.signalAfter && !feature.iServicesAfter)
             add("Run iServices Fix for FaceTime + iMessage")
     }

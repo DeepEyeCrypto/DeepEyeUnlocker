@@ -18,6 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.*
+import androidx.compose.ui.unit.Dp
+import com.deepeye.otg.viewmodel.UsbViewModel
+import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -147,7 +151,7 @@ fun MissionTopBar(
     onSelect: (String) -> Unit,
     compactMode: Boolean
 ) {
-    val showDebug by viewModel.showDebugPanel.collectAsState()
+    val showDebug by (viewModel.showDebugPanel as kotlinx.coroutines.flow.StateFlow<Boolean>).collectAsState()
     val selectedSession = selectedKey?.let(sessions::get)
     val selectedLabel = when (selectedSession) {
         is UsbLifecycleState.Connected -> selectedSession.deviceName

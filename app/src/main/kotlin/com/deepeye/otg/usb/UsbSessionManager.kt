@@ -34,9 +34,10 @@ sealed class UsbConnectionEvent {
  * Production-stable USB connection layer with Mutex-serialization, 
  * active disconnect watchdog and queue-based transfers.
  */
-class UsbSessionManager(
-    private val context: Context,
-    private val usbManager: UsbManager
+@javax.inject.Singleton
+class UsbSessionManager @javax.inject.Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+    private val usbManager: android.hardware.usb.UsbManager
 ) {
     companion object {
         private const val TAG = "DeepEye-UsbMgr"

@@ -33,11 +33,7 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         MainScreen(
-            viewModel = viewModel,
-            onRemoteShare = {
-                val intent = Intent(context, RemoteShareActivity::class.java)
-                context.startActivity(intent)
-            }
+            viewModel = viewModel
         )
 
         // Overlay Layer for Active Operations/States

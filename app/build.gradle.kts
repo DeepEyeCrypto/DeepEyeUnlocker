@@ -1,207 +1,112 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.compose'
-    id 'com.google.dagger.hilt.android'
-    id 'com.google.devtools.ksp'
-    id 'org.jetbrains.kotlin.plugin.serialization'
-}
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
-}
-
-// Add Java toolchain for Java 17 compatibility (Java 25 parsing issue)
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-// ── Load signing properties (gitignored) ────────────────────
-def keystorePropsFile = rootProject.file("keystore.properties")
-def keystoreProps = new Properties()
-if (keystorePropsFile.exists()) {
-    keystoreProps.load(new FileInputStream(keystorePropsFile))
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") // Keep KSP plugin
+    id("io.gitlab.arturbosch.detekt") // Add Detekt plugin
 }
 
 android {
-    namespace 'com.deepeye.otg'
-    compileSdk 35
-    buildToolsVersion "35.0.0"
-    ndkVersion "25.1.8937393"
+    namespace = "com.deepeye.otg"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "com.deepeye.otg"
-        minSdk 26
-        targetSdk 35
-        versionCode 20330
-        versionName "2026.33.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "com.deepeye.otg"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
 
-        ndk {
-            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
-        }
-
-        externalNativeBuild {
-            cmake {
-                cppFlags "-std=c++17"
-                cFlags "-std=c11"
-                arguments "-DANDROID_STL=c++_shared", "-DANDROID_PLATFORM=android-26"
-            }
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "src/main/jni/CMakeLists.txt"
-            version "3.22.1"
-        }
-    }
-
-    // ── Signing configs ────────────────────────────────────────
-    signingConfigs {
-        release {
-            def storeFilePath = keystoreProps['STORE_FILE']
-            def storePwd      = keystoreProps['STORE_PASSWORD']
-            def keyAl          = keystoreProps['KEY_ALIAS']
-            def keyPwd         = keystoreProps['KEY_PASSWORD']
-
-            enableV1Signing = true
-            enableV2Signing = true
-            enableV3Signing = true
-
-            if (storeFilePath != null && storePwd != null &&
-                keyAl != null && keyPwd != null) {
-                // Local signing via keystore.properties
-                storeFile     file(storeFilePath)
-                storePassword storePwd
-                keyAlias      keyAl                keyPassword   keyPwd
-            } else {
-                // CI signing via environment variables
-                storeFile     file(System.getenv("KEYSTORE_PATH") ?: "missing.p12")
-                storePassword System.getenv("STORE_PASSWORD") ?: ""
-                keyAlias      System.getenv("KEY_ALIAS") ?: ""
-                keyPassword   System.getenv("KEY_PASSWORD") ?: ""
-            }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
         }
     }
 
     buildTypes {
-        debug {
-            debuggable true
-            minifyEnabled false
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-DEBUG"
-        }
         release {
-            debuggable false            minifyEnabled true
-            // Resource shrink is currently stalling release packaging after R8.
-            // Keep code shrinking enabled, but skip resource shrinking so
-            // assembleRelease can complete deterministically.
-            shrinkResources false
-            signingConfig signingConfigs.release
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
-
-    buildFeatures {
-        compose true
-        buildConfig true
-    }
-
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
-
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = "1.8"
     }
-
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
     packaging {
         resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-        }
-        jniLibs {
-            useLegacyPackaging = false
-        }
-    }
-
-    lint {
-        checkReleaseBuilds false
-        abortOnError false
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-            returnDefaultValues = true
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
 
 dependencies {
-    def composeBom = platform('androidx.compose:compose-bom:2024.09.00')
-    implementation composeBom    implementation 'androidx.compose.ui:ui'
-    implementation 'androidx.compose.ui:ui-graphics'
-    implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.material3:material3:1.3.0'
-    implementation 'androidx.activity:activity-compose:1.8.2'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.core:core-splashscreen:1.0.1'
-    // Stage 3: JADX libraries for APK Analysis    implementation("com.github.skylot:jadx-core:1.5.0")
-    implementation("com.github.skylot:jadx-dex-input:1.5.0")
 
-    // Stage 5: TensorFlow Lite for AI Anomaly Detection
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.compose.material:material-icons-extended'
-        // Haze for Glassmorphism
-    implementation 'dev.chrisbanes.haze:haze:1.3.1'
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.test.ext:junit:1.1.5")
+    implementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // Zip for Encrypted Vaults
-    implementation 'net.lingala.zip4j:zip4j:2.11.5'
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.50")
+    ksp("com.google.dagger:hilt-compiler:2.50")
 
-    // Logging
-    implementation 'com.jakewharton.timber:timber:5.0.1'
+    // Timber logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
-    // Security for Stage C Cloud
-    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
 
-    // Networking for Stage H Tunnel
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // Tauri dependencies
+    implementation("app.tauri:android-sdk:1.0.0-beta.10")
 
-    // Hilt DI
-    implementation "com.google.dagger:hilt-android:2.51.1"
-    ksp "com.google.dagger:hilt-compiler:2.51.1"
-    implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Room Persistence
-    def room_version = "2.6.1"
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-    ksp "androidx.room:room-compiler:$room_version"
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // Kotlin Serialization for Checkm8Profile
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:1.6.0"
+    // Room Persistence Library
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
 
-    // ── Test dependencies ───────────────────────────────────────────
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'androidx.test:core:1.6.1'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
-    testImplementation 'org.mockito:mockito-core:5.12.0'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
-    testImplementation "androidx.room:room-testing:$room_version"
-    testImplementation 'org.robolectric:robolectric:4.13'
+    // Unit Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
-    debugImplementation 'androidx.compose.ui:ui-tooling'
-    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    // Detekt
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.4")
+}
+
+// Detekt configuration
+detekt {
+    config.setFrom(files("$rootDir/detekt-config.yml")) // Assuming a config file exists at the root
+    parallel = true
+    buildUponDefaultConfig = true // Use default detekt rules
 }

@@ -102,11 +102,7 @@ object AppModule {
         return context.getSystemService(Context.USB_SERVICE) as UsbManager
     }
 
-    @Provides
-    @Singleton
-    fun provideFirmwareAssetManager(@ApplicationContext context: Context): com.deepeye.otg.assets.FirmwareAssetManager {
-        return com.deepeye.otg.assets.FirmwareAssetManager(context)
-    }
+    // FirmwareAssetManager is now provided via its @Inject constructor and @Singleton annotation.
 
     @Provides
     @Singleton

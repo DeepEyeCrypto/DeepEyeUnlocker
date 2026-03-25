@@ -66,10 +66,16 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
     val activePlan = uiState.activePlan
     val errorMessage = uiState.errorMessage
     val successMessage = uiState.successMessage
+    val displayedCount by remember(uiState.displayedFeatures.size) {
+        derivedStateOf { uiState.displayedFeatures.size }
+    }
+    val hasActiveExecution by remember(uiState.isExecuting, uiState.activeFeatureId) {
+        derivedStateOf { uiState.isExecuting && uiState.activeFeatureId != null }
+    }
 
     // Optimization: derived state for heavy list counts
-    val featureCountText by remember {
-        derivedStateOf { "${uiState.displayedFeatures.size} / ${uiState.totalAvailable} features" }
+    val featureCountText by remember(displayedCount, uiState.totalAvailable) {
+        derivedStateOf { "$displayedCount / ${uiState.totalAvailable} features" }
     }
 
     Box(
@@ -157,7 +163,7 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
 
             items(
                 items = uiState.displayedFeatures,
-                key = { it.id }
+                key = { feature -> feature.id }
             ) { feature ->
                 FeatureCard(
                     feature = feature,
@@ -171,7 +177,7 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
             }
         }
 
-        if (uiState.isExecuting) {
+        if (hasActiveExecution) {
             ExecutionCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

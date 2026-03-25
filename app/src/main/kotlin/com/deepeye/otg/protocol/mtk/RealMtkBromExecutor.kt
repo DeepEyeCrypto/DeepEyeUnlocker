@@ -52,7 +52,6 @@ class RealMtkBromExecutor(
         private const val TIMEOUT_BYTE   = 2000
         private const val TIMEOUT_CHUNK  = 5000
         private const val TIMEOUT_ERASE  = 30_000
-        private const val TIMEOUT_ERASE  = 30_000
         
         // DA chunk size fix for Android P (API 28+)
         private val DA_CHUNK_SIZE = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)

@@ -21,6 +21,7 @@ import java.util.UUID
  * Single source of truth for USB connection lifecycle.
  * Lives in ViewModel — survives Activity recreation.
  */
+@javax.inject.Singleton
 class UsbLifecycleManager @Inject constructor(
     private val context: Context,
     private val usbManager: UsbManager,

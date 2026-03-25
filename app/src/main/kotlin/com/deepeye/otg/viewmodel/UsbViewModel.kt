@@ -155,7 +155,7 @@ class UsbViewModel @javax.inject.Inject constructor(
     val adbSignatureRequired = settings.adbSignatureRequired
     val debounceAttach = settings.debounceAttach
     val permissionTimeout = settings.permissionTimeout
-    val showDebugPanel = settings.showDebugPanel
+    val showDebugPanel: StateFlow<Boolean> = settings.showDebugPanel
     val showDetectionReason = settings.showDetectionReason
     val monospaceHex = settings.monospaceHex
     val forceReclassify = settings.forceReclassify
