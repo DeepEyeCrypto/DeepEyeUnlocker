@@ -1,33 +1,43 @@
-use std::process::Command;
 use std::fs;
 use std::path::PathBuf;
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 
-fn run_bash(s: &str) -> Result<String, String> {
-    let output = Command::new("bash").arg("-c").arg(s).output()
+async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
+    let output = app
+        .shell()
+        .command("bash")
+        .args(["-c", s])
+        .output()
+        .await
         .map_err(|e| e.to_string())?;
-    Ok(format!("{}\n{}", String::from_utf8_lossy(&output.stdout),
+
+    Ok(format!("{}\n{}", 
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)))
 }
 
 /// Push local activation record to DeepEye Cloud Vault
 #[tauri::command]
-pub fn push_to_cloud_vault(ecid: String, token_path: String) -> Result<String, String> {
+pub async fn push_to_cloud_vault(app: AppHandle, ecid: String, _token_path: String) -> Result<String, String> {
     // Simulated encrypted upload logic
-    run_bash(&format!(
+    run_bash(&app, &format!(
         "echo 'Encrypting token for ECID: {ecid} using DeepVault-ECC...' && \
          echo 'Uploading to https://vault.deepeye.io/sync...' && \
          sleep 1 && echo 'Sync Success: Record secured in Cloud Vault.'"
     ))
+    .await
 }
 
 /// Pull activation record from Cloud Vault
 #[tauri::command]
-pub fn pull_from_cloud_vault(ecid: String) -> Result<String, String> {
-    run_bash(&format!(
+pub async fn pull_from_cloud_vault(app: AppHandle, ecid: String) -> Result<String, String> {
+    run_bash(&app, &format!(
         "echo 'Authenticating with DeepEye Cloud...' && \
          echo 'Downloading latest record for {ecid}...' && \
          sleep 1 && echo 'Restore Success: Record downloaded to ~/DeepEyeUnlocker/Vault/{ecid}/'"
     ))
+    .await
 }
 
 /// List all records in the Cloud Vault

@@ -4,6 +4,9 @@ import android.hardware.usb.UsbConstants
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.util.Log
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
+import com.deepeye.otg.util.sendZlp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -200,7 +203,14 @@ class BulkTransport(
             var attempt = 0
             while (attempt < MAX_RETRIES) {
                 val buffer = ByteArray(expectedSize)
-                val received = connection.bulkTransfer(inEp, buffer, expectedSize, timeout)
+                val received = connection.bulkIn(
+                    ep = inEp,
+                    buf = buffer,
+                    len = expectedSize,
+                    timeoutMs = timeout,
+                    sessionId = "bulk-transport",
+                    tag = "USB_SESSION"
+                )
                 
                 when {
                     received > 0 || expectedSize == 0 -> return@withLock TransferResult.Success(received, buffer.copyOf(received), attempt)
@@ -255,7 +265,12 @@ class BulkTransport(
     private fun chunkedWrite(data: ByteArray, ep: UsbEndpoint, timeout: Int): TransferResult {
         if (data.isEmpty()) {
             if (!isOpen) return TransferResult.DeviceGone
-            val sent = connection.bulkTransfer(ep, data, 0, timeout)
+            val sent = connection.sendZlp(
+                ep = ep,
+                timeoutMs = timeout,
+                sessionId = "bulk-transport",
+                tag = "USB_SESSION"
+            )
             return if (sent >= 0) {
                 TransferResult.Success(0, data)
             } else {
@@ -267,7 +282,15 @@ class BulkTransport(
         while (offset < data.size) {
             if (!isOpen) return TransferResult.DeviceGone
             val chunkLen = min(MAX_CHUNK, data.size - offset)
-            val sent = connection.bulkTransfer(ep, data, offset, chunkLen, timeout)
+            val chunk = data.copyOfRange(offset, offset + chunkLen)
+            val sent = connection.bulkOut(
+                ep = ep,
+                data = chunk,
+                len = chunkLen,
+                timeoutMs = timeout,
+                sessionId = "bulk-transport",
+                tag = "USB_SESSION"
+            )
             if (sent < 0) return if (isStalled(ep)) TransferResult.Stall else TransferResult.IOError("Transfer error $sent")
             if (sent == 0) return TransferResult.Timeout
             offset += sent

@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,12 +41,12 @@ fun VaultScreen(
     viewModel: ForensicVaultViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val devices by viewModel.allDevices.collectAsState()
-    val sessions by viewModel.deviceSessions.collectAsState()
-    val logs by viewModel.sessionLogs.collectAsState()
-    val selectedKey by viewModel.selectedDeviceKey.collectAsState()
-    val selectedSessionId by viewModel.selectedSessionId.collectAsState()
-    val exportStatus by viewModel.exportStatus.collectAsState()
+    val devices by viewModel.allDevices.collectAsStateWithLifecycle()
+    val sessions by viewModel.deviceSessions.collectAsStateWithLifecycle()
+    val logs by viewModel.sessionLogs.collectAsStateWithLifecycle()
+    val selectedKey by viewModel.selectedDeviceKey.collectAsStateWithLifecycle()
+    val selectedSessionId by viewModel.selectedSessionId.collectAsStateWithLifecycle()
+    val exportStatus by viewModel.exportStatus.collectAsStateWithLifecycle()
 
     Box(Modifier.fillMaxSize()) {
         Column(

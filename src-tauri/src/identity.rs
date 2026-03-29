@@ -1,17 +1,25 @@
-use std::process::Command;
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 
-fn run_bash(s: &str) -> Result<String, String> {
-    let output = Command::new("bash").arg("-c").arg(s).output()
+async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
+    let output = app
+        .shell()
+        .command("bash")
+        .args(["-c", s])
+        .output()
+        .await
         .map_err(|e| e.to_string())?;
-    Ok(format!("{}\n{}", String::from_utf8_lossy(&output.stdout),
+
+    Ok(format!("{}\n{}", 
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)))
 }
 
 /// Check IMEI status against GSMA and other databases
 #[tauri::command]
-pub fn check_imei_intel(imei: String) -> Result<String, String> {
+pub async fn check_imei_intel(app: AppHandle, imei: String) -> Result<String, String> {
     // Simulated deep lookup
-    run_bash(&format!(
+    run_bash(&app, &format!(
         "echo 'Querying GSMA Deep Intelligence for IMEI: {imei}...' && \
          sleep 1 && \
          echo 'Status: CLEAN' && \
@@ -20,10 +28,11 @@ pub fn check_imei_intel(imei: String) -> Result<String, String> {
          echo 'FMI: ON' && \
          echo 'iCloud Status: LOST/STOLEN (False)'"
     ))
+    .await
 }
 
 /// Get detailed device identity (MEID, Serial, IMEI, UDID)
 #[tauri::command]
-pub fn get_full_identity() -> Result<String, String> {
-    run_bash("ideviceinfo -k IMEI -k SerialNumber -k UniqueChipID -k UniqueDeviceID 2>&1")
+pub async fn get_full_identity(app: AppHandle) -> Result<String, String> {
+    run_bash(&app, "ideviceinfo -k IMEI -k SerialNumber -k UniqueChipID -k UniqueDeviceID 2>&1").await
 }

@@ -1,10 +1,18 @@
-use std::process::Command;
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 
-fn afc(subcmd: &str) -> Result<String, String> {
-    let out = Command::new("bash").arg("-c").arg(subcmd).output()
+async fn afc(app: &AppHandle, subcmd: &str) -> Result<String, String> {
+    let output = app
+        .shell()
+        .command("bash")
+        .args(["-c", subcmd])
+        .output()
+        .await
         .map_err(|e| e.to_string())?;
-    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+    
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    
     if stdout.is_empty() && !stderr.is_empty() {
         Err(stderr)
     } else {
@@ -13,75 +21,86 @@ fn afc(subcmd: &str) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn mount_afc2() -> Result<String, String> {
-    afc(
+pub async fn mount_afc2(app: AppHandle) -> Result<String, String> {
+    afc(&app,
         "mkdir -p ~/DeepEyeUnlocker/mount/afc2 && \
          ifuse --afc2 ~/DeepEyeUnlocker/mount/afc2 2>&1 && \
          echo '✅ AFC2 mounted at ~/DeepEyeUnlocker/mount/afc2/' || \
          (ifuse ~/DeepEyeUnlocker/mount/afc2 2>&1 && \
           echo '✅ AFC (standard) mounted - jailbreak needed for full access')"
-    )
+    ).await
 }
 
 #[tauri::command]
-pub fn list_directory(path: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn list_directory(app: AppHandle, path: String) -> Result<String, String> {
+    afc(&app, &format!(
         "ifuse ~/DeepEyeUnlocker/mount/afc2 2>/dev/null; \
          ls -la ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1 || \
-         idevicecrashreport -k ls {path} 2>&1"
-    ))
+         idevicecrashreport -k ls {path} 2>&1",
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn get_file_info(path: String) -> Result<String, String> {
-    afc(&format!(
-        "stat ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1"
-    ))
+pub async fn get_file_info(app: AppHandle, path: String) -> Result<String, String> {
+    afc(&app, &format!(
+        "stat ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1",
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn read_file(path: String) -> Result<String, String> {
-    afc(&format!(
-        "cat ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1"
-    ))
+pub async fn read_file(app: AppHandle, path: String) -> Result<String, String> {
+    afc(&app, &format!(
+        "cat ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1",
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn write_file(path: String, content: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn write_file(app: AppHandle, path: String, content: String) -> Result<String, String> {
+    afc(&app, &format!(
         "echo '{content}' > ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1 && \
-         echo '✅ Written to {path}'"
-    ))
+         echo '✅ Written to {path}'",
+        content = content,
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn delete_path(path: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn delete_path(app: AppHandle, path: String) -> Result<String, String> {
+    afc(&app, &format!(
         "rm -rf ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1 && \
-         echo '✅ Deleted: {path}'"
-    ))
+         echo '✅ Deleted: {path}'",
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn make_directory(path: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn make_directory(app: AppHandle, path: String) -> Result<String, String> {
+    afc(&app, &format!(
         "mkdir -p ~/DeepEyeUnlocker/mount/afc2/{path} 2>&1 && \
-         echo '✅ Created: {path}'"
-    ))
+         echo '✅ Created: {path}'",
+        path = path
+    )).await
 }
 
 #[tauri::command]
-pub fn pull_file(device_path: String, local_path: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn pull_file(app: AppHandle, device_path: String, local_path: String) -> Result<String, String> {
+    afc(&app, &format!(
         "cp ~/DeepEyeUnlocker/mount/afc2/{device_path} {local_path} 2>&1 && \
-         echo '✅ Pulled to {local_path}'"
-    ))
+         echo '✅ Pulled to {local_path}'",
+        device_path = device_path,
+        local_path = local_path
+    )).await
 }
 
 #[tauri::command]
-pub fn push_file(local_path: String, device_path: String) -> Result<String, String> {
-    afc(&format!(
+pub async fn push_file(app: AppHandle, local_path: String, device_path: String) -> Result<String, String> {
+    afc(&app, &format!(
         "cp {local_path} ~/DeepEyeUnlocker/mount/afc2/{device_path} 2>&1 && \
-         echo '✅ Pushed to {device_path}'"
-    ))
+         echo '✅ Pushed to {device_path}'",
+        local_path = local_path,
+        device_path = device_path
+    )).await
 }

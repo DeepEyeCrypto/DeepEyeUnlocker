@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,7 +38,7 @@ fun ForensicLabScreen(
     hazeState: HazeState,
     perfMode: Boolean
 ) {
-    val session by viewModel.lifecycleState.collectAsState()
+    val session by viewModel.lifecycleState.collectAsStateWithLifecycle()
     val operations = DeepEyeOperation.values()
     
     val safeOps = operations.filter { it.effectiveRisk == RiskLevel.SAFE }

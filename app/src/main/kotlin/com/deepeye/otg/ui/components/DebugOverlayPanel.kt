@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.components
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,8 +27,8 @@ import com.deepeye.otg.usb.UsbDescriptorSnapshot
 
 @Composable
 fun DebugOverlayPanel(viewModel: UsbViewModel) {
-    val showDebug by viewModel.showDebugPanel.collectAsState()
-    val lifecycleState by viewModel.lifecycleState.collectAsState()
+    val showDebug by viewModel.showDebugPanel.collectAsStateWithLifecycle()
+    val lifecycleState by viewModel.lifecycleState.collectAsStateWithLifecycle()
 
     AnimatedVisibility(
         visible = showDebug,

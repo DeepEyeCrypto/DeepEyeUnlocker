@@ -7,6 +7,8 @@ import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.logging.SafeLog
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -319,8 +321,16 @@ class MtkCdcSession(
      * Helper: Bulk Read
      */
     private suspend fun readBulk(length: Int, timeout: Int = 2000): ByteArray? {
+        val inEp = bulkIn ?: return null
         val buffer = ByteArray(length)
-        val result = connection.bulkTransfer(bulkIn, buffer, length, timeout)
+        val result = connection.bulkIn(
+            ep = inEp,
+            buf = buffer,
+            len = length,
+            timeoutMs = timeout,
+            sessionId = sessionId,
+            tag = "USB_SESSION"
+        )
         return if (result >= 0) buffer else null
     }
 
@@ -328,7 +338,15 @@ class MtkCdcSession(
      * Helper: Bulk Write
      */
     private suspend fun writeBulk(data: ByteArray, timeout: Int = 2000): Int {
-        return connection.bulkTransfer(bulkOut, data, data.size, timeout)
+        val outEp = bulkOut ?: return -1
+        return connection.bulkOut(
+            ep = outEp,
+            data = data,
+            len = data.size,
+            timeoutMs = timeout,
+            sessionId = sessionId,
+            tag = "USB_SESSION"
+        )
     }
 
     fun release() {

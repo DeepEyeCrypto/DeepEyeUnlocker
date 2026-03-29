@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### Added
+- Apple USB support updates for Normal / Recovery / DFU / WTF / Pwned DFU detection flows.
+- Stage 14 Tauri wrappers alignment for `ideviceinfo` / `irecovery` / `idevicerestore` orchestration.
+- Android CI policy gates and Tauri CI hardening workflows.
+- Tag-driven auto release workflow with changelog section extraction.
+
 ## [2026.32.4] — 2026-03-24
 
 ### 🛠️ Registry Sanitization & CI Survival
@@ -449,7 +457,7 @@ security research on personal/lab devices.
 
 ---
 
-## [Unreleased]
+## [Legacy Roadmap]
 
 - EDL Sahara/Firehose byte-level protocol completion
 - BROM META/BROM handshake complete

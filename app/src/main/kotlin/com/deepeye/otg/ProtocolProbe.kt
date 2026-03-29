@@ -6,6 +6,8 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.util.Log
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
 
 enum class DetectedProtocol {
     UNKNOWN,
@@ -252,11 +254,27 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
     private fun probeFastboot(): Boolean {
         try {
+            val bulkOut = bulkOut ?: return false
+            val bulkIn = bulkIn ?: return false
             val cmd = "getvar:version".toByteArray()
             val buffer = ByteArray(64)
             
-            connection.bulkTransfer(bulkOut, cmd, cmd.size, 500)
-            val len = connection.bulkTransfer(bulkIn, buffer, buffer.size, 500)
+            connection.bulkOut(
+                ep = bulkOut,
+                data = cmd,
+                len = cmd.size,
+                timeoutMs = 500,
+                sessionId = "probe-fastboot",
+                tag = "USB_SESSION"
+            )
+            val len = connection.bulkIn(
+                ep = bulkIn,
+                buf = buffer,
+                len = buffer.size,
+                timeoutMs = 500,
+                sessionId = "probe-fastboot",
+                tag = "USB_SESSION"
+            )
             if (len > 0) {
                 val response = String(buffer, 0, len)
                 Log.d(TAG, "[PROTO] Fastboot probe response: $response")
@@ -270,12 +288,28 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
     private fun probeMtkBrom(): Boolean {
         try {
+            val bulkOut = bulkOut ?: return false
+            val bulkIn = bulkIn ?: return false
             // MTK Start Cmd: A0 0A 50 05
             val cmd = byteArrayOf(0xA0.toByte(), 0x0A, 0x50, 0x05)
             val buffer = ByteArray(64)
             
-            connection.bulkTransfer(bulkOut, cmd, cmd.size, 500)
-            val len = connection.bulkTransfer(bulkIn, buffer, buffer.size, 500)
+            connection.bulkOut(
+                ep = bulkOut,
+                data = cmd,
+                len = cmd.size,
+                timeoutMs = 500,
+                sessionId = "probe-mtk",
+                tag = "USB_SESSION"
+            )
+            val len = connection.bulkIn(
+                ep = bulkIn,
+                buf = buffer,
+                len = buffer.size,
+                timeoutMs = 500,
+                sessionId = "probe-mtk",
+                tag = "USB_SESSION"
+            )
             
             if (len > 0) {
                 Log.d(TAG, "[PROTO] MTK probe response len=$len first=0x${"%02X".format(buffer[0])}")
@@ -289,8 +323,16 @@ class ProtocolProbe(private val connection: UsbDeviceConnection, private val dev
 
     private fun probeQualcommSahara(): Boolean {
         try {
+            val bulkIn = bulkIn ?: return false
             val buffer = ByteArray(1024)
-            val len = connection.bulkTransfer(bulkIn, buffer, buffer.size, 500)
+            val len = connection.bulkIn(
+                ep = bulkIn,
+                buf = buffer,
+                len = buffer.size,
+                timeoutMs = 500,
+                sessionId = "probe-sahara",
+                tag = "USB_SESSION"
+            )
             if (len > 0) {
                  if (buffer[0] == 0x01.toByte()) {
                      Log.d(TAG, "[PROTO] Qualcomm Sahara probe detected HELLO (len=$len)")

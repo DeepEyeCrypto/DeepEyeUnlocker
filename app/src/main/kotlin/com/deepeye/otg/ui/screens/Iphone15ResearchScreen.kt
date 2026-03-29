@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,8 +43,8 @@ import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
 fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
-    val sessions by viewModel.sessions.collectAsState()
-    val selectedKey by viewModel.selectedDeviceKey.collectAsState()
+    val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val selectedKey by viewModel.selectedDeviceKey.collectAsStateWithLifecycle()
 
     val selected = selectedKey?.let { sessions[it] } ?: sessions.values.firstOrNull()
     val connected = selected as? com.deepeye.otg.usb.UsbLifecycleState.Connected

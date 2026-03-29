@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -49,7 +50,7 @@ fun FuzzDashboardScreen(
     viewModel: FuzzDashboardViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier

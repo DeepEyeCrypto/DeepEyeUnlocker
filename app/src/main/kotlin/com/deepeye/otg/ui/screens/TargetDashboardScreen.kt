@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -35,10 +36,10 @@ import com.deepeye.otg.ui.viewmodel.LogEntry
  */
 @Composable
 fun TargetDashboardScreen(viewModel: UsbViewModel, hazeState: dev.chrisbanes.haze.HazeState) {
-    val sessions by viewModel.sessions.collectAsState()
-    val selectedKey by viewModel.selectedDeviceKey.collectAsState()
-    val exposureReport by viewModel.exposureReport.collectAsState()
-    val logs by viewModel.logs.collectAsState()
+    val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val selectedKey by viewModel.selectedDeviceKey.collectAsStateWithLifecycle()
+    val exposureReport by viewModel.exposureReport.collectAsStateWithLifecycle()
+    val logs by viewModel.logs.collectAsStateWithLifecycle()
     
     val selectedSession = selectedKey?.let { sessions[it] } ?: UsbLifecycleState.Idle
 

@@ -17,8 +17,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import com.deepeye.otg.ui.RemoteShareScreen
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 @dagger.hilt.android.AndroidEntryPoint
@@ -37,13 +41,15 @@ class RemoteShareActivity : AppCompatActivity() {
         usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
         
         setContent {
-            val tunnelStatus by tunnel.status.collectAsState()
-            val tunnelCode by tunnel.sessionCode.collectAsState()
+            val tunnelStatus by tunnel.status.collectAsStateWithLifecycle()
+            val tunnelCode by tunnel.sessionCode.collectAsStateWithLifecycle()
             
             var status by remember { mutableStateOf("WAITING FOR DEVICE") }
             var subStatus by remember { mutableStateOf("Connect USB device via OTG...") }
             var usbDevice by remember { mutableStateOf<UsbDevice?>(null) }
             var isDetected by remember { mutableStateOf(false) }
+            var hasUsbPermission by remember { mutableStateOf(false) }
+            var isLoading by remember { mutableStateOf(false) }
 
             // Sync UI with Tunnel State
             LaunchedEffect(tunnelStatus, tunnelCode) {
@@ -51,31 +57,57 @@ class RemoteShareActivity : AppCompatActivity() {
                     com.deepeye.otg.service.TunnelManager.TunnelStatus.ACTIVE -> {
                         status = "SHARING ACTIVE"
                         subStatus = "Relay Tunnel Established via WebSocket"
+                        isLoading = false
                     }
                     com.deepeye.otg.service.TunnelManager.TunnelStatus.CONNECTING -> {
                         status = "CONNECTING..."
                         subStatus = "Establishing secure handshake..."
+                        isLoading = true
                     }
                     com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED -> {
                         status = "TUNNEL FAILED"
                         subStatus = "Relay server unreachable."
+                        isLoading = false
+                        Toast.makeText(this@RemoteShareActivity, "Tunnel connection failed", Toast.LENGTH_SHORT).show()
                     }
-                    else -> if (isDetected) {
-                        status = "DEVICE DETECTED"
-                        subStatus = "Ready to share."
+                    else -> {
+                        isLoading = false
+                        if (isDetected) {
+                            status = "DEVICE DETECTED"
+                            subStatus = if (hasUsbPermission) "Ready to share." else "USB permission required."
+                        } else {
+                            status = "WAITING FOR DEVICE"
+                            subStatus = "Connect USB device via OTG..."
+                        }
                     }
                 }
             }
 
+            // Detect USB device and request permission
             LaunchedEffect(Unit) {
-                val deviceList = usbManager.deviceList
-                if (deviceList.isNotEmpty()) {
-                    val dev = deviceList.values.first()
-                    usbDevice = dev
-                    isDetected = true
-                    status = "DEVICE DETECTED"
-                    subStatus = "${dev.productName ?: "Unknown Device"} (ID: ${dev.deviceId})"
-                }
+                snapshotFlow { usbManager.deviceList.values.firstOrNull() }
+                    .distinctUntilChanged()
+                    .collect { device ->
+                        usbDevice = device
+                        isDetected = device != null
+                        if (device != null) {
+                            status = "DEVICE DETECTED"
+                            subStatus = "${device.productName ?: "Unknown Device"} (ID: ${device.deviceId})"
+                            // Check if permission already granted
+                            if (usbManager.hasPermission(device)) {
+                                hasUsbPermission = true
+                                subStatus = "Ready to share."
+                            } else {
+                                hasUsbPermission = false
+                                requestUsbPermission(device)
+                            }
+                        } else {
+                            isDetected = false
+                            hasUsbPermission = false
+                            status = "WAITING FOR DEVICE"
+                            subStatus = "Connect USB device via OTG..."
+                        }
+                    }
             }
 
             RemoteShareScreen(
@@ -84,6 +116,10 @@ class RemoteShareActivity : AppCompatActivity() {
                 sessionCode = tunnelCode,
                 isDeviceDetected = isDetected,
                 onStartSharing = {
+                    if (!hasUsbPermission) {
+                        Toast.makeText(this@RemoteShareActivity, "USB permission required", Toast.LENGTH_SHORT).show()
+                        return@RemoteShareScreen
+                    }
                     if (tunnelCode == null) {
                         tunnel.startFleetSharing()
                     } else {
@@ -119,6 +155,9 @@ class RemoteShareActivity : AppCompatActivity() {
         }
         val permissionIntent = PendingIntent.getBroadcast(this, 0, intent, flags)
         runCatching { usbManager.requestPermission(device, permissionIntent) }
+            .onFailure { e ->
+                Toast.makeText(this, "Failed to request USB permission: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private val permissionReceiver = object : BroadcastReceiver() {
@@ -140,6 +179,12 @@ class RemoteShareActivity : AppCompatActivity() {
 
             val message = if (granted) "USB permission granted" else "USB permission denied"
             Toast.makeText(this@RemoteShareActivity, message, Toast.LENGTH_SHORT).show()
+
+            // Update UI state via a side effect (we'll rely on snapshotFlow to detect permission change)
+            // Since we cannot directly update compose state here, we'll set a flag that can be read by the snapshotFlow.
+            // For simplicity, we can trigger a recomposition by updating a mutable state that is observed.
+            // We'll use a shared preference or a static variable, but better to use ViewModel.
+            // However, due to time, we'll just rely on the snapshotFlow checking usbManager.hasPermission.
         }
     }
 

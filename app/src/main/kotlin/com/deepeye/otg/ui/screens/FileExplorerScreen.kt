@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,9 +34,9 @@ import org.json.JSONObject
  */
 @Composable
 fun FileExplorerScreen(viewModel: UsbViewModel) {
-    val currentPath by viewModel.currentPath.collectAsState()
-    val filesJson by viewModel.directoryFiles.collectAsState()
-    val hexPreview by viewModel.fileContentHex.collectAsState()
+    val currentPath by viewModel.currentPath.collectAsStateWithLifecycle()
+    val filesJson by viewModel.directoryFiles.collectAsStateWithLifecycle()
+    val hexPreview by viewModel.fileContentHex.collectAsStateWithLifecycle()
     
     val files = remember(filesJson) {
         val list = mutableListOf<FileEntry>()

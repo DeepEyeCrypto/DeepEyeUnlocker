@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,16 +32,16 @@ fun SettingsScreen(viewModel: UsbViewModel) {
     val scrollState = rememberScrollState()
     
     // Collecting states from VM
-    val perfMode by viewModel.performanceMode.collectAsState()
-    val adbSig by viewModel.adbSignatureRequired.collectAsState()
-    val debounce by viewModel.debounceAttach.collectAsState()
-    val showDebug by viewModel.showDebugPanel.collectAsState()
-    val showReason by viewModel.showDetectionReason.collectAsState()
-    val forceReclass by viewModel.forceReclassify.collectAsState()
-    val logToFile by viewModel.logUsbToFile.collectAsState()
+    val perfMode by viewModel.performanceMode.collectAsStateWithLifecycle()
+    val adbSig by viewModel.adbSignatureRequired.collectAsStateWithLifecycle()
+    val debounce by viewModel.debounceAttach.collectAsStateWithLifecycle()
+    val showDebug by viewModel.showDebugPanel.collectAsStateWithLifecycle()
+    val showReason by viewModel.showDetectionReason.collectAsStateWithLifecycle()
+    val forceReclass by viewModel.forceReclassify.collectAsStateWithLifecycle()
+    val logToFile by viewModel.logUsbToFile.collectAsStateWithLifecycle()
     
-    val licenseStatus by viewModel.licenseStatus.collectAsState()
-    val activeLicense by viewModel.currentLicense.collectAsState()
+    val licenseStatus by viewModel.licenseStatus.collectAsStateWithLifecycle()
+    val activeLicense by viewModel.currentLicense.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier

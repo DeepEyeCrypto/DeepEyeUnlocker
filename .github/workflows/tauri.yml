@@ -1,0 +1,47 @@
+name: Tauri CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: PASS — std::process::Command violation
+        run: |
+          count=$(grep -rn "std::process::Command" src-tauri/src/ | wc -l)
+          echo "std::process::Command violations: $count"
+          [ "$count" -eq 0 ] || exit 1
+
+      - name: PASS — raw window.emit violation
+        run: |
+          count=$(grep -rn "window\.emit" src-tauri/src/ | wc -l)
+          echo "window.emit violations: $count"
+          [ "$count" -eq 0 ] || exit 1
+
+      - name: Clippy (zero warnings)
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+  audit-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci
+      - name: TypeScript strict check
+        run: npx tsc --noEmit
+      - name: Vitest
+        run: npx vitest run --reporter=verbose
+

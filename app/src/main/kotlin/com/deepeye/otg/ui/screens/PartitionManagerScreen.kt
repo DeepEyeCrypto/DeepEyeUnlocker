@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,7 +31,7 @@ fun PartitionManagerScreen(
     viewModel: UsbViewModel
 ) {
     val hazeState = remember { HazeState() }
-    val hexData by viewModel.hexPeekData.collectAsState()
+    val hexData by viewModel.hexPeekData.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
 
     val filtered = remember(partitions, searchQuery) {

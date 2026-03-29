@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -39,8 +40,8 @@ fun TerminalScreen(
     mainViewModel: UsbViewModel,
     terminalViewModel: TerminalViewModel = hiltViewModel()
 ) {
-    val logs by terminalViewModel.logs.collectAsState()
-    val isProcessing by terminalViewModel.isProcessing.collectAsState()
+    val logs by terminalViewModel.logs.collectAsStateWithLifecycle()
+    val isProcessing by terminalViewModel.isProcessing.collectAsStateWithLifecycle()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()

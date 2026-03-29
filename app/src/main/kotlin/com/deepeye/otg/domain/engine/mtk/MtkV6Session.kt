@@ -3,6 +3,9 @@ package com.deepeye.otg.domain.engine.mtk
 import android.content.Context
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
+import com.deepeye.otg.util.sendZlp
 import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -30,7 +33,14 @@ class MtkV6Session(
         try {
             // Read key descriptor (should be 0x02)
             val descriptor = ByteArray(1)
-            val read = conn.bulkTransfer(epIn, descriptor, 1, 5000)
+            val read = conn.bulkIn(
+                ep = epIn,
+                buf = descriptor,
+                len = 1,
+                timeoutMs = 5000,
+                sessionId = sessionId,
+                tag = "USB_SESSION"
+            )
             if (read < 1 || descriptor[0].toInt() != 0x02) {
                 return Result.failure(V6Error.KeyExchangeFailed("Invalid key descriptor: ${descriptor.getOrNull(0)}"))
             }
@@ -41,12 +51,26 @@ class MtkV6Session(
             Timber.d("[MTK_V6] key_exchange challenge=${challenge.toHex()} sessionId=$sessionId")
 
             // Send challenge
-            val sent = conn.bulkTransfer(epOut, challenge, 16, 5000)
+            val sent = conn.bulkOut(
+                ep = epOut,
+                data = challenge,
+                len = 16,
+                timeoutMs = 5000,
+                sessionId = sessionId,
+                tag = "USB_SESSION"
+            )
             if (sent < 16) return Result.failure(V6Error.KeyExchangeFailed("Failed to send challenge"))
 
             // Receive response
             val response = ByteArray(16)
-            val respRead = conn.bulkTransfer(epIn, response, 16, 5000)
+            val respRead = conn.bulkIn(
+                ep = epIn,
+                buf = response,
+                len = 16,
+                timeoutMs = 5000,
+                sessionId = sessionId,
+                tag = "USB_SESSION"
+            )
             if (respRead < 16) return Result.failure(V6Error.KeyExchangeFailed("Failed to receive response"))
 
             // Derive session key: SHA256(challenge + hw_code_bytes)
@@ -101,7 +125,14 @@ class MtkV6Session(
             val length = minOf(chunkSize, totalSize - bytesSent)
             val chunk = daBytes.copyOfRange(bytesSent, bytesSent + length)
             
-            val transferred = conn.bulkTransfer(epOut, chunk, length, 5000)
+            val transferred = conn.bulkOut(
+                ep = epOut,
+                data = chunk,
+                len = length,
+                timeoutMs = 5000,
+                sessionId = sessionId,
+                tag = "USB_SESSION"
+            )
             if (transferred < 0) {
                 return Result.failure(V6Error.DaUploadFailed(bytesSent))
             }
@@ -114,7 +145,12 @@ class MtkV6Session(
 
         // ZLP if totalSent is multiple of maxPacketSize
         if (bytesSent % epOut.maxPacketSize == 0) {
-            conn.bulkTransfer(epOut, ByteArray(0), 0, 2000)
+            conn.sendZlp(
+                ep = epOut,
+                timeoutMs = 2000,
+                sessionId = sessionId,
+                tag = "USB_SESSION"
+            )
             Timber.d("[MTK_V6] da_upload sent ZLP sessionId=$sessionId")
         }
 

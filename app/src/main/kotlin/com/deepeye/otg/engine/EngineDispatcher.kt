@@ -985,7 +985,7 @@ object EngineDispatcher {
                 
                 DeepEyeOperation.WRITE_FIRMWARE -> {
                     onProgress(40, "Write Firmware is MOCKED in CDC session")
-                    delay(1000)
+                    delay(500)
                     onProgress(100, "Write sequence finished (Simulated)")
                     EngineResult(true, "Firmware write mucked (safety)")
                 }

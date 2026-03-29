@@ -5,6 +5,9 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbManager
 import com.deepeye.otg.data.gsmg.ProtocolResult
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
+import com.deepeye.otg.util.sendZlp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -134,7 +137,7 @@ class RealQcEdlExecutor(
     ): Result<String> {
         // Read HELLO packet from device (48 bytes)
         val hello = ByteArray(SAHARA_PKT_SIZE)
-        val n     = conn.bulkTransfer(epIn, hello, SAHARA_PKT_SIZE, TIMEOUT_SAHARA)
+        val n     = conn.bulkIn(epIn, hello, SAHARA_PKT_SIZE, TIMEOUT_SAHARA, sessionId, "QC_EDL")
         Timber.d("[QC_EDL] sahara_hello recv=$n sessionId=$sessionId")
 
         if (n < 8) return Result.failure(ProtocolResult.ProtocolHandshakeFailed(
@@ -161,7 +164,7 @@ class RealQcEdlExecutor(
         writeLE32(resp, 16, 0x00)                // status = 0 = OK
         writeLE32(resp, 20, 0x00)                // mode = 0 = IMAGE_TX
 
-        val sent = conn.bulkTransfer(epOut, resp, 48, TIMEOUT_SAHARA)
+        val sent = conn.bulkOut(epOut, resp, 48, TIMEOUT_SAHARA, sessionId, "QC_EDL")
         Timber.d("[QC_EDL] sahara_hello_resp sent=$sent sessionId=$sessionId")
 
         return Result.success("SAHARA_OK")
@@ -183,7 +186,7 @@ class RealQcEdlExecutor(
         // Loop: read DATA_REQ from device → send requested offset+length
         while (offset < total) {
             val req  = ByteArray(64)
-            val n    = conn.bulkTransfer(epIn, req, 64, TIMEOUT_SAHARA)
+            val n    = conn.bulkIn(epIn, req, 64, TIMEOUT_SAHARA, sessionId, "QC_EDL")
             if (n < 0) break
 
             val cmd   = readLE32(req, 0)
@@ -196,7 +199,7 @@ class RealQcEdlExecutor(
                 val end   = minOf(reqOffset + reqLen, total)
                 val chunk = progBytes.copyOfRange(reqOffset, end)
 
-                conn.bulkTransfer(epOut, chunk, chunk.size, TIMEOUT_SAHARA)
+                conn.bulkOut(epOut, chunk, chunk.size, TIMEOUT_SAHARA, sessionId, "QC_EDL")
                 offset = end
 
                 onProgress((offset * 100) / total)
@@ -207,7 +210,7 @@ class RealQcEdlExecutor(
 
         // ZLP if needed
         if (total % epOut.maxPacketSize == 0) {
-            conn.bulkTransfer(epOut, ByteArray(0), 0, 2000)
+            conn.sendZlp(epOut, 2000, sessionId, "QC_EDL")
             Timber.d("[QC_EDL] prog_upload ZLP sent sessionId=$sessionId")
         }
 
@@ -215,11 +218,11 @@ class RealQcEdlExecutor(
         val done = ByteArray(8)
         writeLE32(done, 0, SAHARA_DONE)
         writeLE32(done, 4, 8)
-        conn.bulkTransfer(epOut, done, 8, TIMEOUT_SAHARA)
+        conn.bulkOut(epOut, done, 8, TIMEOUT_SAHARA, sessionId, "QC_EDL")
 
         // Read DONE_RESP
         val doneResp = ByteArray(16)
-        val dr       = conn.bulkTransfer(epIn, doneResp, 16, TIMEOUT_SAHARA)
+        val dr       = conn.bulkIn(epIn, doneResp, 16, TIMEOUT_SAHARA, sessionId, "QC_EDL")
         val respCmd  = readLE32(doneResp, 0)
         Timber.d("[QC_EDL] prog_done resp=0x${respCmd.toString(16)} " +
                  "recv=$dr sessionId=$sessionId")
@@ -302,12 +305,12 @@ class RealQcEdlExecutor(
         while (offset < bytes.size) {
             val len   = minOf(FIREHOSE_CHUNK, bytes.size - offset)
             val chunk = bytes.copyOfRange(offset, offset + len)
-            conn.bulkTransfer(epOut, chunk, len, TIMEOUT_FIREHOSE)
+            conn.bulkOut(epOut, chunk, len, TIMEOUT_FIREHOSE, sessionId, "QC_EDL")
             offset += len
         }
         // ZLP if needed
         if (bytes.size % epOut.maxPacketSize == 0) {
-            conn.bulkTransfer(epOut, ByteArray(0), 0, 2000)
+            conn.sendZlp(epOut, 2000, sessionId, "QC_EDL")
         }
         Timber.d("[QC_EDL] firehose_xml sent len=${bytes.size} sessionId=$sessionId")
     }
@@ -322,7 +325,7 @@ class RealQcEdlExecutor(
         val start = System.currentTimeMillis()
 
         while (System.currentTimeMillis() - start < TIMEOUT_FIREHOSE) {
-            val n = conn.bulkTransfer(epIn, buf, buf.size, 5000)
+            val n = conn.bulkIn(epIn, buf, buf.size, 5000, sessionId, "QC_EDL")
             if (n > 0) {
                 sb.append(buf.copyOfRange(0, n).toString(Charsets.UTF_8))
                 if ("</data>" in sb || "</response>" in sb) break

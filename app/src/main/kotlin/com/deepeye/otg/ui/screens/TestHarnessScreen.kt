@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,13 +32,13 @@ fun TestHarnessScreen(
     viewModel: UsbViewModel,
     modifier: Modifier = Modifier
 ) {
-    val lifecycleState by viewModel.lifecycleState.collectAsState()
-    val rawLogs by UsbLogger.logBuffer.collectAsState()
-    val highLevelLogs by viewModel.logLines.collectAsState()
-    val perfMode by viewModel.performanceMode.collectAsState()
-    val fuzzActive by viewModel.fuzzingActive.collectAsState()
-    val fuzzStats by viewModel.fuzzingStats.collectAsState()
-    val exploitState by viewModel.exploitState.collectAsState()
+    val lifecycleState by viewModel.lifecycleState.collectAsStateWithLifecycle()
+    val rawLogs by UsbLogger.logBuffer.collectAsStateWithLifecycle()
+    val highLevelLogs by viewModel.logLines.collectAsStateWithLifecycle()
+    val perfMode by viewModel.performanceMode.collectAsStateWithLifecycle()
+    val fuzzActive by viewModel.fuzzingActive.collectAsStateWithLifecycle()
+    val fuzzStats by viewModel.fuzzingStats.collectAsStateWithLifecycle()
+    val exploitState by viewModel.exploitState.collectAsStateWithLifecycle()
     val hazeState = remember { HazeState() }
 
     Column(

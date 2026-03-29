@@ -20,6 +20,11 @@ object ModeHelper {
             "VIVO" -> getVivoGuidance(socNorm)
             "SAMSUNG" -> getSamsungGuidance(socNorm)
             "HUAWEI", "HONOR" -> getHuaweiGuidance(socNorm)
+            "MOTOROLA", "LENOVO" -> getMotorolaGuidance(socNorm)
+            "GOOGLE", "PIXEL" -> getGoogleGuidance(socNorm)
+            "ASUS" -> getAsusGuidance(socNorm)
+            "LG" -> getLgGuidance(socNorm)
+            "APPLE", "IPHONE", "IPAD" -> getAppleGuidance(socNorm)
             else -> getGenericGuidance(socNorm)
         }
     }
@@ -146,6 +151,125 @@ object ModeHelper {
              alternativeSteps = listOf("HarmonyTP cable may be required."),
              safetyNotes = listOf("Requires specific drivers (USB SER).")
          )
+    }
+
+    private fun getMotorolaGuidance(soc: String): ModeGuidance {
+        return if (soc.contains("MTK")) {
+            ModeGuidance(
+                requiredMode = "BROM / Preloader",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Down + Power.",
+                    "3. Connect USB cable."
+                ),
+                alternativeSteps = listOf("Try Volume Up + Power for some models."),
+                safetyNotes = listOf("Motorola MTK devices are rare; most are Qualcomm.")
+            )
+        } else {
+            ModeGuidance(
+                requiredMode = "Fastboot / EDL (9008)",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Down + Power.",
+                    "3. Connect USB cable.",
+                    "4. Select 'AP Fastboot Flash Mode' from boot menu."
+                ),
+                alternativeSteps = listOf(
+                    "Use 'adb reboot bootloader' if ADB available.",
+                    "For EDL: 'adb reboot edl' or test-point."
+                ),
+                safetyNotes = listOf("Motorola bootloader unlock required for many operations.")
+            )
+        }
+    }
+
+    private fun getGoogleGuidance(soc: String): ModeGuidance {
+        // Google Pixel devices are Qualcomm (except Tensor which is Exynos-based)
+        return ModeGuidance(
+            requiredMode = "Fastboot / EDL (9008)",
+            steps = listOf(
+                "1. Power off device.",
+                "2. Hold Volume Down + Power.",
+                "3. Connect USB cable."
+            ),
+            alternativeSteps = listOf(
+                "Use 'adb reboot bootloader' or 'adb reboot edl'.",
+                "For Tensor devices: Use 'adb reboot fastboot'."
+            ),
+            safetyNotes = listOf("Pixel devices have strict bootloader locking; unlock via OEM unlocking in developer options.")
+        )
+    }
+
+    private fun getAsusGuidance(soc: String): ModeGuidance {
+        return if (soc.contains("MTK")) {
+            ModeGuidance(
+                requiredMode = "BROM / Preloader",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Up + Power.",
+                    "3. Connect USB cable."
+                ),
+                alternativeSteps = listOf("Try Volume Down + Power for some models."),
+                safetyNotes = listOf("Asus MTK devices may require test-point for BROM.")
+            )
+        } else {
+            ModeGuidance(
+                requiredMode = "Fastboot / Download Mode",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Up + Power.",
+                    "3. Connect USB cable."
+                ),
+                alternativeSteps = listOf("Use 'adb reboot bootloader' if ADB available."),
+                safetyNotes = listOf("Asus Qualcomm devices may have custom download mode.")
+            )
+        }
+    }
+
+    private fun getLgGuidance(soc: String): ModeGuidance {
+        return if (soc.contains("MTK")) {
+            ModeGuidance(
+                requiredMode = "BROM / Preloader",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Up + Power.",
+                    "3. Connect USB cable."
+                ),
+                alternativeSteps = listOf("Try Volume Down + Power for some models."),
+                safetyNotes = listOf("LG MTK devices are uncommon.")
+            )
+        } else {
+            ModeGuidance(
+                requiredMode = "Download Mode (9008)",
+                steps = listOf(
+                    "1. Power off device.",
+                    "2. Hold Volume Up + Power.",
+                    "3. Connect USB cable.",
+                    "4. When LG logo appears, release Power and press again."
+                ),
+                alternativeSteps = listOf("Use 'adb reboot download' if supported."),
+                safetyNotes = listOf("LG devices may require specific drivers for download mode.")
+            )
+        }
+    }
+
+    private fun getAppleGuidance(soc: String): ModeGuidance {
+        // iOS devices: DFU mode (checkm8) or Recovery mode
+        return ModeGuidance(
+            requiredMode = "DFU Mode (checkm8)",
+            steps = listOf(
+                "1. Connect device to USB while powered on.",
+                "2. Press Volume Up quickly, then Volume Down quickly (iPhone 7 and later).",
+                "3. Hold Side button until screen goes black.",
+                "4. After 3 seconds, release Side button but keep holding Volume Down.",
+                "5. Continue holding Volume Down for 5 seconds (iPhone 7/8) or 10 seconds (iPhone X and later)."
+            ),
+            alternativeSteps = listOf(
+                "For older devices (iPhone 6s and earlier): Hold Home + Power.",
+                "Use checkm8 exploit via ipwndfu."
+            ),
+            safetyNotes = listOf("DFU mode required for checkm8 exploit. Ensure USB host controller supports timing.")
+        )
     }
 
     private fun getGenericGuidance(soc: String): ModeGuidance {

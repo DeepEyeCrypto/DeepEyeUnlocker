@@ -29,6 +29,8 @@ import com.deepeye.otg.exploit.PostExploitExtractor
 import com.deepeye.otg.exploit.AslrDefeater
 import com.deepeye.otg.exploit.UniversalExploitOrchestrator
 import com.deepeye.otg.exploit.AmfiSymlinkBypass
+import com.deepeye.otg.data.tauri.NoOpTauriBridge
+import com.deepeye.otg.data.tauri.TauriBridge
 import com.deepeye.otg.data.db.dao.FuzzDao
 import com.deepeye.otg.data.db.dao.ForensicDao
 import dagger.Module
@@ -100,6 +102,12 @@ object AppModule {
     @Singleton
     fun provideUsbManager(@ApplicationContext context: Context): UsbManager {
         return context.getSystemService(Context.USB_SERVICE) as UsbManager
+    }
+
+    @Provides
+    @Singleton
+    fun provideTauriBridge(noOpTauriBridge: NoOpTauriBridge): TauriBridge {
+        return noOpTauriBridge
     }
 
     // FirmwareAssetManager is now provided via its @Inject constructor and @Singleton annotation.

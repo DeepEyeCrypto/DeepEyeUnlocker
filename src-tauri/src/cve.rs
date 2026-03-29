@@ -1,9 +1,17 @@
-use std::process::Command;
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 
-fn run_bash(s: &str) -> Result<String, String> {
-    let output = Command::new("bash").arg("-c").arg(s).output()
+async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
+    let output = app
+        .shell()
+        .command("bash")
+        .args(["-c", s])
+        .output()
+        .await
         .map_err(|e| e.to_string())?;
-    Ok(format!("{}\n{}", String::from_utf8_lossy(&output.stdout),
+
+    Ok(format!("{}\n{}", 
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)))
 }
 
@@ -37,6 +45,6 @@ pub fn query_cve_database(version: String, chip: String) -> Result<String, Strin
 
 /// Perform a deep intelligence scan (simulated)
 #[tauri::command]
-pub fn run_intelligence_scan(ecid: String) -> Result<String, String> {
-    run_bash(&format!("echo 'Initiating DeepEye Intelligence Scan for ECID: {ecid}...' && sleep 1 && echo 'Checking GSMA Blacklist... CLEAN' && echo 'Checking iCloud FMI State... ON (Locked)' && echo 'Analyzing exploit surface... High Success Probability'"))
+pub async fn run_intelligence_scan(app: AppHandle, ecid: String) -> Result<String, String> {
+    run_bash(&app, &format!("echo 'Initiating DeepEye Intelligence Scan for ECID: {ecid}...' && sleep 1 && echo 'Checking GSMA Blacklist... CLEAN' && echo 'Checking iCloud FMI State... ON (Locked)' && echo 'Analyzing exploit surface... High Success Probability'")).await
 }

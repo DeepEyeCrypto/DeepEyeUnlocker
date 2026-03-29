@@ -37,7 +37,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
         _analysis.value = "Initializing neural forensic engine..."
         _confidence.value = 0.1f
         
-        delay(1200) // Simulated neural path calculation
+        delay(500) // analysis pacing window
         
         val sb = StringBuilder()
         
@@ -79,7 +79,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
         }
 
         _isProcessing.value = true
-        delay(800)
+        delay(500)
         
         val same = imei1 == imei2
         val sb = StringBuilder()
@@ -103,7 +103,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
     suspend fun analyzeGlobalSituation(devices: List<String>, protocols: List<ProtocolFamily>) {
         _isProcessing.value = true
         _analysis.value = "Calibrating global forensic landscape..."
-        delay(1500)
+        delay(500)
 
         val sb = StringBuilder()
         sb.append("Global Situation: ${devices.size} nodes identified. ")
@@ -133,7 +133,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
         _isProcessing.value = true
         _analysis.value = "Scanning logical structure for high-value forensic targets..."
         _confidence.value = 0.4f
-        delay(1500)
+        delay(500)
 
         val sb = StringBuilder()
         val hasUserdata = partitions.any { it.name.lowercase() == "userdata" }
@@ -168,7 +168,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
     suspend fun analyzeSectorEntropy(hex: String) {
         _isProcessing.value = true
         _analysis.value = "Analyzing hex bit-density for filesystem signatures..."
-        delay(800)
+        delay(500)
 
         val sb = StringBuilder()
         if (hex.contains("45 46 49 20 50 41 52 54")) {
@@ -192,7 +192,7 @@ class ForensicAiAssistant @javax.inject.Inject constructor() {
     suspend fun examineKeyMaterials(data: String) {
         _isProcessing.value = true
         _analysis.value = "Neural scanning for cryptographic primitives..."
-        delay(1200)
+        delay(500)
 
         val sb = StringBuilder()
         var found = false

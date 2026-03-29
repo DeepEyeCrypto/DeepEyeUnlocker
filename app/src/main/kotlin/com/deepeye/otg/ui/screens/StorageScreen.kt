@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -41,30 +42,30 @@ import com.deepeye.otg.ui.components.ForensicIntelPanel
 fun StorageScreen(
     viewModel: StorageViewModel = hiltViewModel()
 ) {
-    val partitions by viewModel.partitions.collectAsState()
-    val isScanning by viewModel.isScanning.collectAsState()
-    val totalSize by viewModel.totalSize.collectAsState()
-    val hexData by viewModel.hexPeekData.collectAsState()
-    val actionStatus by viewModel.actionStatus.collectAsState()
+    val partitions by viewModel.partitions.collectAsStateWithLifecycle()
+    val isScanning by viewModel.isScanning.collectAsStateWithLifecycle()
+    val totalSize by viewModel.totalSize.collectAsStateWithLifecycle()
+    val hexData by viewModel.hexPeekData.collectAsStateWithLifecycle()
+    val actionStatus by viewModel.actionStatus.collectAsStateWithLifecycle()
     
-    val selectedPartition by viewModel.selectedPartition.collectAsState()
-    val currentPath by viewModel.currentPath.collectAsState()
-    val dirFiles by viewModel.directoryFiles.collectAsState()
+    val selectedPartition by viewModel.selectedPartition.collectAsStateWithLifecycle()
+    val currentPath by viewModel.currentPath.collectAsStateWithLifecycle()
+    val dirFiles by viewModel.directoryFiles.collectAsStateWithLifecycle()
 
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchResults by viewModel.searchResults.collectAsState()
-    val isSearchingInternal by viewModel.isSearchingInternal.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val isSearchingInternal by viewModel.isSearchingInternal.collectAsStateWithLifecycle()
 
-    val securityArtifacts by viewModel.securityArtifacts.collectAsState()
-    val lastReportPath by viewModel.lastReportPath.collectAsState()
+    val securityArtifacts by viewModel.securityArtifacts.collectAsStateWithLifecycle()
+    val lastReportPath by viewModel.lastReportPath.collectAsStateWithLifecycle()
 
-    val tunnelUrl by viewModel.tunnelUrl.collectAsState()
-    val remoteActive by viewModel.isRemoteActive.collectAsState()
-    val remoteLogs by viewModel.remoteActivityLogs.collectAsState()
+    val tunnelUrl by viewModel.tunnelUrl.collectAsStateWithLifecycle()
+    val remoteActive by viewModel.isRemoteActive.collectAsStateWithLifecycle()
+    val remoteLogs by viewModel.remoteActivityLogs.collectAsStateWithLifecycle()
 
-    val aiAnalysis by viewModel.aiAssistant.analysis.collectAsState()
-    val aiConfidence by viewModel.aiAssistant.confidence.collectAsState()
-    val aiIsProcessing by viewModel.aiAssistant.isProcessing.collectAsState()
+    val aiAnalysis by viewModel.aiAssistant.analysis.collectAsStateWithLifecycle()
+    val aiConfidence by viewModel.aiAssistant.confidence.collectAsStateWithLifecycle()
+    val aiIsProcessing by viewModel.aiAssistant.isProcessing.collectAsStateWithLifecycle()
 
     var activeView by remember { mutableStateOf("MAP") } 
     var showPatchDialog by remember { mutableStateOf<ForensicSearchHit?>(null) }

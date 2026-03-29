@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -23,7 +24,7 @@ import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
 fun DeepEyeApp(viewModel: UsbViewModel) {
-    val state by viewModel.queueState.collectAsState()
+    val state by viewModel.queueState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Base layer: Main UI is ALWAYS visible
@@ -47,7 +48,7 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
         ) { targetState ->
             when (targetState) {
                 is SessionState.ExecutingOperation -> {
-                    val logs by viewModel.logs.collectAsState()
+                    val logs by viewModel.logs.collectAsStateWithLifecycle()
                     ExecutingScreen(
                         op = targetState.op,
                         progress = targetState.progress,

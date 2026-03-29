@@ -101,7 +101,7 @@ class StorageViewModel @Inject constructor(
             addRemoteLog("TUNNEL_ESTABLISHED: Link generated.")
             
             // Mock periodic remote commands for simulation
-            delay(5000)
+            delay(3000)
             if (_isRemoteActive.value) {
                 simulateRemoteCommand("PEEK_PARTITION", "userdata")
                 delay(3000)
@@ -119,9 +119,9 @@ class StorageViewModel @Inject constructor(
         viewModelScope.launch {
             addRemoteLog("REMOTE_EXEC: $cmd ($target)")
             _actionStatus.value = "Remote Task: $cmd..."
-            delay(1500)
+            delay(150)
             _actionStatus.value = "Remote Task Complete."
-            delay(1000)
+            delay(100)
             _actionStatus.value = null
         }
     }
@@ -141,7 +141,7 @@ class StorageViewModel @Inject constructor(
             val currentTransport = lifecycleManager.getTransport(null) // Get primary transport
             
             if (currentTransport == null) {
-                delay(1000)
+                delay(100)
                 val mockPartitions = listOf(
                     GptStructure.GptEntry("GUID_BOOT", "PART_BOOT", 0, 131071, 0, "boot"),
                     GptStructure.GptEntry("GUID_SYSTEM", "PART_SYSTEM", 131072, 8519679, 0, "system"),
@@ -207,7 +207,7 @@ class StorageViewModel @Inject constructor(
     fun applyLivePatch(partition: String, offset: Long, hexData: String) {
         viewModelScope.launch {
             _actionStatus.value = "Injecting bit-patch into $partition..."
-            delay(1000)
+            delay(100)
             
             val handle = 0L 
             val success = if (handle == 0L) true else engine.patchSector(handle, partition, offset, hexData)
@@ -234,7 +234,7 @@ class StorageViewModel @Inject constructor(
         viewModelScope.launch {
             _isScanning.value = true
             _actionStatus.value = "Starting Security Deep Audit..."
-            delay(1500)
+            delay(150)
             
             val artifacts = mutableListOf<SecurityArtifact>()
             artifacts.add(SecurityArtifact("RSA_PUBLIC_KEY", "system", 0x12FA30BC, "Identified OS verification certificate (Verity Key)."))
@@ -310,7 +310,7 @@ class StorageViewModel @Inject constructor(
                 path = reportFile.absolutePath
             )
             
-            delay(4000)
+            delay(3000)
             _actionStatus.value = null
         }
     }
@@ -347,7 +347,7 @@ class StorageViewModel @Inject constructor(
                 _directoryFiles.value = realFiles
             } else {
                 // Fallback to simulation mode if no device or empty results
-                delay(800)
+                delay(100)
 
             if (partition.name.lowercase() == "userdata") {
                 val baseFiles = when (path) {
@@ -388,7 +388,7 @@ class StorageViewModel @Inject constructor(
             if (!exportDir.exists()) exportDir.mkdirs()
             val outFile = File(exportDir, fileEntry.name)
 
-            delay(1200)
+            delay(150)
 
             val success = true 
             
@@ -445,11 +445,11 @@ class StorageViewModel @Inject constructor(
             val outFile = File(exportDir, "${partition.name}_phys.bin")
 
             if (handle == 0L) {
-                delay(1000)
+                delay(100)
                 _actionStatus.value = "Acquiring ${partition.name} [30%]"
-                delay(1000)
+                delay(100)
                 _actionStatus.value = "Acquiring ${partition.name} [75%]"
-                delay(1000)
+                delay(100)
                 _actionStatus.value = "Acquiring ${partition.name} [100%]"
             } else {
                 engine.acquirePartition(handle, partition.name, outFile) { progress ->
@@ -474,7 +474,7 @@ class StorageViewModel @Inject constructor(
     fun runRamdiskMassExtraction() {
         viewModelScope.launch {
             _actionStatus.value = "Initializing SSH Ramdisk extraction..."
-            delay(1000)
+            delay(100)
             
             val results = mutableMapOf<String, String>()
             val targets = listOf("SMS", "CALL_LOGS", "KEYCHAIN", "APPLE_ID", "WIFI_PLIST")
@@ -484,7 +484,7 @@ class StorageViewModel @Inject constructor(
                 _extractionStatus.value = results.toMap()
                 _actionStatus.value = "Carving $target..."
                 
-                delay(800)
+                delay(100)
                 
                 val outputDir = File(context.getExternalFilesDir(null), "vault/mass_extraction")
                 if (!outputDir.exists()) outputDir.mkdirs()

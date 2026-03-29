@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
+use tauri_plugin_shell::ShellExt;
 use crate::commands::ios_backup::python_module_root;
 
 // ──────────────────────────────────────────────────────────────
@@ -27,13 +29,16 @@ pub struct MountResult {
 }
 
 #[tauri::command]
-pub async fn ios_mount_ramdisk(app: tauri::AppHandle) -> Result<MountResult, String> {
+pub async fn ios_mount_ramdisk(app: AppHandle) -> Result<MountResult, String> {
     let python_root = python_module_root(&app);
-    let output = std::process::Command::new("python3")
+    let output = app
+        .shell()
+        .command("python3")
         .args(["-m", "ios_backup.cli", "mount-ramdisk"])
-        .env("PYTHONPATH", python_root)
+        .env("PYTHONPATH", &python_root)
         .output()
-        .map_err(|e| e.to_string())?;
+        .await
+        .map_err(|e| format!("Failed to start mount ramdisk: {}", e))?;
 
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).to_string());
@@ -46,13 +51,16 @@ pub async fn ios_mount_ramdisk(app: tauri::AppHandle) -> Result<MountResult, Str
 }
 
 #[tauri::command]
-pub async fn ios_mass_extract(app: tauri::AppHandle, save_path: String) -> Result<MassExtractionReport, String> {
+pub async fn ios_mass_extract(app: AppHandle, save_path: String) -> Result<MassExtractionReport, String> {
     let python_root = python_module_root(&app);
-    let output = std::process::Command::new("python3")
+    let output = app
+        .shell()
+        .command("python3")
         .args(["-m", "ios_backup.cli", "mass-extract", &save_path])
-        .env("PYTHONPATH", python_root)
+        .env("PYTHONPATH", &python_root)
         .output()
-        .map_err(|e| e.to_string())?;
+        .await
+        .map_err(|e| format!("Failed to start mass extraction: {}", e))?;
 
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).to_string());

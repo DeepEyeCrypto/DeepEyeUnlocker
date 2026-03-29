@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.components
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -151,7 +152,7 @@ fun MissionTopBar(
     onSelect: (String) -> Unit,
     compactMode: Boolean
 ) {
-    val showDebug by (viewModel.showDebugPanel as kotlinx.coroutines.flow.StateFlow<Boolean>).collectAsState()
+    val showDebug by (viewModel.showDebugPanel as kotlinx.coroutines.flow.StateFlow<Boolean>).collectAsStateWithLifecycle()
     val selectedSession = selectedKey?.let(sessions::get)
     val selectedLabel = when (selectedSession) {
         is UsbLifecycleState.Connected -> selectedSession.deviceName

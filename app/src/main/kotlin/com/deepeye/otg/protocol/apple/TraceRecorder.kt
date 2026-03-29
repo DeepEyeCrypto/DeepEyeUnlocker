@@ -509,8 +509,8 @@ class TraceRecorder(
         return TraceStatistics(
             totalEntries = entries.size.toLong(),
             controlTransfers = entries.count { it.entryType == "CONTROL_TRANSFER" }.toLong(),
-            bulkInTransfers = entries.count { it.entryType == "BULK_IN" }.toLong(),
-            bulkOutTransfers = entries.count { it.entryType == "BULK_OUT" }.toLong(),
+            inTransferCount = entries.count { it.entryType == "BULK_IN" }.toLong(),
+            outTransferCount = entries.count { it.entryType == "BULK_OUT" }.toLong(),
             sessionEvents = entries.count { it.entryType == "SESSION_EVENT" }.toLong(),
             annotations = entries.count { it.entryType == "ANNOTATION" }.toLong(),
             totalDataBytes = entries.sumOf { it.dataLength }.toLong(),
@@ -528,8 +528,8 @@ class TraceRecorder(
 data class TraceStatistics(
     val totalEntries: Long,
     val controlTransfers: Long,
-    val bulkInTransfers: Long,
-    val bulkOutTransfers: Long,
+    val inTransferCount: Long,
+    val outTransferCount: Long,
     val sessionEvents: Long,
     val annotations: Long,
     val totalDataBytes: Long,

@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -153,7 +154,7 @@ fun ReportingScreen(
             }
         }
 
-        val syncStatus by viewModel.cloudSyncStatus.collectAsState()
+        val syncStatus by viewModel.cloudSyncStatus.collectAsStateWithLifecycle()
         if (syncStatus.syncing) {
             Box(
                 modifier = Modifier

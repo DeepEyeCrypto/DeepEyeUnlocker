@@ -37,6 +37,7 @@ import com.deepeye.otg.intelligence.vulndb.RiskLevel
 import com.deepeye.otg.intelligence.vulndb.SplStatus
 import com.deepeye.otg.usb.UsbLifecycleState
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import com.deepeye.otg.ui.device.DeviceSupportScreen
@@ -53,10 +54,10 @@ fun MainScreen(
     fuzzViewModel: com.deepeye.otg.viewmodel.research.FuzzDashboardViewModel = hiltViewModel(),
     hidViewModel: com.deepeye.otg.viewmodel.research.HidResearchViewModel = hiltViewModel(),
 ) {
-    val sessions by viewModel.sessions.collectAsState()
-    val selectedKey by viewModel.selectedDeviceKey.collectAsState()
-    val currentNav by viewModel.currentNav.collectAsState()
-    val perfMode by viewModel.performanceMode.collectAsState()
+    val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val selectedKey by viewModel.selectedDeviceKey.collectAsStateWithLifecycle()
+    val currentNav by viewModel.currentNav.collectAsStateWithLifecycle()
+    val perfMode by viewModel.performanceMode.collectAsStateWithLifecycle()
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
 
     BoxWithConstraints(
@@ -189,10 +190,10 @@ private fun MissionNavContent(
             )
             NavTarget.SETTINGS -> SettingsScreen(viewModel)
             NavTarget.IMEI_REPAIR -> {
-                val aiAnalysis by viewModel.aiAnalysis.collectAsState()
-                val aiIsProcessing by viewModel.aiIsProcessing.collectAsState()
-                val ci1 by viewModel.currentImei1.collectAsState()
-                val ci2 by viewModel.currentImei2.collectAsState()
+                val aiAnalysis by viewModel.aiAnalysis.collectAsStateWithLifecycle()
+                val aiIsProcessing by viewModel.aiIsProcessing.collectAsStateWithLifecycle()
+                val ci1 by viewModel.currentImei1.collectAsStateWithLifecycle()
+                val ci2 by viewModel.currentImei2.collectAsStateWithLifecycle()
 
                 ImeiRepairScreen(
                     onRepair = { i1, i2 -> viewModel.performImeiRepair(i1, i2) },
@@ -287,8 +288,8 @@ private fun ActiveSessionView(
     perfMode: Boolean
 ) {
     val modeAccent = accentColorForMode(sessionState.deviceMode)
-    val userRole by viewModel.currentUserPolicyTier.collectAsState()
-    val isSplitActive by viewModel.splitViewActive.collectAsState()
+    val userRole by viewModel.currentUserPolicyTier.collectAsStateWithLifecycle()
+    val isSplitActive by viewModel.splitViewActive.collectAsStateWithLifecycle()
 
     if (isSplitActive) {
         Column(Modifier.fillMaxSize()) {
@@ -402,9 +403,9 @@ private fun OperationCatalog(
 
 @Composable
 private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
-    val logs by viewModel.logs.collectAsState()
-    val aiAnalysis by viewModel.aiAnalysis.collectAsState()
-    val exposureReport by viewModel.exposureReport.collectAsState()
+    val logs by viewModel.logs.collectAsStateWithLifecycle()
+    val aiAnalysis by viewModel.aiAnalysis.collectAsStateWithLifecycle()
+    val exposureReport by viewModel.exposureReport.collectAsStateWithLifecycle()
     
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -596,7 +597,7 @@ private fun accentColorForMode(mode: DeviceMode): Color = when (mode) {
 
 @Composable
 private fun MissionNavigationRail(viewModel: UsbViewModel) {
-    val currentNav by viewModel.currentNav.collectAsState()
+    val currentNav by viewModel.currentNav.collectAsStateWithLifecycle()
     
     NavigationRail(
         containerColor = Color.Transparent,
@@ -640,7 +641,7 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
 
 @Composable
 private fun MissionNavigationBar(viewModel: UsbViewModel) {
-    val currentNav by viewModel.currentNav.collectAsState()
+    val currentNav by viewModel.currentNav.collectAsStateWithLifecycle()
 
     Row(
         modifier = Modifier

@@ -54,12 +54,28 @@ class OtgActivity : AppCompatActivity() {
 
                 LaunchedEffect(activeState) {
                     val serviceIntent = Intent(context, UsbForegroundService::class.java)
-                    if (activeState is SessionState.ConnectedReady) {
-                        serviceIntent.action = UsbForegroundService.ACTION_START
-                        context.startForegroundService(serviceIntent)
-                    } else if (activeState is SessionState.Idle || activeState is SessionState.Error) {
-                        serviceIntent.action = UsbForegroundService.ACTION_STOP
-                        context.startService(serviceIntent)
+                    when (activeState) {
+                        is SessionState.ConnectedReady,
+                        is SessionState.ExecutingOperation,
+                        is SessionState.ConnectedMtpOnly,
+                        is SessionState.PartitionPreview,
+                        is SessionState.Reporting -> {
+                            // Keep service alive for active USB sessions
+                            serviceIntent.action = UsbForegroundService.ACTION_START
+                            context.startForegroundService(serviceIntent)
+                        }
+                        is SessionState.Idle,
+                        is SessionState.Error,
+                        is SessionState.PermissionDenied,
+                        is SessionState.OperationComplete -> {
+                            // Stop service when session ends or error occurs
+                            serviceIntent.action = UsbForegroundService.ACTION_STOP
+                            context.startService(serviceIntent)
+                        }
+                        else -> {
+                            // Transitional states (WaitingForDevice, PermissionPending, etc.)
+                            // Do nothing, keep previous service state
+                        }
                     }
                 }
 

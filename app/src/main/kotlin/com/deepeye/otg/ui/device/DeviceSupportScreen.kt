@@ -1,5 +1,6 @@
 package com.deepeye.otg.ui.device
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,7 +31,7 @@ private val SUBTEXT  = Color(0xFF888888)
 fun DeviceSupportScreen(
     viewModel: DeviceSupportViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier

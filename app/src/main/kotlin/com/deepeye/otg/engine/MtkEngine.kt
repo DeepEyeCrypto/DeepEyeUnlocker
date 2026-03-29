@@ -53,7 +53,7 @@ class MtkEngine @Inject constructor(
                 "mtk_brom_exploit" -> {
                     emit(20f to "Executing Brom Exploit sequence...")
                     // In a real scenario, this involves triggering payload execution
-                    kotlinx.coroutines.delay(1000)
+                    kotlinx.coroutines.delay(500)
                     emit(100f to "Brom Exploit Successful (SLA/DAA Bypassed)")
                 }
                 "mtk_read_backup" -> {
@@ -72,9 +72,9 @@ class MtkEngine @Inject constructor(
                 "mtk_bl_unlock" -> {
                     emit(20f to "Preparing Brom Bootloader Unlock...")
                     // Logic would involve writing specific flags to Seccfg partition
-                    kotlinx.coroutines.delay(1500)
+                    kotlinx.coroutines.delay(500)
                     emit(80f to "Writing Seccfg unlock tokens...")
-                    kotlinx.coroutines.delay(1000)
+                    kotlinx.coroutines.delay(500)
                     emit(100f to "Bootloader Unlocked successfully via Brom")
                 }
                 "mtk_security_backup" -> {

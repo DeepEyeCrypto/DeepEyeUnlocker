@@ -5,6 +5,8 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbManager
 import com.deepeye.otg.data.gsmg.ProtocolResult
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -112,14 +114,28 @@ class RealSamsungOdinExecutor(
         sessionId: String,
     ): Result<Unit> {
         // Send "ODIN"
-        val n = conn.bulkTransfer(epOut, HANDSHAKE_SEND, 4, TIMEOUT_CTRL)
+        val n = conn.bulkOut(
+            ep = epOut,
+            data = HANDSHAKE_SEND,
+            len = 4,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         Timber.d("[SAMSUNG_ODIN] hs sent=$n sessionId=$sessionId")
         if (n != 4) return Result.failure(ProtocolResult.UsbTransportError(
             reason = "ODIN handshake send failed: $n", sessionId = sessionId) as Exception)
 
         // Receive "LOKE"
         val rx = ByteArray(4)
-        val r  = conn.bulkTransfer(epIn, rx, 4, TIMEOUT_CTRL)
+        val r  = conn.bulkIn(
+            ep = epIn,
+            buf = rx,
+            len = 4,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         val resp = rx.toString(Charsets.US_ASCII).take(4)
         Timber.d("[SAMSUNG_ODIN] hs rx=$r resp='$resp' sessionId=$sessionId")
 
@@ -142,12 +158,26 @@ class RealSamsungOdinExecutor(
         sessionId: String,
     ): Result<Unit> {
         val packet = buildPacket(CMD_SESSION, 0, 0)
-        val n = conn.bulkTransfer(epOut, packet, PACKET_SIZE, TIMEOUT_CTRL)
+        val n = conn.bulkOut(
+            ep = epOut,
+            data = packet,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         if (n < 0) return Result.failure(ProtocolResult.UsbTransportError(
             reason = "Session start failed: $n", sessionId = sessionId) as Exception)
 
         val resp = ByteArray(PACKET_SIZE)
-        conn.bulkTransfer(epIn, resp, PACKET_SIZE, TIMEOUT_CTRL)
+        conn.bulkIn(
+            ep = epIn,
+            buf = resp,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         Timber.d("[SAMSUNG_ODIN] session_start resp[0-3]=" +
                  "${resp.take(4).joinToString(",") { it.toString() }} " +
                  "sessionId=$sessionId")
@@ -173,7 +203,14 @@ class RealSamsungOdinExecutor(
 
         // Setup flash: CMD_TRANSFER with partition ID (FRP=0x1A on most Samsung)
         val setup = buildPacket(CMD_TRANSFER, 0x1A, frpSizeBytes)
-        conn.bulkTransfer(epOut, setup, PACKET_SIZE, TIMEOUT_CTRL)
+        conn.bulkOut(
+            ep = epOut,
+            data = setup,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
 
         var chunkIdx = 0
         var offset   = 0
@@ -183,15 +220,36 @@ class RealSamsungOdinExecutor(
 
             // Send chunk header
             val header = buildPacket(CMD_TRANSFER, chunkIdx, chunkLen)
-            conn.bulkTransfer(epOut, header, PACKET_SIZE, TIMEOUT_CTRL)
+            conn.bulkOut(
+                ep = epOut,
+                data = header,
+                len = PACKET_SIZE,
+                timeoutMs = TIMEOUT_CTRL,
+                sessionId = sessionId,
+                tag = "SAMSUNG_ODIN"
+            )
 
             // Send chunk data (zeros)
             val chunk = zeros.copyOfRange(offset, offset + chunkLen)
-            conn.bulkTransfer(epOut, chunk, chunkLen, TIMEOUT_DATA)
+            conn.bulkOut(
+                ep = epOut,
+                data = chunk,
+                len = chunkLen,
+                timeoutMs = TIMEOUT_DATA,
+                sessionId = sessionId,
+                tag = "SAMSUNG_ODIN"
+            )
 
             // Read ACK — MUST be [0,0,0,0] to continue
             val ack = ByteArray(PACKET_SIZE)
-            val r   = conn.bulkTransfer(epIn, ack, PACKET_SIZE, TIMEOUT_DATA)
+            val r   = conn.bulkIn(
+                ep = epIn,
+                buf = ack,
+                len = PACKET_SIZE,
+                timeoutMs = TIMEOUT_DATA,
+                sessionId = sessionId,
+                tag = "SAMSUNG_ODIN"
+            )
             val ackCode = ((ack[0].toInt() and 0xFF)) or
                           ((ack[1].toInt() and 0xFF) shl 8) or
                           ((ack[2].toInt() and 0xFF) shl 16) or
@@ -215,10 +273,24 @@ class RealSamsungOdinExecutor(
 
         // CMD_FLASH end
         val flashEnd = buildPacket(CMD_FLASH, 0, 0)
-        conn.bulkTransfer(epOut, flashEnd, PACKET_SIZE, TIMEOUT_CTRL)
+        conn.bulkOut(
+            ep = epOut,
+            data = flashEnd,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
 
         val finalAck = ByteArray(PACKET_SIZE)
-        conn.bulkTransfer(epIn, finalAck, PACKET_SIZE, 30_000)
+        conn.bulkIn(
+            ep = epIn,
+            buf = finalAck,
+            len = PACKET_SIZE,
+            timeoutMs = 30_000,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         Timber.d("[SAMSUNG_ODIN] flash_end finalAck[0-3]=" +
                  "${finalAck.take(4).joinToString(",") { it.toString() }} " +
                  "sessionId=$sessionId")
@@ -235,9 +307,23 @@ class RealSamsungOdinExecutor(
         sessionId: String,
     ) {
         val end = buildPacket(CMD_END, 0, 1)  // 1 = reboot
-        conn.bulkTransfer(epOut, end, PACKET_SIZE, TIMEOUT_CTRL)
+        conn.bulkOut(
+            ep = epOut,
+            data = end,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         val resp = ByteArray(PACKET_SIZE)
-        conn.bulkTransfer(epIn, resp, PACKET_SIZE, TIMEOUT_CTRL)
+        conn.bulkIn(
+            ep = epIn,
+            buf = resp,
+            len = PACKET_SIZE,
+            timeoutMs = TIMEOUT_CTRL,
+            sessionId = sessionId,
+            tag = "SAMSUNG_ODIN"
+        )
         Timber.d("[SAMSUNG_ODIN] session_end sessionId=$sessionId")
     }
 

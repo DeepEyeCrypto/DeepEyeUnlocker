@@ -34,6 +34,19 @@ use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
 use commands::extraction::{ios_mount_ramdisk, ios_mass_extract};
 use commands::checkm8::run_checkm8;
 use commands::ios_bypass::ios_bypass_full;
+use commands::apple::{apple_device_info, apple_irecovery_cmd, apple_exit_recovery, apple_enter_dfu, apple_icloud_bypass, apple_restore_ipsw};
+use commands::exploit::{run_palera1n, verify_pwned_dfu, bypass_icloud_activation};
+use commands::f3arrain::{f3arrain_send_iboot, f3arrain_run_bypass};
+use commands::hydra::{hydra_detect_protocol, hydra_run_mtk_meta, hydra_samsung_frp_bypass};
+use commands::mtk::{
+    mtk_run_command,
+    mtk_read_partition,
+    mtk_write_partition,
+    mtk_erase_partition,
+    mtk_device_info,
+    mtk_unlock_bootloader,
+};
+use commands::bruteforce::run_pin_bruteforce;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -94,7 +107,7 @@ use backup::{
 use frida::{
     frida_ps, frida_attach, frida_spawn, frida_run_script,
     frida_kill_process, frida_list_exports, inject_dylib,
-    dump_app_memory, ssl_kill_switch
+    dump_app_memory, ssl_kill_switch, frida_inject
 };
 
 use sideloader::{
@@ -170,6 +183,26 @@ pub fn run() {
             ios_inject_surgical_patch,
             ios_mount_ramdisk,
             ios_mass_extract,
+            apple_device_info,
+            apple_irecovery_cmd,
+            apple_exit_recovery,
+            apple_enter_dfu,
+            apple_icloud_bypass,
+            apple_restore_ipsw,
+            run_palera1n,
+            verify_pwned_dfu,
+            bypass_icloud_activation,
+            f3arrain_send_iboot,
+            f3arrain_run_bypass,
+            hydra_detect_protocol,
+            hydra_run_mtk_meta,
+            hydra_samsung_frp_bypass,
+            mtk_run_command,
+            mtk_read_partition,
+            mtk_write_partition,
+            mtk_erase_partition,
+            mtk_device_info,
+            mtk_unlock_bootloader,
             get_ecid,
             get_board_config,
             save_shsh_all_signed,
@@ -236,6 +269,7 @@ pub fn run() {
             inject_dylib,
             dump_app_memory,
             ssl_kill_switch,
+            frida_inject,
             install_ipa,
             sign_and_install,
             list_installed_apps,
@@ -266,7 +300,8 @@ pub fn run() {
             list_processes,
             get_screenshot,
             run_checkm8,
-            ios_bypass_full
+            ios_bypass_full,
+            run_pin_bruteforce
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
