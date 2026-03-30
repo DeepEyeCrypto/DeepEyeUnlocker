@@ -39,8 +39,19 @@ jobs:
       - name: Remove local org.gradle.java.home
         run: sed -i '/org\.gradle\.java\.home/d' gradle.properties || true
 
+      - name: Decode keystore
+        if: env.KEYSTORE_BASE64 != ''
+        run: echo "$KEYSTORE_BASE64" | base64 -d > app/release.p12
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
       - name: Build release APK
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/app/release.p12
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Verify release APK exists
         run: |

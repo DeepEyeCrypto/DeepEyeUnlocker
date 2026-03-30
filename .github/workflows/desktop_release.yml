@@ -13,7 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest] # Extend to ubuntu-22.04 later
+        include:
+          - platform: macos-latest
+            args: '--target universal-apple-darwin'
+          # - platform: ubuntu-22.04
+          #   args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -41,13 +45,27 @@ jobs:
       - name: setup python research module
         run: chmod +x scripts/setup_ios_module.sh && ./scripts/setup_ios_module.sh
 
-      - uses: tauri-apps/tauri-action@v0.5
+      - name: Build Tauri app
+        run: npx tauri build ${{ matrix.args }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepEyeUnlocker-${{ matrix.platform }}
+          path: |
+            src-tauri/target/**/release/bundle/**/*
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "DeepEye Unlocker ${{ github.ref_name }}"
+          body: "Automated forensic build for DeepEye Unlocker Desktop Console."
+          draft: true
+          prerelease: false
+          files: |
+            src-tauri/target/**/release/bundle/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: v__VERSION__ # tauri-action replaces this
-          releaseName: "DeepEye Unlocker v__VERSION__"
-          releaseBody: "Automated forensic build for DeepEye Unlocker Desktop Console."
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.platform == 'macos-latest' && '--target universal-apple-darwin' || '' }}

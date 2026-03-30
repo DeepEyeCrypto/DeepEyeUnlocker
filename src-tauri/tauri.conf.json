@@ -37,7 +37,6 @@
       "appimage",
       "deb"
     ],
-    "identifier": "com.deepeye.otg",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -45,13 +44,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "python/**",
-      "resources/scripts/*",
-      "resources/macos/*",
-      "resources/windows/*",
-      "resources/linux/*"
-    ],
+    "resources": {
+      "python/ios_backup": "python/ios_backup",
+      "python/ios_bypass": "python/ios_bypass",
+      "resources/linux": "resources/linux",
+      "resources/macos": "resources/macos"
+    },
     "windows": {
       "nsis": {
         "displayLanguageSelector": false,
@@ -122,11 +120,6 @@
         {
           "name": "irecovery",
           "cmd": "irecovery",
-          "args": true
-        },
-        {
-          "name": "ideviceenterrecovery",
-          "cmd": "ideviceenterrecovery",
           "args": true
         },
         {
