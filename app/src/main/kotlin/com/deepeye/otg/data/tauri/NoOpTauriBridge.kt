@@ -35,4 +35,24 @@ class NoOpTauriBridge @Inject constructor() : TauriBridge {
     override suspend fun bypassIcloudActivation(method: String): String {
         throw IllegalStateException("Tauri bridge not available in Android runtime")
     }
+
+    override suspend fun appleCheckActivation(): String {
+        throw IllegalStateException("Tauri bridge not available in Android runtime")
+    }
+
+    override suspend fun appleDnsActivation(serverHost: String): String {
+        throw IllegalStateException("Tauri bridge not available in Android runtime")
+    }
+
+    override suspend fun appleMdmBypass(profilePath: String): String {
+        throw IllegalStateException("Tauri bridge not available in Android runtime")
+    }
+
+    override suspend fun appleRestoreActivationRecord(recordPath: String): String {
+        throw IllegalStateException("Tauri bridge not available in Android runtime")
+    }
+
+    override suspend fun runCommand(command: String, args: Map<String, Any>): String {
+        throw IllegalStateException("Tauri bridge not available in Android runtime")
+    }
 }

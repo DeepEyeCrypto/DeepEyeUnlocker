@@ -1,31 +1,46 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+type DeviceIdentity = {
+  model?: string;
+  version?: string;
+  ecid?: string;
+  chip_id?: string;
+  cpid?: string;
+  udid?: string;
+};
+
+type DeviceBarState = {
+  name: string;
+  os: string;
+  mode: string;
+  ecid: string;
+  chip: string;
+  cpid: string;
+  udid?: string;
+};
+
 export default function DeviceBar() {
-  const [device, setDevice] = useState<any>(null);
+  const [device, setDevice] = useState<DeviceBarState | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
 
   const handleDetect = async () => {
     setIsDetecting(true);
     try {
-      // 1. Poll orchestrator to ensure a device is in a valid state
       const modeResult = await invoke<{ mode: string }>("ios_poll_orchestrator");
-      console.log("[DeviceBar] Polled Mode:", modeResult.mode);
+      const identity = await invoke<DeviceIdentity>("ios_device_identity", { udid: "" });
 
-      // 2. Fetch full identity (using "any" udid or empty if not known yet)
-      const identity = await invoke<any>("ios_device_identity", { udid: "" });
-      
       setDevice({
         name: identity.model || "iPhone (Detected)",
         os: identity.version || "iOS",
         mode: modeResult.mode,
-        ecid: identity.ecid,
-        chip: identity.chip_id,
-        cpid: identity.cpid
+        ecid: identity.ecid || "N/A",
+        chip: identity.chip_id || "N/A",
+        cpid: identity.cpid || "N/A",
+        udid: identity.udid,
       });
     } catch (error) {
       console.error("[DeviceBar] Detection failed:", error);
-      // Fallback or error state
     } finally {
       setIsDetecting(false);
     }
@@ -43,58 +58,38 @@ export default function DeviceBar() {
   };
 
   return (
-    <div className="glass" style={{
-      padding: "12px 20px", borderRadius: 16,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      border: "1px solid rgba(255,255,255,0.08)"
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: device ? "linear-gradient(135deg, #a78bfa, #7c3aed)" : "rgba(255,255,255,0.05)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: device ? 20 : 16,
-            opacity: device ? 1 : 0.5
-          }}>
-            {device ? "📲" : "🔌"}
+    <div className="devicebar card">
+      <div className="devicebar-main">
+        <div className="devicebar-ident">
+          <div className={`devicebar-icon ${device ? "active" : ""}`}>
+            <span className="devicebar-icon-glyph">{device ? "D" : "U"}</span>
           </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: device ? "#e2e8f0" : "#94a3b8" }}>
+          <div className="devicebar-ident-text">
+            <div className={`devicebar-title ${device ? "active" : ""}`}>
               {device ? device.name : "No Device Connected"}
             </div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>
+            <div className="devicebar-subtitle">
               {device ? `${device.os} · ${device.mode}` : isDetecting ? "Scanning USB ports..." : "Awaiting connection..."}
             </div>
           </div>
         </div>
 
-        <div style={{ height: 24, width: 1, background: "rgba(255,255,255,0.1)" }} />
+        <div className="devicebar-divider" />
 
-        <div style={{ display: "flex", gap: 15 }}>
+        <div className="devicebar-stats">
           <Stat label="ECID" value={device ? device.ecid : "N/A"} active={!!device} />
           <Stat label="CHIP" value={device ? device.chip : "N/A"} active={!!device} />
           <Stat label="CPID" value={device ? device.cpid : "N/A"} active={!!device} />
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10 }}>
-        <button 
-          className="btn" 
-          style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6 }} 
-          onClick={handleDetect}
-          disabled={isDetecting}
-        >
-          <span>{isDetecting ? "🔄" : "🔍"}</span> 
+      <div className="devicebar-actions">
+        <button className="btn btn-secondary btn-sm" onClick={handleDetect} disabled={isDetecting}>
+          <span>{isDetecting ? "R" : "S"}</span>
           <span>{isDetecting ? "Detecting..." : "Detect"}</span>
         </button>
-        <button 
-          className="btn primary" 
-          style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6 }} 
-          disabled={!device}
-          onClick={handleSyncVault}
-        >
-          <span>☁️</span> 
+        <button className="btn btn-primary btn-sm" disabled={!device} onClick={handleSyncVault}>
+          <span>V</span>
           <span>Sync Vault</span>
         </button>
       </div>
@@ -104,10 +99,9 @@ export default function DeviceBar() {
 
 function Stat({ label, value, active }: { label: string; value: string; active?: boolean }) {
   return (
-    <div>
-      <div style={{ fontSize: 10, color: "#475569", fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 12, color: active ? "#94a3b8" : "#475569", fontWeight: 700 }}>{value}</div>
+    <div className="devicebar-stat">
+      <div className="devicebar-stat-label">{label}</div>
+      <div className={`devicebar-stat-value ${active ? "active" : ""}`}>{value}</div>
     </div>
   );
 }
-

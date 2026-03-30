@@ -16,10 +16,13 @@ enum class MissionHub(val label: String, val icon: ImageVector) {
 }
 
 enum class NavTarget(val hub: MissionHub) {
+    // COMMAND Hub
     DASHBOARD(MissionHub.COMMAND),
     DEVICES(MissionHub.COMMAND),
     DEVICE_SUPPORT(MissionHub.COMMAND),
+    EDL_CONSOLE(MissionHub.COMMAND),
     
+    // LAB Hub
     LAB_HOME(MissionHub.LAB),
     IMEI_REPAIR(MissionHub.LAB),
     STORAGE(MissionHub.LAB),
@@ -28,14 +31,19 @@ enum class NavTarget(val hub: MissionHub) {
     FORENSICS_LAB(MissionHub.LAB),
     REMOTE_SHARE(MissionHub.LAB),
     
+    // BYPASS Hub
     MISSION_HUB(MissionHub.BYPASS),
+    UNLOCK_SCREEN(MissionHub.BYPASS),
     
+    // INTEL Hub
     CVE_INTELLIGENCE(MissionHub.INTEL),
     FUZZ_DASHBOARD(MissionHub.INTEL),
     HID_RESEARCH(MissionHub.INTEL),
     IPHONE_15_RESEARCH(MissionHub.INTEL),
     
+    // ARCHIVE Hub
     SETTINGS(MissionHub.ARCHIVE),
     TERMINAL(MissionHub.ARCHIVE),
-    VAULT(MissionHub.ARCHIVE)
+    VAULT(MissionHub.ARCHIVE),
+    LOG_SCREEN(MissionHub.ARCHIVE)
 }

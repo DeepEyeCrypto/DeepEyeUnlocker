@@ -1,134 +1,92 @@
-name: Android Signed Release
+name: DeepEyeUnlocker Release
 
 on:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
-
-permissions:
-  contents: write
+      - "v*"
 
 jobs:
-  build-signed:
-    name: Build Signed APK
-    runs-on: ubuntu-latest
-
-    env:
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-      KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
-
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: universal-apple-darwin
+            artifact: "*.dmg"
+            label: macOS-Universal
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: "*.exe\n*.msi"
+            label: Windows-x64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: "*.AppImage\n*.deb"
+            label: Linux-x64
+    runs-on: ${{ matrix.os }}
     steps:
-      # ── Checkout ──────────────────────────────────────────
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: 20
 
-      # ── Java 17 ───────────────────────────────────────────
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+          version: 9
 
-      # ── Android SDK ───────────────────────────────────────
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      # ── Decode keystore from secret ───────────────────────
-      - name: Decode keystore
-        run: |
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" \
-              | base64 --decode > $RUNNER_TEMP/deepeye-release.jks
-            echo "KEYSTORE_PATH=$RUNNER_TEMP/deepeye-release.jks" >> $GITHUB_ENV
-            echo "✅ Production keystore decoded"
-          else
-            echo "⚠️ No KEYSTORE_BASE64 secret — generating ephemeral keystore"
-            keytool -genkeypair -v \
-              -keystore $RUNNER_TEMP/deepeye-release.jks \
-              -storetype JKS \
-              -keyalg RSA -keysize 2048 -validity 1 \
-              -alias deepeye \
-              -dname "CN=DeepEye CI, OU=CI, O=DeepEyeCrypto, L=CI, S=CI, C=US" \
-              -storepass android -keypass android
-            echo "KEYSTORE_PATH=$RUNNER_TEMP/deepeye-release.jks" >> $GITHUB_ENV
-            echo "STORE_PASSWORD=android" >> $GITHUB_ENV
-            echo "KEY_ALIAS=deepeye" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=android" >> $GITHUB_ENV
-          fi
-
-      # ── Verify keystore ──────────────────────────────────
-      - name: Verify keystore
-        run: |
-          keytool -list \
-            -keystore "$KEYSTORE_PATH" \
-            -storepass "$STORE_PASSWORD" \
-            -noprompt 2>&1 | head -5
-          echo "✅ Keystore valid"
-
-      # ── Build signed release APK ──────────────────────────
-      - name: Remove local org.gradle.java.home
-        run: sed -i '/org.gradle.java.home/d' gradle.properties || true
-
-      - name: Build signed release APK
-        run: |
-          chmod +x gradlew
-          ./gradlew clean assembleRelease \
-            --no-daemon \
-            --stacktrace
-
-      # ── Verify APK signature ──────────────────────────────
-      - name: Verify APK signature
-        run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          if [ -z "$APK" ]; then
-            echo "::error::Release APK not found!"
-            ls -R app/build/outputs/apk/ || true
-            exit 1
-          fi
-          echo "APK: $APK ($(du -sh "$APK" | cut -f1))"
-          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/apksigner \
-            verify --verbose "$APK" || echo "⚠️ apksigner not available, skipping verify"
-
-      # ── Rename APK with version tag ───────────────────────
-      - name: Rename APK
-        run: |
-          mkdir -p artifacts
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          VERSION="${{ github.ref_name }}"
-          if [ "$VERSION" = "main" ] || [ -z "$VERSION" ]; then
-            VERSION="dev-$(git rev-parse --short HEAD)"
-          fi
-          cp "$APK" "artifacts/DeepEyeUnlocker-${VERSION}.apk"
-          echo "APK_FILE=artifacts/DeepEyeUnlocker-${VERSION}.apk" >> $GITHUB_ENV
-          ls -lh artifacts/
-
-      # ── Upload build artifact ─────────────────────────────
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          name: DeepEyeUnlocker-signed
-          path: artifacts/*.apk
-          retention-days: 90
+          targets: ${{ matrix.target }}
 
-      # ── Create GitHub Release ─────────────────────────────
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build frontend
+        run: |
+          pnpm install
+          pnpm tauri build --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: DeepEyeUnlocker_${{ matrix.label }}
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+          retention-days: 30
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/*.apk
-          generate_release_notes: true
-          make_latest: true
+          files: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+          body_path: .github/release-template.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Cleanup keystore from runner ──────────────────────
-      - name: Cleanup keystore
-        if: always()
-        run: |
-          rm -f $RUNNER_TEMP/deepeye-release.jks
-          echo "✅ Keystore cleaned from runner"
+  notarize:
+    needs: build
+    runs-on: macos-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DeepEyeUnlocker_macOS-Universal
+          path: ./artifacts
+
+      - name: Notarize macOS app
+        uses: apple-actions/notarize-app@main
+        with:
+          app_file: ./artifacts/DeepEyeUnlocker.dmg
+          apple_id: ${{ secrets.APPLE_ID }}
+          apple_password: ${{ secrets.APPLE_PASSWORD }}
+          team_id: ${{ secrets.APPLE_TEAM_ID }}

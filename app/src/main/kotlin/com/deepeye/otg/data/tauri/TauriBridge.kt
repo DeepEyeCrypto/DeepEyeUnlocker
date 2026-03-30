@@ -43,4 +43,17 @@ interface TauriBridge {
     suspend fun verifyPwnedDfu(): Boolean
 
     suspend fun bypassIcloudActivation(method: String): String
+
+    suspend fun appleCheckActivation(): String
+
+    suspend fun appleDnsActivation(serverHost: String): String
+
+    suspend fun appleMdmBypass(profilePath: String): String
+
+    suspend fun appleRestoreActivationRecord(recordPath: String): String
+
+    /**
+     * Generic command runner for Tauri backend.
+     */
+    suspend fun runCommand(command: String, args: Map<String, Any>): String
 }

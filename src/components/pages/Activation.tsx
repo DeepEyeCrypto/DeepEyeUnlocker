@@ -33,23 +33,23 @@ export default function ActivationPage() {
   };
 
   return (
-    <div>
-      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>🔓 Activation</h2>
-      <p style={{ fontSize: 12, color: "#64748b", marginBottom: 20 }}>
+    <div className="page">
+      <h2 className="page-title">Activation</h2>
+      <p className="page-subtitle">
         Official Hello Bypass · MDM Removal · Passcode Activation
       </p>
 
-      <div className="glass" style={{ padding: 16, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="panel row-between">
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>Detection Engine ({deviceState})</div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>Identify lock type before running exploit</div>
+          <div className="action-title">Detection Engine ({deviceState})</div>
+          <div className="meta-text">Identify lock type before running exploit</div>
         </div>
-        <button className="btn primary" style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={checkState} disabled={status === "running"}>
-          <span>🔍</span> <span>Check Device State</span>
+        <button className="btn btn-primary btn-sm" onClick={checkState} disabled={status === "running"}>
+          <span>S</span> <span>Check Device State</span>
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginBottom: 12 }}>
+      <div className="grid-auto">
         <ActionCard
           title="Hello Bypass"
           desc="Full untethered bypass for Hello screen (iOS 12-16)"
@@ -89,15 +89,22 @@ export default function ActivationPage() {
   );
 }
 
-function ActionCard({ title, desc, icon, btnText, onClick, disabled }: any) {
+function ActionCard({ title, desc, icon, btnText, onClick, disabled }: {
+  title: string;
+  desc: string;
+  icon: string;
+  btnText: string;
+  onClick: () => void;
+  disabled: boolean;
+}) {
   return (
-    <div className="glass" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>{title}</span>
+    <div className="action-card">
+      <div className="action-row">
+        <span>{icon}</span>
+        <span className="action-title">{title}</span>
       </div>
-      <p style={{ fontSize: 11, color: "#64748b", flex: 1 }}>{desc}</p>
-      <button className="btn" style={{ width: "100%", fontSize: 11 }} onClick={onClick} disabled={disabled}>
+      <p className="action-desc">{desc}</p>
+      <button className="btn btn-secondary btn-sm" onClick={onClick} disabled={disabled}>
         {btnText}
       </button>
     </div>

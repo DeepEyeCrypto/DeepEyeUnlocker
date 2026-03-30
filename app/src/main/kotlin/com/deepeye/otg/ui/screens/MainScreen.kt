@@ -42,9 +42,12 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import com.deepeye.otg.ui.device.DeviceSupportScreen
 import com.deepeye.otg.ui.screens.CveDashboardScreen
+import com.deepeye.otg.ui.screens.EdlConsole
 import com.deepeye.otg.ui.screens.FuzzDashboardScreen
 import com.deepeye.otg.ui.screens.HidResearchScreen
 import com.deepeye.otg.ui.screens.Iphone15ResearchScreen
+import com.deepeye.otg.ui.screens.LogScreen
+import com.deepeye.otg.ui.screens.UnlockScreen
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
@@ -160,7 +163,15 @@ private fun MissionNavContent(
             NavTarget.DASHBOARD -> {
                 TargetDashboardScreen(viewModel, hazeState)
             }
+            NavTarget.DEVICES -> {
+                // TODO: Implement Devices screen
+                DisconnectedView(hazeState)
+            }
             NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
+            NavTarget.EDL_CONSOLE -> EdlConsole(
+                mainViewModel = viewModel,
+                onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
+            )
             NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
             NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
             NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
@@ -189,6 +200,14 @@ private fun MissionNavContent(
                 onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
             )
             NavTarget.SETTINGS -> SettingsScreen(viewModel)
+            NavTarget.LOG_SCREEN -> LogScreen(
+                mainViewModel = viewModel,
+                onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
+            )
+            NavTarget.UNLOCK_SCREEN -> UnlockScreen(
+                mainViewModel = viewModel,
+                onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
+            )
             NavTarget.IMEI_REPAIR -> {
                 val aiAnalysis by viewModel.aiAnalysis.collectAsStateWithLifecycle()
                 val aiIsProcessing by viewModel.aiIsProcessing.collectAsStateWithLifecycle()

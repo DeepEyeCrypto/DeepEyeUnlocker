@@ -16,6 +16,7 @@ pub async fn hydra_detect_protocol(_app: AppHandle, vid: u16, pid: u16) -> Resul
         (0x1004, 0x633E) => "LG_DOWNLOAD_MODE",
         (0x22B8, 0x2E76) => "MOTO_EDL",
         (0x12D1, 0x1037) => "HUAWEI_HISI",
+        (0x05AC, 0x1227) => "APPLE_DFU",
         _ => "UNKNOWN",
     };
     Ok(protocol.to_string())

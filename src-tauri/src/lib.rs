@@ -34,7 +34,18 @@ use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
 use commands::extraction::{ios_mount_ramdisk, ios_mass_extract};
 use commands::checkm8::run_checkm8;
 use commands::ios_bypass::ios_bypass_full;
-use commands::apple::{apple_device_info, apple_irecovery_cmd, apple_exit_recovery, apple_enter_dfu, apple_icloud_bypass, apple_restore_ipsw};
+use commands::apple::{
+    apple_device_info,
+    apple_irecovery_cmd,
+    apple_exit_recovery,
+    apple_enter_dfu,
+    apple_icloud_bypass,
+    apple_restore_ipsw,
+    apple_check_activation,
+    apple_dns_activation,
+    apple_mdm_bypass,
+    apple_restore_activation_record,
+};
 use commands::exploit::{run_palera1n, verify_pwned_dfu, bypass_icloud_activation};
 use commands::f3arrain::{f3arrain_send_iboot, f3arrain_run_bypass};
 use commands::hydra::{hydra_detect_protocol, hydra_run_mtk_meta, hydra_samsung_frp_bypass};
@@ -189,6 +200,10 @@ pub fn run() {
             apple_enter_dfu,
             apple_icloud_bypass,
             apple_restore_ipsw,
+            apple_check_activation,
+            apple_dns_activation,
+            apple_mdm_bypass,
+            apple_restore_activation_record,
             run_palera1n,
             verify_pwned_dfu,
             bypass_icloud_activation,

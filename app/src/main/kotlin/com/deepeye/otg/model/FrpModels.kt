@@ -13,7 +13,6 @@ data class DetectedDevice(
 
 sealed class FrpResult {
     object Idle : FrpResult()
-    data class PathSelected(val path: DeviceMatrix.FrpPath) : FrpResult()
     data class Progress(val percent: Float, val step: String) : FrpResult()
     data class Success(val message: String) : FrpResult()
     data class Error(val reason: String) : FrpResult()

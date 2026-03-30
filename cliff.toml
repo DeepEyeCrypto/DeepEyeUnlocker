@@ -1,0 +1,27 @@
+[changelog]
+header = "# Changelog\n\n"
+body = """
+## {{ version }} — {{ timestamp | date(format=\"%Y-%m-%d\") }}
+
+{% for group, commits in commits | group_by(attribute=\"group\") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message }} ([{{ commit.id | truncate(length=7, end=\"\") }}](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/commit/{{ commit.id }}))
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+commit_parsers = [
+  { message = "^feat", group = "✨ Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️ Refactor" },
+  { message = "^docs", group = "📝 Docs" },
+  { message = "^chore", group = "🔧 Chore" },
+  { message = "^ci", group = "👷 CI" },
+]
+filter_commits = true
+tag_pattern = "v[0-9]*"

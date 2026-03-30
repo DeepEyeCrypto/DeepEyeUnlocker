@@ -277,7 +277,8 @@ object ModeHelper {
             ModeGuidance(
                 requiredMode = "BROM / Preloader",
                 steps = listOf("Power Off > Hold Vol+ > Connect USB"),
-                alternativeSteps = listOf("Try Vol- or Vol+ & Vol-")
+                alternativeSteps = listOf("Try Vol- or Vol+ & Vol-"),
+                safetyNotes = listOf("Test-point may be required for newer devices.")
             )
         } else {
              ModeGuidance(

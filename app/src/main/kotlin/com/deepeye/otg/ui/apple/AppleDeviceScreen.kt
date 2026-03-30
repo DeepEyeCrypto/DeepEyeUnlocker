@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.deepeye.otg.data.repository.AppleDeviceState
 import com.deepeye.otg.usb.DeviceMatrix
 
 @Composable
@@ -92,6 +93,7 @@ fun AppleDeviceScreen(
                             is AppleDeviceState.Idle -> "No Apple device detected"
                             is AppleDeviceState.Detected -> "Apple device detected: ${deviceState.device.deviceName} (${deviceState.mode})"
                             is AppleDeviceState.Error -> "Error: ${deviceState.reason}"
+                            else -> "Unknown state"
                         }
                     )
                     state.detectedMode?.let { mode ->

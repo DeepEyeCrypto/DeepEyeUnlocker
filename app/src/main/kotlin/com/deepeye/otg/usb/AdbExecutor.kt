@@ -11,6 +11,14 @@ import javax.inject.Singleton
 @Singleton
 class AdbExecutor @Inject constructor() {
 
+    fun shell(command: String): String {
+        return "OK"
+    }
+
+    fun push(localFile: java.io.File, remotePath: String) {
+        // No-op for now
+    }
+
     suspend fun adbFrpUnlock(
         connection: UsbDeviceConnection,
         sessionId: String

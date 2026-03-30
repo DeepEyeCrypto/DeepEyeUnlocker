@@ -106,8 +106,31 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
+
+    @Provides
+    @Singleton
     fun provideTauriBridge(noOpTauriBridge: NoOpTauriBridge): TauriBridge {
         return noOpTauriBridge
+    }
+
+    @Provides
+    @Singleton
+    fun provideMtkAuthHandler(): com.deepeye.otg.usb.MtkAuthHandler {
+        return com.deepeye.otg.usb.MtkAuthHandler()
+    }
+
+    @Provides
+    @Singleton
+    fun provideExploitExecutor(
+        @ApplicationContext context: Context,
+        adbExecutor: com.deepeye.otg.usb.AdbExecutor,
+        lifecycleManager: UsbLifecycleManager
+    ): com.deepeye.otg.exploit.ExploitExecutor {
+        val transport = lifecycleManager.getTransport() ?: NoOpUsbTransport
+        return com.deepeye.otg.exploit.ExploitExecutor(context, adbExecutor, transport)
     }
 
     // FirmwareAssetManager is now provided via its @Inject constructor and @Singleton annotation.

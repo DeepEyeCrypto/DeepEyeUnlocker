@@ -31,19 +31,25 @@ pub async fn f3arrain_send_iboot(app: AppHandle, iboot_path: String) -> Result<S
 
 #[tauri::command]
 pub async fn f3arrain_run_bypass(app: AppHandle, bypass_type: String) -> Result<String, String> {
-    let script = match bypass_type.as_str() {
+    let script_name = match bypass_type.as_str() {
         "icloud" => "bypass_icloud.sh",
         "mdm" => "bypass_mdm.sh",
         "passcode" => "bypass_passcode.sh",
         _ => return Err(format!("Unknown bypass type: {bypass_type}")),
     };
 
+    let resource_path = app.path()
+        .resource_dir()
+        .map_err(|e| format!("resource dir error: {e}"))?
+        .join("scripts")
+        .join(script_name);
+
     let shell = app.shell();
     let (mut rx, _child) = shell
         .command("bash")
-        .args([script])
+        .arg(resource_path.to_str().unwrap())
         .spawn()
-        .map_err(|e| format!("bypass script error: {e}"))?;
+        .map_err(|e| format!("spawn error: {e}"))?;
 
     let mut out = String::new();
     let mut err = String::new();
