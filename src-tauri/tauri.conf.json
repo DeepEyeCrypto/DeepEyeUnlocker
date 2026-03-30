@@ -44,12 +44,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "python/ios_backup": "python/ios_backup",
-      "python/ios_bypass": "python/ios_bypass",
-      "resources/linux": "resources/linux",
-      "resources/macos": "resources/macos"
-    },
+    "resources": [
+      { "src": "python/ios_backup/**", "target": "python/ios_backup/" },
+      { "src": "python/ios_bypass/**", "target": "python/ios_bypass/" },
+      { "src": "resources/linux/**", "target": "resources/linux/" },
+      { "src": "resources/macos/**", "target": "resources/macos/" },
+      { "src": "resources/windows/**", "target": "resources/windows/" }
+    ],
     "windows": {
       "nsis": {
         "displayLanguageSelector": false,
