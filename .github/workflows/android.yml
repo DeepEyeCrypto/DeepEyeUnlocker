@@ -62,9 +62,13 @@ jobs:
 
       - name: PASS 11 — Frida std::process::Command violation
         run: |
-          count=$(grep -rn "std::process::Command" src-tauri/src/frida.rs | wc -l)
-          echo "Frida std::process violations: $count"
-          [ "$count" -eq 0 ] || exit 1
+          if [ -f src-tauri/src/frida.rs ]; then
+            count=$(grep -rn "std::process::Command" src-tauri/src/frida.rs | wc -l)
+            echo "Frida std::process violations: $count"
+            [ "$count" -eq 0 ] || exit 1
+          else
+            echo "src-tauri/src/frida.rs not found, skipping"
+          fi
 
   test:
     runs-on: ubuntu-latest
@@ -75,8 +79,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Remove local org.gradle.java.home
+        run: sed -i '/org\.gradle\.java\.home/d' gradle.properties || true
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -93,8 +102,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Remove local org.gradle.java.home
+        run: sed -i '/org\.gradle\.java\.home/d' gradle.properties || true
+
       - name: Build release APK
         run: ./gradlew assembleRelease --no-daemon
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

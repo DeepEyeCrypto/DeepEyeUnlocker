@@ -19,7 +19,7 @@ jobs:
 
       - name: Generate changelog from commits
         id: changelog
-        uses: orhun/git-cliff-action@v3
+        uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
           args: --latest --strip header
@@ -35,6 +35,9 @@ jobs:
 
       - name: Make Gradle executable
         run: chmod +x gradlew
+
+      - name: Remove local org.gradle.java.home
+        run: sed -i '/org\.gradle\.java\.home/d' gradle.properties || true
 
       - name: Build release APK
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace

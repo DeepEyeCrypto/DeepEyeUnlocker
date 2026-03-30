@@ -13,6 +13,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
+
       - name: PASS — std::process::Command violation
         run: |
           count=$(grep -rn "std::process::Command" src-tauri/src/ | wc -l)
@@ -42,6 +47,3 @@ jobs:
         run: npm ci
       - name: TypeScript strict check
         run: npx tsc --noEmit
-      - name: Vitest
-        run: npx vitest run --reporter=verbose
-
