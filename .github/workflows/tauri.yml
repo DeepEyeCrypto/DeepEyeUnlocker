@@ -31,10 +31,12 @@ jobs:
           [ "$count" -eq 0 ] || exit 1
 
       - name: Clippy (zero warnings)
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+        working-directory: src-tauri
+        run: cargo clippy -- -D warnings
 
       - name: Rust tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
+        working-directory: src-tauri
+        run: cargo test
 
   audit-frontend:
     runs-on: ubuntu-latest
