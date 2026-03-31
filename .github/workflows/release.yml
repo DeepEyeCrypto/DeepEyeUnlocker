@@ -78,6 +78,7 @@ jobs:
             i686-linux-android,
             x86_64-linux-android
       - run: pnpm install
+      - run: pnpm tauri android init
       - run: pnpm tauri android build --apk
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
