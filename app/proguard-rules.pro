@@ -10,9 +10,6 @@
 -keep class com.deepeye.otg.domain.models.** { *; }
 -keep class com.deepeye.otg.protocol.** { *; }
 
-# 3. Timber/Logging
--keep class timber.log.Timber { *; }
--dontwarn timber.log.**
 
 # 4. Hilt/Dagger
 -keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
@@ -29,3 +26,4 @@
 -dontwarn sun.misc.Unsafe
 -dontwarn org.checkerframework.**
 -dontwarn afu.org.checkerframework.**
+-dontwarn com.google.crypto.tink.**

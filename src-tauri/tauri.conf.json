@@ -45,11 +45,12 @@
       "icons/icon.ico"
     ],
     "resources": [
-      { "src": "python/ios_backup/**", "target": "python/ios_backup/" },
-      { "src": "python/ios_bypass/**", "target": "python/ios_bypass/" },
-      { "src": "resources/linux/**", "target": "resources/linux/" },
-      { "src": "resources/macos/**", "target": "resources/macos/" },
-      { "src": "resources/windows/**", "target": "resources/windows/" }
+      "python/ios_backup/**",
+      "python/ios_bypass/**",
+      "python/ios_exploit/**",
+      "resources/linux/**",
+      "resources/macos/**",
+      "resources/windows/**"
     ],
     "windows": {
       "nsis": {
