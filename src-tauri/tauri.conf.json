@@ -45,12 +45,12 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "python/ios_backup/**",
-      "python/ios_bypass/**",
-      "python/ios_exploit/**",
-      "resources/linux/**",
-      "resources/macos/**",
-      "resources/windows/**"
+      "python/ios_backup/**/*",
+      "python/ios_bypass/**/*",
+      "python/ios_exploit/**/*",
+      "resources/linux/**/*",
+      "resources/macos/**/*",
+      "resources/windows/**/*"
     ],
     "windows": {
       "nsis": {
