@@ -58,6 +58,10 @@ use commands::mtk::{
     mtk_unlock_bootloader,
 };
 use commands::bruteforce::run_pin_bruteforce;
+use commands::updater::{check_for_update, install_update};
+use commands::edl::{edl_detect_device, edl_read_partition, edl_write_partition, edl_erase_partition, edl_reboot, edl_get_gpt};
+use commands::rom_flasher::{rom_sideload_zip, rom_flash_partition, rom_wipe_data, rom_reboot_recovery, rom_reboot_bootloader};
+use commands::device_history::{history_add_entry, history_get_entries, history_clear, history_delete_entry, history_export_json};
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -154,6 +158,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             ios_backup_info,
             ios_extract_hash,
@@ -316,7 +321,29 @@ pub fn run() {
             get_screenshot,
             run_checkm8,
             ios_bypass_full,
-            run_pin_bruteforce
+            run_pin_bruteforce,
+            // Stage 25 — Auto-updater
+            check_for_update,
+            install_update,
+            // Stage 26 — EDL mode
+            edl_detect_device,
+            edl_read_partition,
+            edl_write_partition,
+            edl_erase_partition,
+            edl_reboot,
+            edl_get_gpt,
+            // Stage 27 — Custom ROM flasher
+            rom_sideload_zip,
+            rom_flash_partition,
+            rom_wipe_data,
+            rom_reboot_recovery,
+            rom_reboot_bootloader,
+            // Stage 28 — Device history
+            history_add_entry,
+            history_get_entries,
+            history_clear,
+            history_delete_entry,
+            history_export_json
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

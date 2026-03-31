@@ -168,8 +168,24 @@
           "name": "scp",
           "cmd": "scp",
           "args": true
+        },
+        {
+          "name": "edl",
+          "cmd": "edl",
+          "args": true
+        },
+        {
+          "name": "fastboot",
+          "cmd": "fastboot",
+          "args": true
         }
       ]
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest/download/latest.json"
+      ],
+      "pubkey": ""
     }
   }
 }

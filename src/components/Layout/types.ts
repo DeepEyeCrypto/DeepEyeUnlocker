@@ -13,7 +13,11 @@ export type NavId =
   | "vault"
   | "identity"
   | "extraction"
-  | "advanced";
+  | "advanced"
+  | "updater"
+  | "edl"
+  | "romflasher"
+  | "history";
 
 export type NavItem = {
   id: NavId;
@@ -37,4 +41,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "identity", icon: "I", label: "Identity" },
   { id: "extraction", icon: "E", label: "Extraction" },
   { id: "advanced", icon: "X", label: "Advanced" },
+  { id: "updater", icon: "U", label: "Updater" },
+  { id: "edl", icon: "Q", label: "EDL 9008" },
+  { id: "romflasher", icon: "Z", label: "ROM Flash" },
+  { id: "history", icon: "L", label: "History" },
 ];

@@ -18,6 +18,10 @@ import VaultPage from "./components/pages/Vault";
 import IdentityPage from "./components/pages/Identity";
 import MassExtraction from "./components/pages/MassExtraction";
 import AdvancedPage from "./components/pages/Advanced";
+import UpdaterPage from "./components/pages/Updater";
+import EdlPage from "./components/pages/EdlMode";
+import RomFlasherPage from "./components/pages/RomFlasher";
+import DeviceHistoryPage from "./components/pages/DeviceHistory";
 
 const PAGES: Record<NavId, JSX.Element> = {
   dashboard: <DashboardPage />,
@@ -35,6 +39,10 @@ const PAGES: Record<NavId, JSX.Element> = {
   identity: <IdentityPage />,
   extraction: <MassExtraction />,
   advanced: <AdvancedPage />,
+  updater: <UpdaterPage />,
+  edl: <EdlPage />,
+  romflasher: <RomFlasherPage />,
+  history: <DeviceHistoryPage />,
 };
 
 export default function App() {

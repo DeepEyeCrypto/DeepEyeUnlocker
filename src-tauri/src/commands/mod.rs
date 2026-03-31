@@ -21,3 +21,7 @@ pub mod f3arrain;
 pub mod hydra;
 pub mod mtk;
 pub mod bruteforce;
+pub mod updater;
+pub mod edl;
+pub mod rom_flasher;
+pub mod device_history;
