@@ -62,6 +62,10 @@ android {
             def storePwd      = keystoreProps['STORE_PASSWORD']
             def keyAl          = keystoreProps['KEY_ALIAS']
             def keyPwd         = keystoreProps['KEY_PASSWORD']
+            def ciStoreFilePath = System.getenv("KEYSTORE_PATH")
+            def ciStorePwd      = System.getenv("STORE_PASSWORD")
+            def ciKeyAlias      = System.getenv("KEY_ALIAS")
+            def ciKeyPwd        = System.getenv("KEY_PASSWORD")
 
             enableV1Signing = true
             enableV2Signing = true
@@ -74,12 +78,13 @@ android {
                 storePassword storePwd
                 keyAlias      keyAl
                 keyPassword   keyPwd
-            } else {
+            } else if (ciStoreFilePath != null && ciStorePwd != null &&
+                ciKeyAlias != null && ciKeyPwd != null) {
                 // CI signing via environment variables
-                storeFile     file(System.getenv("KEYSTORE_PATH") ?: "missing.p12")
-                storePassword System.getenv("STORE_PASSWORD") ?: ""
-                keyAlias      System.getenv("KEY_ALIAS") ?: ""
-                keyPassword   System.getenv("KEY_PASSWORD") ?: ""
+                storeFile     file(ciStoreFilePath)
+                storePassword ciStorePwd
+                keyAlias      ciKeyAlias
+                keyPassword   ciKeyPwd
             }
         }
     }
@@ -98,7 +103,10 @@ android {
             // Keep code shrinking enabled, but skip resource shrinking so
             // assembleRelease can complete deterministically.
             shrinkResources false
-            signingConfig signingConfigs.release
+            def releaseSigning = signingConfigs.release
+            signingConfig releaseSigning.storeFile != null && releaseSigning.storeFile.exists()
+                ? releaseSigning
+                : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
