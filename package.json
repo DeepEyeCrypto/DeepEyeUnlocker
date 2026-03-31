@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "android:release": "./gradlew --stacktrace --info assembleRelease",
+    "android:release:ci": "./gradlew --stacktrace --info --no-daemon assembleRelease",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
