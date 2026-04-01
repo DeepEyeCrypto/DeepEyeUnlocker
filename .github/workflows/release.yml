@@ -79,6 +79,11 @@ jobs:
           echo "Using Linux packages: $webkit_package $appindicator_package"
           sudo apt-get install -y "${common_packages[@]}" "$webkit_package" "$appindicator_package"
 
+      - name: Install JS dependencies
+        shell: bash
+        run: |
+          npm ci
+
       - name: Show desktop toolchain versions
         shell: bash
         run: |
@@ -91,7 +96,6 @@ jobs:
       - name: Build frontend & Tauri app
         shell: bash
         run: |
-          npm ci
           npx tauri build --target ${{ matrix.target }}
 
       - name: Inspect desktop bundle output
@@ -181,6 +185,11 @@ jobs:
             armv7-linux-androideabi,
             i686-linux-android,
             x86_64-linux-android
+      - name: Install JS dependencies
+        shell: bash
+        run: |
+          pnpm install
+
       - name: Show Android toolchain versions
         shell: bash
         run: |
@@ -189,8 +198,7 @@ jobs:
           java -version
           rustc --version
           cargo --version
-          npx tauri --version
-      - run: pnpm install
+          pnpm exec tauri --version
       - run: pnpm tauri android init
       - run: pnpm tauri android build --apk
         env:
