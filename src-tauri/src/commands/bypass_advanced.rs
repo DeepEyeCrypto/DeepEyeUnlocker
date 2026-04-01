@@ -81,11 +81,11 @@ pub async fn ios_temp_activation(app: AppHandle, udid: String) -> Result<TempAct
 }
 
 #[tauri::command]
-pub async fn ios_untethered_bypass(app: AppHandle, udid: String, activation_type: String) -> Result<Option<String>, String> {
+pub async fn ios_untethered_bypass(app: AppHandle, _udid: String, activation_type: String) -> Result<Option<String>, String> {
     let app_handle = app.clone();
     tauri::async_runtime::spawn(async move {
         // Step-by-step stream simulation based on Module 11 flow
-        let steps = vec![
+        let steps = [
             ("Exploit", "Entering DFU Mode (Hard Reset Handshake)..."),
             ("PwnDFU", "Executing Gaster PWN exploit chain..."),
             ("Boot", "Loading XNU Ramdisk (DeepEye v2)..."),

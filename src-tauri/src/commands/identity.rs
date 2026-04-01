@@ -67,7 +67,7 @@ pub async fn ios_imei_state(app: AppHandle, udid: String) -> Result<ImeiState, S
         imei: matrix["imei_present"].as_str().unwrap_or("N/A").to_string(),
         valid: matrix["imei_valid"].as_bool().unwrap_or(false),
         cdma_meid: matrix["is_meid_cdma"].as_bool().unwrap_or(false),
-        gsm_signal_eligible: matrix["eligible_types"].as_array().map_or(false, |a| a.iter().any(|v| v == "GsmSignal")),
+        gsm_signal_eligible: matrix["eligible_types"].as_array().is_some_and(|a| a.iter().any(|v| v == "GsmSignal")),
         icloud_lock_inferred: None,
     })
 }

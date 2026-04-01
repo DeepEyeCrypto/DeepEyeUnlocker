@@ -110,7 +110,7 @@ pub async fn ios_run_checkra1n(app: AppHandle, udid: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn ios_patch_activation_record(app: AppHandle, udid: String) -> Result<(), String> {
+pub async fn ios_patch_activation_record(_app: AppHandle, udid: String) -> Result<(), String> {
     println!("[COMMAND] ios_patch_activation_record udid={}", udid);
     // Placeholder for actual patch logic (usually involves SSH to jailbroken device)
     Ok(())

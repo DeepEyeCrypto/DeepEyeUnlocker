@@ -36,7 +36,7 @@ pub async fn ios_check_hello_state(app: AppHandle, udid: String) -> Result<Hello
 }
 
 #[tauri::command]
-pub async fn ios_run_hello_bypass(app: AppHandle, udid: String) -> Result<bool, String> {
+pub async fn ios_run_hello_bypass(_app: AppHandle, udid: String) -> Result<bool, String> {
     println!("[COMMAND] ios_run_hello_bypass udid={}", udid);
     // Placeholder for actual signal/activation record injection
     Ok(true)

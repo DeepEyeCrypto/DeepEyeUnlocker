@@ -47,7 +47,7 @@ async fn run_checkm8_bypass(
     let last_event: serde_json::Value = stdout
         .lines()
         .filter_map(|l| serde_json::from_str(l).ok())
-        .last()
+        .next_back()
         .unwrap_or(serde_json::json!({"event": "unknown"}));
 
     Ok(last_event)

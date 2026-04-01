@@ -75,7 +75,7 @@ pub async fn ios_run_gaster_pwn(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn ios_boot_ramdisk(app: AppHandle, ramdisk_path: String) -> Result<(), String> {
+pub async fn ios_boot_ramdisk(_app: AppHandle, ramdisk_path: String) -> Result<(), String> {
     println!("[COMMAND] ios_boot_ramdisk path={}", ramdisk_path);
     // Placeholder for booting ramdisk via gaster or irecovery
     Ok(())

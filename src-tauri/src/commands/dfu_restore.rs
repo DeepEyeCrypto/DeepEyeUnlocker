@@ -7,7 +7,8 @@ use tauri_plugin_shell::process::CommandEvent;
 pub enum DeviceMode {
     Normal,
     Recovery,
-    DFU,
+    #[serde(rename = "DFU")]
+    Dfu,
     Restore,
     Unknown,
 }
@@ -51,7 +52,7 @@ pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
     let mode = match mode_str {
         "normal" => DeviceMode::Normal,
         "recovery" => DeviceMode::Recovery,
-        "dfu" => DeviceMode::DFU,
+        "dfu" => DeviceMode::Dfu,
         "restore" => DeviceMode::Restore,
         _ => DeviceMode::Unknown,
     };

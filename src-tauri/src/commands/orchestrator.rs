@@ -32,7 +32,7 @@ pub async fn ios_poll_orchestrator(app: AppHandle) -> Result<DeviceMode, String>
 }
 
 #[tauri::command]
-pub async fn ios_inject_surgical_patch(app: AppHandle, patch_id: String) -> Result<bool, String> {
+pub async fn ios_inject_surgical_patch(_app: AppHandle, patch_id: String) -> Result<bool, String> {
     println!("[ORCHESTRATOR] Injecting surgical patch: {}", patch_id);
     // Simulation: would write to mounted ramdisk
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;

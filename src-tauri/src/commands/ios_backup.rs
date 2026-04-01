@@ -3,13 +3,12 @@ use tauri_plugin_shell::process::CommandEvent;
 use serde_json::Value;
 use std::path::PathBuf;
 use tauri::Emitter;
-use tauri::Manager;
 
 /**
  * Layer 1 — python_module_root() path utility
  * Determines the location of our Python research modules.
  */
-pub fn python_module_root(app: &tauri::AppHandle) -> PathBuf {
+pub fn python_module_root(_app: &tauri::AppHandle) -> PathBuf {
     #[cfg(dev)]
     {
         // In development, point to the source-controlled python directory
@@ -18,7 +17,7 @@ pub fn python_module_root(app: &tauri::AppHandle) -> PathBuf {
     #[cfg(not(dev))]
     {
         // In production, point to the bundled resource directory
-        app.path().resource_dir().unwrap().join("python")
+        _app.path().resource_dir().unwrap().join("python")
     }
 }
 
@@ -136,7 +135,7 @@ pub async fn ios_run_crack(
                 app.emit("ios-crack-error", error.to_string()).ok();
             }
             CommandEvent::Terminated(status) => {
-                if !status.code.map_or(false, |c| c == 0) {
+                if status.code != Some(0) {
                     app.emit("ios-crack-error", format!("Process terminated with code {:?}", status.code)).ok();
                 }
                 break;

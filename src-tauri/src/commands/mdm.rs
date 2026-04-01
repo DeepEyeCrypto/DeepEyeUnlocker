@@ -86,7 +86,7 @@ pub async fn ios_list_profiles(app: AppHandle, udid: String) -> Result<Vec<Confi
 }
 
 #[tauri::command]
-pub async fn ios_remove_mdm(app: AppHandle, udid: String) -> Result<bool, String> {
+pub async fn ios_remove_mdm(_app: AppHandle, udid: String) -> Result<bool, String> {
     println!("[COMMAND] ios_remove_mdm udid={}", udid);
     // placeholder logic using ideviceactivation or similar
     Ok(true)

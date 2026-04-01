@@ -52,6 +52,7 @@ fn write_store(app: &AppHandle, store: &HistoryStore) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn history_add_entry(
     app: AppHandle,
     model: String,
