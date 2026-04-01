@@ -36,22 +36,126 @@ jobs:
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          common_packages=(
+            build-essential
+            curl
+            file
+            libgtk-3-dev
+            librsvg2-dev
+            libssl-dev
+            patchelf
+            pkg-config
+          )
+
+          webkit_package=""
+          for candidate in libwebkit2gtk-4.1-dev libwebkit2gtk-4.0-dev; do
+            if apt-cache show "$candidate" >/dev/null 2>&1; then
+              webkit_package="$candidate"
+              break
+            fi
+          done
+
+          appindicator_package=""
+          for candidate in libayatana-appindicator3-dev libappindicator3-dev; do
+            if apt-cache show "$candidate" >/dev/null 2>&1; then
+              appindicator_package="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$webkit_package" ]; then
+            echo "Unable to resolve a WebKitGTK development package on this runner."
+            exit 1
+          fi
+
+          if [ -z "$appindicator_package" ]; then
+            echo "Unable to resolve an AppIndicator development package on this runner."
+            exit 1
+          fi
+
+          echo "Using Linux packages: $webkit_package $appindicator_package"
+          sudo apt-get install -y "${common_packages[@]}" "$webkit_package" "$appindicator_package"
+
+      - name: Show desktop toolchain versions
+        shell: bash
+        run: |
+          node --version
+          npm --version
+          rustc --version
+          cargo --version
+          npx tauri --version
 
       - name: Build frontend & Tauri app
+        shell: bash
         run: |
-          npm install
+          npm ci
           npx tauri build --target ${{ matrix.target }}
+
+      - name: Inspect desktop bundle output
+        shell: bash
+        run: |
+          echo "Inspecting src-tauri/target after build"
+          if [ -d src-tauri/target ]; then
+            find src-tauri/target -maxdepth 6 -type f | sort
+          else
+            echo "src-tauri/target does not exist"
+          fi
+
+      - name: Collect desktop bundle artifacts
+        id: collect-desktop-artifacts
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import sys
+
+          target = os.environ["TARGET"]
+          preferred_root = Path("src-tauri") / "target" / target / "release" / "bundle"
+          search_roots = [preferred_root, Path("src-tauri") / "target"]
+          collected: list[str] = []
+
+          def maybe_add(path: Path) -> None:
+              if path.is_file():
+                  collected.append(path.as_posix())
+
+          if preferred_root.exists():
+              for entry in preferred_root.rglob("*"):
+                  maybe_add(entry)
+
+          if not collected:
+              for entry in search_roots[1].rglob("*"):
+                  if entry.is_file() and "/release/bundle/" in entry.as_posix():
+                      collected.append(entry.as_posix())
+
+          collected = sorted(dict.fromkeys(collected))
+
+          if not collected:
+              print(f"No desktop bundle artifacts found for target {target}", file=sys.stderr)
+              sys.exit(1)
+
+          print("Discovered desktop bundle artifacts:")
+          for item in collected:
+              print(item)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write("paths<<EOF\n")
+              fh.write("\n".join(collected))
+              fh.write("\nEOF\n")
+          PY
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: DeepEyeUnlocker_${{ matrix.label }}
-          path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+          path: ${{ steps.collect-desktop-artifacts.outputs.paths }}
           retention-days: 30
+          if-no-files-found: error
 
   build-android:
     runs-on: ubuntu-latest
@@ -77,21 +181,68 @@ jobs:
             armv7-linux-androideabi,
             i686-linux-android,
             x86_64-linux-android
+      - name: Show Android toolchain versions
+        shell: bash
+        run: |
+          node --version
+          pnpm --version
+          java -version
+          rustc --version
+          cargo --version
+          npx tauri --version
       - run: pnpm install
       - run: pnpm tauri android init
       - run: pnpm tauri android build --apk
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+
+      - name: Inspect Android output
+        shell: bash
+        run: |
+          echo "Inspecting src-tauri/gen/android/app/build/outputs after build"
+          if [ -d src-tauri/gen/android/app/build/outputs ]; then
+            find src-tauri/gen/android/app/build/outputs -maxdepth 8 -type f | sort
+          else
+            echo "src-tauri/gen/android/app/build/outputs does not exist"
+          fi
+
+      - name: Collect Android release artifacts
+        id: collect-android-artifacts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import sys
+
+          root = Path("src-tauri") / "gen" / "android" / "app" / "build" / "outputs"
+          allowed_suffixes = {".apk", ".aab"}
+          collected = sorted(
+              path.as_posix()
+              for path in root.rglob("*")
+              if path.is_file() and path.suffix.lower() in allowed_suffixes
+          )
+
+          if not collected:
+              print(f"No Android release artifacts found under {root}", file=sys.stderr)
+              sys.exit(1)
+
+          print("Discovered Android release artifacts:")
+          for item in collected:
+              print(item)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write("paths<<EOF\n")
+              fh.write("\n".join(collected))
+              fh.write("\nEOF\n")
+          PY
+
       - uses: actions/upload-artifact@v4
         with:
           name: DeepEyeUnlocker-Android
           retention-days: 30
-          path: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-      - uses: softprops/action-gh-release@v1
-        with:
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ steps.collect-android-artifacts.outputs.paths }}
+          if-no-files-found: error
 
   create-release:
     needs: [build, build-android]
@@ -106,6 +257,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+
+      - name: Inspect downloaded artifacts
+        shell: bash
+        run: |
+          if [ -d ./artifacts ]; then
+            find ./artifacts -maxdepth 8 -type f | sort
+          else
+            echo "No downloaded artifacts directory found"
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
