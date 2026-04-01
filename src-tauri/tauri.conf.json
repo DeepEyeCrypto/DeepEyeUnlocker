@@ -1,6 +1,6 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2026.31.0",
+  "version": "2027.0.5",
   "identifier": "com.deepeye.otg",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -33,7 +33,6 @@
     "targets": [
       "dmg",
       "nsis",
-      "msi",
       "appimage",
       "deb"
     ],
