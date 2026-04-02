@@ -3,7 +3,6 @@ use tauri_plugin_shell::process::CommandEvent;
 use serde_json::Value;
 use std::path::PathBuf;
 use tauri::Emitter;
-use tauri::Manager;
 
 /**
  * Layer 1 — python_module_root() path utility
