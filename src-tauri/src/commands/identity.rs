@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
+use crate::commands::ios_backup::python_script_path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeviceIdentity {
@@ -25,16 +26,20 @@ pub struct ImeiState {
     pub icloud_lock_inferred: Option<bool>,
 }
 
-fn python_path(app: &AppHandle) -> std::path::PathBuf {
-    app.path().resource_dir().unwrap().join("python")
-}
-
 #[tauri::command]
 pub async fn ios_device_identity(app: AppHandle, udid: String) -> Result<DeviceIdentity, String> {
+    // [INFERRED] Android runtime must not invoke the desktop-only Apple Python bridge during startup.
+    if cfg!(target_os = "android") {
+        return Err("ios_device_identity is unavailable on Android runtime".to_string());
+    }
+
+    let cli_script = python_script_path(&app, "ios_backup/cli.py")?;
     let output = app.shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            cli_script
+                .to_str()
+                .ok_or_else(|| "invalid ios_backup cli path".to_string())?,
             "device-identity",
             &udid
         ])
@@ -49,10 +54,17 @@ pub async fn ios_device_identity(app: AppHandle, udid: String) -> Result<DeviceI
 #[tauri::command]
 pub async fn ios_imei_state(app: AppHandle, udid: String) -> Result<ImeiState, String> {
     // Derived from matrix for simplicity in this bridge
+    if cfg!(target_os = "android") {
+        return Err("ios_imei_state is unavailable on Android runtime".to_string());
+    }
+
+    let cli_script = python_script_path(&app, "ios_backup/cli.py")?;
     let output = app.shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            cli_script
+                .to_str()
+                .ok_or_else(|| "invalid ios_backup cli path".to_string())?,
             "activation-matrix",
             &udid
         ])

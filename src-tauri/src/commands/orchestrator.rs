@@ -1,22 +1,27 @@
 use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
+use crate::commands::ios_backup::python_script_path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeviceMode {
     pub mode: String,
 }
 
-fn python_path(app: &AppHandle) -> std::path::PathBuf {
-    app.path().resource_dir().unwrap().join("python")
-}
-
 #[tauri::command]
 pub async fn ios_poll_orchestrator(app: AppHandle) -> Result<DeviceMode, String> {
+    // [INFERRED] Android runtime must not attempt to spawn the desktop Apple Python toolchain.
+    if cfg!(target_os = "android") {
+        return Err("ios_poll_orchestrator is unavailable on Android runtime".to_string());
+    }
+
+    let orchestrator_script = python_script_path(&app, "ios_backup/orchestrator.py")?;
     let output = app.shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/orchestrator.py").to_str().unwrap(),
+            orchestrator_script
+                .to_str()
+                .ok_or_else(|| "invalid orchestrator script path".to_string())?,
             "poll"
         ])
         .output()

@@ -30,7 +30,7 @@ pub struct MountResult {
 
 #[tauri::command]
 pub async fn ios_mount_ramdisk(app: AppHandle) -> Result<MountResult, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     let output = app
         .shell()
         .command("python3")
@@ -52,7 +52,7 @@ pub async fn ios_mount_ramdisk(app: AppHandle) -> Result<MountResult, String> {
 
 #[tauri::command]
 pub async fn ios_mass_extract(app: AppHandle, save_path: String) -> Result<MassExtractionReport, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     let output = app
         .shell()
         .command("python3")

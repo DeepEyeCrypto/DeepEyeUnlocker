@@ -10,7 +10,7 @@ import {
   type DetectedDeviceInfo,
   type PlatformTab,
 } from "../lib/dashboard";
-import { isMobile } from "../lib/platform";
+import { getPlatform, isMobile } from "../lib/platform";
 
 type IdentityResponse = {
   model?: string;
@@ -22,10 +22,11 @@ type IdentityResponse = {
 type OrchestratorResponse = { mode: string };
 
 export default function DashboardPage() {
+  const platform = getPlatform();
   const mobile = isMobile();
   const [state, setState] = useState<DashboardState>("idle");
   const [error, setError] = useState<string>("");
-  const [tab, setTab] = useState<PlatformTab>("apple");
+  const [tab, setTab] = useState<PlatformTab>(platform === "android" ? "android" : "apple");
   const [device, setDevice] = useState<DetectedDeviceInfo | null>(null);
   const [logLines, setLogLines] = useState<string[]>(["[info] Dashboard initialized"]);
   const [logCollapsed, setLogCollapsed] = useState(true);
@@ -43,6 +44,15 @@ export default function DashboardPage() {
   };
 
   const poll = async () => {
+    // [INFERRED] The Android runtime has no desktop Apple toolchain, so startup polling must short-circuit.
+    if (platform === "android") {
+      setState("idle");
+      setError("");
+      setDevice(null);
+      addLog("[info] Android runtime detected; skipping Apple desktop orchestrator probes.");
+      return;
+    }
+
     try {
       setState("scanning");
       setError("");
@@ -79,11 +89,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     void poll();
+
+    if (platform === "android") {
+      return;
+    }
+
     const timer = setInterval(() => {
       void poll();
     }, DASHBOARD_CONFIG.POLLING_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [platform]);
 
   const canRunActions = state === "connected";
 
@@ -100,7 +115,10 @@ export default function DashboardPage() {
 
       <ProgressStep steps={steps} />
 
-      {state === "idle" && <div className="panel">Connect a device to begin.</div>}
+      {state === "idle" && platform === "android" && (
+        <div className="panel">Android runtime detected. Desktop Apple probe commands are disabled on-device.</div>
+      )}
+      {state === "idle" && platform !== "android" && <div className="panel">Connect a device to begin.</div>}
       {state === "scanning" && <div className="panel pulse-panel">Scanning USB...</div>}
       {state === "error" && (
         <div className="danger-note row-between">
@@ -176,4 +194,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

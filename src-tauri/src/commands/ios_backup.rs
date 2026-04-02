@@ -1,6 +1,7 @@
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
 use serde_json::Value;
+use std::fs;
 use std::path::PathBuf;
 use tauri::Emitter;
 #[allow(unused_imports)]
@@ -10,17 +11,51 @@ use tauri::Manager;
  * Layer 1 — python_module_root() path utility
  * Determines the location of our Python research modules.
  */
-pub fn python_module_root(_app: &tauri::AppHandle) -> PathBuf {
+pub fn python_module_root(_app: &tauri::AppHandle) -> Result<PathBuf, String> {
     #[cfg(dev)]
     {
         // In development, point to the source-controlled python directory
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("python")
+        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("python"))
     }
     #[cfg(not(dev))]
     {
-        // In production, point to the bundled resource directory
-        _app.path().resource_dir().unwrap().join("python")
+        // [INFERRED] Tauri mobile packaging can surface resources from different extracted locations.
+        // Prefer the bundled resource directory when it exists, otherwise fall back to app data.
+        if let Ok(resource_dir) = _app.path().resource_dir() {
+            let bundled_python = resource_dir.join("python");
+            if bundled_python.exists() {
+                return Ok(bundled_python);
+            }
+        }
+
+        let app_data_dir = _app
+            .path()
+            .app_data_dir()
+            .map_err(|e| format!("app data dir error: {e}"))?;
+        let python_dir = app_data_dir.join("python");
+        fs::create_dir_all(&python_dir)
+            .map_err(|e| format!("create python dir error: {e}"))?;
+        Ok(python_dir)
     }
+}
+
+pub fn python_script_path(app: &tauri::AppHandle, relative_script_path: &str) -> Result<PathBuf, String> {
+    let python_root = python_module_root(app)?;
+    let script_path = python_root.join(relative_script_path);
+
+    if let Some(parent) = script_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("create python script dir error: {e}"))?;
+    }
+
+    if !script_path.exists() {
+        return Err(format!(
+            "bundled python script missing: {}",
+            script_path.display()
+        ));
+    }
+
+    Ok(script_path)
 }
 
 /**
@@ -32,7 +67,7 @@ pub async fn ios_backup_info(
     app: tauri::AppHandle,
     backup_path: String,
 ) -> Result<Value, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     
     let output = app.shell()
         .command("python3")
@@ -55,7 +90,7 @@ pub async fn ios_extract_hash(
     backup_path: String,
     output_path: String,
 ) -> Result<u32, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     
     let output = app.shell()
         .command("python3")
@@ -82,7 +117,7 @@ pub async fn ios_extract_screentime(
     backup_path: String,
     password: String,
 ) -> Result<Value, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     
     let output = app.shell()
         .command("python3")
@@ -105,7 +140,7 @@ pub async fn ios_run_crack(
     backup_path: String,
     wordlist: String,
 ) -> Result<Option<String>, String> {
-    let python_root = python_module_root(&app);
+    let python_root = python_module_root(&app)?;
     
     let (mut rx, _child) = app.shell()
         .command("python3")
