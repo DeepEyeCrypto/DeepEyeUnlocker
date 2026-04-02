@@ -41,6 +41,27 @@ config = json.loads(Path("src-tauri/tauri.conf.json").read_text(encoding="utf-8"
 print(config.get("version", "0"))
 PY
 )"
+
+# [INFERRED] Release CI patches tauri.conf.json from the current git tag; warn if a pinned version sneaks back in.
+version_warning=0
+if [[ "$version" != *AUTO* ]]; then
+  echo "⚠️ WARN: src-tauri/tauri.conf.json version is pinned to $version; expected an AUTO placeholder for tag-synced releases"
+  version_warning=1
+fi
+
+latest_tag="$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n1 || true)"
+if [ -n "$latest_tag" ] && [[ "$version" != *AUTO* ]]; then
+  latest_version="${latest_tag#v}"
+  if [ "$version" != "$latest_version" ]; then
+    echo "⚠️ WARN: src-tauri/tauri.conf.json version ($version) does not match latest release tag $latest_tag"
+    version_warning=1
+  fi
+fi
+
+if [ "$version_warning" -eq 1 ]; then
+  echo "⚠️ WARN: Release CI will patch the version from the tag, but the checked-in config looks stale"
+fi
+
 major="${version%%.*}"
 has_msi="$(python3 - <<'PY'
 import json

@@ -93,7 +93,27 @@ jobs:
           cargo --version
           npx tauri --version
 
-      - name: Build frontend & Tauri app
+      - name: Sync version from tag
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          export VERSION
+          # [INFERRED] Cross-platform JSON patch avoids BSD/GNU sed differences on GitHub runners.
+          node -e 'const fs=require("fs");const path="src-tauri/tauri.conf.json";const data=JSON.parse(fs.readFileSync(path,"utf8"));data.version=process.env.VERSION;fs.writeFileSync(path, JSON.stringify(data, null, 2)+"\n");'
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Synced version to $VERSION"
+
+      - name: Build frontend & Tauri app (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ""
+        run: |
+          npx tauri build --target ${{ matrix.target }}
+
+      - name: Build frontend & Tauri app (non-macOS)
+        if: runner.os != 'macOS'
         shell: bash
         run: |
           npx tauri build --target ${{ matrix.target }}
@@ -208,6 +228,18 @@ jobs:
           rustc --version
           cargo --version
           pnpm exec tauri --version
+
+      - name: Sync version from tag
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          export VERSION
+          # [INFERRED] Cross-platform JSON patch avoids BSD/GNU sed differences on GitHub runners.
+          node -e 'const fs=require("fs");const path="src-tauri/tauri.conf.json";const data=JSON.parse(fs.readFileSync(path,"utf8"));data.version=process.env.VERSION;fs.writeFileSync(path, JSON.stringify(data, null, 2)+"\n");'
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Synced version to $VERSION"
+
       - run: pnpm tauri android init
       - run: pnpm tauri android build --apk
 
@@ -221,42 +253,37 @@ jobs:
             echo "src-tauri/gen/android/app/build/outputs does not exist"
           fi
 
-      - name: Collect Android release artifacts
-        id: collect-android-artifacts
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        with:
+          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Rename signed APK
+        id: rename_signed_apk
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import os
-          import sys
+          SIGNED_PATH="${{ steps.sign_apk.outputs.signedReleaseFile }}"
+          if [ ! -f "$SIGNED_PATH" ]; then
+            echo "Signed APK not found at $SIGNED_PATH"
+            exit 1
+          fi
 
-          root = Path("src-tauri") / "gen" / "android" / "app" / "build" / "outputs"
-          allowed_suffixes = {".apk"}
-          collected = sorted(
-              path.as_posix()
-              for path in root.rglob("*")
-              if path.is_file() and path.suffix.lower() in allowed_suffixes
-          )
-
-          if not collected:
-              print(f"No Android release artifacts found under {root}", file=sys.stderr)
-              sys.exit(1)
-
-          print("Discovered Android release artifacts:")
-          for item in collected:
-              print(item)
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write("paths<<EOF\n")
-              fh.write("\n".join(collected))
-              fh.write("\nEOF\n")
-          PY
+          # [INFERRED] The signing action resolves the final signed path; rename after signing to keep a stable release filename.
+          FINAL_PATH="$(dirname "$SIGNED_PATH")/DeepEyeUnlocker_${VERSION}.apk"
+          mv "$SIGNED_PATH" "$FINAL_PATH"
+          echo "path=$FINAL_PATH" >> "$GITHUB_OUTPUT"
+          echo "Renamed signed APK to $FINAL_PATH"
 
       - uses: actions/upload-artifact@v4
         with:
           name: DeepEyeUnlocker-Android
           retention-days: 30
-          path: ${{ steps.collect-android-artifacts.outputs.paths }}
+          path: ${{ steps.rename_signed_apk.outputs.path }}
           if-no-files-found: error
 
   create-release:
