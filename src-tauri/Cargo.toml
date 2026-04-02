@@ -31,11 +31,3 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
-
-[target.universal-apple-darwin]
-rustflags = [
-  "-C", "link-arg=-arch",
-  "-C", "link-arg=arm64",
-  "-C", "link-arg=-arch",
-  "-C", "link-arg=x86_64"
-]

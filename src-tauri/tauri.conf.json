@@ -55,9 +55,6 @@
       "nsis": {
         "displayLanguageSelector": false,
         "installMode": "both"
-      },
-      "wix": {
-        "language": "en-US"
       }
     },
     "macOS": {

@@ -172,10 +172,18 @@ jobs:
         with: { version: 9 }
       - uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
-      - run: sdkmanager "ndk;27.0.11902837"
+      - name: Install pinned Android NDK
+        shell: bash
+        run: |
+          # [INFERRED] P007/P008 remediation from the DeepEye v7 CI hardening brief.
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          echo "y" | sdkmanager "ndk;27.0.12077973" --sdk_root="$SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
+          ls "$SDK_ROOT/ndk/" | grep "27.0"
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - uses: dtolnay/rust-toolchain@stable
@@ -201,8 +209,6 @@ jobs:
           pnpm exec tauri --version
       - run: pnpm tauri android init
       - run: pnpm tauri android build --apk
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
 
       - name: Inspect Android output
         shell: bash
