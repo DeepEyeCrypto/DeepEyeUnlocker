@@ -108,7 +108,8 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         env:
-          APPLE_SIGNING_IDENTITY: ""
+          # [INFERRED] codesign uses "-" for ad-hoc signing; an empty string makes Tauri request a missing keychain identity.
+          APPLE_SIGNING_IDENTITY: "-"
         run: |
           npx tauri build --target ${{ matrix.target }}
 
@@ -205,6 +206,13 @@ jobs:
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "NDK_HOME=$SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
           ls "$SDK_ROOT/ndk/" | grep "27.0"
+      - name: Install Android build-tools for APK signing
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          # [INFERRED] r0adkll/sign-android-release@v1 defaults to build-tools 29.0.3 for zipalign/apksigner.
+          echo "y" | sdkmanager "build-tools;29.0.3" --sdk_root="$SDK_ROOT"
+          ls "$SDK_ROOT/build-tools/" | grep "29.0.3"
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - uses: dtolnay/rust-toolchain@stable
