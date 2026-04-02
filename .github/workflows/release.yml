@@ -110,6 +110,8 @@ jobs:
         env:
           # [INFERRED] codesign uses "-" for ad-hoc signing; an empty string makes Tauri request a missing keychain identity.
           APPLE_SIGNING_IDENTITY: "-"
+          # [CONFIRMED] Rust panics during macOS packaging should emit a usable backtrace in CI logs.
+          RUST_BACKTRACE: 1
         run: |
           npx tauri build --target ${{ matrix.target }}
 

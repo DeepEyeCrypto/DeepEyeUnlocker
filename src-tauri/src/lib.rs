@@ -153,7 +153,8 @@ use developer::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    // [CONFIRMED] Release builds use panic=abort, so startup errors must be logged instead of panicking.
+    let app_result = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -339,12 +340,15 @@ pub fn run() {
             rom_reboot_recovery,
             rom_reboot_bootloader,
             // Stage 28 — Device history
-            history_add_entry,
-            history_get_entries,
-            history_clear,
-            history_delete_entry,
-            history_export_json
+             history_add_entry,
+             history_get_entries,
+             history_clear,
+             history_delete_entry,
+             history_export_json
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!());
+
+    if let Err(error) = app_result {
+        eprintln!("[startup] tauri application failed to initialize: {error}");
+    }
 }
