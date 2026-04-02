@@ -97,12 +97,66 @@ with open(".github/workflows/release.yml", "r", encoding="utf-8") as handle:
 PY
 echo "✅ YAML valid"
 
-echo "[5/5] cargo test..."
+echo "[5/6] cargo test..."
 cargo_test_log="$(mktemp)"
 cargo test --manifest-path src-tauri/Cargo.toml >"$cargo_test_log" 2>&1
 tail -20 "$cargo_test_log"
 rm -f "$cargo_test_log"
 echo "✅ Tests passed"
+
+# [INFERRED] P009 guard launches the Tauri app long enough to catch startup-time plugin config panics before release tagging.
+echo "[6/6] Tauri startup smoke test (P009)..."
+startup_smoke_log="$(mktemp)"
+startup_smoke_pid=""
+
+cleanup_startup_smoke() {
+  if [ -n "${startup_smoke_pid:-}" ] && kill -0 "$startup_smoke_pid" 2>/dev/null; then
+    kill "$startup_smoke_pid" 2>/dev/null || true
+    wait "$startup_smoke_pid" 2>/dev/null || true
+  fi
+  rm -f "$startup_smoke_log"
+}
+
+RUST_BACKTRACE=1 cargo run --manifest-path src-tauri/Cargo.toml >"$startup_smoke_log" 2>&1 &
+startup_smoke_pid=$!
+trap cleanup_startup_smoke EXIT
+
+launch_deadline=$((SECONDS + 180))
+launch_seen=0
+stable_deadline=0
+
+while [ "$SECONDS" -lt "$launch_deadline" ]; do
+  if ! kill -0 "$startup_smoke_pid" 2>/dev/null; then
+    echo "❌ FAIL P009: App died during startup"
+    tail -50 "$startup_smoke_log"
+    cleanup_startup_smoke
+    trap - EXIT
+    exit 1
+  fi
+
+  if [ "$launch_seen" -eq 0 ] && grep -q 'Running `' "$startup_smoke_log"; then
+    launch_seen=1
+    stable_deadline=$((SECONDS + 5))
+  fi
+
+  if [ "$launch_seen" -eq 1 ] && [ "$SECONDS" -ge "$stable_deadline" ]; then
+    break
+  fi
+
+  sleep 1
+done
+
+if [ "$launch_seen" -eq 0 ]; then
+  echo "❌ FAIL P009: cargo run did not reach the app launch phase within 180s"
+  tail -50 "$startup_smoke_log"
+  cleanup_startup_smoke
+  trap - EXIT
+  exit 1
+fi
+
+cleanup_startup_smoke
+trap - EXIT
+echo "✅ Startup smoke test passed (P009 guard)"
 
 echo ""
 echo "==================================="
