@@ -56,9 +56,9 @@ if [ "$major" -gt "255" ] && [ "$has_msi" = "True" ]; then
   exit 1
 fi
 
-duplicate_publishers="$(grep -c "action-gh-release" .github/workflows/release.yml || true)"
+duplicate_publishers="$(grep -Rho "softprops/action-gh-release" .github/workflows 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$duplicate_publishers" -gt "1" ]; then
-  echo "❌ FAIL: Multiple action-gh-release entries found (P006)"
+  echo "❌ FAIL: Multiple action-gh-release entries found across .github/workflows (P006)"
   exit 1
 fi
 

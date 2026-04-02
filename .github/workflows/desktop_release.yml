@@ -1,9 +1,6 @@
 name: Desktop Multi-Platform Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -53,19 +50,8 @@ jobs:
         with:
           name: DeepEyeUnlocker-${{ matrix.platform }}
           path: |
-            src-tauri/target/**/release/bundle/**/*
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.AppImage
+            src-tauri/target/**/release/bundle/**/*.exe
           retention-days: 30
-
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "DeepEye Unlocker ${{ github.ref_name }}"
-          body: "Automated forensic build for DeepEye Unlocker Desktop Console."
-          draft: true
-          prerelease: false
-          files: |
-            src-tauri/target/**/release/bundle/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

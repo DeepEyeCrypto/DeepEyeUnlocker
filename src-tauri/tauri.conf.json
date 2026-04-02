@@ -1,6 +1,6 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2027.0.5",
+  "version": "2027.0.12",
   "identifier": "com.deepeye.otg",
   "build": {
     "beforeDevCommand": "npm run dev",

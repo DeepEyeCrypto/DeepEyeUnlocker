@@ -122,10 +122,11 @@ jobs:
           target = os.environ["TARGET"]
           preferred_root = Path("src-tauri") / "target" / target / "release" / "bundle"
           search_roots = [preferred_root, Path("src-tauri") / "target"]
+          allowed_suffixes = {".dmg", ".deb", ".appimage", ".exe"}
           collected: list[str] = []
 
           def maybe_add(path: Path) -> None:
-              if path.is_file():
+              if path.is_file() and path.suffix.lower() in allowed_suffixes:
                   collected.append(path.as_posix())
 
           if preferred_root.exists():
@@ -230,7 +231,7 @@ jobs:
           import sys
 
           root = Path("src-tauri") / "gen" / "android" / "app" / "build" / "outputs"
-          allowed_suffixes = {".apk", ".aab"}
+          allowed_suffixes = {".apk"}
           collected = sorted(
               path.as_posix()
               for path in root.rglob("*")
