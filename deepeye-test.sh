@@ -17,7 +17,7 @@ fi
 rm -f "$cargo_check_log"
 echo "✅ cargo check passed"
 
-echo "[2/5] cargo clippy..."
+echo "[2/5] cargo clippy (all targets)..."
 cargo clippy \
   --manifest-path src-tauri/Cargo.toml \
   --all-targets \
