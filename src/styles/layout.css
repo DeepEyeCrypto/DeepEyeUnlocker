@@ -963,3 +963,336 @@ select.field-input option {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS — Phase 2 Stability
+   Mobile: 375px - 430px
+   Tablet: 768px - 1024px
+   Desktop: 1280px+
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Mobile: 375px - 430px ── */
+@media (max-width: 430px) {
+  /* Global: prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Page container: clamp padding for small screens */
+  .page {
+    padding: clamp(8px, 2vw, 12px);
+  }
+
+  /* Page titles: smaller on mobile */
+  .page-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Buttons: minimum 44px touch target */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: clamp(13px, 2vw, 15px);
+  }
+
+  .btn-sm {
+    padding: 10px 16px;
+    font-size: var(--font-size-sm);
+  }
+
+  .btn-md {
+    padding: 12px 20px;
+    font-size: var(--font-size-base);
+  }
+
+  .btn-lg {
+    padding: 14px 24px;
+    font-size: var(--font-size-md);
+  }
+
+  /* Device grid: single column on mobile */
+  .device-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Two column grids become single column */
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  /* FRP brand selector: 3 columns on mobile */
+  .frp-brand-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* FRP chipset: 2 columns on mobile */
+  .frp-chipset-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* FRP method cards: single column */
+  .frp-method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Console: fixed height range for mobile */
+  .terminal-log {
+    height: clamp(150px, 30vh, 250px);
+    font-size: 11px;
+  }
+
+  /* Card body: reduce padding on mobile */
+  .card-body {
+    padding: var(--space-3);
+  }
+
+  .card-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Panel: reduce padding */
+  .panel {
+    padding: var(--space-3);
+  }
+
+  /* Action row: stack on mobile */
+  .action-row {
+    flex-direction: column;
+  }
+
+  .action-row .btn {
+    width: 100%;
+  }
+
+  /* Field grid: single column */
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Quick grid: 2 columns on mobile */
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Dashboard grid: single column */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Device bar: stack on mobile */
+  .devicebar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .devicebar-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .devicebar-stats {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .devicebar-divider {
+    display: none;
+  }
+
+  /* FRP dialog: full width on mobile */
+  .frp-dialog {
+    width: calc(100vw - 24px);
+    padding: var(--space-3);
+  }
+
+  /* FRP programming row: column on mobile */
+  .frp-programming-row,
+  .frp-route-row {
+    flex-direction: column;
+  }
+
+  /* Bottom nav: safe area padding for notch devices */
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .bottom-nav-item {
+    min-width: 64px;
+    flex-shrink: 0;
+    padding: var(--space-2);
+  }
+
+  .bottom-nav-icon {
+    font-size: 16px;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+  }
+
+  /* Sidenav: hide on mobile, use bottom nav instead */
+  .sidenav {
+    display: none;
+  }
+
+  /* Main content: full width on mobile */
+  .main-content {
+    padding: var(--space-2);
+  }
+
+  /* Danger note: smaller padding */
+  .danger-note {
+    padding: var(--space-3);
+  }
+
+  /* FRP console meta: wrap on mobile */
+  .frp-console-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* FRP meta list: smaller gap */
+  .frp-meta-list {
+    gap: 2px;
+  }
+
+  /* FRP search result: smaller padding */
+  .frp-selector,
+  .frp-chipset-option,
+  .frp-search-result {
+    padding: var(--space-2);
+  }
+
+  /* FRP method card: smaller padding */
+  .frp-method-card {
+    padding: var(--space-3);
+  }
+
+  /* Row between: stack on mobile */
+  .row-between {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Stack-sm: tighter gap */
+  .stack-sm {
+    gap: var(--space-2);
+  }
+}
+
+/* ── Tablet: 768px - 1024px ── */
+@media (min-width: 431px) and (max-width: 1024px) {
+  .frp-brand-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .frp-chipset-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .frp-method-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .device-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .terminal-log {
+    height: clamp(180px, 35vh, 320px);
+  }
+
+  .sidenav {
+    width: 180px;
+  }
+}
+
+/* ── Desktop: 1280px+ ── */
+@media (min-width: 1280px) {
+  .frp-brand-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .frp-chipset-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .frp-method-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .device-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .terminal-log {
+    height: clamp(200px, 40vh, 400px);
+  }
+
+  .main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* ── Console output: monospace, auto-scroll friendly ── */
+.console-output {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-y: auto;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* ── Page container: responsive padding ── */
+.page-container {
+  padding: clamp(12px, 3vw, 24px);
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ── Ensure all scrollable containers use smooth scroll ── */
+.main-content,
+.terminal-log,
+.bottom-nav {
+  scroll-behavior: smooth;
+}
+
+/* ── Prevent text wrapping in badges and chips ── */
+.frp-risk-badge,
+.frp-status-chip,
+.status-badge,
+.nav-badge {
+  white-space: nowrap;
+}
+
+/* ── Ensure images and icons scale properly ── */
+.devicebar-icon {
+  width: clamp(32px, 5vw, 40px);
+  height: clamp(32px, 5vw, 40px);
+}
+
+/* ── Safe area padding for notch devices (iOS) ── */
+[data-platform="ios"] .bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+[data-platform="android"] .bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
