@@ -8,27 +8,27 @@ import DashboardPage from "./pages/Dashboard";
 
 // Lazy-loaded heavy pages
 import React from "react";
-const Activation = React.lazy(() => import("../components/pages/Activation"));
-const Jailbreak = React.lazy(() => import("../components/pages/Jailbreak"));
-const Toolbox = React.lazy(() => import("../components/pages/Toolbox"));
-const FMIPage = React.lazy(() => import("../components/pages/FMI"));
-const PurplePage = React.lazy(() => import("../components/pages/PurpleMode"));
-const BootFilesPage = React.lazy(() => import("../components/pages/BootFiles"));
-const SHSHPage = React.lazy(() => import("../components/pages/SHSH"));
-const DiagnosticsPage = React.lazy(() => import("../components/pages/Diagnostics"));
-const RestorePage = React.lazy(() => import("../components/pages/Restore"));
-const CveDashboard = React.lazy(() => import("../components/pages/CveDashboard"));
-const VaultPage = React.lazy(() => import("../components/pages/Vault"));
-const IdentityPage = React.lazy(() => import("../components/pages/Identity"));
-const AdbToolsPage = React.lazy(() => import("../components/pages/AdbTools"));
-const FrpBypassPage = React.lazy(() => import("../components/pages/FrpBypass"));
-const MassExtraction = React.lazy(() => import("../components/pages/MassExtraction"));
-const AdvancedPage = React.lazy(() => import("../components/pages/Advanced"));
-const UpdaterPage = React.lazy(() => import("../components/pages/Updater"));
-const EdlPage = React.lazy(() => import("../components/pages/EdlMode"));
-const MtkToolsPage = React.lazy(() => import("../components/pages/MtkTools"));
-const RomFlasherPage = React.lazy(() => import("../components/pages/RomFlasher"));
-const DeviceHistoryPage = React.lazy(() => import("../components/pages/DeviceHistory"));
+const Activation = React.lazy(() => import("./components/pages/Activation.tsx"));
+const Jailbreak = React.lazy(() => import("./components/pages/Jailbreak.tsx"));
+const Toolbox = React.lazy(() => import("./components/pages/Toolbox.tsx"));
+const FMIPage = React.lazy(() => import("./components/pages/FMI.tsx"));
+const PurplePage = React.lazy(() => import("./components/pages/PurpleMode.tsx"));
+const BootFilesPage = React.lazy(() => import("./components/pages/BootFiles.tsx"));
+const SHSHPage = React.lazy(() => import("./components/pages/SHSH.tsx"));
+const DiagnosticsPage = React.lazy(() => import("./components/pages/Diagnostics.tsx"));
+const RestorePage = React.lazy(() => import("./components/pages/Restore.tsx"));
+const CveDashboard = React.lazy(() => import("./components/pages/CveDashboard.tsx"));
+const VaultPage = React.lazy(() => import("./components/pages/Vault.tsx"));
+const IdentityPage = React.lazy(() => import("./components/pages/Identity.tsx"));
+const AdbToolsPage = React.lazy(() => import("./components/pages/AdbTools.tsx"));
+const FrpBypassPage = React.lazy(() => import("./components/pages/FrpBypass.tsx"));
+const MassExtraction = React.lazy(() => import("./components/pages/MassExtraction.tsx"));
+const AdvancedPage = React.lazy(() => import("./components/pages/Advanced.tsx"));
+const UpdaterPage = React.lazy(() => import("./components/pages/Updater.tsx"));
+const EdlPage = React.lazy(() => import("./components/pages/EdlMode.tsx"));
+const MtkToolsPage = React.lazy(() => import("./components/pages/MtkTools.tsx"));
+const RomFlasherPage = React.lazy(() => import("./components/pages/RomFlasher.tsx"));
+const DeviceHistoryPage = React.lazy(() => import("./components/pages/DeviceHistory.tsx"));
 
 const PAGES: Record<NavId, JSX.Element> = {
   dashboard: <DashboardPage />,
