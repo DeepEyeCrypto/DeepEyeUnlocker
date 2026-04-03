@@ -681,6 +681,219 @@ select.field-input option {
   width: 100%;
 }
 
+.frp-brand-grid,
+.frp-chipset-grid,
+.frp-method-grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.frp-brand-grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.frp-chipset-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.frp-method-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+
+.frp-selector,
+.frp-chipset-option,
+.frp-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  text-align: left;
+  transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base);
+}
+
+.frp-selector,
+.frp-chipset-option,
+.frp-search-result {
+  cursor: pointer;
+}
+
+.frp-selector:hover,
+.frp-chipset-option:hover,
+.frp-search-result:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg-elevated);
+  transform: translateY(-1px);
+}
+
+.frp-selector.is-active,
+.frp-chipset-option.is-active,
+.frp-search-result.is-active,
+.frp-method-card.is-active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-secondary));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.frp-selector-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.frp-selector-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.frp-search-list,
+.frp-programming-list,
+.frp-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.frp-programming-row,
+.frp-route-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.frp-programming-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.frp-programming-path {
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.frp-method-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.frp-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.frp-meta-list strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.frp-risk-badge,
+.frp-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.frp-risk-badge[data-level="LOW"] {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
+}
+
+.frp-risk-badge[data-level="MEDIUM"] {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.frp-risk-badge[data-level="HIGH"] {
+  color: #ff7043;
+  border-color: rgba(255, 112, 67, 0.5);
+}
+
+.frp-risk-badge[data-level="EXTREME"] {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 45%, transparent);
+}
+
+.frp-status-chip {
+  color: var(--color-text-secondary);
+}
+
+.frp-console-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.frp-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(4, 8, 14, 0.78);
+}
+
+.frp-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(560px, calc(100vw - 32px));
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+}
+
+.frp-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.frp-dialog-copy {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 860px) {
+  .frp-programming-row,
+  .frp-route-row {
+    flex-direction: column;
+  }
+}
+
 .tab-row {
   display: flex;
   gap: var(--space-2);

@@ -62,6 +62,7 @@ use commands::updater::{check_for_update, install_update};
 use commands::edl::{edl_detect_device, edl_read_partition, edl_write_partition, edl_erase_partition, edl_reboot, edl_get_gpt};
 use commands::rom_flasher::{rom_sideload_zip, rom_flash_partition, rom_wipe_data, rom_reboot_recovery, rom_reboot_bootloader};
 use commands::device_history::{history_add_entry, history_get_entries, history_clear, history_delete_entry, history_export_json};
+use commands::unisoc::unisoc_detect_device;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -329,12 +330,13 @@ pub fn run() {
             // Stage 26 — EDL mode
             edl_detect_device,
             edl_read_partition,
-            edl_write_partition,
-            edl_erase_partition,
-            edl_reboot,
-            edl_get_gpt,
-            // Stage 27 — Custom ROM flasher
-            rom_sideload_zip,
+             edl_write_partition,
+             edl_erase_partition,
+             edl_reboot,
+             edl_get_gpt,
+             unisoc_detect_device,
+             // Stage 27 — Custom ROM flasher
+             rom_sideload_zip,
             rom_flash_partition,
             rom_wipe_data,
             rom_reboot_recovery,

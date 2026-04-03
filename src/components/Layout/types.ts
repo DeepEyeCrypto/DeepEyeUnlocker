@@ -47,7 +47,7 @@ const DESKTOP_ONLY_HINT = "Available on Desktop only";
 export const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", icon: "H", label: "Dashboard", androidOrder: 0 },
   { id: "adbtools", icon: "AD", label: "ADB Tools", visibleOn: "android", enabledOn: "android", androidOrder: 1 },
-  { id: "frp", icon: "FR", label: "FRP Bypass", visibleOn: "android", enabledOn: "android", androidOrder: 2 },
+  { id: "frp", icon: "FR", label: "FRP Bypass", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "DESKTOP", androidOrder: 2 },
   { id: "edl", icon: "Q", label: "Qualcomm EDL", androidOrder: 3 },
   { id: "mtk", icon: "MT", label: "MTK Tools", visibleOn: "android", enabledOn: "android", androidOrder: 4 },
   { id: "romflasher", icon: "FB", label: "Fastboot Flash", androidOrder: 5 },
