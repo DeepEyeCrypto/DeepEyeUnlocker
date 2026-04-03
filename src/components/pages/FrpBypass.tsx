@@ -158,7 +158,7 @@ function formatUnisocProbeOutput(info: UnisocDeviceInfo): string {
 
 export default function FrpBypassPage() {
   const platform = getPlatform();
-  const desktopExecutionEnabled = platform !== "android" && platform !== "ios";
+  const desktopExecutionEnabled = platform !== "ios";
 
   const {
     databaseVersion,
