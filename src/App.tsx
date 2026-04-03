@@ -1,54 +1,58 @@
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { AppShell } from "./components/Layout/AppShell";
 import type { NavId } from "./components/Layout/types";
 import { DeviceCard } from "./components/DeviceCard";
 import { TerminalLog } from "./components/ui/TerminalLog";
+import { PageSkeleton } from "./components/ui/PageSkeleton";
 import DashboardPage from "./pages/Dashboard";
-import Activation from "./components/pages/Activation";
-import Jailbreak from "./components/pages/Jailbreak";
-import Toolbox from "./components/pages/Toolbox";
-import FMIPage from "./components/pages/FMI";
-import PurplePage from "./components/pages/PurpleMode";
-import BootFilesPage from "./components/pages/BootFiles";
-import SHSHPage from "./components/pages/SHSH";
-import DiagnosticsPage from "./components/pages/Diagnostics";
-import RestorePage from "./components/pages/Restore";
-import CveDashboard from "./components/pages/CveDashboard";
-import VaultPage from "./components/pages/Vault";
-import IdentityPage from "./components/pages/Identity";
-import AdbToolsPage from "./components/pages/AdbTools";
-import FrpBypassPage from "./components/pages/FrpBypass";
-import MassExtraction from "./components/pages/MassExtraction";
-import AdvancedPage from "./components/pages/Advanced";
-import UpdaterPage from "./components/pages/Updater";
-import EdlPage from "./components/pages/EdlMode";
-import MtkToolsPage from "./components/pages/MtkTools";
-import RomFlasherPage from "./components/pages/RomFlasher";
-import DeviceHistoryPage from "./components/pages/DeviceHistory";
+
+// Lazy-loaded heavy pages
+import React from "react";
+const Activation = React.lazy(() => import("../components/pages/Activation"));
+const Jailbreak = React.lazy(() => import("../components/pages/Jailbreak"));
+const Toolbox = React.lazy(() => import("../components/pages/Toolbox"));
+const FMIPage = React.lazy(() => import("../components/pages/FMI"));
+const PurplePage = React.lazy(() => import("../components/pages/PurpleMode"));
+const BootFilesPage = React.lazy(() => import("../components/pages/BootFiles"));
+const SHSHPage = React.lazy(() => import("../components/pages/SHSH"));
+const DiagnosticsPage = React.lazy(() => import("../components/pages/Diagnostics"));
+const RestorePage = React.lazy(() => import("../components/pages/Restore"));
+const CveDashboard = React.lazy(() => import("../components/pages/CveDashboard"));
+const VaultPage = React.lazy(() => import("../components/pages/Vault"));
+const IdentityPage = React.lazy(() => import("../components/pages/Identity"));
+const AdbToolsPage = React.lazy(() => import("../components/pages/AdbTools"));
+const FrpBypassPage = React.lazy(() => import("../components/pages/FrpBypass"));
+const MassExtraction = React.lazy(() => import("../components/pages/MassExtraction"));
+const AdvancedPage = React.lazy(() => import("../components/pages/Advanced"));
+const UpdaterPage = React.lazy(() => import("../components/pages/Updater"));
+const EdlPage = React.lazy(() => import("../components/pages/EdlMode"));
+const MtkToolsPage = React.lazy(() => import("../components/pages/MtkTools"));
+const RomFlasherPage = React.lazy(() => import("../components/pages/RomFlasher"));
+const DeviceHistoryPage = React.lazy(() => import("../components/pages/DeviceHistory"));
 
 const PAGES: Record<NavId, JSX.Element> = {
   dashboard: <DashboardPage />,
-  adbtools: <AdbToolsPage />,
-  frp: <FrpBypassPage />,
-  activation: <Activation />,
-  fmi: <FMIPage />,
-  jailbreak: <Jailbreak />,
-  purple: <PurplePage />,
-  bootfiles: <BootFilesPage />,
-  toolbox: <Toolbox />,
-  shsh: <SHSHPage />,
-  diagnostics: <DiagnosticsPage />,
-  restore: <RestorePage />,
-  cve: <CveDashboard />,
-  vault: <VaultPage />,
-  identity: <IdentityPage />,
-  extraction: <MassExtraction />,
-  advanced: <AdvancedPage />,
-  updater: <UpdaterPage />,
-  edl: <EdlPage />,
-  mtk: <MtkToolsPage />,
-  romflasher: <RomFlasherPage />,
-  history: <DeviceHistoryPage />,
+  adbtools: <Suspense fallback={<PageSkeleton />}><AdbToolsPage /></Suspense>,
+  frp: <Suspense fallback={<PageSkeleton />}><FrpBypassPage /></Suspense>,
+  activation: <Suspense fallback={<PageSkeleton />}><Activation /></Suspense>,
+  fmi: <Suspense fallback={<PageSkeleton />}><FMIPage /></Suspense>,
+  jailbreak: <Suspense fallback={<PageSkeleton />}><Jailbreak /></Suspense>,
+  purple: <Suspense fallback={<PageSkeleton />}><PurplePage /></Suspense>,
+  bootfiles: <Suspense fallback={<PageSkeleton />}><BootFilesPage /></Suspense>,
+  toolbox: <Suspense fallback={<PageSkeleton />}><Toolbox /></Suspense>,
+  shsh: <Suspense fallback={<PageSkeleton />}><SHSHPage /></Suspense>,
+  diagnostics: <Suspense fallback={<PageSkeleton />}><DiagnosticsPage /></Suspense>,
+  restore: <Suspense fallback={<PageSkeleton />}><RestorePage /></Suspense>,
+  cve: <Suspense fallback={<PageSkeleton />}><CveDashboard /></Suspense>,
+  vault: <Suspense fallback={<PageSkeleton />}><VaultPage /></Suspense>,
+  identity: <Suspense fallback={<PageSkeleton />}><IdentityPage /></Suspense>,
+  extraction: <Suspense fallback={<PageSkeleton />}><MassExtraction /></Suspense>,
+  advanced: <Suspense fallback={<PageSkeleton />}><AdvancedPage /></Suspense>,
+  updater: <Suspense fallback={<PageSkeleton />}><UpdaterPage /></Suspense>,
+  edl: <Suspense fallback={<PageSkeleton />}><EdlPage /></Suspense>,
+  mtk: <Suspense fallback={<PageSkeleton />}><MtkToolsPage /></Suspense>,
+  romflasher: <Suspense fallback={<PageSkeleton />}><RomFlasherPage /></Suspense>,
+  history: <Suspense fallback={<PageSkeleton />}><DeviceHistoryPage /></Suspense>,
 };
 
 export default function App() {

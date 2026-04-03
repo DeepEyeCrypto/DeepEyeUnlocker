@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "bundle:analyze": "vite-bundle-visualizer",
     "android:release": "./gradlew --stacktrace --info assembleRelease",
     "android:release:ci": "./gradlew --stacktrace --info --no-daemon assembleRelease",
     "tauri": "tauri",
