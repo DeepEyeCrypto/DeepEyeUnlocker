@@ -241,34 +241,36 @@
   color: var(--color-text-primary);
 }
 
-.titlebar-controls {
-  -webkit-app-region: no-drag;
+.mac-traffic-lights {
   display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: var(--space-4);
+  -webkit-app-region: no-drag;
 }
 
-.tb-btn {
-  width: 46px;
-  height: var(--titlebar-height);
+.mac-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
-  transition: background var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: filter var(--transition-fast);
 }
 
-.tb-btn:hover {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-primary);
+.mac-btn:hover {
+  filter: brightness(0.85);
 }
 
-.tb-close:hover {
-  background: var(--color-error);
-  color: var(--color-text-primary);
-}
+.mac-close { background-color: #ff5f56; }
+.mac-min { background-color: #ffbd2e; }
+.mac-max { background-color: #27c93f; }
 
 .btn {
   display: inline-flex;

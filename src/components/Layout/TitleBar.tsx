@@ -5,18 +5,12 @@ export function TitleBar() {
   return (
     <div className="titlebar" data-tauri-drag-region>
       <div className="titlebar-left" data-tauri-drag-region>
+        <div className="mac-traffic-lights" onDoubleClick={(e) => e.stopPropagation()}>
+          <button onClick={() => void win.close()} className="mac-btn mac-close" title="Close" />
+          <button onClick={() => void win.minimize()} className="mac-btn mac-min" title="Minimize" />
+          <button onClick={() => void win.toggleMaximize()} className="mac-btn mac-max" title="Maximize" />
+        </div>
         <span className="titlebar-title">DeepEye Unlocker</span>
-      </div>
-      <div className="titlebar-controls">
-        <button onClick={() => void win.minimize()} className="tb-btn tb-min" title="Minimize">
-          <span>─</span>
-        </button>
-        <button onClick={() => void win.toggleMaximize()} className="tb-btn tb-max" title="Maximize">
-          <span>□</span>
-        </button>
-        <button onClick={() => void win.close()} className="tb-btn tb-close" title="Close">
-          <span>✕</span>
-        </button>
       </div>
     </div>
   );
