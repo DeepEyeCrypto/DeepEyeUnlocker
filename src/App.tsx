@@ -16,15 +16,20 @@ import RestorePage from "./components/pages/Restore";
 import CveDashboard from "./components/pages/CveDashboard";
 import VaultPage from "./components/pages/Vault";
 import IdentityPage from "./components/pages/Identity";
+import AdbToolsPage from "./components/pages/AdbTools";
+import FrpBypassPage from "./components/pages/FrpBypass";
 import MassExtraction from "./components/pages/MassExtraction";
 import AdvancedPage from "./components/pages/Advanced";
 import UpdaterPage from "./components/pages/Updater";
 import EdlPage from "./components/pages/EdlMode";
+import MtkToolsPage from "./components/pages/MtkTools";
 import RomFlasherPage from "./components/pages/RomFlasher";
 import DeviceHistoryPage from "./components/pages/DeviceHistory";
 
 const PAGES: Record<NavId, JSX.Element> = {
   dashboard: <DashboardPage />,
+  adbtools: <AdbToolsPage />,
+  frp: <FrpBypassPage />,
   activation: <Activation />,
   fmi: <FMIPage />,
   jailbreak: <Jailbreak />,
@@ -41,6 +46,7 @@ const PAGES: Record<NavId, JSX.Element> = {
   advanced: <AdvancedPage />,
   updater: <UpdaterPage />,
   edl: <EdlPage />,
+  mtk: <MtkToolsPage />,
   romflasher: <RomFlasherPage />,
   history: <DeviceHistoryPage />,
 };
@@ -84,4 +90,3 @@ export default function App() {
     </AppShell>
   );
 }
-
