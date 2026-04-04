@@ -1,3 +1,14 @@
+## [2027.1.1] — 2026-04-04
+
+### 🎨 Brand Identity Refresh — Visual Orchestration
+- **Universal Branding**: Complete overhaul of application icons and visual assets across all supported platforms (Desktop, Mobile, and Web).
+- **Tauri (Desktop)**: Regenerated icon set (32x32 to 512x512) for Windows (ico), macOS (icns), and Linux, ensuring crisp rendering on high-DPI displays.
+- **Android (Mobile)**: Updated launcher icons (`ic_launcher`, `ic_launcher_round`, `ic_launcher_foreground`) for all DPI densities, providing a unified look on mobile devices.
+- **Web Frontend**: Refreshed favicon and apple-touch-icon in the public directory to match the new professional DeepEye Unlocker aesthetic.
+- **Canonical Source**: Established `src-tauri/icons/icon.png` as the primary branding source of truth for future asset pipelines.
+
+---
+
 ## [2027.1.0] — 2026-04-04
 
 ### 🚀 Final Release v2027.1.0 — Production Ready

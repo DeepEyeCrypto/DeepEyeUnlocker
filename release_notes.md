@@ -1,9 +1,16 @@
-# DeepEye Unlocker v2026.33.0
+# DeepEye Unlocker v2027.1.1
 
-## [Unreleased]
-### Added
-- New device support for Xiaomi 13 Ultra
-- EDL protocol enhancements for Qualcomm SD 8 Gen 2
+## [2027.1.1]
+### 🎨 Universal Brand Identity Refresh
+All platforms have been updated with the new official DeepEye Unlocker logo.
+- **Desktop**: macOS (Universal), Windows (NSIS), and Linux (AppImage) now feature high-DPI platform-specific icons.
+- **Mobile**: Android launcher assets (adaptive and legacy) have been completely refreshed.
+- **Web**: Favicons and Apple Touch Icons are now synchronized with the new aesthetic.
+
+## [2027.1.0]
+### 🚀 Final Production Release
+- **Gold Master**: Stabilized all core forensic and bypass protocols for public distribution.
+- **Asset Pipeline**: Established secure release infrastructure with automated tagging.
 
 ### Removed
 - RemoteShare functionality due to security concerns
