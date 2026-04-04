@@ -1,6 +1,6 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2027.1.1",
+  "version": "2027.1.2",
   "identifier": "com.deepeye.otg",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -77,13 +77,7 @@
           "x": 480,
           "y": 170
         }
-      },
-      "frameworks": [],
-      "exceptionDomain": "",
-      "signingIdentity": null,
-      "hardenedRuntime": false,
-      "entitlements": "Entitlements.plist",
-      "infoPlist": "Info.plist"
+      }
     }
   },
   "plugins": {
