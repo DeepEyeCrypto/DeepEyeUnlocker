@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "deep-eye-unlocker-desktop"
-version = "2026.30.0"
+version = "2027.1.0"
 dependencies = [
  "chrono",
  "serde",
