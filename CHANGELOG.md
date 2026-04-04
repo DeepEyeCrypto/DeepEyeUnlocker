@@ -43,6 +43,17 @@
 
 ---
 
+## [2027.2.0] — 2026-04-04
+
+### Added
+- **Real Samsung FRP Bypass**: Implemented actual Samsung FRP bypass flow using ADB shell commands with step-by-step UI progress tracking.
+- **Auto Brand Detection**: On device connect, automatically detects brand via `adb shell getprop ro.product.brand` and maps to correct FRP method.
+- **Qualcomm EDL Mode Support**: Added EDL mode detection (VID=0x05C6, PID=0x9008) with UI indicator and `adb reboot edl` command support.
+- **Step-by-Step FRP Progress UI**: Clear progress steps (Step 1 → Step 2 → Step 3 → Success/Fail) for better user feedback during bypass operations.
+
+### Changed
+- Version synchronization across package.json, Cargo.toml, and tauri.conf.json to 2027.2.0.
+
 ## [Unreleased]
 
 ### Added

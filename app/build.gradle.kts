@@ -14,8 +14,8 @@ android {
         applicationId = "com.deepeye.otg"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2027011
-        versionName = "2027.1.1"
+        versionCode = 2027020
+        versionName = "2027.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
