@@ -9,6 +9,7 @@ pub mod bypass;
 pub mod vault;
 pub mod ramdisk;
 pub mod bypass_advanced;
+pub mod connected_devices;
 pub mod identity;
 pub mod ticket;
 pub mod orchestrator;

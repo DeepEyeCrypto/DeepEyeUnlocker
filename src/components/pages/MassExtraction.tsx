@@ -17,21 +17,17 @@ export default function MassExtraction() {
   ];
 
   const startExtraction = async () => {
-    setStatus("running"); setOutput("Initializing DeepEye Extraction Engine...\nMounting Data Partition...");
-    setProgress(10);
-    
-    // Simulate multi-stage extraction
-    setTimeout(() => { setOutput(o => o + "\n[1/6] Extracting Photos..."); setProgress(30); }, 1000);
-    setTimeout(() => { setOutput(o => o + "\n[2/6] Extracting Messages..."); setProgress(50); }, 2000);
-    setTimeout(() => { setOutput(o => o + "\n[3/6] Decrypting Keychain..."); setProgress(70); }, 3000);
-    
+    setStatus("running");
+    setOutput("Initializing DeepEye Extraction Engine...\nWaiting for backend extraction events...");
+    setProgress(0);
+
     try {
       const res = await invoke<string>("ios_mass_extract");
-      setOutput(o => o + "\n" + res);
+      setOutput(res.trim().length > 0 ? res : "Mass extraction completed.");
       setProgress(100);
       setStatus("success");
     } catch (e: any) {
-      setOutput(o => o + "\nError: " + String(e));
+      setOutput("Error: " + String(e));
       setStatus("error");
     }
   };
@@ -83,10 +79,10 @@ export default function MassExtraction() {
                 transition: "all 0.3s"
               }} />
             </div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>Speed: 45 MB/s</div>
+            <div style={{ fontSize: 11, color: "#64748b" }}>Progress reflects backend-confirmed completion only.</div>
           </div>
           <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>
-            Destination: ~/DeepEyeUnlocker/Forensics/
+            Destination path is resolved by the backend command output.
           </div>
         </div>
       </div>

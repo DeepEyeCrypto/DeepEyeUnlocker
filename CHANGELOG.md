@@ -1,3 +1,21 @@
+## [2027.4.0] — 2026-04-05
+
+### ✨ New Features
+- Wait Queue: Queue any operation before device connects — auto-executes the moment the phone is plugged in.
+
+### 🎨 UI Improvements
+- Glassmorphism action buttons with hover glow across the dashboard actions.
+- Bottom navigation cleaned up to an icon-only minimal layout.
+- Android runtime detection message refined to a subtler italic presentation.
+
+### 🔧 Bug Fixes
+- Removed all remaining mock and fake device data from the desktop workflow.
+- Added live ADB device polling on a 2-second interval for connected device state.
+- Switched vault flows to real user inputs and real session identifiers.
+- Removed simulated extraction progress in favor of actual runtime state.
+
+---
+
 ## [2027.1.1] — 2026-04-04
 
 ### 🎨 Brand Identity Refresh — Visual Orchestration

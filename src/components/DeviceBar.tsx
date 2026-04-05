@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-type DeviceIdentity = {
-  model?: string;
-  version?: string;
-  ecid?: string;
-  chip_id?: string;
-  cpid?: string;
-  udid?: string;
+type ConnectedDevice = {
+  id: string;
+  model: string;
+  serial: string;
+  os: string;
+  mode: string;
+  source: string;
 };
 
 type DeviceBarState = {
@@ -27,17 +27,22 @@ export default function DeviceBar() {
   const handleDetect = async () => {
     setIsDetecting(true);
     try {
-      const modeResult = await invoke<{ mode: string }>("ios_poll_orchestrator");
-      const identity = await invoke<DeviceIdentity>("ios_device_identity", { udid: "" });
+      const devices = await invoke<ConnectedDevice[]>("get_connected_devices");
+      const appleDevice = devices.find((entry) => entry.source === "apple") ?? null;
+
+      if (!appleDevice) {
+        setDevice(null);
+        return;
+      }
 
       setDevice({
-        name: identity.model || "iPhone (Detected)",
-        os: identity.version || "iOS",
-        mode: modeResult.mode,
-        ecid: identity.ecid || "N/A",
-        chip: identity.chip_id || "N/A",
-        cpid: identity.cpid || "N/A",
-        udid: identity.udid,
+        name: appleDevice.model,
+        os: appleDevice.os,
+        mode: appleDevice.mode,
+        ecid: appleDevice.serial || "N/A",
+        chip: appleDevice.source.toUpperCase(),
+        cpid: appleDevice.id || "N/A",
+        udid: appleDevice.id,
       });
     } catch (error) {
       console.error("[DeviceBar] Detection failed:", error);
@@ -66,10 +71,10 @@ export default function DeviceBar() {
           </div>
           <div className="devicebar-ident-text">
             <div className={`devicebar-title ${device ? "active" : ""}`}>
-              {device ? device.name : "No Device Connected"}
+              {device ? device.name : "No device connected"}
             </div>
             <div className="devicebar-subtitle">
-              {device ? `${device.os} · ${device.mode}` : isDetecting ? "Scanning USB ports..." : "Awaiting connection..."}
+              {device ? `${device.os} · ${device.mode}` : isDetecting ? "Scanning USB ports..." : "Waiting for device..."}
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ export function BottomNav({ active, onNavigate, items }: BottomNavProps) {
             key={item.id}
             type="button"
             title={item.title}
+            aria-label={item.label}
             aria-disabled={item.disabled}
             tabIndex={item.disabled ? -1 : 0}
             className={`bottom-nav-item ${active === item.id ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
@@ -25,10 +26,7 @@ export function BottomNav({ active, onNavigate, items }: BottomNavProps) {
             }}
           >
             <span className="bottom-nav-icon">{item.icon}</span>
-            <span className="bottom-nav-meta">
-              <span className="bottom-nav-label">{item.label}</span>
-              {item.disabled && item.badge && <span className="nav-badge">{item.badge}</span>}
-            </span>
+            <span className="visually-hidden">{item.label}</span>
           </button>
         ))}
       </div>

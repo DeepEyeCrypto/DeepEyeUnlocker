@@ -1,9 +1,12 @@
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useState } from "react";
 import { AppShell } from "./components/Layout/AppShell";
 import type { NavId } from "./components/Layout/types";
 import { DeviceCard } from "./components/DeviceCard";
 import { TerminalLog } from "./components/ui/TerminalLog";
 import { PageSkeleton } from "./components/ui/PageSkeleton";
+import { useDevicePolling } from "./hooks/useDevicePolling";
+import { DASHBOARD_CONFIG } from "./lib/dashboard";
+import { getPlatform } from "./lib/platform";
 import DashboardPage from "./pages/Dashboard";
 
 // Lazy-loaded heavy pages
@@ -30,63 +33,56 @@ const MtkToolsPage = React.lazy(() => import("./components/pages/MtkTools.tsx"))
 const RomFlasherPage = React.lazy(() => import("./components/pages/RomFlasher.tsx"));
 const DeviceHistoryPage = React.lazy(() => import("./components/pages/DeviceHistory.tsx"));
 
-const PAGES: Record<NavId, JSX.Element> = {
-  dashboard: <DashboardPage />,
-  adbtools: <Suspense fallback={<PageSkeleton />}><AdbToolsPage /></Suspense>,
-  frp: <Suspense fallback={<PageSkeleton />}><FrpBypassPage /></Suspense>,
-  activation: <Suspense fallback={<PageSkeleton />}><Activation /></Suspense>,
-  fmi: <Suspense fallback={<PageSkeleton />}><FMIPage /></Suspense>,
-  jailbreak: <Suspense fallback={<PageSkeleton />}><Jailbreak /></Suspense>,
-  purple: <Suspense fallback={<PageSkeleton />}><PurplePage /></Suspense>,
-  bootfiles: <Suspense fallback={<PageSkeleton />}><BootFilesPage /></Suspense>,
-  toolbox: <Suspense fallback={<PageSkeleton />}><Toolbox /></Suspense>,
-  shsh: <Suspense fallback={<PageSkeleton />}><SHSHPage /></Suspense>,
-  diagnostics: <Suspense fallback={<PageSkeleton />}><DiagnosticsPage /></Suspense>,
-  restore: <Suspense fallback={<PageSkeleton />}><RestorePage /></Suspense>,
-  cve: <Suspense fallback={<PageSkeleton />}><CveDashboard /></Suspense>,
-  vault: <Suspense fallback={<PageSkeleton />}><VaultPage /></Suspense>,
-  identity: <Suspense fallback={<PageSkeleton />}><IdentityPage /></Suspense>,
-  extraction: <Suspense fallback={<PageSkeleton />}><MassExtraction /></Suspense>,
-  advanced: <Suspense fallback={<PageSkeleton />}><AdvancedPage /></Suspense>,
-  updater: <Suspense fallback={<PageSkeleton />}><UpdaterPage /></Suspense>,
-  edl: <Suspense fallback={<PageSkeleton />}><EdlPage /></Suspense>,
-  mtk: <Suspense fallback={<PageSkeleton />}><MtkToolsPage /></Suspense>,
-  romflasher: <Suspense fallback={<PageSkeleton />}><RomFlasherPage /></Suspense>,
-  history: <Suspense fallback={<PageSkeleton />}><DeviceHistoryPage /></Suspense>,
-};
-
 export default function App() {
   const [page, setPage] = useState<NavId>("dashboard");
-  const logs = useMemo(
-    () => [
-      "[info] USB transport initialized",
-      "Device handshake complete",
-      "Mode detected: Apple Recovery",
-      "Ready for operation dispatch",
-    ],
-    [],
+  const platform = getPlatform();
+  const { primaryDevice, state, error, logs, refresh } = useDevicePolling(
+    DASHBOARD_CONFIG.POLLING_INTERVAL_MS,
   );
+
+  const pages: Record<NavId, JSX.Element> = {
+    dashboard: (
+      <DashboardPage
+        platform={platform}
+        connectionState={state}
+        error={error}
+        device={primaryDevice}
+        onRefresh={refresh}
+      />
+    ),
+    adbtools: <Suspense fallback={<PageSkeleton />}><AdbToolsPage /></Suspense>,
+    frp: <Suspense fallback={<PageSkeleton />}><FrpBypassPage /></Suspense>,
+    activation: <Suspense fallback={<PageSkeleton />}><Activation /></Suspense>,
+    fmi: <Suspense fallback={<PageSkeleton />}><FMIPage /></Suspense>,
+    jailbreak: <Suspense fallback={<PageSkeleton />}><Jailbreak /></Suspense>,
+    purple: <Suspense fallback={<PageSkeleton />}><PurplePage /></Suspense>,
+    bootfiles: <Suspense fallback={<PageSkeleton />}><BootFilesPage /></Suspense>,
+    toolbox: <Suspense fallback={<PageSkeleton />}><Toolbox /></Suspense>,
+    shsh: <Suspense fallback={<PageSkeleton />}><SHSHPage /></Suspense>,
+    diagnostics: <Suspense fallback={<PageSkeleton />}><DiagnosticsPage /></Suspense>,
+    restore: <Suspense fallback={<PageSkeleton />}><RestorePage /></Suspense>,
+    cve: <Suspense fallback={<PageSkeleton />}><CveDashboard /></Suspense>,
+    vault: <Suspense fallback={<PageSkeleton />}><VaultPage /></Suspense>,
+    identity: <Suspense fallback={<PageSkeleton />}><IdentityPage /></Suspense>,
+    extraction: <Suspense fallback={<PageSkeleton />}><MassExtraction /></Suspense>,
+    advanced: <Suspense fallback={<PageSkeleton />}><AdvancedPage /></Suspense>,
+    updater: <Suspense fallback={<PageSkeleton />}><UpdaterPage /></Suspense>,
+    edl: <Suspense fallback={<PageSkeleton />}><EdlPage /></Suspense>,
+    mtk: <Suspense fallback={<PageSkeleton />}><MtkToolsPage /></Suspense>,
+    romflasher: <Suspense fallback={<PageSkeleton />}><RomFlasherPage /></Suspense>,
+    history: <Suspense fallback={<PageSkeleton />}><DeviceHistoryPage /></Suspense>,
+  };
 
   return (
     <AppShell active={page} onNavigate={setPage}>
       <div className="dashboard-grid">
-        <DeviceCard
-          device={{
-            status: "connected",
-            model: "DeepEye Testbed",
-            serial: "DEEPEYE-OTG-001",
-            os: "Android 14 / iOS 17",
-            mode: "Recovery",
-            bootloaderStatus: "Unlocked",
-            carrier: "Research Lab",
-          }}
-        />
+        <DeviceCard device={primaryDevice} />
 
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Operation Console</h3>
           </div>
-          <div className="card-body">{PAGES[page]}</div>
+          <div className="card-body">{pages[page]}</div>
         </div>
 
         <TerminalLog lines={logs} />

@@ -6,6 +6,8 @@ export default function VaultPage() {
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState<"idle"|"running"|"success"|"error">("idle");
   const [vaultList, setVaultList] = useState<string[]>([]);
+  const [ecid, setEcid] = useState("");
+  const [tokenPath, setTokenPath] = useState("");
 
   const run = async (id: string, args: Record<string, string> = {}) => {
     setStatus("running"); setOutput("");
@@ -33,8 +35,23 @@ export default function VaultPage() {
         <div className="glass" style={{ padding: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#475569" }}>Local to Cloud</div>
           <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Secure your locally extracted tickets in the DeepEye vault.</p>
+          <input
+            value={ecid}
+            onChange={(event) => setEcid(event.target.value)}
+            placeholder="Enter actual ECID"
+            className="field-input"
+            style={{ marginBottom: 8 }}
+          />
+          <input
+            value={tokenPath}
+            onChange={(event) => setTokenPath(event.target.value)}
+            placeholder="Enter extracted token path"
+            className="field-input"
+            style={{ marginBottom: 8 }}
+          />
           <button className="btn primary" style={{ width: "100%" }}
-            onClick={() => run("push_to_cloud_vault", { ecid: "0x8020", token_path: "/dummy/path" })}>
+            disabled={!ecid.trim() || !tokenPath.trim()}
+            onClick={() => run("push_to_cloud_vault", { ecid: ecid.trim(), token_path: tokenPath.trim() })}>
             ⬆️ Push Record to Cloud
           </button>
         </div>
@@ -42,8 +59,16 @@ export default function VaultPage() {
         <div className="glass" style={{ padding: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#475569" }}>Cloud to Local</div>
           <p style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Recover records for any previously synced device.</p>
+          <input
+            value={ecid}
+            onChange={(event) => setEcid(event.target.value)}
+            placeholder="Enter actual ECID"
+            className="field-input"
+            style={{ marginBottom: 8 }}
+          />
           <button className="btn" style={{ width: "100%" }}
-            onClick={() => run("pull_from_cloud_vault", { ecid: "0x8020" })}>
+            disabled={!ecid.trim()}
+            onClick={() => run("pull_from_cloud_vault", { ecid: ecid.trim() })}>
             ⬇️ Pull Record from Cloud
           </button>
         </div>
