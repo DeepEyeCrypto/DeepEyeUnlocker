@@ -143,27 +143,37 @@ jobs:
           import sys
 
           target = os.environ["TARGET"]
-          preferred_root = Path("src-tauri") / "target" / target / "release" / "bundle"
-          search_roots = [preferred_root, Path("src-tauri") / "target"]
-          allowed_suffixes = {".dmg", ".deb", ".appimage", ".exe"}
+          target_patterns = {
+              # [INFERRED] Tauri v2 desktop bundles are emitted under target-specific bundle directories.
+              "universal-apple-darwin": [
+                  "src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg",
+              ],
+              "x86_64-pc-windows-msvc": [
+                  "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe",
+              ],
+              "x86_64-unknown-linux-gnu": [
+                  "src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage",
+              ],
+          }
+
+          patterns = target_patterns.get(target)
+          if not patterns:
+              print(f"Unsupported desktop target for artifact collection: {target}", file=sys.stderr)
+              sys.exit(1)
+
           collected: list[str] = []
 
-          def maybe_add(path: Path) -> None:
-              if path.is_file() and path.suffix.lower() in allowed_suffixes:
-                  collected.append(path.as_posix())
-
-          if preferred_root.exists():
-              for entry in preferred_root.rglob("*"):
-                  maybe_add(entry)
-
-          if not collected:
-              for entry in search_roots[1].rglob("*"):
-                  if entry.is_file() and "/release/bundle/" in entry.as_posix():
+          for pattern in patterns:
+              for entry in sorted(Path(".").glob(pattern)):
+                  if entry.is_file():
                       collected.append(entry.as_posix())
 
           collected = sorted(dict.fromkeys(collected))
 
           if not collected:
+              print("Checked artifact patterns:", file=sys.stderr)
+              for pattern in patterns:
+                  print(f" - {pattern}", file=sys.stderr)
               print(f"No desktop bundle artifacts found for target {target}", file=sys.stderr)
               sys.exit(1)
 
