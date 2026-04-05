@@ -1,7 +1,10 @@
 use serde::Serialize;
+#[cfg(target_os = "macos")]
 use serde_json::Value;
 use tauri::AppHandle;
+#[cfg(target_os = "macos")]
 use tauri_plugin_shell::process::CommandEvent;
+#[cfg(target_os = "macos")]
 use tauri_plugin_shell::ShellExt;
 
 const UNISOC_VENDOR_ID: &str = "0x1782";
