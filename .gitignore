@@ -30,6 +30,7 @@ dist/
 target/
 .tauri/
 src-tauri/target/
+.release-build-v*/
 
 # vendored python tools — strip their git history
 src-tauri/python/**/.git

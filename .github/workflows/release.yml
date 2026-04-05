@@ -1,5 +1,8 @@
 name: DeepEyeUnlocker Release
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     tags:
@@ -124,11 +127,11 @@ jobs:
       - name: Inspect desktop bundle output
         shell: bash
         run: |
-          echo "Inspecting src-tauri/target after build"
-          if [ -d src-tauri/target ]; then
-            find src-tauri/target -maxdepth 6 -type f | sort
+          echo "Inspecting target after build"
+          if [ -d target ]; then
+            find target -maxdepth 6 -type f | sort
           else
-            echo "src-tauri/target does not exist"
+            echo "target does not exist"
           fi
 
       - name: Collect desktop bundle artifacts
@@ -144,15 +147,15 @@ jobs:
 
           target = os.environ["TARGET"]
           target_patterns = {
-              # [INFERRED] Tauri v2 desktop bundles are emitted under target-specific bundle directories.
+              # [INFERRED] Workspace Cargo builds emit bundles under the repository root target/ directory, not src-tauri/target/.
               "universal-apple-darwin": [
-                  "src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg",
+                  "target/universal-apple-darwin/release/bundle/dmg/*.dmg",
               ],
               "x86_64-pc-windows-msvc": [
-                  "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe",
+                  "target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe",
               ],
               "x86_64-unknown-linux-gnu": [
-                  "src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage",
+                  "target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage",
               ],
           }
 
@@ -274,20 +277,49 @@ jobs:
           fi
 
       - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
         id: sign_apk
-        with:
-          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          # [INFERRED] Manual zipalign/apksigner execution avoids the deprecated set-output usage emitted by r0adkll/sign-android-release@v1.
+          RELEASE_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
+          UNSIGNED_APK="$(find "$RELEASE_DIR" -maxdepth 1 -type f -name '*-unsigned.apk' | head -n 1)"
+
+          if [ -z "$UNSIGNED_APK" ]; then
+            echo "No unsigned APK found in $RELEASE_DIR"
+            exit 1
+          fi
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          BUILD_TOOLS="$SDK_ROOT/build-tools/29.0.3"
+          KEYSTORE_PATH="$RUNNER_TEMP/deepeye-release.jks"
+          ALIGNED_APK="${UNSIGNED_APK%-unsigned.apk}-aligned.apk"
+          SIGNED_APK="${UNSIGNED_APK%-unsigned.apk}-signed.apk"
+
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED_APK" "$ALIGNED_APK"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$KEYSTORE_PATH" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass pass:"$ANDROID_STORE_PASSWORD" \
+            --key-pass pass:"$ANDROID_KEY_PASSWORD" \
+            --out "$SIGNED_APK" \
+            "$ALIGNED_APK"
+          "$BUILD_TOOLS/apksigner" verify "$SIGNED_APK"
+
+          echo "signed_apk=$SIGNED_APK" >> "$GITHUB_OUTPUT"
 
       - name: Rename signed APK
         id: rename_signed_apk
         shell: bash
         run: |
-          SIGNED_PATH="${{ steps.sign_apk.outputs.signedReleaseFile }}"
+          SIGNED_PATH="${{ steps.sign_apk.outputs.signed_apk }}"
           if [ ! -f "$SIGNED_PATH" ]; then
             echo "Signed APK not found at $SIGNED_PATH"
             exit 1
