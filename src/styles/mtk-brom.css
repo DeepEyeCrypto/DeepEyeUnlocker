@@ -1,0 +1,376 @@
+/* ═══════════════════════════════════════════════════════════════
+   MTK BROM Page — Day 5 Styles
+   Glassmorphism design system + terminal aesthetics
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Status badge ────────────────────────────────────────────── */
+.mtk-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  transition: all var(--transition-base);
+}
+
+.mtk-status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mtk-status-badge.idle {
+  background: rgba(100, 100, 100, 0.2);
+  border-color: rgba(100, 100, 100, 0.3);
+  color: #94a3b8;
+}
+.mtk-status-badge.idle .status-dot { background: #64748b; }
+
+.mtk-status-badge.working {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: #fbbf24;
+  animation: mtk-pulse 1.5s ease-in-out infinite;
+}
+.mtk-status-badge.working .status-dot {
+  background: #eab308;
+  animation: mtk-dot-pulse 1s ease-in-out infinite;
+}
+
+.mtk-status-badge.connected {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  animation: mtk-pulse 2s ease-in-out infinite;
+}
+.mtk-status-badge.connected .status-dot { background: #3b82f6; }
+
+.mtk-status-badge.ready {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.mtk-status-badge.ready .status-dot { background: #10b981; }
+
+.mtk-status-badge.error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+.mtk-status-badge.error .status-dot { background: #ef4444; }
+
+@keyframes mtk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes mtk-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.5; }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.mtk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.mtk-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mtk-chip-label {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.mtk-chip-label strong {
+  color: var(--color-text-accent);
+  font-weight: 600;
+}
+
+/* ── Two-column layout ───────────────────────────────────────── */
+.mtk-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* ── Info grid (device info panel) ────────────────────────────── */
+.mtk-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-4);
+}
+
+.mtk-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mtk-info-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.mtk-info-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.mtk-info-value.accent { color: var(--color-text-accent); }
+.mtk-info-value.success { color: var(--color-success); }
+.mtk-info-value.warn { color: var(--color-warning); }
+
+/* ── Operation buttons grid ──────────────────────────────────── */
+.mtk-ops-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.mtk-ops-grid .btn {
+  font-size: var(--font-size-xs);
+  padding: 8px 12px;
+  justify-content: flex-start;
+}
+
+.mtk-ops-grid .btn .btn-icon {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* ── Partition table ─────────────────────────────────────────── */
+.mtk-partition-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.mtk-partition-table th {
+  padding: 6px 10px;
+  text-align: left;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 10px;
+}
+
+.mtk-partition-table td {
+  padding: 6px 10px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mtk-partition-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-text-primary);
+}
+
+.mtk-partition-table tr.selected td {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--color-text-accent);
+}
+
+.mtk-partition-table .pt-name {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.mtk-partition-table .pt-type {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.mtk-partition-table .pt-type.boot {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.mtk-partition-table .pt-type.system {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.mtk-partition-table .pt-type.normal {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+}
+
+.mtk-partition-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ── IMEI repair section ─────────────────────────────────────── */
+.mtk-imei-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.mtk-imei-field label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mtk-imei-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-base);
+  box-sizing: border-box;
+}
+
+.mtk-imei-field input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px var(--color-accent-glow);
+}
+
+.mtk-imei-field input.invalid {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+.mtk-imei-field input.valid {
+  border-color: var(--color-success);
+}
+
+.mtk-imei-hint {
+  font-size: 10px;
+  color: var(--color-error);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+/* ── Activity log ────────────────────────────────────────────── */
+.mtk-activity-log {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mtk-activity-log .log-line {
+  color: #4ade80;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mtk-activity-log .log-line:last-child {
+  opacity: 1;
+}
+
+.mtk-activity-log .log-line .log-time {
+  color: #475569;
+  margin-right: 6px;
+}
+
+.mtk-activity-log .log-line.error {
+  color: #f87171;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.mtk-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: mtk-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes mtk-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error banner ────────────────────────────────────────────── */
+.mtk-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: #fca5a5;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Disabled state ──────────────────────────────────────────── */
+.mtk-ops-grid .btn:disabled,
+.mtk-imei-row .btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .mtk-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .mtk-imei-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mtk-ops-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mtk-header {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}

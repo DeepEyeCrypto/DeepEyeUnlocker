@@ -16,6 +16,7 @@ mod ssh_tunnel;
 mod crash_logs;
 mod ipsw_dl;
 mod developer;
+mod error;
 
 use commands::ios_backup::{ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack};
 use commands::adb::stream_adb_logs;
@@ -57,6 +58,13 @@ use commands::mtk::{
     mtk_erase_partition,
     mtk_device_info,
     mtk_unlock_bootloader,
+};
+use commands::mtk_brom::{
+    mtk_bypass_sla, mtk_da_erase_partition, mtk_da_read_partition,
+    mtk_da_write_partition, mtk_detect_auth_type, mtk_detect_device,
+    mtk_dump_preloader, mtk_erase_frp, mtk_format_userdata,
+    mtk_handshake_and_identify, mtk_jump_to_da, mtk_list_partitions,
+    mtk_read_imei, mtk_reboot, mtk_upload_da, mtk_write_imei,
 };
 use commands::bruteforce::run_pin_bruteforce;
 use commands::updater::{check_for_update, install_update};
@@ -227,6 +235,22 @@ pub fn run() {
             mtk_erase_partition,
             mtk_device_info,
             mtk_unlock_bootloader,
+            mtk_detect_device,
+            mtk_handshake_and_identify,
+             mtk_detect_auth_type,
+             mtk_bypass_sla,
+             mtk_upload_da,
+             mtk_jump_to_da,
+             mtk_erase_frp,
+             mtk_format_userdata,
+             mtk_read_imei,
+             mtk_write_imei,
+             mtk_reboot,
+             mtk_list_partitions,
+             mtk_da_read_partition,
+             mtk_da_write_partition,
+             mtk_dump_preloader,
+             mtk_da_erase_partition,
             get_ecid,
             get_board_config,
             save_shsh_all_signed,

@@ -87,6 +87,19 @@ jobs:
         run: |
           npm ci
 
+      - name: Cache Homebrew
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: brew-${{ runner.os }}-create-dmg
+
+      - name: Install create-dmg (macOS only)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install create-dmg
+
       - name: Show desktop toolchain versions
         shell: bash
         run: |
@@ -111,6 +124,8 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         env:
+          CI: true
+          TAURI_SKIP_NOTARIZATION: "true"
           # [INFERRED] codesign uses "-" for ad-hoc signing; an empty string makes Tauri request a missing keychain identity.
           APPLE_SIGNING_IDENTITY: "-"
           # [CONFIRMED] Rust panics during macOS packaging should emit a usable backtrace in CI logs.

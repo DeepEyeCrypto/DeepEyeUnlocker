@@ -21,6 +21,7 @@ pub mod exploit;
 pub mod f3arrain;
 pub mod hydra;
 pub mod mtk;
+pub mod mtk_brom;
 pub mod bruteforce;
 pub mod updater;
 pub mod edl;

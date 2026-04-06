@@ -32,6 +32,7 @@ const EdlPage = React.lazy(() => import("./components/pages/EdlMode.tsx"));
 const MtkToolsPage = React.lazy(() => import("./components/pages/MtkTools.tsx"));
 const RomFlasherPage = React.lazy(() => import("./components/pages/RomFlasher.tsx"));
 const DeviceHistoryPage = React.lazy(() => import("./components/pages/DeviceHistory.tsx"));
+const MtkBromPage = React.lazy(() => import("./pages/MtkBromPage.tsx"));
 
 export default function App() {
   const [page, setPage] = useState<NavId>("dashboard");
@@ -71,6 +72,7 @@ export default function App() {
     mtk: <Suspense fallback={<PageSkeleton />}><MtkToolsPage /></Suspense>,
     romflasher: <Suspense fallback={<PageSkeleton />}><RomFlasherPage /></Suspense>,
     history: <Suspense fallback={<PageSkeleton />}><DeviceHistoryPage /></Suspense>,
+    mtkbrom: <Suspense fallback={<PageSkeleton />}><MtkBromPage /></Suspense>,
   };
 
   return (

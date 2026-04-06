@@ -150,6 +150,19 @@ install_dependencies.bat   # Windows
 3. **Configure Security Settings** (if required)
 4. **Test Connection** using the built-in device detection
 
+### Linux udev Rule for MTK BROM / Preloader
+
+```bash
+# /etc/udev/rules.d/51-mtk-brom.rules
+SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="0003", MODE="0666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="2000", MODE="0666", GROUP="plugdev"
+
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+Reconnect the MediaTek device after reloading rules so `mtk_detect_device()` in `src-tauri/src/commands/mtk_brom.rs` can access BROM or Preloader mode without a permission failure.
+
 ---
 
 ## 🛠️ Usage Guide

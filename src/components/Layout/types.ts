@@ -22,7 +22,8 @@ export type NavId =
   | "edl"
   | "mtk"
   | "romflasher"
-  | "history";
+  | "history"
+  | "mtkbrom";
 
 type NavAvailability = "all" | "desktop" | "android";
 
@@ -50,6 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "frp", icon: "FR", label: "FRP Bypass", androidOrder: 2 },
   { id: "edl", icon: "Q", label: "Qualcomm EDL", androidOrder: 3 },
   { id: "mtk", icon: "MT", label: "MTK Tools", visibleOn: "android", enabledOn: "android", androidOrder: 4 },
+  { id: "mtkbrom", icon: "BR", label: "MTK BROM", androidOrder: 4.5 },
   { id: "romflasher", icon: "FB", label: "Fastboot Flash", androidOrder: 5 },
   { id: "identity", icon: "I", label: "Identity", androidOrder: 6 },
   { id: "history", icon: "L", label: "History", androidOrder: 7 },

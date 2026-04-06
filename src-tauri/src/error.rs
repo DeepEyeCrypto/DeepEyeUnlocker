@@ -1,6 +1,7 @@
 //! Error handling infrastructure for DeepEyeUnlocker
 //! Provides structured error types, retry logic, and user-friendly messages.
 
+#![allow(dead_code)]
 use serde::Serialize;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -53,7 +54,7 @@ pub struct DeviceError {
 impl DeviceError {
     pub fn new(category: ErrorCategory, message: impl Into<String>, hint: impl Into<String>) -> Self {
         Self {
-            category,
+            category: category.clone(),
             message: message.into(),
             hint: hint.into(),
             recoverable: matches!(
@@ -115,7 +116,7 @@ impl DeviceError {
         Self::new(
             ErrorCategory::ToolNotFound,
             format!("Required tool '{}' not found", tool),
-            &format!(
+            format!(
                 "Install '{}' and ensure it's in your PATH. Check the setup guide.",
                 tool
             ),
