@@ -1,3 +1,14 @@
+## [2027.8.2] — 2026-04-06
+
+### 🔧 Bug Fixes
+- Android OTG USB detection completed for MTK BROM and Qualcomm EDL device attach flows.
+- Corrected Qualcomm PID `0x900e` classification to EDL alongside `0x9008`.
+- Added USB attach auto-launch handling in the Android manifest and [`OtgActivity`](app/src/main/kotlin/com/deepeye/otg/ui/OtgActivity.kt).
+- Expanded [`device_filter.xml`](app/src/main/res/xml/device_filter.xml) coverage for MTK `0x0003` / `0x2000` and Qualcomm `0x9008` / `0x900e`.
+- Hardened bulk endpoint validation in [`UsbEndpointResolver.kt`](app/src/main/kotlin/com/deepeye/otg/usb/UsbEndpointResolver.kt).
+
+---
+
 ## [2027.4.0] — 2026-04-05
 
 ### ✨ New Features
