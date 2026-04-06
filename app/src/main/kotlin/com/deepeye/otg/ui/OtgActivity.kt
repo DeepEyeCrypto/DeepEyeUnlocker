@@ -5,6 +5,7 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.deepeye.otg.BuildConfig
 import com.deepeye.otg.DeepEyeApplication
 import com.deepeye.otg.service.ModelSyncManager
 import com.deepeye.otg.service.TunnelManager
@@ -29,6 +31,10 @@ import kotlinx.coroutines.withContext
 @dagger.hilt.android.AndroidEntryPoint
 class OtgActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "DeepEye-OtgActivity"
+    }
+
     private val app by lazy { application as DeepEyeApplication }
 
     private val viewModel: UsbViewModel by viewModels()
@@ -44,6 +50,12 @@ class OtgActivity : AppCompatActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        if (BuildConfig.DEBUG) {
+            debugListUsbDevices()
+        }
+
+        handleUsbIntent(intent)
 
         setContent {
             DeepEyeTheme {
@@ -87,11 +99,6 @@ class OtgActivity : AppCompatActivity() {
             }
         }
 
-        // Handle device already connected when app launched from USB attach intent.
-        extractDeviceFromIntent(intent)?.let { device ->
-            app.usbLifecycleManager.onDeviceAttached(device)
-        }
-
         // Handle Remote Session (Stage H)
         intent?.getStringExtra("REMOTE_SESSION")?.let { code ->
             tunnelManager.joinSession(code)
@@ -114,9 +121,48 @@ class OtgActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleUsbIntent(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Process-scoped manager is owned by Application, not Activity.
+    }
+
+    private fun handleUsbIntent(intent: Intent?) {
+        val action = intent?.action ?: return
+        val device = extractDeviceFromIntent(intent) ?: return
+
+        when (action) {
+            UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
+                Log.i(
+                    TAG,
+                    "USB attach intent received vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} name=${device.deviceName}"
+                )
+                app.usbLifecycleManager.onDeviceAttached(device)
+            }
+
+            UsbManager.ACTION_USB_DEVICE_DETACHED -> {
+                Log.i(
+                    TAG,
+                    "USB detach intent received vid=0x${device.vendorId.toString(16)} pid=0x${device.productId.toString(16)} name=${device.deviceName}"
+                )
+                app.usbLifecycleManager.onDeviceDetached(device)
+            }
+        }
+    }
+
+    private fun debugListUsbDevices() {
+        val usbManager = getSystemService(USB_SERVICE) as UsbManager
+        usbManager.deviceList.forEach { (name, device) ->
+            Log.d(
+                "USB_DEBUG",
+                "Device: $name | VID: ${device.vendorId.toString(16)} | PID: ${device.productId.toString(16)} | Name: ${device.deviceName}"
+            )
+        }
     }
 
     private fun extractDeviceFromIntent(intent: Intent?): UsbDevice? {

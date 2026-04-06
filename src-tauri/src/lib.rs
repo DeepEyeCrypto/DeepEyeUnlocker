@@ -69,10 +69,11 @@ use commands::mtk_brom::{
 };
 use commands::bruteforce::run_pin_bruteforce;
 use commands::updater::{check_for_update, install_update};
-use commands::edl::{edl_detect_device, edl_read_partition, edl_write_partition, edl_erase_partition, edl_reboot, edl_get_gpt};
+use commands::edl::{edl_find_device, edl_sahara_handshake, edl_upload_programmer, edl_configure, edl_read_partition, edl_write_partition, edl_erase_partition, edl_get_storage_info, edl_reboot};
 use commands::rom_flasher::{rom_sideload_zip, rom_flash_partition, rom_wipe_data, rom_reboot_recovery, rom_reboot_bootloader};
 use commands::device_history::{history_add_entry, history_get_entries, history_clear, history_delete_entry, history_export_json};
 use commands::unisoc::unisoc_detect_device;
+use commands::usb_utils::usb_debug_list_devices;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -253,6 +254,7 @@ pub fn run() {
              mtk_da_write_partition,
              mtk_dump_preloader,
              mtk_da_erase_partition,
+             usb_debug_list_devices,
             get_ecid,
             get_board_config,
             save_shsh_all_signed,
@@ -356,12 +358,15 @@ pub fn run() {
             check_for_update,
             install_update,
             // Stage 26 — EDL mode
-            edl_detect_device,
+            edl_find_device,
+            edl_sahara_handshake,
+            edl_upload_programmer,
+            edl_configure,
             edl_read_partition,
              edl_write_partition,
              edl_erase_partition,
+             edl_get_storage_info,
              edl_reboot,
-             edl_get_gpt,
              unisoc_detect_device,
              // Stage 27 — Custom ROM flasher
              rom_sideload_zip,

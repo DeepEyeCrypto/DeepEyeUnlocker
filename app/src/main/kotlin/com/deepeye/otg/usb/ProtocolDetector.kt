@@ -174,14 +174,14 @@ class ProtocolDetector {
         val vid = snapshot.vendorId
         val pid = snapshot.productId
 
-        return if (vid == 0x05C6 && pid == 0x9008) {
+        return if (vid == 0x05C6 && (pid == 0x9008 || pid == 0x900E)) {
             DetectionResult(
                 DeviceMode.QC_EDL,
                 ProtocolFamily.EDL,
                 100,
-                "Matched Qualcomm EDL VID/PID 0x05C6:0x9008"
+                "Matched Qualcomm EDL VID/PID 0x05C6:0x${"%04X".format(pid)}"
             )
-        } else if (vid == 0x05C6 && (pid == 0x9025 || pid == 0x900E || pid == 0x901D)) {
+        } else if (vid == 0x05C6 && (pid == 0x9025 || pid == 0x901D)) {
             DetectionResult(
                 DeviceMode.QC_DIAG,
                 ProtocolFamily.DIAG,

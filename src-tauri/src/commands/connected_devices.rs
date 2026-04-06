@@ -4,7 +4,7 @@ use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
 use crate::commands::activation::ios_check_activation_state;
-use crate::commands::edl::edl_detect_device;
+use crate::commands::edl::edl_find_device;
 use crate::commands::identity::ios_device_identity;
 use crate::commands::mtk::mtk_device_info;
 use crate::commands::orchestrator::ios_poll_orchestrator;
@@ -223,31 +223,22 @@ pub async fn get_connected_devices(app: AppHandle) -> Result<Vec<ConnectedDevice
         }
     }
 
-    if let Ok(edl) = edl_detect_device(app.clone()).await {
-        if edl.detected {
-            devices.push(ConnectedDevice {
-                id: if edl.serial.is_empty() {
-                    "edl-device".to_string()
-                } else {
-                    edl.serial.clone()
-                },
-                model: if edl.chipset.is_empty() {
-                    "Qualcomm Device".to_string()
-                } else {
-                    edl.chipset.clone()
-                },
-                serial: if edl.serial.is_empty() {
-                    "N/A".to_string()
-                } else {
-                    edl.serial.clone()
-                },
-                os: "Android".to_string(),
-                mode: edl.mode,
-                bootloader_status: "Unknown".to_string(),
-                carrier: None,
-                source: "edl".to_string(),
-            });
-        }
+    if let Ok(edl) = edl_find_device().await {
+        let serial_str = edl.serial.clone().unwrap_or_else(|| "N/A".to_string());
+        devices.push(ConnectedDevice {
+            id: if serial_str.is_empty() || serial_str == "N/A" {
+                "edl-device".to_string()
+            } else {
+                serial_str.clone()
+            },
+            model: "Qualcomm Device".to_string(), // In pure EDL we don't know the exact chipset until programmer speaks XML
+            serial: serial_str,
+            os: "Android".to_string(),
+            mode: if edl.programmer_loaded { "EDL Programmable".to_string() } else { "EDL 9008".to_string() },
+            bootloader_status: "Unknown".to_string(),
+            carrier: None,
+            source: "edl".to_string(),
+        });
     }
 
     if let Ok(mtk_info) = mtk_device_info(app.clone()).await {

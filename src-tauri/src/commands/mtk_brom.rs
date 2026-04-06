@@ -1,5 +1,9 @@
 use std::{fs, sync::{Mutex, MutexGuard}, time::Duration};
 
+use super::usb_utils::{
+    debug_list_usb_devices, open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN,
+    EP_OUT as USB_EP_OUT, TIMEOUT as USB_TIMEOUT,
+};
 use rusb::{
     Device, DeviceDescriptor, DeviceHandle, Direction, GlobalContext, TransferType, UsbContext,
 };
@@ -9,9 +13,9 @@ use thiserror::Error;
 const MTK_VENDOR_ID: u16 = 0x0e8d;
 const MTK_BROM_PID: u16 = 0x0003;
 const MTK_PRELOADER_PID: u16 = 0x2000;
-const BROM_EP_OUT: u8 = 0x01;
-const BROM_EP_IN: u8 = 0x81;
-const BROM_TIMEOUT: Duration = Duration::from_millis(2000);
+const BROM_EP_OUT: u8 = USB_EP_OUT;
+const BROM_EP_IN: u8 = USB_EP_IN;
+const BROM_TIMEOUT: Duration = USB_TIMEOUT;
 const BROM_DA_LOAD_ADDR: u32 = 0x0020_0000;
 const BROM_DA_CHUNK_SIZE: usize = 4096;
 const BROM_DA_CHUNK_ACK: u8 = 0x69;
@@ -146,9 +150,17 @@ fn debug_log(message: impl AsRef<str>) {
     }
 }
 
+fn usb_access_hint() -> &'static str {
+    "macOS: check USB entitlements or run with sudo during development; Windows: install WinUSB with Zadig; Linux: install 99-deepeye.rules and re-login"
+}
+
 fn map_usb_error(operation: &str, error: rusb::Error) -> BromError {
     match error {
         rusb::Error::Timeout => BromError::Timeout,
+        rusb::Error::Access => BromError::UsbError(format!(
+            "{operation}: {error} — {}",
+            usb_access_hint()
+        )),
         _ => BromError::UsbError(format!("{operation}: {error}")),
     }
 }
@@ -216,6 +228,9 @@ fn find_transport_interface(
 
 pub fn find_mtk_device() -> Option<MtkDevice> {
     let devices = rusb::devices().ok()?;
+
+    #[cfg(debug_assertions)]
+    debug_list_usb_devices();
 
     for device in devices.iter() {
         let Ok(descriptor) = device.device_descriptor() else {
@@ -285,41 +300,15 @@ fn locate_brom_device() -> Result<(Device<GlobalContext>, InterfaceLayout), Brom
 // [INFERRED] The BROM transport requires opening the vendor-specific interface and claiming the bulk endpoints before any command exchange.
 fn open_brom_handle() -> Result<(DeviceHandle<GlobalContext>, InterfaceLayout), BromError> {
     let (device, layout) = locate_brom_device()?;
-    let handle = device.open().map_err(|error| map_usb_error("open BROM device", error))?;
-
-    let needs_configuration = match handle.active_configuration() {
-        Ok(active_configuration) => active_configuration != layout.config_value,
-        Err(_) => true,
-    };
-
-    if needs_configuration {
-        match handle.set_active_configuration(layout.config_value) {
-            Ok(()) => {}
-            Err(rusb::Error::Busy | rusb::Error::NotSupported) => {}
-            Err(error) => return Err(map_usb_error("set active configuration", error)),
-        }
-    }
-
-    #[cfg(any(target_os = "linux", target_os = "android"))]
-    {
-        if handle.kernel_driver_active(layout.interface_number).unwrap_or(false) {
-            match handle.detach_kernel_driver(layout.interface_number) {
-                Ok(()) => {}
-                Err(rusb::Error::NotFound | rusb::Error::NotSupported) => {}
-                Err(error) => return Err(map_usb_error("detach kernel driver", error)),
-            }
-        }
-    }
-
-    handle
-        .claim_interface(layout.interface_number)
-        .map_err(|error| map_usb_error("claim interface", error))?;
-
-    if layout.alternate_setting != 0 {
-        handle
-            .set_alternate_setting(layout.interface_number, layout.alternate_setting)
-            .map_err(|error| map_usb_error("set alternate setting", error))?;
-    }
+    let handle = open_and_claim_with_options(
+        &device,
+        ClaimOptions {
+            config_value: Some(layout.config_value),
+            interface_number: layout.interface_number,
+            alternate_setting: Some(layout.alternate_setting),
+        },
+    )
+    .map_err(|error| map_usb_error("open BROM device", error))?;
 
     Ok((handle, layout))
 }

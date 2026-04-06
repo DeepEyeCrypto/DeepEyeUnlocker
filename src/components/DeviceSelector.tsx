@@ -4,13 +4,21 @@ import { DeviceEntry, getBrands, getModelsByBrand, getSupportBadge } from '../li
 interface DeviceSelectorProps {
   onSelect: (device: DeviceEntry) => void;
   selectedDevice: DeviceEntry | null;
+  filterSupport?: import('../lib/devices').BromSupport[];
 }
 
-export function DeviceSelector({ onSelect, selectedDevice }: DeviceSelectorProps) {
+export function DeviceSelector({ onSelect, selectedDevice, filterSupport }: DeviceSelectorProps) {
   const [brand, setBrand] = useState<string>('');
   
+  const filtered = useMemo(() => {
+    // Import dynamically or assume it's part of devices.ts
+    // Wait, allDevices is not imported directly. 
+    // Let's modify the models array fetching directly using getModelsByBrand.
+    return getModelsByBrand(brand).filter(d => filterSupport ? filterSupport.includes(d.brom_support) : true);
+  }, [brand, filterSupport]);
+
   const brands = useMemo(() => getBrands(), []);
-  const models = useMemo(() => brand ? getModelsByBrand(brand) : [], [brand]);
+  const models = filtered;
 
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setBrand(e.target.value);

@@ -1,3 +1,14 @@
 [workspace]
 members = ["src-tauri"]
 resolver = "2"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

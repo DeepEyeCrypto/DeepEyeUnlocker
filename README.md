@@ -150,18 +150,39 @@ install_dependencies.bat   # Windows
 3. **Configure Security Settings** (if required)
 4. **Test Connection** using the built-in device detection
 
-### Linux udev Rule for MTK BROM / Preloader
+### macOS Raw USB Access for MTK BROM / Qualcomm EDL
+
+- Desktop builds use `src-tauri/entitlements.plist` to request raw USB access.
+- If detection works only with elevated privileges during development, launch Tauri with:
 
 ```bash
-# /etc/udev/rules.d/51-mtk-brom.rules
-SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="0003", MODE="0666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="2000", MODE="0666", GROUP="plugdev"
-
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+sudo -E RUST_LOG=debug npm run tauri dev
 ```
 
-Reconnect the MediaTek device after reloading rules so `mtk_detect_device()` in `src-tauri/src/commands/mtk_brom.rs` can access BROM or Preloader mode without a permission failure.
+- If the locally built app bundle loses entitlements, re-sign it before raw USB testing.
+
+### Windows WinUSB Driver Setup (Zadig)
+
+For `rusb`/`libusb` access on Windows, install WinUSB once per device mode:
+
+1. Download Zadig: <https://zadig.akeo.ie/>
+2. Boot the device into MediaTek BROM (`0e8d:0003` or `0e8d:2000`) or Qualcomm EDL (`05c6:9008` or `05c6:900e`)
+3. In Zadig, open **Options → List All Devices**
+4. Select **MediaTek BROM**, **MediaTek PreLoader USB VCOM**, or **QHSUSB_BULK**
+5. Choose **WinUSB (libusb)**
+6. Click **Replace Driver**
+
+### Linux udev Rules for MTK BROM / Qualcomm EDL
+
+```bash
+# Install the bundled rules file
+sudo cp ./99-deepeye.rules /etc/udev/rules.d/99-deepeye.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+sudo usermod -aG plugdev $USER
+```
+
+Log out and back in after adding the `plugdev` group, then reconnect the device. The desktop backend now exposes a USB debug enumeration command so development builds can verify the expected VID/PID before starting MTK BROM or Qualcomm EDL operations.
 
 ---
 

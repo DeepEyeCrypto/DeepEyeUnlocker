@@ -28,7 +28,7 @@ const FrpBypassPage = React.lazy(() => import("./components/pages/FrpBypass.tsx"
 const MassExtraction = React.lazy(() => import("./components/pages/MassExtraction.tsx"));
 const AdvancedPage = React.lazy(() => import("./components/pages/Advanced.tsx"));
 const UpdaterPage = React.lazy(() => import("./components/pages/Updater.tsx"));
-const EdlPage = React.lazy(() => import("./components/pages/EdlMode.tsx"));
+const EdlPage = React.lazy(() => import("./pages/EdlPage.tsx"));
 const MtkToolsPage = React.lazy(() => import("./components/pages/MtkTools.tsx"));
 const RomFlasherPage = React.lazy(() => import("./components/pages/RomFlasher.tsx"));
 const DeviceHistoryPage = React.lazy(() => import("./components/pages/DeviceHistory.tsx"));

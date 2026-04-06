@@ -37,6 +37,13 @@ object UsbEndpointResolver {
             val resolved = tryResolveInterface(usbInterface, ifIdx, mode)
             
             if (resolved != null) {
+                if (!validate(resolved, mode)) {
+                    Log.w(
+                        TAG,
+                        "Rejected interface IFT-$ifIdx for mode=$mode due to missing required endpoints: bulkIn=${resolved.bulkIn != null}, bulkOut=${resolved.bulkOut != null}"
+                    )
+                    continue
+                }
                 Log.i(TAG, "SUCCESS resolved endpoints on IFT-$ifIdx: BULK-IN=${resolved.bulkIn != null}, BULK-OUT=${resolved.bulkOut != null}")
                 return resolved
             }
@@ -108,8 +115,24 @@ object UsbEndpointResolver {
 
     fun validate(endpoints: ResolvedEndpoints, mode: ConnectionMode): Boolean {
         // Mode-specific validation. Some only need BULK-OUT or vice versa.
-        val needsBulkIn = mode != ConnectionMode.TESTPOINT
-        val needsBulkOut = true
+        val needsBulkIn = when (mode) {
+            ConnectionMode.TESTPOINT,
+            ConnectionMode.APPLE_DFU,
+            ConnectionMode.APPLE_RECOVERY,
+            ConnectionMode.APPLE_NORMAL,
+            ConnectionMode.UNKNOWN -> false
+
+            else -> true
+        }
+        val needsBulkOut = when (mode) {
+            ConnectionMode.TESTPOINT,
+            ConnectionMode.APPLE_DFU,
+            ConnectionMode.APPLE_RECOVERY,
+            ConnectionMode.APPLE_NORMAL,
+            ConnectionMode.UNKNOWN -> false
+
+            else -> true
+        }
         
         if (needsBulkIn && endpoints.bulkIn == null) {
             Log.w(TAG, "Validation Failed: Mode $mode requires BULK-IN endpoint")
