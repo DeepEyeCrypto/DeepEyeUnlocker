@@ -162,6 +162,29 @@ export default function DashboardPage({
 
       <ProgressStep steps={steps} />
 
+      <div className="card glass glass-hover" style={{ padding: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '25%', color: '#3b82f6' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
+            <rect x="9" y="9" width="6" height="6" />
+            <line x1="9" y1="1" x2="9" y2="4" />
+            <line x1="15" y1="1" x2="15" y2="4" />
+            <line x1="9" y1="20" x2="9" y2="23" />
+            <line x1="15" y1="20" x2="15" y2="23" />
+            <line x1="20" y1="9" x2="23" y2="9" />
+            <line x1="20" y1="14" x2="23" y2="14" />
+            <line x1="1" y1="9" x2="4" y2="9" />
+            <line x1="1" y1="14" x2="4" y2="14" />
+          </svg>
+        </div>
+        <div>
+          <h3 style={{ margin: 0, fontWeight: 600, fontSize: '1.125rem' }}>1,879 Supported Devices</h3>
+          <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-2)', fontSize: '0.875rem' }}>
+            483 Full BROM · 649 Partial · 412 EDL
+          </p>
+        </div>
+      </div>
+
       {platform === "android" && (
         <div className="runtime-note">
           Android runtime detected. Desktop Apple probe commands are disabled on device.

@@ -30,6 +30,7 @@ use commands::vault::{ios_create_deepvault};
 use commands::ramdisk::{ios_check_pwn_state, ios_run_gaster_pwn, ios_boot_ramdisk};
 use commands::bypass_advanced::{ios_activation_type_check, ios_temp_activation, ios_untethered_bypass, ios_activation_persistence_check};
 use commands::connected_devices::get_connected_devices;
+use commands::connected_devices::get_supported_brands;
 use commands::identity::{ios_device_identity, ios_imei_state};
 use commands::ticket::{ios_parse_activation_record, ios_activation_record_state, ios_scan_tickets};
 use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
@@ -202,6 +203,7 @@ pub fn run() {
             ios_untethered_bypass,
             ios_activation_persistence_check,
             get_connected_devices,
+            get_supported_brands,
             ios_device_identity,
             ios_imei_state,
             ios_parse_activation_record,

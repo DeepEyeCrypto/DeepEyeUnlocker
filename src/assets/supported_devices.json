@@ -1,0 +1,40 @@
+{
+  "devices": [
+    {
+      "brand": "Xiaomi",
+      "model": "Redmi Note 9",
+      "series": "Note 9",
+      "year": 2020,
+      "type": "smartphone",
+      "chipset": "MT6769Z",
+      "brom_support": "full"
+    },
+    {
+      "brand": "Infinix",
+      "model": "Hot 10S",
+      "series": "Hot",
+      "year": 2021,
+      "type": "smartphone",
+      "chipset": "MT6769Z",
+      "brom_support": "full"
+    },
+    {
+      "brand": "Samsung",
+      "model": "Galaxy A32",
+      "series": "A Series",
+      "year": 2021,
+      "type": "smartphone",
+      "chipset": "MT6853",
+      "brom_support": "partial"
+    },
+    {
+      "brand": "Poco",
+      "model": "X3 Pro",
+      "series": "X",
+      "year": 2021,
+      "type": "smartphone",
+      "chipset": "Snapdragon 860",
+      "brom_support": "edl_only"
+    }
+  ]
+}

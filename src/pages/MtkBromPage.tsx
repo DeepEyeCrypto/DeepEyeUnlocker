@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useMtkBrom, type BromStatus } from "../hooks/useMtkBrom";
+import { DeviceSelector } from "../components/DeviceSelector";
+import type { DeviceEntry } from "../lib/devices";
 import { Card } from "../components/ui/Card";
 import "../styles/mtk-brom.css";
 
@@ -63,6 +65,7 @@ export default function MtkBromPage() {
     dumpPreloader, erasePartition,
   } = useMtkBrom();
 
+  const [selectedDevice, setSelectedDevice] = useState<DeviceEntry | null>(null);
   const [log, setLog] = useState<string[]>(["[system] MTK BROM interface ready"]);
   const [imei1Input, setImei1Input] = useState("");
   const [imei2Input, setImei2Input] = useState("");
@@ -98,6 +101,9 @@ export default function MtkBromPage() {
   const handleConnect = async () => {
     try {
       const result = await detect();
+      if (selectedDevice) {
+        addLog(`[success] Detected: ${selectedDevice.brand} ${selectedDevice.model} ✓`);
+      }
       if (result.authType !== "None") {
         addLog(`[info] Auth required: ${result.authType}`);
       }
@@ -188,6 +194,11 @@ export default function MtkBromPage() {
 
   return (
     <div className="page page-enter">
+      <DeviceSelector 
+        selectedDevice={selectedDevice} 
+        onSelect={setSelectedDevice} 
+      />
+
       {/* Header */}
       <div className="mtk-header">
         <div className="mtk-header-info">
@@ -223,7 +234,7 @@ export default function MtkBromPage() {
         <div className="action-row">
           <button
             className="btn btn-primary btn-sm"
-            disabled={working}
+            disabled={working || !selectedDevice || selectedDevice.brom_support === 'none'}
             onClick={handleConnect}
           >
             {working && bromStatus === "detecting" ? (

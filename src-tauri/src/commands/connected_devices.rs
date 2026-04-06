@@ -300,3 +300,25 @@ pub async fn get_connected_devices(app: AppHandle) -> Result<Vec<ConnectedDevice
     Ok(devices)
 }
 
+#[derive(serde::Deserialize)]
+struct SupportedDevicesDoc {
+    devices: Vec<SupportedDeviceNode>,
+}
+
+#[derive(serde::Deserialize)]
+struct SupportedDeviceNode {
+    brand: String,
+}
+
+#[tauri::command]
+pub fn get_supported_brands() -> Vec<String> {
+    let json_content = include_str!("../../../src/assets/supported_devices.json");
+    if let Ok(doc) = serde_json::from_str::<SupportedDevicesDoc>(json_content) {
+        let mut brands: Vec<String> = doc.devices.into_iter().map(|d| d.brand).collect();
+        brands.sort();
+        brands.dedup();
+        brands
+    } else {
+        vec![]
+    }
+}
