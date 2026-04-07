@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
+use crate::commands::ios_backup::python_script_path;
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
-use crate::commands::ios_backup::python_script_path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeviceMode {
@@ -16,13 +16,14 @@ pub async fn ios_poll_orchestrator(app: AppHandle) -> Result<DeviceMode, String>
     }
 
     let orchestrator_script = python_script_path(&app, "ios_backup/orchestrator.py")?;
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args([
             orchestrator_script
                 .to_str()
                 .ok_or_else(|| "invalid orchestrator script path".to_string())?,
-            "poll"
+            "poll",
         ])
         .output()
         .await

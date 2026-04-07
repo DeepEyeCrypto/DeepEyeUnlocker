@@ -1,7 +1,7 @@
+use crate::commands::ios_backup::python_module_root;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
-use crate::commands::ios_backup::python_module_root;
 
 // ──────────────────────────────────────────────────────────────
 // MODULE 15: MASS ARTIFACT EXTRACTION (DeepExtraction v2)
@@ -46,12 +46,15 @@ pub async fn ios_mount_ramdisk(app: AppHandle) -> Result<MountResult, String> {
 
     let result: MountResult = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("Failed to parse mount result: {}", e))?;
-    
+
     Ok(result)
 }
 
 #[tauri::command]
-pub async fn ios_mass_extract(app: AppHandle, save_path: String) -> Result<MassExtractionReport, String> {
+pub async fn ios_mass_extract(
+    app: AppHandle,
+    save_path: String,
+) -> Result<MassExtractionReport, String> {
     let python_root = python_module_root(&app)?;
     let output = app
         .shell()
@@ -68,6 +71,6 @@ pub async fn ios_mass_extract(app: AppHandle, save_path: String) -> Result<MassE
 
     let result: MassExtractionReport = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("Failed to parse extraction report: {}", e))?;
-    
+
     Ok(result)
 }

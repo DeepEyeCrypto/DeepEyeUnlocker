@@ -10,9 +10,11 @@ async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(format!("{}\n{}", 
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 /// Block OTA updates by installing a TVOS profile or patching plist

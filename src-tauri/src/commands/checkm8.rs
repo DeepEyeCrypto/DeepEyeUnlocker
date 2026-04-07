@@ -17,10 +17,9 @@ pub const CHECKM8_CHIPS: &[u16] = &[
 pub async fn run_checkm8(
     app: AppHandle,
     chip_id: u16,
-    operation: String,   // "pwn" | "frp_bypass" | "activation_patch"
+    operation: String, // "pwn" | "frp_bypass" | "activation_patch"
     session_id: String,
 ) -> Result<String, String> {
-
     // Verify chip is vulnerable
     if !CHECKM8_CHIPS.contains(&chip_id) {
         return Err(format!(
@@ -39,9 +38,12 @@ pub async fn run_checkm8(
         .command("python3")
         .args([
             &script_path,
-            "--chip-id", &format!("0x{:04X}", chip_id),
-            "--operation", &operation,
-            "--session-id", &session_id,
+            "--chip-id",
+            &format!("0x{:04X}", chip_id),
+            "--operation",
+            &operation,
+            "--session-id",
+            &session_id,
         ])
         .env("PYTHONPATH", &python_root)
         .output()

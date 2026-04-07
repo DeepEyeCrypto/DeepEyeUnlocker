@@ -76,4 +76,3 @@ pub async fn hydra_samsung_frp_bypass(app: AppHandle, method: String) -> Result<
     }
     Ok(out.trim().to_string())
 }
-

@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager, Emitter};
-use tauri_plugin_shell::ShellExt;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PwnState {
@@ -17,16 +17,21 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 #[tauri::command]
 pub async fn ios_check_pwn_state(app: AppHandle, udid: Option<String>) -> Result<PwnState, String> {
     println!("[COMMAND] ios_check_pwn_state");
-    
+
     let mut args = vec![
-        python_path(&app).join("ios_backup/cli.py").to_str().unwrap().to_string(),
+        python_path(&app)
+            .join("ios_backup/cli.py")
+            .to_str()
+            .unwrap()
+            .to_string(),
         "pwn-state".to_string(),
     ];
     if let Some(u) = udid {
         args.push(u);
     }
 
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args(args)
         .output()
@@ -44,12 +49,16 @@ pub async fn ios_check_pwn_state(app: AppHandle, udid: Option<String>) -> Result
 #[tauri::command]
 pub async fn ios_run_gaster_pwn(app: AppHandle) -> Result<(), String> {
     println!("[COMMAND] ios_run_gaster_pwn");
-    
-    let (mut rx, _child) = app.shell()
+
+    let (mut rx, _child) = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
-            "gaster-pwn"
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
+            "gaster-pwn",
         ])
         .spawn()
         .map_err(|e| e.to_string())?;

@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager, Emitter};
-use tauri_plugin_shell::ShellExt;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum DeviceMode {
@@ -28,14 +28,18 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 #[tauri::command]
 pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
     println!("[COMMAND] ios_detect_dfu_state");
-    
+
     // In a real implementation, we'd use irecovery -v or similar
     // For now, call our python helper
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/dfu.py").to_str().unwrap(),
-            "dfu-state"
+            python_path(&app)
+                .join("ios_backup/dfu.py")
+                .to_str()
+                .unwrap(),
+            "dfu-state",
         ])
         .output()
         .await
@@ -47,7 +51,7 @@ pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
 
     let json_str = String::from_utf8_lossy(&output.stdout);
     let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| e.to_string())?;
-    
+
     let mode_str = val["mode"].as_str().unwrap_or("unknown");
     let mode = match mode_str {
         "normal" => DeviceMode::Normal,
@@ -68,8 +72,9 @@ pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
 #[tauri::command]
 pub async fn ios_enter_dfu(app: AppHandle, udid: String) -> Result<(), String> {
     println!("[COMMAND] ios_enter_dfu udid={}", udid);
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("ideviceenterrecovery")
         .args([&udid])
         .output()
@@ -77,7 +82,11 @@ pub async fn ios_enter_dfu(app: AppHandle, udid: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     if output.status.success() {
-        app.emit("dfu-step", "Device entering recovery. Manual DFU steps needed next.").unwrap();
+        app.emit(
+            "dfu-step",
+            "Device entering recovery. Manual DFU steps needed next.",
+        )
+        .unwrap();
         Ok(())
     } else {
         Err(String::from_utf8_lossy(&output.stderr).to_string())
@@ -85,10 +94,18 @@ pub async fn ios_enter_dfu(app: AppHandle, udid: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn ios_restore_device(app: AppHandle, udid: String, ipsw_path: String) -> Result<(), String> {
-    println!("[COMMAND] ios_restore_device udid={} ipsw={}", udid, ipsw_path);
-    
-    let (mut rx, _child) = app.shell()
+pub async fn ios_restore_device(
+    app: AppHandle,
+    udid: String,
+    ipsw_path: String,
+) -> Result<(), String> {
+    println!(
+        "[COMMAND] ios_restore_device udid={} ipsw={}",
+        udid, ipsw_path
+    );
+
+    let (mut rx, _child) = app
+        .shell()
         .command("idevicerestore")
         .args(["--erase", &ipsw_path])
         .spawn()
@@ -119,18 +136,29 @@ pub async fn ios_restore_device(app: AppHandle, udid: String, ipsw_path: String)
 }
 
 #[tauri::command]
-pub async fn ios_download_ipsw(app: AppHandle, model: String, ios_version: String) -> Result<String, String> {
-    println!("[COMMAND] ios_download_ipsw model={} version={}", model, ios_version);
-    
+pub async fn ios_download_ipsw(
+    app: AppHandle,
+    model: String,
+    ios_version: String,
+) -> Result<String, String> {
+    println!(
+        "[COMMAND] ios_download_ipsw model={} version={}",
+        model, ios_version
+    );
+
     // PSEUDO: IPSW download logic
     // In production, this would use reqwest or curl to download from ipsw.me
     let dest = format!("/tmp/{}_{}_Restore.ipsw", model, ios_version);
-    app.emit("dfu-progress", format!("Starting download for {}...", model)).unwrap();
-    
+    app.emit(
+        "dfu-progress",
+        format!("Starting download for {}...", model),
+    )
+    .unwrap();
+
     // Simulate progress
     app.emit("dfu-progress", "Downloading: 10%").unwrap();
     app.emit("dfu-progress", "Downloading: 50%").unwrap();
     app.emit("dfu-progress", "Downloading: 100%").unwrap();
-    
+
     Ok(dest)
 }

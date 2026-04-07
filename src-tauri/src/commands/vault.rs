@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
-use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct VaultRequest {
@@ -22,17 +22,24 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-pub async fn ios_create_deepvault(app: AppHandle, request: VaultRequest) -> Result<VaultResult, String> {
+pub async fn ios_create_deepvault(
+    app: AppHandle,
+    request: VaultRequest,
+) -> Result<VaultResult, String> {
     println!("[COMMAND] ios_create_deepvault dir={}", request.dir);
-    
+
     let payload = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "create-vault",
-            &payload
+            &payload,
         ])
         .output()
         .await

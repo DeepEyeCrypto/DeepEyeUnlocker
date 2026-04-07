@@ -10,31 +10,43 @@ async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(format!("{}\n{}", 
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 /// Push local activation record to DeepEye Cloud Vault
 #[tauri::command]
-pub async fn push_to_cloud_vault(app: AppHandle, ecid: String, _token_path: String) -> Result<String, String> {
+pub async fn push_to_cloud_vault(
+    app: AppHandle,
+    ecid: String,
+    _token_path: String,
+) -> Result<String, String> {
     // Simulated encrypted upload logic
-    run_bash(&app, &format!(
-        "echo 'Encrypting token for ECID: {ecid} using DeepVault-ECC...' && \
+    run_bash(
+        &app,
+        &format!(
+            "echo 'Encrypting token for ECID: {ecid} using DeepVault-ECC...' && \
          echo 'Uploading to https://vault.deepeye.io/sync...' && \
          sleep 1 && echo 'Sync Success: Record secured in Cloud Vault.'"
-    ))
+        ),
+    )
     .await
 }
 
 /// Pull activation record from Cloud Vault
 #[tauri::command]
 pub async fn pull_from_cloud_vault(app: AppHandle, ecid: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "echo 'Authenticating with DeepEye Cloud...' && \
+    run_bash(
+        &app,
+        &format!(
+            "echo 'Authenticating with DeepEye Cloud...' && \
          echo 'Downloading latest record for {ecid}...' && \
          sleep 1 && echo 'Restore Success: Record downloaded to ~/DeepEyeUnlocker/Vault/{ecid}/'"
-    ))
+        ),
+    )
     .await
 }
 

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
 
@@ -37,13 +37,20 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-pub async fn ios_parse_activation_record(app: AppHandle, backup_path: String) -> Result<ActivationRecord, String> {
-    let output = app.shell()
+pub async fn ios_parse_activation_record(
+    app: AppHandle,
+    backup_path: String,
+) -> Result<ActivationRecord, String> {
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "activation-record",
-            &backup_path
+            &backup_path,
         ])
         .output()
         .await
@@ -54,7 +61,10 @@ pub async fn ios_parse_activation_record(app: AppHandle, backup_path: String) ->
 }
 
 #[tauri::command]
-pub async fn ios_activation_record_state(app: AppHandle, udid: String) -> Result<ActivationRecordState, String> {
+pub async fn ios_activation_record_state(
+    app: AppHandle,
+    udid: String,
+) -> Result<ActivationRecordState, String> {
     // For live device state
     let record = ios_parse_activation_record(app.clone(), udid).await?;
     Ok(ActivationRecordState {
@@ -66,12 +76,16 @@ pub async fn ios_activation_record_state(app: AppHandle, udid: String) -> Result
 
 #[tauri::command]
 pub async fn ios_scan_tickets(app: AppHandle, backup_path: String) -> Result<Vec<String>, String> {
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "scan-tickets",
-            &backup_path
+            &backup_path,
         ])
         .output()
         .await

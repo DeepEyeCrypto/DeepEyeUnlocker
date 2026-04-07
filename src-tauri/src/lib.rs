@@ -1,87 +1,95 @@
-mod commands;
-mod shsh;
-mod diagnostics;
-mod restore;
-mod purple;
-mod toolbox;
-mod cve;
-mod vault;
-mod identity;
-mod nonce;
 mod afc;
 mod backup;
+mod commands;
+mod crash_logs;
+mod cve;
+mod developer;
+mod diagnostics;
+mod error;
 mod frida;
+mod identity;
+mod ipsw_dl;
+mod nonce;
+mod purple;
+mod restore;
+mod shsh;
 mod sideloader;
 mod ssh_tunnel;
-mod crash_logs;
-mod ipsw_dl;
-mod developer;
-mod error;
+mod toolbox;
+mod vault;
 
-use commands::ios_backup::{ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack};
+use commands::activation::{
+    ios_check_activation_state, ios_patch_activation_record, ios_run_checkra1n,
+};
 use commands::adb::{
-    adb_list_devices, adb_get_full_info, adb_shell_command, adb_reboot_device,
-    adb_install_apk, adb_push_file, adb_pull_file, adb_sideload_zip,
-    adb_erase_frp_partition, adb_check_root_access, adb_test_binary, stream_adb_logs
+    adb_check_root_access, adb_erase_frp_partition, adb_get_full_info, adb_install_apk,
+    adb_list_devices, adb_pull_file, adb_push_file, adb_reboot_device, adb_shell_command,
+    adb_sideload_zip, adb_test_binary, stream_adb_logs,
 };
-use commands::samsung::{
-    samsung_find_device_cmd, samsung_do_handshake_cmd, samsung_get_pit_cmd,
-    samsung_flash_part_cmd, samsung_do_erase_frp_cmd, samsung_reboot_device_cmd
+use commands::apple::{
+    apple_check_activation, apple_device_info, apple_dns_activation, apple_enter_dfu,
+    apple_exit_recovery, apple_icloud_bypass, apple_irecovery_cmd, apple_mdm_bypass,
+    apple_restore_activation_record, apple_restore_ipsw,
 };
-use commands::dfu_restore::{ios_detect_dfu_state, ios_enter_dfu, ios_restore_device, ios_download_ipsw};
-use commands::activation::{ios_check_activation_state, ios_run_checkra1n, ios_patch_activation_record};
-use commands::apple_id::{ios_apple_id_state, ios_remove_apple_id, ios_fmi_state};
-use commands::screentime::{ios_extract_screentime_hash, ios_run_screentime_crack};
-use commands::mdm::{ios_mdm_state, ios_list_profiles, ios_remove_mdm};
+use commands::apple_id::{ios_apple_id_state, ios_fmi_state, ios_remove_apple_id};
+use commands::bruteforce::run_pin_bruteforce;
 use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass};
-use commands::vault::{ios_create_deepvault};
-use commands::ramdisk::{ios_check_pwn_state, ios_run_gaster_pwn, ios_boot_ramdisk};
-use commands::bypass_advanced::{ios_activation_type_check, ios_temp_activation, ios_untethered_bypass, ios_activation_persistence_check};
+use commands::bypass_advanced::{
+    ios_activation_persistence_check, ios_activation_type_check, ios_temp_activation,
+    ios_untethered_bypass,
+};
+use commands::checkm8::run_checkm8;
 use commands::connected_devices::get_connected_devices;
 use commands::connected_devices::get_supported_brands;
-use commands::identity::{ios_device_identity, ios_imei_state};
-use commands::ticket::{ios_parse_activation_record, ios_activation_record_state, ios_scan_tickets};
-use commands::orchestrator::{ios_poll_orchestrator, ios_inject_surgical_patch};
-use commands::extraction::{ios_mount_ramdisk, ios_mass_extract};
-use commands::checkm8::run_checkm8;
-use commands::ios_bypass::ios_bypass_full;
-use commands::apple::{
-    apple_device_info,
-    apple_irecovery_cmd,
-    apple_exit_recovery,
-    apple_enter_dfu,
-    apple_icloud_bypass,
-    apple_restore_ipsw,
-    apple_check_activation,
-    apple_dns_activation,
-    apple_mdm_bypass,
-    apple_restore_activation_record,
+use commands::device_history::{
+    history_add_entry, history_clear, history_delete_entry, history_export_json,
+    history_get_entries,
 };
-use commands::exploit::{run_palera1n, verify_pwned_dfu, bypass_icloud_activation};
-use commands::f3arrain::{f3arrain_send_iboot, f3arrain_run_bypass};
+use commands::dfu_restore::{
+    ios_detect_dfu_state, ios_download_ipsw, ios_enter_dfu, ios_restore_device,
+};
+use commands::edl::{
+    edl_configure, edl_erase_partition, edl_find_device, edl_get_storage_info, edl_read_partition,
+    edl_reboot, edl_sahara_handshake, edl_upload_programmer, edl_write_partition,
+};
+use commands::exploit::{bypass_icloud_activation, run_palera1n, verify_pwned_dfu};
+use commands::extraction::{ios_mass_extract, ios_mount_ramdisk};
+use commands::f3arrain::{f3arrain_run_bypass, f3arrain_send_iboot};
 use commands::hydra::{hydra_detect_protocol, hydra_run_mtk_meta, hydra_samsung_frp_bypass};
+use commands::identity::{ios_device_identity, ios_imei_state};
+use commands::ios_backup::{
+    ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack,
+};
+use commands::ios_bypass::ios_bypass_full;
+use commands::mdm::{ios_list_profiles, ios_mdm_state, ios_remove_mdm};
 use commands::mtk::{
-    mtk_run_command,
-    mtk_read_partition,
-    mtk_write_partition,
-    mtk_erase_partition,
-    mtk_device_info,
-    mtk_unlock_bootloader,
+    mtk_device_info, mtk_erase_partition, mtk_read_partition, mtk_run_command,
+    mtk_unlock_bootloader, mtk_write_partition,
 };
 use commands::mtk_brom::{
-    mtk_bypass_sla, mtk_da_erase_partition, mtk_da_read_partition,
-    mtk_da_write_partition, mtk_detect_auth_type, mtk_detect_device,
-    mtk_dump_preloader, mtk_erase_frp, mtk_format_userdata,
-    mtk_handshake_and_identify, mtk_jump_to_da, mtk_list_partitions,
+    mtk_bypass_sla, mtk_da_erase_partition, mtk_da_read_partition, mtk_da_write_partition,
+    mtk_detect_auth_type, mtk_detect_device, mtk_dump_preloader, mtk_erase_frp,
+    mtk_format_userdata, mtk_handshake_and_identify, mtk_jump_to_da, mtk_list_partitions,
     mtk_read_imei, mtk_reboot, mtk_upload_da, mtk_write_imei,
 };
-use commands::bruteforce::run_pin_bruteforce;
-use commands::updater::{check_update, do_install_update};
-use commands::edl::{edl_find_device, edl_sahara_handshake, edl_upload_programmer, edl_configure, edl_read_partition, edl_write_partition, edl_erase_partition, edl_get_storage_info, edl_reboot};
-use commands::rom_flasher::{rom_sideload_zip, rom_flash_partition, rom_wipe_data, rom_reboot_recovery, rom_reboot_bootloader};
-use commands::device_history::{history_add_entry, history_get_entries, history_clear, history_delete_entry, history_export_json};
+use commands::orchestrator::{ios_inject_surgical_patch, ios_poll_orchestrator};
+use commands::ramdisk::{ios_boot_ramdisk, ios_check_pwn_state, ios_run_gaster_pwn};
+use commands::rom_flasher::{
+    rom_flash_partition, rom_reboot_bootloader, rom_reboot_recovery, rom_sideload_zip,
+    rom_wipe_data,
+};
+use commands::samsung::{
+    samsung_do_erase_frp_cmd, samsung_do_handshake_cmd, samsung_find_device_cmd,
+    samsung_flash_part_cmd, samsung_get_pit_cmd, samsung_reboot_device_cmd,
+};
+use commands::screentime::{ios_extract_screentime_hash, ios_run_screentime_crack};
+use commands::ticket::{
+    ios_activation_record_state, ios_parse_activation_record, ios_scan_tickets,
+};
 use commands::unisoc::unisoc_detect_device;
+use commands::updater::{check_update, do_install_update};
 use commands::usb_utils::usb_debug_list_devices;
+use commands::vault::ios_create_deepvault;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -90,90 +98,70 @@ pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
 };
 
 use shsh::{
-    get_ecid, get_board_config, save_shsh_all_signed, save_shsh_specific,
-    save_shsh_with_generator, list_saved_shsh, check_signed_versions,
-    futurerestore, futurerestore_no_baseband
+    check_signed_versions, futurerestore, futurerestore_no_baseband, get_board_config, get_ecid,
+    list_saved_shsh, save_shsh_all_signed, save_shsh_specific, save_shsh_with_generator,
 };
 
 use diagnostics::{
-    run_diagnostics, get_battery_stats, get_thermal_state,
-    device_shutdown, device_restart, device_sleep
+    device_restart, device_shutdown, device_sleep, get_battery_stats, get_thermal_state,
+    run_diagnostics,
 };
 
-use restore::{
-    restore_local_ipsw, restore_latest, exit_recovery, get_recovery_info
-};
+use restore::{exit_recovery, get_recovery_info, restore_latest, restore_local_ipsw};
 
-use purple::{
-    enter_purple_mode, purple_read_sn, purple_write_sn, purple_read_all
-};
+use purple::{enter_purple_mode, purple_read_all, purple_read_sn, purple_write_sn};
 
-use toolbox::{
-    toolbox_block_ota, toolbox_factory_reset, toolbox_get_logs, toolbox_backup_device
-};
+use toolbox::{toolbox_backup_device, toolbox_block_ota, toolbox_factory_reset, toolbox_get_logs};
 
-use cve::{
-    query_cve_database, run_intelligence_scan
-};
+use cve::{query_cve_database, run_intelligence_scan};
 
-use vault::{
-    push_to_cloud_vault, pull_from_cloud_vault, list_cloud_vault
-};
+use vault::{list_cloud_vault, pull_from_cloud_vault, push_to_cloud_vault};
 
-use identity::{
-    check_imei_intel, get_full_identity
-};
+use identity::{check_imei_intel, get_full_identity};
 
 use nonce::{
-    get_current_nonce, set_nonce_generator, set_nonce_from_blob,
-    get_generator_from_blob, clear_nonce, set_nonce_checkra1n
+    clear_nonce, get_current_nonce, get_generator_from_blob, set_nonce_checkra1n,
+    set_nonce_from_blob, set_nonce_generator,
 };
 
 use afc::{
-    mount_afc2, list_directory, get_file_info, read_file,
-    write_file, delete_path, make_directory, pull_file, push_file
+    delete_path, get_file_info, list_directory, make_directory, mount_afc2, pull_file, push_file,
+    read_file, write_file,
 };
 
 use backup::{
-    create_backup, backup_encrypted, restore_backup, list_backups,
-    delete_backup, change_backup_password, extract_app_data, restore_app_data
+    backup_encrypted, change_backup_password, create_backup, delete_backup, extract_app_data,
+    list_backups, restore_app_data, restore_backup,
 };
 
 use frida::{
-    frida_ps, frida_attach, frida_spawn, frida_run_script,
-    frida_kill_process, frida_list_exports, inject_dylib,
-    dump_app_memory, ssl_kill_switch, frida_inject
+    dump_app_memory, frida_attach, frida_inject, frida_kill_process, frida_list_exports, frida_ps,
+    frida_run_script, frida_spawn, inject_dylib, ssl_kill_switch,
 };
 
 use sideloader::{
-    install_ipa, sign_and_install, list_installed_apps,
-    uninstall_app, get_app_info, reinstall_app
+    get_app_info, install_ipa, list_installed_apps, reinstall_app, sign_and_install, uninstall_app,
 };
 
 use ssh_tunnel::{
-    start_ssh_tunnel, stop_ssh_tunnel, check_tunnel_status,
-    run_ssh_command, run_su_command, ssh_upload_file,
-    ssh_download_file, install_sileo_pkg
+    check_tunnel_status, install_sileo_pkg, run_ssh_command, run_su_command, ssh_download_file,
+    ssh_upload_file, start_ssh_tunnel, stop_ssh_tunnel,
 };
 
 use crash_logs::{
-    pull_crash_logs, list_crash_logs, read_crash_log,
-    clear_crash_logs, symbolicate_log
+    clear_crash_logs, list_crash_logs, pull_crash_logs, read_crash_log, symbolicate_log,
 };
 
 use ipsw_dl::{
-    get_signed_firmwares, get_all_firmwares, download_ipsw,
-    get_download_progress, verify_ipsw_sha1
+    download_ipsw, get_all_firmwares, get_download_progress, get_signed_firmwares, verify_ipsw_sha1,
 };
 
 use developer::{
-    mount_dev_disk_image, unmount_dev_disk_image, check_dev_disk_mounted,
-    list_processes, get_screenshot
+    check_dev_disk_mounted, get_screenshot, list_processes, mount_dev_disk_image,
+    unmount_dev_disk_image,
 };
 
-
 // ── ADB and Samsung Commands are now imported from their modules directly ──
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -270,21 +258,21 @@ pub fn run() {
             mtk_unlock_bootloader,
             mtk_detect_device,
             mtk_handshake_and_identify,
-             mtk_detect_auth_type,
-             mtk_bypass_sla,
-             mtk_upload_da,
-             mtk_jump_to_da,
-             mtk_erase_frp,
-             mtk_format_userdata,
-             mtk_read_imei,
-             mtk_write_imei,
-             mtk_reboot,
-             mtk_list_partitions,
-             mtk_da_read_partition,
-             mtk_da_write_partition,
-             mtk_dump_preloader,
-             mtk_da_erase_partition,
-             usb_debug_list_devices,
+            mtk_detect_auth_type,
+            mtk_bypass_sla,
+            mtk_upload_da,
+            mtk_jump_to_da,
+            mtk_erase_frp,
+            mtk_format_userdata,
+            mtk_read_imei,
+            mtk_write_imei,
+            mtk_reboot,
+            mtk_list_partitions,
+            mtk_da_read_partition,
+            mtk_da_write_partition,
+            mtk_dump_preloader,
+            mtk_da_erase_partition,
+            usb_debug_list_devices,
             get_ecid,
             get_board_config,
             save_shsh_all_signed,
@@ -393,23 +381,23 @@ pub fn run() {
             edl_upload_programmer,
             edl_configure,
             edl_read_partition,
-             edl_write_partition,
-             edl_erase_partition,
-             edl_get_storage_info,
-             edl_reboot,
-             unisoc_detect_device,
-             // Stage 27 — Custom ROM flasher
-             rom_sideload_zip,
+            edl_write_partition,
+            edl_erase_partition,
+            edl_get_storage_info,
+            edl_reboot,
+            unisoc_detect_device,
+            // Stage 27 — Custom ROM flasher
+            rom_sideload_zip,
             rom_flash_partition,
             rom_wipe_data,
             rom_reboot_recovery,
             rom_reboot_bootloader,
             // Stage 28 — Device history
-             history_add_entry,
-             history_get_entries,
-             history_clear,
-             history_delete_entry,
-             history_export_json
+            history_add_entry,
+            history_get_entries,
+            history_clear,
+            history_delete_entry,
+            history_export_json
         ])
         .run(tauri::generate_context!());
 

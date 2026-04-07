@@ -4,10 +4,16 @@ use std::sync::Mutex;
 static TUNNEL_PID: Mutex<Option<u32>> = Mutex::new(None);
 
 fn bash(s: &str) -> Result<String, String> {
-    let out = Command::new("bash").arg("-c").arg(s).output()
+    let out = Command::new("bash")
+        .arg("-c")
+        .arg(s)
+        .output()
         .map_err(|e| e.to_string())?;
-    Ok(format!("{}\n{}", String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)))
+    Ok(format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    ))
 }
 
 #[tauri::command]
@@ -22,10 +28,12 @@ pub fn start_ssh_tunnel() -> Result<String, String> {
     let pid = child.id();
     *TUNNEL_PID.lock().unwrap() = Some(pid);
 
-    Ok(format!("✅ SSH Tunnel started\n\
+    Ok(format!(
+        "✅ SSH Tunnel started\n\
         PID: {pid}\n\
         Connect: ssh root@localhost -p 2222\n\
-        Default pass: alpine"))
+        Default pass: alpine"
+    ))
 }
 
 #[tauri::command]
@@ -49,7 +57,7 @@ pub fn check_tunnel_status() -> Result<String, String> {
            nc -z localhost 2222 2>&1 && echo 'Socket: OPEN' || echo 'Socket: pending...'; \
          else \
            echo '🔴 Tunnel NOT running. Start it first.'; \
-         fi"
+         fi",
     )
 }
 

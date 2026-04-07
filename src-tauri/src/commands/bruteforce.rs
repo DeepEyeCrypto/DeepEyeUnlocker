@@ -18,8 +18,12 @@ pub async fn run_pin_bruteforce(
             .output()
             .await
             .map_err(|e| e.to_string())?;
-        
-        results.push(format!("PIN {}: {}", pin, String::from_utf8_lossy(&output.stdout)));
+
+        results.push(format!(
+            "PIN {}: {}",
+            pin,
+            String::from_utf8_lossy(&output.stdout)
+        ));
         tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
     }
     Ok(results.join("\n"))

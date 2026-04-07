@@ -10,9 +10,11 @@ async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(format!("{}\n{}", 
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 /// Run diagnostics command on device
@@ -25,13 +27,21 @@ pub async fn run_diagnostics(app: AppHandle, cmd: String) -> Result<String, Stri
 /// Get detailed battery health
 #[tauri::command]
 pub async fn get_battery_stats(app: AppHandle) -> Result<String, String> {
-    run_bash(&app, "idevicediagnostics iorep -q com.apple.ioreport.BatteryUsage 2>&1").await
+    run_bash(
+        &app,
+        "idevicediagnostics iorep -q com.apple.ioreport.BatteryUsage 2>&1",
+    )
+    .await
 }
 
 /// Get device thermal state
 #[tauri::command]
 pub async fn get_thermal_state(app: AppHandle) -> Result<String, String> {
-    run_bash(&app, "idevicediagnostics iorep -q com.apple.ioreport.ThermalState 2>&1").await
+    run_bash(
+        &app,
+        "idevicediagnostics iorep -q com.apple.ioreport.ThermalState 2>&1",
+    )
+    .await
 }
 
 /// Shutdown device diagnostic

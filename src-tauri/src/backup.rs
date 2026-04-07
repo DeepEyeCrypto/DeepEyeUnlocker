@@ -9,57 +9,81 @@ async fn bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .output()
         .await
         .map_err(|e| e.to_string())?;
-    
-    Ok(format!("{}\n{}", 
+
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 #[tauri::command]
 pub async fn create_backup(app: AppHandle, label: String) -> Result<String, String> {
-    bash(&app, &format!(
-        "mkdir -p ~/DeepEyeUnlocker/backups/{label} && \
+    bash(
+        &app,
+        &format!(
+            "mkdir -p ~/DeepEyeUnlocker/backups/{label} && \
          idevicebackup2 backup --full ~/DeepEyeUnlocker/backups/{label}/ 2>&1 && \
          echo '✅ Backup complete → ~/DeepEyeUnlocker/backups/{label}/'",
-        label = label
-    )).await
+            label = label
+        ),
+    )
+    .await
 }
 
 #[tauri::command]
-pub async fn backup_encrypted(app: AppHandle, label: String, _password: String) -> Result<String, String> {
-    bash(&app, &format!(
-        "mkdir -p ~/DeepEyeUnlocker/backups/{label} && \
+pub async fn backup_encrypted(
+    app: AppHandle,
+    label: String,
+    _password: String,
+) -> Result<String, String> {
+    bash(
+        &app,
+        &format!(
+            "mkdir -p ~/DeepEyeUnlocker/backups/{label} && \
          idevicebackup2 -i backup --full \
          ~/DeepEyeUnlocker/backups/{label}/ 2>&1",
-        label = label
-    )).await
+            label = label
+        ),
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn restore_backup(app: AppHandle, label: String) -> Result<String, String> {
-    bash(&app, &format!(
-        "idevicebackup2 restore --system --reboot \
+    bash(
+        &app,
+        &format!(
+            "idevicebackup2 restore --system --reboot \
          ~/DeepEyeUnlocker/backups/{label}/ 2>&1",
-        label = label
-    )).await
+            label = label
+        ),
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn list_backups(app: AppHandle) -> Result<String, String> {
-    bash(&app,
+    bash(
+        &app,
         "ls -la ~/DeepEyeUnlocker/backups/ 2>/dev/null && \
          du -sh ~/DeepEyeUnlocker/backups/*/ 2>/dev/null || \
-         echo 'No backups found.'"
-    ).await
+         echo 'No backups found.'",
+    )
+    .await
 }
 
 #[tauri::command]
 pub async fn delete_backup(app: AppHandle, label: String) -> Result<String, String> {
-    bash(&app, &format!(
-        "rm -rf ~/DeepEyeUnlocker/backups/{label} && \
+    bash(
+        &app,
+        &format!(
+            "rm -rf ~/DeepEyeUnlocker/backups/{label} && \
          echo '✅ Backup deleted: {label}'",
-        label = label
-    )).await
+            label = label
+        ),
+    )
+    .await
 }
 
 #[tauri::command]

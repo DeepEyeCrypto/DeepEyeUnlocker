@@ -38,7 +38,8 @@ pub async fn f3arrain_run_bypass(app: AppHandle, bypass_type: String) -> Result<
         _ => return Err(format!("Unknown bypass type: {bypass_type}")),
     };
 
-    let resource_path = app.path()
+    let resource_path = app
+        .path()
         .resource_dir()
         .map_err(|e| format!("resource dir error: {e}"))?
         .join("scripts")

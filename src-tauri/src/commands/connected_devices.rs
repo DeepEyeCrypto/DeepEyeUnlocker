@@ -58,8 +58,11 @@ async fn collect_command_output(
 }
 
 fn extract_adb_field(line: &str, prefix: &str) -> Option<String> {
-    line.split_whitespace()
-        .find_map(|token| token.strip_prefix(prefix).map(|value| value.replace('_', " ")))
+    line.split_whitespace().find_map(|token| {
+        token
+            .strip_prefix(prefix)
+            .map(|value| value.replace('_', " "))
+    })
 }
 
 async fn adb_getprop(app: &AppHandle, serial: &str, property: &str) -> Option<String> {
@@ -105,10 +108,13 @@ fn normalize_bootloader_state(
 
 // [INFERRED] `adb devices -l` is the canonical non-destructive probe for attached Android devices on host machines.
 async fn detect_adb_devices(app: &AppHandle) -> Vec<ConnectedDevice> {
-    let output = match collect_command_output(app, "adb", vec!["devices".to_string(), "-l".to_string()]).await {
-        Ok(output) => output,
-        Err(_) => return Vec::new(),
-    };
+    let output =
+        match collect_command_output(app, "adb", vec!["devices".to_string(), "-l".to_string()])
+            .await
+        {
+            Ok(output) => output,
+            Err(_) => return Vec::new(),
+        };
 
     let mut devices = Vec::new();
 
@@ -184,18 +190,16 @@ pub async fn get_connected_devices(app: AppHandle) -> Result<Vec<ConnectedDevice
     if let Ok(mode) = ios_poll_orchestrator(app.clone()).await {
         let normalized_mode = mode.mode.to_lowercase();
         if !normalized_mode.contains("unknown") && !normalized_mode.contains("unsupported") {
-            let activation = ios_check_activation_state(app.clone(), String::new()).await.ok();
+            let activation = ios_check_activation_state(app.clone(), String::new())
+                .await
+                .ok();
             let identity = ios_device_identity(app.clone(), String::new()).await.ok();
 
             let id = identity
                 .as_ref()
                 .map(|entry| entry.udid.clone())
                 .filter(|value| !value.is_empty())
-                .or_else(|| {
-                    identity
-                        .as_ref()
-                        .and_then(|entry| entry.serial.clone())
-                })
+                .or_else(|| identity.as_ref().and_then(|entry| entry.serial.clone()))
                 .unwrap_or_else(|| "apple-device".to_string());
 
             let serial = identity
@@ -234,7 +238,11 @@ pub async fn get_connected_devices(app: AppHandle) -> Result<Vec<ConnectedDevice
             model: "Qualcomm Device".to_string(), // In pure EDL we don't know the exact chipset until programmer speaks XML
             serial: serial_str,
             os: "Android".to_string(),
-            mode: if edl.programmer_loaded { "EDL Programmable".to_string() } else { "EDL 9008".to_string() },
+            mode: if edl.programmer_loaded {
+                "EDL Programmable".to_string()
+            } else {
+                "EDL 9008".to_string()
+            },
             bootloader_status: "Unknown".to_string(),
             carrier: None,
             source: "edl".to_string(),

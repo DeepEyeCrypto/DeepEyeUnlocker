@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager, Emitter};
-use tauri_plugin_shell::ShellExt;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ActivationRemovalPath {
@@ -27,15 +27,22 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-pub async fn ios_check_activation_state(app: AppHandle, udid: String) -> Result<ActivationState, String> {
+pub async fn ios_check_activation_state(
+    app: AppHandle,
+    udid: String,
+) -> Result<ActivationState, String> {
     println!("[COMMAND] ios_check_activation_state udid={}", udid);
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "activation-state",
-            &udid
+            &udid,
         ])
         .output()
         .await
@@ -47,7 +54,7 @@ pub async fn ios_check_activation_state(app: AppHandle, udid: String) -> Result<
 
     let json_str = String::from_utf8_lossy(&output.stdout);
     let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| e.to_string())?;
-    
+
     if val.get("error").is_some() {
         return Err(val["error"].as_str().unwrap().to_string());
     }
@@ -59,7 +66,13 @@ pub async fn ios_check_activation_state(app: AppHandle, udid: String) -> Result<
     // Logic to determine removal path
     let removal_path = if !fmi_enabled {
         ActivationRemovalPath::None
-    } else if chip.contains("arm64") || chip.contains("A7") || chip.contains("A8") || chip.contains("A9") || chip.contains("A10") || chip.contains("A11") {
+    } else if chip.contains("arm64")
+        || chip.contains("A7")
+        || chip.contains("A8")
+        || chip.contains("A9")
+        || chip.contains("A10")
+        || chip.contains("A11")
+    {
         ActivationRemovalPath::Checkra1n
     } else {
         ActivationRemovalPath::DfuRestore
@@ -78,8 +91,9 @@ pub async fn ios_check_activation_state(app: AppHandle, udid: String) -> Result<
 #[tauri::command]
 pub async fn ios_run_checkra1n(app: AppHandle, udid: String) -> Result<(), String> {
     println!("[COMMAND] ios_run_checkra1n udid={}", udid);
-    
-    let (mut rx, _child) = app.shell()
+
+    let (mut rx, _child) = app
+        .shell()
         .command("checkra1n")
         .args(["--cli", "--udid", &udid])
         .spawn()
@@ -98,7 +112,9 @@ pub async fn ios_run_checkra1n(app: AppHandle, udid: String) -> Result<(), Strin
                     app_handle.emit("activation-error", line).unwrap();
                 }
                 CommandEvent::Terminated(payload) => {
-                    app_handle.emit("activation-complete", payload.code).unwrap();
+                    app_handle
+                        .emit("activation-complete", payload.code)
+                        .unwrap();
                     break;
                 }
                 _ => {}

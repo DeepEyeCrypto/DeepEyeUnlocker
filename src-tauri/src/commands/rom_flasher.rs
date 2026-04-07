@@ -1,9 +1,9 @@
-use tauri::AppHandle;
-use tauri::Manager;
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::CommandEvent;
 use serde::Serialize;
 use std::path::PathBuf;
+use tauri::AppHandle;
+use tauri::Manager;
+use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 fn get_tool_path(app: &AppHandle, tool: &str) -> Result<PathBuf, String> {
     #[cfg(target_os = "windows")]
@@ -33,11 +33,8 @@ fn get_tool_path(app: &AppHandle, tool: &str) -> Result<PathBuf, String> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(
-                &resource_path,
-                std::fs::Permissions::from_mode(0o755),
-            )
-            .map_err(|e| format!("chmod error: {e}"))?;
+            std::fs::set_permissions(&resource_path, std::fs::Permissions::from_mode(0o755))
+                .map_err(|e| format!("chmod error: {e}"))?;
         }
         resource_path
     } else {
@@ -56,10 +53,7 @@ pub struct FlashResult {
 
 /// Flash a custom ROM ZIP via TWRP sideload (device must be in TWRP sideload mode)
 #[tauri::command]
-pub async fn rom_sideload_zip(
-    app: AppHandle,
-    zip_path: String,
-) -> Result<FlashResult, String> {
+pub async fn rom_sideload_zip(app: AppHandle, zip_path: String) -> Result<FlashResult, String> {
     if !zip_path.ends_with(".zip") {
         return Err("Only .zip files are allowed for sideload".into());
     }
@@ -109,11 +103,22 @@ pub async fn rom_flash_partition(
     image_path: String,
 ) -> Result<FlashResult, String> {
     let allowed = [
-        "boot", "recovery", "system", "vendor", "dtbo",
-        "vbmeta", "cache", "userdata", "product", "system_ext",
+        "boot",
+        "recovery",
+        "system",
+        "vendor",
+        "dtbo",
+        "vbmeta",
+        "cache",
+        "userdata",
+        "product",
+        "system_ext",
     ];
     if !allowed.contains(&partition.as_str()) {
-        return Err(format!("Partition '{}' not in allowed flash list", partition));
+        return Err(format!(
+            "Partition '{}' not in allowed flash list",
+            partition
+        ));
     }
 
     let fastboot = get_tool_path(&app, "fastboot")?;

@@ -52,7 +52,11 @@ pub struct DeviceError {
 }
 
 impl DeviceError {
-    pub fn new(category: ErrorCategory, message: impl Into<String>, hint: impl Into<String>) -> Self {
+    pub fn new(
+        category: ErrorCategory,
+        message: impl Into<String>,
+        hint: impl Into<String>,
+    ) -> Self {
         Self {
             category: category.clone(),
             message: message.into(),
@@ -108,7 +112,11 @@ impl DeviceError {
     }
 
     pub fn invalid_input(msg: impl Into<String>) -> Self {
-        Self::new(ErrorCategory::InvalidInput, msg, "Check your input and try again.")
+        Self::new(
+            ErrorCategory::InvalidInput,
+            msg,
+            "Check your input and try again.",
+        )
     }
 
     pub fn tool_not_found(tool: impl Into<String>) -> Self {
@@ -247,7 +255,7 @@ where
                 if attempt < config.max_attempts && retryable {
                     let delay_ms = (config.initial_delay_ms as f64
                         * config.backoff_multiplier.powi((attempt - 1) as i32))
-                        .min(config.max_delay_ms as f64) as u64;
+                    .min(config.max_delay_ms as f64) as u64;
 
                     sleep(Duration::from_millis(delay_ms)).await;
                 }

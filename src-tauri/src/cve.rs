@@ -10,9 +10,11 @@ async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(format!("{}\n{}", 
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 /// Query local CVE database for specific iOS/Chip vulnerabilities
@@ -37,7 +39,10 @@ pub fn query_cve_database(version: String, chip: String) -> Result<String, Strin
     }
 
     if vulnerabilities.is_empty() {
-        Ok("No immediate high-severity CVEs found for this configuration in local cache.".to_string())
+        Ok(
+            "No immediate high-severity CVEs found for this configuration in local cache."
+                .to_string(),
+        )
     } else {
         Ok(vulnerabilities.join("\n"))
     }

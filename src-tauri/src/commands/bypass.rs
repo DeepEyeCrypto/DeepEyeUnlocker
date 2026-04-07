@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
 
@@ -15,13 +15,17 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 #[tauri::command]
 pub async fn ios_check_hello_state(app: AppHandle, udid: String) -> Result<HelloState, String> {
     println!("[COMMAND] ios_check_hello_state udid={}", udid);
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "hello-state",
-            &udid
+            &udid,
         ])
         .output()
         .await

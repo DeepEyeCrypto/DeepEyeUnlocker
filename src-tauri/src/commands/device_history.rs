@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri::Manager;
-use std::path::PathBuf;
-use std::fs;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DeviceHistoryEntry {
@@ -27,8 +27,7 @@ fn history_path(app: &AppHandle) -> Result<PathBuf, String> {
         .path()
         .app_data_dir()
         .map_err(|e| format!("app data dir error: {e}"))?;
-    fs::create_dir_all(&data_dir)
-        .map_err(|e| format!("create data dir error: {e}"))?;
+    fs::create_dir_all(&data_dir).map_err(|e| format!("create data dir error: {e}"))?;
     Ok(data_dir.join("device_history.json"))
 }
 
@@ -37,18 +36,15 @@ fn read_store(app: &AppHandle) -> Result<HistoryStore, String> {
     if !path.exists() {
         return Ok(HistoryStore::default());
     }
-    let data = fs::read_to_string(&path)
-        .map_err(|e| format!("read history error: {e}"))?;
-    serde_json::from_str(&data)
-        .map_err(|e| format!("parse history error: {e}"))
+    let data = fs::read_to_string(&path).map_err(|e| format!("read history error: {e}"))?;
+    serde_json::from_str(&data).map_err(|e| format!("parse history error: {e}"))
 }
 
 fn write_store(app: &AppHandle, store: &HistoryStore) -> Result<(), String> {
     let path = history_path(app)?;
-    let json = serde_json::to_string_pretty(store)
-        .map_err(|e| format!("serialize history error: {e}"))?;
-    fs::write(&path, json)
-        .map_err(|e| format!("write history error: {e}"))
+    let json =
+        serde_json::to_string_pretty(store).map_err(|e| format!("serialize history error: {e}"))?;
+    fs::write(&path, json).map_err(|e| format!("write history error: {e}"))
 }
 
 #[tauri::command]
@@ -66,7 +62,11 @@ pub async fn history_add_entry(
     let mut store = read_store(&app)?;
 
     let entry = DeviceHistoryEntry {
-        id: format!("{}-{}", chrono::Utc::now().timestamp_millis(), store.entries.len()),
+        id: format!(
+            "{}-{}",
+            chrono::Utc::now().timestamp_millis(),
+            store.entries.len()
+        ),
         timestamp: chrono::Utc::now().to_rfc3339(),
         model,
         serial,
@@ -96,13 +96,8 @@ pub async fn history_get_entries(
 ) -> Result<Vec<DeviceHistoryEntry>, String> {
     let store = read_store(&app)?;
     let limit = limit.unwrap_or(100).min(500);
-    let entries: Vec<DeviceHistoryEntry> = store
-        .entries
-        .iter()
-        .rev()
-        .take(limit)
-        .cloned()
-        .collect();
+    let entries: Vec<DeviceHistoryEntry> =
+        store.entries.iter().rev().take(limit).cloned().collect();
     Ok(entries)
 }
 
@@ -114,10 +109,7 @@ pub async fn history_clear(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn history_delete_entry(
-    app: AppHandle,
-    entry_id: String,
-) -> Result<String, String> {
+pub async fn history_delete_entry(app: AppHandle, entry_id: String) -> Result<String, String> {
     let mut store = read_store(&app)?;
     let before = store.entries.len();
     store.entries.retain(|e| e.id != entry_id);
@@ -131,6 +123,5 @@ pub async fn history_delete_entry(
 #[tauri::command]
 pub async fn history_export_json(app: AppHandle) -> Result<String, String> {
     let store = read_store(&app)?;
-    serde_json::to_string_pretty(&store.entries)
-        .map_err(|e| format!("export error: {e}"))
+    serde_json::to_string_pretty(&store.entries).map_err(|e| format!("export error: {e}"))
 }

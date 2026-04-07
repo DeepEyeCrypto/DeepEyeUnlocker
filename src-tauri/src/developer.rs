@@ -28,7 +28,11 @@ pub async fn mount_dev_disk_image(app: AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn unmount_dev_disk_image(app: AppHandle) -> Result<String, String> {
-    bash(&app, "ideviceimagemounter -u 2>&1 && echo '✅ DeveloperDiskImage unmounted'").await
+    bash(
+        &app,
+        "ideviceimagemounter -u 2>&1 && echo '✅ DeveloperDiskImage unmounted'",
+    )
+    .await
 }
 
 #[tauri::command]

@@ -1,4 +1,8 @@
-use std::{fs, sync::{Mutex, MutexGuard}, time::Duration};
+use std::{
+    fs,
+    sync::{Mutex, MutexGuard},
+    time::Duration,
+};
 
 use super::usb_utils::{
     debug_list_usb_devices, open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN,
@@ -35,7 +39,8 @@ const DA_CMD_ERASE_PARTITION_DA: u16 = 0x5008;
 const DA_CHUNK_SIZE: usize = 4096;
 
 // [INFERRED] MediaTek Boot ROM handshake bytes follow the public BROM bootstrap exchange used by mtkclient and SP Flash Tool traces.
-const BROM_HANDSHAKE_SEQUENCE: [(u8, u8); 4] = [(0xA0, 0x5F), (0x0A, 0xF5), (0x50, 0xAF), (0x05, 0xFA)];
+const BROM_HANDSHAKE_SEQUENCE: [(u8, u8); 4] =
+    [(0xA0, 0x5F), (0x0A, 0xF5), (0x50, 0xAF), (0x05, 0xFA)];
 
 static ACTIVE_BROM_SESSION: Mutex<Option<ActiveBromSession>> = Mutex::new(None);
 
@@ -157,10 +162,9 @@ fn usb_access_hint() -> &'static str {
 fn map_usb_error(operation: &str, error: rusb::Error) -> BromError {
     match error {
         rusb::Error::Timeout => BromError::Timeout,
-        rusb::Error::Access => BromError::UsbError(format!(
-            "{operation}: {error} — {}",
-            usb_access_hint()
-        )),
+        rusb::Error::Access => {
+            BromError::UsbError(format!("{operation}: {error} — {}", usb_access_hint()))
+        }
         _ => BromError::UsbError(format!("{operation}: {error}")),
     }
 }
@@ -173,7 +177,10 @@ fn mode_from_pid(pid: u16) -> Option<MtkMode> {
     }
 }
 
-fn build_device<T: UsbContext>(device: &Device<T>, descriptor: &DeviceDescriptor) -> Option<MtkDevice> {
+fn build_device<T: UsbContext>(
+    device: &Device<T>,
+    descriptor: &DeviceDescriptor,
+) -> Option<MtkDevice> {
     let mode = mode_from_pid(descriptor.product_id())?;
 
     Some(MtkDevice {
@@ -343,7 +350,10 @@ fn read_exact(handle: &DeviceHandle<GlobalContext>, buffer: &mut [u8]) -> Result
     Ok(())
 }
 
-fn release_claimed_interface(handle: &DeviceHandle<GlobalContext>, layout: InterfaceLayout) -> Result<(), BromError> {
+fn release_claimed_interface(
+    handle: &DeviceHandle<GlobalContext>,
+    layout: InterfaceLayout,
+) -> Result<(), BromError> {
     handle
         .release_interface(layout.interface_number)
         .map_err(|error| map_usb_error("release interface", error))
@@ -387,7 +397,9 @@ fn replace_active_session(session: ActiveBromSession) -> Result<(), BromError> {
     };
 
     if let Some(previous_session) = previous_session {
-        if let Err(error) = release_claimed_interface(&previous_session.handle, previous_session.layout) {
+        if let Err(error) =
+            release_claimed_interface(&previous_session.handle, previous_session.layout)
+        {
             debug_log(format!("session cleanup warning: {error}"));
         }
     }
@@ -416,7 +428,9 @@ where
 {
     let mut guard = lock_active_session()?;
     let session = guard.as_mut().ok_or_else(|| {
-        BromError::DaUploadFailed("No active BROM session. Run SLA bypass or upload DA first".to_string())
+        BromError::DaUploadFailed(
+            "No active BROM session. Run SLA bypass or upload DA first".to_string(),
+        )
     })?;
 
     callback(session)
@@ -427,7 +441,9 @@ fn open_handshaken_session() -> Result<ActiveBromSession, BromError> {
 
     if let Err(error) = brom_handshake(&handle) {
         if let Err(release_error) = release_claimed_interface(&handle, layout) {
-            debug_log(format!("session cleanup warning after handshake failure: {release_error}"));
+            debug_log(format!(
+                "session cleanup warning after handshake failure: {release_error}"
+            ));
         }
         return Err(error);
     }
@@ -481,7 +497,11 @@ pub fn brom_handshake(handle: &DeviceHandle<GlobalContext>) -> Result<(), BromEr
 }
 
 fn auth_type_from_response(response: u8) -> AuthType {
-    let compact_bits = if response & 0x0C != 0 { (response & 0x0C) >> 2 } else { response & 0x03 };
+    let compact_bits = if response & 0x0C != 0 {
+        (response & 0x0C) >> 2
+    } else {
+        response & 0x03
+    };
 
     match compact_bits {
         0 => AuthType::None,
@@ -545,9 +565,15 @@ fn xor_checksum(da_bytes: &[u8]) -> u16 {
     checksum
 }
 
-pub fn upload_da(handle: &DeviceHandle<GlobalContext>, da_bytes: &[u8]) -> Result<DaUploadResult, BromError> {
+pub fn upload_da(
+    handle: &DeviceHandle<GlobalContext>,
+    da_bytes: &[u8],
+) -> Result<DaUploadResult, BromError> {
     let size = u32::try_from(da_bytes.len()).map_err(|_| {
-        BromError::DaUploadFailed(format!("DA binary is too large: {} byte(s)", da_bytes.len()))
+        BromError::DaUploadFailed(format!(
+            "DA binary is too large: {} byte(s)",
+            da_bytes.len()
+        ))
     })?;
     let checksum = xor_checksum(da_bytes);
 
@@ -731,7 +757,9 @@ fn bypass_sla_blocking() -> Result<(), BromError> {
 fn upload_da_blocking(da_path: String) -> Result<DaUploadResult, BromError> {
     let trimmed_path = da_path.trim();
     if trimmed_path.is_empty() {
-        return Err(BromError::DaUploadFailed("DA path cannot be empty".to_string()));
+        return Err(BromError::DaUploadFailed(
+            "DA path cannot be empty".to_string(),
+        ));
     }
 
     let da_bytes = fs::read(trimmed_path).map_err(|error| {
@@ -807,7 +835,10 @@ pub fn da_send_cmd(
     cmd: u16,
     params: &[u8],
 ) -> Result<(), BromError> {
-    debug_log(format!("da_send_cmd cmd={cmd:#06x} params_len={}", params.len()));
+    debug_log(format!(
+        "da_send_cmd cmd={cmd:#06x} params_len={}",
+        params.len()
+    ));
     write_exact(handle, &cmd.to_be_bytes())?;
     if !params.is_empty() {
         write_exact(handle, params)?;
@@ -846,7 +877,9 @@ pub fn da_read_imei(handle: &DeviceHandle<GlobalContext>) -> Result<ImeiInfo, Br
     debug_log(format!("da_read_imei: device reports {count} IMEI(s)"));
 
     if count == 0 {
-        return Err(BromError::InvalidImei("Device returned 0 IMEIs".to_string()));
+        return Err(BromError::InvalidImei(
+            "Device returned 0 IMEIs".to_string(),
+        ));
     }
 
     let mut imeis: Vec<String> = Vec::with_capacity(count);
@@ -864,7 +897,11 @@ pub fn da_read_imei(handle: &DeviceHandle<GlobalContext>) -> Result<ImeiInfo, Br
 
     Ok(ImeiInfo {
         imei1: imeis.remove(0),
-        imei2: if imeis.is_empty() { None } else { Some(imeis.remove(0)) },
+        imei2: if imeis.is_empty() {
+            None
+        } else {
+            Some(imeis.remove(0))
+        },
     })
 }
 
@@ -909,7 +946,9 @@ fn crc8(data: &[u8]) -> u8 {
     data.iter().fold(0u8, |acc, &b| acc ^ b)
 }
 
-pub fn da_list_partitions(handle: &DeviceHandle<GlobalContext>) -> Result<Vec<PartitionEntry>, BromError> {
+pub fn da_list_partitions(
+    handle: &DeviceHandle<GlobalContext>,
+) -> Result<Vec<PartitionEntry>, BromError> {
     debug_log("da_list_partitions: querying device partition table");
     da_send_cmd(handle, DA_CMD_LIST_PARTITIONS, &[])?;
 
@@ -971,7 +1010,10 @@ pub fn da_read_partition(
     da_send_cmd(handle, DA_CMD_READ_PARTITION, &params)?;
 
     let mut file = fs::File::create(out_path).map_err(|e| {
-        BromError::DaUploadFailed(format!("Cannot create output file '{}': {e}", out_path.display()))
+        BromError::DaUploadFailed(format!(
+            "Cannot create output file '{}': {e}",
+            out_path.display()
+        ))
     })?;
 
     use std::io::Write;
@@ -1009,7 +1051,9 @@ pub fn da_read_partition(
         ));
     }
 
-    debug_log(format!("da_read_partition: complete, {total_written} bytes written"));
+    debug_log(format!(
+        "da_read_partition: complete, {total_written} bytes written"
+    ));
     Ok(total_written)
 }
 
@@ -1066,9 +1110,10 @@ pub fn da_dump_preloader(
     debug_log("da_dump_preloader: reading full preloader partition");
 
     let partitions = da_list_partitions(handle)?;
-    let preloader = partitions.iter().find(|p| p.name == "preloader").ok_or_else(|| {
-        BromError::PartitionNotFound("preloader".to_string())
-    })?;
+    let preloader = partitions
+        .iter()
+        .find(|p| p.name == "preloader")
+        .ok_or_else(|| BromError::PartitionNotFound("preloader".to_string()))?;
 
     da_read_partition(handle, "preloader", 0, preloader.size, out_path)
 }
@@ -1109,7 +1154,10 @@ fn list_partitions_blocking() -> Result<Vec<PartitionEntry>, BromError> {
 }
 
 fn read_partition_blocking(
-    name: String, offset: u64, length: u64, out_path: String,
+    name: String,
+    offset: u64,
+    length: u64,
+    out_path: String,
 ) -> Result<u64, BromError> {
     let path = std::path::PathBuf::from(&out_path);
     with_temporary_brom_handle(|handle| da_read_partition(handle, &name, offset, length, &path))
@@ -1229,7 +1277,10 @@ pub async fn mtk_list_partitions() -> Result<Vec<PartitionEntry>, String> {
 
 #[tauri::command]
 pub async fn mtk_da_read_partition(
-    name: String, offset: u64, length: u64, out_path: String,
+    name: String,
+    offset: u64,
+    length: u64,
+    out_path: String,
 ) -> Result<u64, String> {
     tokio::task::spawn_blocking(move || read_partition_blocking(name, offset, length, out_path))
         .await
@@ -1239,7 +1290,9 @@ pub async fn mtk_da_read_partition(
 
 #[tauri::command]
 pub async fn mtk_da_write_partition(
-    name: String, offset: u64, data_path: String,
+    name: String,
+    offset: u64,
+    data_path: String,
 ) -> Result<(), String> {
     tokio::task::spawn_blocking(move || write_partition_blocking(name, offset, data_path))
         .await

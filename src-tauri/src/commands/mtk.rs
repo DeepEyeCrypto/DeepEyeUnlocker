@@ -71,15 +71,7 @@ pub async fn mtk_read_partition(
         return Err("output_path must not be empty".to_string());
     }
 
-    run_mtk_client(
-        &app,
-        &[
-            "r",
-            partition.trim(),
-            output_path.trim(),
-        ],
-    )
-    .await
+    run_mtk_client(&app, &["r", partition.trim(), output_path.trim()]).await
 }
 
 #[tauri::command]
@@ -95,15 +87,7 @@ pub async fn mtk_write_partition(
         return Err("input_path must not be empty".to_string());
     }
 
-    run_mtk_client(
-        &app,
-        &[
-            "w",
-            partition.trim(),
-            input_path.trim(),
-        ],
-    )
-    .await
+    run_mtk_client(&app, &["w", partition.trim(), input_path.trim()]).await
 }
 
 #[tauri::command]
@@ -124,4 +108,3 @@ pub async fn mtk_device_info(app: AppHandle) -> Result<String, String> {
 pub async fn mtk_unlock_bootloader(app: AppHandle) -> Result<String, String> {
     run_mtk_client(&app, &["da", "seccfg", "unlock"]).await
 }
-

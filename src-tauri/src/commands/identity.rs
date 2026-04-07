@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
+use crate::commands::ios_backup::python_script_path;
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
-use crate::commands::ios_backup::python_script_path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeviceIdentity {
@@ -34,14 +34,15 @@ pub async fn ios_device_identity(app: AppHandle, udid: String) -> Result<DeviceI
     }
 
     let cli_script = python_script_path(&app, "ios_backup/cli.py")?;
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args([
             cli_script
                 .to_str()
                 .ok_or_else(|| "invalid ios_backup cli path".to_string())?,
             "device-identity",
-            &udid
+            &udid,
         ])
         .output()
         .await
@@ -59,14 +60,15 @@ pub async fn ios_imei_state(app: AppHandle, udid: String) -> Result<ImeiState, S
     }
 
     let cli_script = python_script_path(&app, "ios_backup/cli.py")?;
-    let output = app.shell()
+    let output = app
+        .shell()
         .command("python3")
         .args([
             cli_script
                 .to_str()
                 .ok_or_else(|| "invalid ios_backup cli path".to_string())?,
             "activation-matrix",
-            &udid
+            &udid,
         ])
         .output()
         .await
@@ -74,12 +76,14 @@ pub async fn ios_imei_state(app: AppHandle, udid: String) -> Result<ImeiState, S
 
     let json_str = String::from_utf8_lossy(&output.stdout);
     let matrix: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| e.to_string())?;
-    
+
     Ok(ImeiState {
         imei: matrix["imei_present"].as_str().unwrap_or("N/A").to_string(),
         valid: matrix["imei_valid"].as_bool().unwrap_or(false),
         cdma_meid: matrix["is_meid_cdma"].as_bool().unwrap_or(false),
-        gsm_signal_eligible: matrix["eligible_types"].as_array().is_some_and(|a| a.iter().any(|v| v == "GsmSignal")),
+        gsm_signal_eligible: matrix["eligible_types"]
+            .as_array()
+            .is_some_and(|a| a.iter().any(|v| v == "GsmSignal")),
         icloud_lock_inferred: None,
     })
 }

@@ -20,21 +20,13 @@ async fn bash(app: &AppHandle, s: &str) -> Result<String, String> {
 #[tauri::command]
 pub async fn get_signed_firmwares(app: AppHandle, identifier: String) -> Result<String, String> {
     let cmd = "curl -s 'https://api.ipsw.me/v4/device/__ID__?type=ipsw' | python3 -c \"import json,sys; d=json.load(sys.stdin); fw=d.get('firmwares',[]); s=[f for f in fw if f.get('signed')]; [print('✅ iOS %s | Build %s | %.2f GB' % (f.get('version','?'), f.get('buildid','?'), (f.get('filesize',0)/1e9))) for f in s]; print('\\n%d version(s) currently signed' % len(s))\" 2>&1".replace("__ID__", &identifier);
-    bash(
-        &app,
-        &cmd,
-    )
-    .await
+    bash(&app, &cmd).await
 }
 
 #[tauri::command]
 pub async fn get_all_firmwares(app: AppHandle, identifier: String) -> Result<String, String> {
     let cmd = "curl -s 'https://api.ipsw.me/v4/device/__ID__?type=ipsw' | python3 -c \"import json,sys; d=json.load(sys.stdin); fw=d.get('firmwares',[]); [print(('✅' if f.get('signed') else '❌') + (' iOS %s | %s | %.2f GB' % (f.get('version','?'), f.get('buildid','?'), (f.get('filesize',0)/1e9)))) for f in fw[:30]]\" 2>&1".replace("__ID__", &identifier);
-    bash(
-        &app,
-        &cmd,
-    )
-    .await
+    bash(&app, &cmd).await
 }
 
 #[tauri::command]

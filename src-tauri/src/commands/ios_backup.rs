@@ -1,11 +1,11 @@
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::CommandEvent;
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Emitter;
 #[allow(unused_imports)]
 use tauri::Manager;
+use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 /**
  * Layer 1 — python_module_root() path utility
@@ -33,19 +33,20 @@ pub fn python_module_root(_app: &tauri::AppHandle) -> Result<PathBuf, String> {
             .app_data_dir()
             .map_err(|e| format!("app data dir error: {e}"))?;
         let python_dir = app_data_dir.join("python");
-        fs::create_dir_all(&python_dir)
-            .map_err(|e| format!("create python dir error: {e}"))?;
+        fs::create_dir_all(&python_dir).map_err(|e| format!("create python dir error: {e}"))?;
         Ok(python_dir)
     }
 }
 
-pub fn python_script_path(app: &tauri::AppHandle, relative_script_path: &str) -> Result<PathBuf, String> {
+pub fn python_script_path(
+    app: &tauri::AppHandle,
+    relative_script_path: &str,
+) -> Result<PathBuf, String> {
     let python_root = python_module_root(app)?;
     let script_path = python_root.join(relative_script_path);
 
     if let Some(parent) = script_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("create python script dir error: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("create python script dir error: {e}"))?;
     }
 
     if !script_path.exists() {
@@ -63,13 +64,11 @@ pub fn python_script_path(app: &tauri::AppHandle, relative_script_path: &str) ->
  */
 
 #[tauri::command]
-pub async fn ios_backup_info(
-    app: tauri::AppHandle,
-    backup_path: String,
-) -> Result<Value, String> {
+pub async fn ios_backup_info(app: tauri::AppHandle, backup_path: String) -> Result<Value, String> {
     let python_root = python_module_root(&app)?;
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
         .args(["-m", "ios_backup.cli", "info", &backup_path])
         .env("PYTHONPATH", python_root)
@@ -91,10 +90,18 @@ pub async fn ios_extract_hash(
     output_path: String,
 ) -> Result<u32, String> {
     let python_root = python_module_root(&app)?;
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
-        .args(["-m", "ios_backup.cli", "hash", &backup_path, "--output", &output_path])
+        .args([
+            "-m",
+            "ios_backup.cli",
+            "hash",
+            &backup_path,
+            "--output",
+            &output_path,
+        ])
         .env("PYTHONPATH", python_root)
         .output()
         .await
@@ -118,10 +125,18 @@ pub async fn ios_extract_screentime(
     password: String,
 ) -> Result<Value, String> {
     let python_root = python_module_root(&app)?;
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
-        .args(["-m", "ios_backup.cli", "screentime", &backup_path, "--password", &password])
+        .args([
+            "-m",
+            "ios_backup.cli",
+            "screentime",
+            &backup_path,
+            "--password",
+            &password,
+        ])
         .env("PYTHONPATH", python_root)
         .output()
         .await
@@ -141,10 +156,18 @@ pub async fn ios_run_crack(
     wordlist: String,
 ) -> Result<Option<String>, String> {
     let python_root = python_module_root(&app)?;
-    
-    let (mut rx, _child) = app.shell()
+
+    let (mut rx, _child) = app
+        .shell()
         .command("python3")
-        .args(["-m", "ios_backup.cli", "crack", &backup_path, "--wordlist", &wordlist])
+        .args([
+            "-m",
+            "ios_backup.cli",
+            "crack",
+            &backup_path,
+            "--wordlist",
+            &wordlist,
+        ])
         .env("PYTHONPATH", python_root)
         .spawn()
         .map_err(|e| e.to_string())?;
@@ -153,12 +176,12 @@ pub async fn ios_run_crack(
         match event {
             CommandEvent::Stdout(line_bytes) => {
                 let line = String::from_utf8_lossy(&line_bytes);
-                
+
                 // Logic for streaming progress
                 if line.contains("H/s") || line.contains("STATUS") {
                     app.emit("ios-crack-progress", line.to_string()).ok();
                 }
-                
+
                 // Logic for terminal password found
                 if line.contains("PASSWORD FOUND") {
                     app.emit("ios-crack-found", line.to_string()).ok();
@@ -173,7 +196,11 @@ pub async fn ios_run_crack(
             }
             CommandEvent::Terminated(status) => {
                 if status.code != Some(0) {
-                    app.emit("ios-crack-error", format!("Process terminated with code {:?}", status.code)).ok();
+                    app.emit(
+                        "ios-crack-error",
+                        format!("Process terminated with code {:?}", status.code),
+                    )
+                    .ok();
                 }
                 break;
             }

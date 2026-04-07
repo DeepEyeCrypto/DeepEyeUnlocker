@@ -1,10 +1,14 @@
+use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri::Manager;
-use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
-use std::path::PathBuf;
+use tauri_plugin_shell::ShellExt;
 
-fn parse_shell_events(event: CommandEvent, out: &mut String, err: &mut String) -> Option<Result<(), String>> {
+fn parse_shell_events(
+    event: CommandEvent,
+    out: &mut String,
+    err: &mut String,
+) -> Option<Result<(), String>> {
     match event {
         CommandEvent::Stdout(b) => {
             out.push_str(&String::from_utf8_lossy(&b));
@@ -54,11 +58,8 @@ fn get_tool_path(app: &AppHandle, tool: &str) -> Result<PathBuf, String> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(
-                &resource_path,
-                std::fs::Permissions::from_mode(0o755),
-            )
-            .map_err(|e| format!("chmod error: {e}"))?;
+            std::fs::set_permissions(&resource_path, std::fs::Permissions::from_mode(0o755))
+                .map_err(|e| format!("chmod error: {e}"))?;
         }
         resource_path
     } else {
@@ -102,11 +103,8 @@ pub async fn apple_device_info(app: AppHandle) -> Result<String, String> {
 }
 
 // Send irecovery command (Recovery / DFU mode)
-#[tauri              ::command]
-pub async fn apple_irecovery_cmd(
-    app: AppHandle,
-    command: String
-) -> Result<String, String> {
+#[tauri::command]
+pub async fn apple_irecovery_cmd(app: AppHandle, command: String) -> Result<String, String> {
     let irecovery = get_tool_path(&app, "irecovery")?;
     let shell = app.shell();
     let (mut rx, _child) = shell
@@ -121,7 +119,7 @@ pub async fn apple_irecovery_cmd(
         match event {
             CommandEvent::Stdout(b) => out.push_str(&String::from_utf8_lossy(&b)),
             CommandEvent::Stderr(b) => err.push_str(&String::from_utf8_lossy(&b)),
-            CommandEvent::Error(e)  => return Err(e),
+            CommandEvent::Error(e) => return Err(e),
             CommandEvent::Terminated(s) => {
                 if s.code.unwrap_or(-1) != 0 {
                     return Err(format!("irecovery exit {:?}\nstderr: {err}", s.code));
@@ -171,7 +169,9 @@ pub async fn apple_enter_dfu(app: AppHandle) -> Result<String, String> {
         .map_err(|e| format!("DFU prep error: {e}"))?;
 
     while let Some(event) = rx.recv().await {
-        if let CommandEvent::Terminated(_) = event { break; }
+        if let CommandEvent::Terminated(_) = event {
+            break;
+        }
     }
     Ok("DFU environment set — physical button combo required".to_string())
 }
@@ -230,7 +230,11 @@ pub async fn apple_restore_ipsw(
     }
 
     let (mut rx, _child) = shell
-        .command(idevicerestore.to_str().ok_or("invalid idevicerestore path")?)
+        .command(
+            idevicerestore
+                .to_str()
+                .ok_or("invalid idevicerestore path")?,
+        )
         .args(args)
         .spawn()
         .map_err(|e| format!("idevicerestore error: {e}"))?;
@@ -253,7 +257,11 @@ pub async fn apple_check_activation(app: AppHandle) -> Result<String, String> {
     let ideviceactivation = get_tool_path(&app, "ideviceactivation")?;
     let shell = app.shell();
     let (mut rx, _child) = shell
-        .command(ideviceactivation.to_str().ok_or("invalid ideviceactivation path")?)
+        .command(
+            ideviceactivation
+                .to_str()
+                .ok_or("invalid ideviceactivation path")?,
+        )
         .args(["state"])
         .spawn()
         .map_err(|e| format!("activation check error: {e}"))?;
@@ -278,14 +286,15 @@ pub async fn apple_check_activation(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn apple_dns_activation(
-    app: AppHandle,
-    server_host: String,
-) -> Result<String, String> {
+pub async fn apple_dns_activation(app: AppHandle, server_host: String) -> Result<String, String> {
     let ideviceactivation = get_tool_path(&app, "ideviceactivation")?;
     let shell = app.shell();
     let (mut rx, _child) = shell
-        .command(ideviceactivation.to_str().ok_or("invalid ideviceactivation path")?)
+        .command(
+            ideviceactivation
+                .to_str()
+                .ok_or("invalid ideviceactivation path")?,
+        )
         .args(["activate", "-s", &server_host])
         .spawn()
         .map_err(|e| format!("DNS bypass error: {e}"))?;
@@ -310,14 +319,15 @@ pub async fn apple_dns_activation(
 }
 
 #[tauri::command]
-pub async fn apple_mdm_bypass(
-    app: AppHandle,
-    profile_path: String,
-) -> Result<String, String> {
+pub async fn apple_mdm_bypass(app: AppHandle, profile_path: String) -> Result<String, String> {
     let ideviceinstaller = get_tool_path(&app, "ideviceinstaller")?;
     let shell = app.shell();
     let (mut rx, _child) = shell
-        .command(ideviceinstaller.to_str().ok_or("invalid ideviceinstaller path")?)
+        .command(
+            ideviceinstaller
+                .to_str()
+                .ok_or("invalid ideviceinstaller path")?,
+        )
         .args(["--install", &profile_path])
         .spawn()
         .map_err(|e| format!("MDM profile install error: {e}"))?;
@@ -349,7 +359,11 @@ pub async fn apple_restore_activation_record(
     let ideviceactivation = get_tool_path(&app, "ideviceactivation")?;
     let shell = app.shell();
     let (mut rx, _child) = shell
-        .command(ideviceactivation.to_str().ok_or("invalid ideviceactivation path")?)
+        .command(
+            ideviceactivation
+                .to_str()
+                .ok_or("invalid ideviceactivation path")?,
+        )
         .args(["activate", "-A", &record_path])
         .spawn()
         .map_err(|e| format!("activation restore error: {e}"))?;

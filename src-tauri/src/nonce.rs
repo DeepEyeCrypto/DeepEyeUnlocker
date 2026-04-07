@@ -30,7 +30,9 @@ pub async fn get_current_nonce(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub async fn set_nonce_generator(app: AppHandle, generator: String) -> Result<String, String> {
     if !generator.starts_with("0x") || generator.len() != 18 {
-        return Err("Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)".into());
+        return Err(
+            "Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)".into(),
+        );
     }
 
     let cmd = format!(
@@ -39,7 +41,9 @@ pub async fn set_nonce_generator(app: AppHandle, generator: String) -> Result<St
          irecovery -s -c \"reset\""
     );
     let out = run_bash(&app, &cmd).await?;
-    Ok(format!("✅ Nonce set to {generator}\nDevice rebooting...\n{out}"))
+    Ok(format!(
+        "✅ Nonce set to {generator}\nDevice rebooting...\n{out}"
+    ))
 }
 
 #[tauri::command]
@@ -54,10 +58,7 @@ fn extract_generator_from_plist(plist: &str) -> Result<String, String> {
     for (i, line) in lines.iter().enumerate() {
         if line.contains("generator") {
             if let Some(next) = lines.get(i + 1) {
-                let val = next
-                    .trim()
-                    .replace("<string>", "")
-                    .replace("</string>", "");
+                let val = next.trim().replace("<string>", "").replace("</string>", "");
                 if val.starts_with("0x") {
                     return Ok(val);
                 }

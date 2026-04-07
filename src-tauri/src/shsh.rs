@@ -10,9 +10,11 @@ async fn run_bash(app: &AppHandle, s: &str) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(format!("{}\n{}", 
+    Ok(format!(
+        "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)))
+        String::from_utf8_lossy(&output.stderr)
+    ))
 }
 
 /// Get ECID from connected device
@@ -29,34 +31,58 @@ pub async fn get_board_config(app: AppHandle) -> Result<String, String> {
 
 /// Save SHSH blobs for currently connected device — all signed firmwares
 #[tauri::command]
-pub async fn save_shsh_all_signed(app: AppHandle, model: String, ecid: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
+pub async fn save_shsh_all_signed(
+    app: AppHandle,
+    model: String,
+    ecid: String,
+) -> Result<String, String> {
+    run_bash(
+        &app,
+        &format!(
+            "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
          tsschecker -d '{model}' -e '{ecid}' -s -a \
          --save-path ~/DeepEyeUnlocker/shsh/{ecid}/ 2>&1"
-    ))
+        ),
+    )
     .await
 }
 
 /// Save SHSH blob for specific iOS version
 #[tauri::command]
-pub async fn save_shsh_specific(app: AppHandle, model: String, ecid: String, ios: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
+pub async fn save_shsh_specific(
+    app: AppHandle,
+    model: String,
+    ecid: String,
+    ios: String,
+) -> Result<String, String> {
+    run_bash(
+        &app,
+        &format!(
+            "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
          tsschecker -d '{model}' -e '{ecid}' -i '{ios}' -s \
          --save-path ~/DeepEyeUnlocker/shsh/{ecid}/ 2>&1"
-    ))
+        ),
+    )
     .await
 }
 
 /// Save using generator (for nonce collision downgrade)
 #[tauri::command]
-pub async fn save_shsh_with_generator(app: AppHandle, model: String, ecid: String, ios: String, generator: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
+pub async fn save_shsh_with_generator(
+    app: AppHandle,
+    model: String,
+    ecid: String,
+    ios: String,
+    generator: String,
+) -> Result<String, String> {
+    run_bash(
+        &app,
+        &format!(
+            "mkdir -p ~/DeepEyeUnlocker/shsh/{ecid} && \
          tsschecker -d '{model}' -e '{ecid}' -i '{ios}' -g '{generator}' -s \
          --save-path ~/DeepEyeUnlocker/shsh/{ecid}/ 2>&1"
-    ))
+        ),
+    )
     .await
 }
 
@@ -66,7 +92,7 @@ pub async fn list_saved_shsh(app: AppHandle) -> Result<String, String> {
     run_bash(
         &app,
         "find ~/DeepEyeUnlocker/shsh -name '*.shsh2' 2>/dev/null | \
-         while read f; do echo \"$(basename $f)\"; done | sort"
+         while read f; do echo \"$(basename $f)\"; done | sort",
     )
     .await
 }
@@ -74,9 +100,10 @@ pub async fn list_saved_shsh(app: AppHandle) -> Result<String, String> {
 /// Check which iOS versions are currently signed by Apple
 #[tauri::command]
 pub async fn check_signed_versions(app: AppHandle, model: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "tsschecker -d '{model}' --list-ios 2>&1 | grep -i 'signed\\|available'"
-    ))
+    run_bash(
+        &app,
+        &format!("tsschecker -d '{model}' --list-ios 2>&1 | grep -i 'signed\\|available'"),
+    )
     .await
 }
 
@@ -87,21 +114,29 @@ pub async fn futurerestore(
     ipsw_path: String,
     shsh_path: String,
     _sep_manifest: String,
-    _baseband: String
+    _baseband: String,
 ) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "futurerestore -t '{shsh_path}' \
+    run_bash(
+        &app,
+        &format!(
+            "futurerestore -t '{shsh_path}' \
          --latest-sep --latest-baseband \
          '{ipsw_path}' 2>&1"
-    ))
+        ),
+    )
     .await
 }
 
 /// futurerestore no baseband (WiFi iPad, iPod)
 #[tauri::command]
-pub async fn futurerestore_no_baseband(app: AppHandle, ipsw_path: String, shsh_path: String) -> Result<String, String> {
-    run_bash(&app, &format!(
-        "futurerestore -t '{shsh_path}' --no-baseband '{ipsw_path}' 2>&1"
-    ))
+pub async fn futurerestore_no_baseband(
+    app: AppHandle,
+    ipsw_path: String,
+    shsh_path: String,
+) -> Result<String, String> {
+    run_bash(
+        &app,
+        &format!("futurerestore -t '{shsh_path}' --no-baseband '{ipsw_path}' 2>&1"),
+    )
     .await
 }

@@ -70,7 +70,9 @@ fn open_samsung() -> Result<DeviceHandle<GlobalContext>, SamsungError> {
         .map_err(|e| SamsungError::UsbError(e.to_string()))?;
 
     for dev in devices.iter() {
-        let desc = dev.device_descriptor().map_err(|e| SamsungError::UsbError(e.to_string()))?;
+        let desc = dev
+            .device_descriptor()
+            .map_err(|e| SamsungError::UsbError(e.to_string()))?;
         if desc.vendor_id() == SAMSUNG_VID && SAMSUNG_PIDS.contains(&desc.product_id()) {
             let handle = dev
                 .open()
@@ -107,7 +109,9 @@ pub fn find_samsung_device() -> Result<SamsungDevice, SamsungError> {
         .map_err(|e| SamsungError::UsbError(e.to_string()))?;
 
     for dev in devices.iter() {
-        let desc = dev.device_descriptor().map_err(|e| SamsungError::UsbError(e.to_string()))?;
+        let desc = dev
+            .device_descriptor()
+            .map_err(|e| SamsungError::UsbError(e.to_string()))?;
         if desc.vendor_id() == SAMSUNG_VID && SAMSUNG_PIDS.contains(&desc.product_id()) {
             let mode = match desc.product_id() {
                 0x685d | 0x6860 => SamsungMode::DownloadMode,
@@ -224,8 +228,7 @@ pub fn samsung_flash_partition(
     on_progress: impl Fn(u32),
 ) -> Result<(), SamsungError> {
     let handle = open_samsung()?;
-    let data = std::fs::read(file_path)
-        .map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
+    let data = std::fs::read(file_path).map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
 
     let total = data.len();
     // begin flash cmd: 0x66
@@ -271,8 +274,7 @@ pub fn samsung_erase_frp() -> Result<(), SamsungError> {
     let size = frp.size as usize;
     let zeros = vec![0u8; size];
     let tmp = std::env::temp_dir().join("frp_zero.bin");
-    std::fs::write(&tmp, &zeros)
-        .map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
+    std::fs::write(&tmp, &zeros).map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
 
     samsung_flash_partition("frp", &tmp, |_| {})?;
     let _ = std::fs::remove_file(&tmp);
@@ -311,4 +313,3 @@ pub fn samsung_do_erase_frp_cmd() -> Result<(), String> {
 pub fn samsung_reboot_device_cmd(mode: u8) -> Result<(), String> {
     samsung_reboot(mode).map_err(|e| e.to_string())
 }
-

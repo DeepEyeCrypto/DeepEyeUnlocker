@@ -1,4 +1,6 @@
-use super::usb_utils::{check_winusb_installed, debug_list_usb_devices, open_and_claim, EP_IN, EP_OUT};
+use super::usb_utils::{
+    check_winusb_installed, debug_list_usb_devices, open_and_claim, EP_IN, EP_OUT,
+};
 use rusb::{Device, DeviceDescriptor, DeviceHandle, GlobalContext};
 use serde::Serialize;
 use std::time::Duration;
@@ -59,10 +61,9 @@ fn usb_access_hint() -> &'static str {
 fn map_usb_error(operation: &str, error: rusb::Error) -> EdlError {
     match error {
         rusb::Error::Timeout => EdlError::Timeout,
-        rusb::Error::Access => EdlError::UsbError(format!(
-            "{operation}: {error} — {}",
-            usb_access_hint()
-        )),
+        rusb::Error::Access => {
+            EdlError::UsbError(format!("{operation}: {error} — {}", usb_access_hint()))
+        }
         _ => EdlError::UsbError(format!("{operation}: {error}")),
     }
 }
@@ -117,7 +118,8 @@ pub fn find_edl_device() -> Result<EdlDeviceInfo, EdlError> {
 
     ensure_driver_ready(desc.vendor_id(), desc.product_id())?;
 
-    let handle = open_and_claim(&device).map_err(|error| map_usb_error("open EDL device", error))?;
+    let handle =
+        open_and_claim(&device).map_err(|error| map_usb_error("open EDL device", error))?;
     let serial = handle.read_serial_number_string_ascii(&desc).ok();
 
     Ok(EdlDeviceInfo {
@@ -130,15 +132,20 @@ pub fn find_edl_device() -> Result<EdlDeviceInfo, EdlError> {
 
 pub fn sahara_handshake(handle: &DeviceHandle<GlobalContext>) -> Result<SaharaInfo, EdlError> {
     let mut buf = [0u8; 1024];
-    let len = handle.read_bulk(EP_IN, &mut buf, TIMEOUT)
+    let len = handle
+        .read_bulk(EP_IN, &mut buf, TIMEOUT)
         .map_err(|e| EdlError::UsbError(format!("Read failed: {}", e)))?;
-    
+
     if len < 8 {
         return Err(EdlError::SaharaFailed("Incomplete Hello Packet".into()));
     }
     let cmd = u32::from_le_bytes(buf[0..4].try_into().unwrap());
-    if cmd != 0x01 { // SAHARA_HELLO
-        return Err(EdlError::SaharaFailed(format!("Expected Hello (1), got {}", cmd)));
+    if cmd != 0x01 {
+        // SAHARA_HELLO
+        return Err(EdlError::SaharaFailed(format!(
+            "Expected Hello (1), got {}",
+            cmd
+        )));
     }
 
     let version = u32::from_le_bytes(buf[8..12].try_into().unwrap());
@@ -154,13 +161,21 @@ pub fn sahara_handshake(handle: &DeviceHandle<GlobalContext>) -> Result<SaharaIn
     resp[16..20].copy_from_slice(&0u32.to_le_bytes()); // Status OK
     resp[20..24].copy_from_slice(&mode.to_le_bytes()); // Mode
 
-    handle.write_bulk(EP_OUT, &resp, TIMEOUT)
+    handle
+        .write_bulk(EP_OUT, &resp, TIMEOUT)
         .map_err(|e| EdlError::UsbError(format!("Write failed: {}", e)))?;
 
-    Ok(SaharaInfo { version, mode, max_packet_size })
+    Ok(SaharaInfo {
+        version,
+        mode,
+        max_packet_size,
+    })
 }
 
-pub fn sahara_upload_programmer(handle: &DeviceHandle<GlobalContext>, programmer_path: &std::path::Path) -> Result<(), EdlError> {
+pub fn sahara_upload_programmer(
+    handle: &DeviceHandle<GlobalContext>,
+    programmer_path: &std::path::Path,
+) -> Result<(), EdlError> {
     let payload = std::fs::read(programmer_path)
         .map_err(|e| EdlError::ProgrammerFailed(format!("File read err: {}", e)))?;
 
@@ -171,42 +186,53 @@ pub fn sahara_upload_programmer(handle: &DeviceHandle<GlobalContext>, programmer
             Err(e) => return Err(EdlError::UsbError(e.to_string())),
         };
 
-        if len < 8 { continue; }
+        if len < 8 {
+            continue;
+        }
         let cmd = u32::from_le_bytes(buf[0..4].try_into().unwrap());
-        
-        if cmd == 0x03 { // READ_DATA
+
+        if cmd == 0x03 {
+            // READ_DATA
             let _image_id = u32::from_le_bytes(buf[8..12].try_into().unwrap());
             let offset = u32::from_le_bytes(buf[12..16].try_into().unwrap()) as usize;
             let length = u32::from_le_bytes(buf[16..20].try_into().unwrap()) as usize;
-            
+
             let end = std::cmp::min(offset + length, payload.len());
             let chunk = &payload[offset..end];
-            handle.write_bulk(EP_OUT, chunk, TIMEOUT)
+            handle
+                .write_bulk(EP_OUT, chunk, TIMEOUT)
                 .map_err(|e| EdlError::UsbError(e.to_string()))?;
-        } else if cmd == 0x04 { // END_OF_IMG
+        } else if cmd == 0x04 {
+            // END_OF_IMG
             // Send DONE
             let mut done_pkt = vec![0u8; 8];
             done_pkt[0..4].copy_from_slice(&5u32.to_le_bytes());
             done_pkt[4..8].copy_from_slice(&8u32.to_le_bytes());
             handle.write_bulk(EP_OUT, &done_pkt, TIMEOUT).ok();
             break;
-        } else if cmd == 0x06 { // DONE_RESP
+        } else if cmd == 0x06 {
+            // DONE_RESP
             break;
         } else {
-            return Err(EdlError::ProgrammerFailed(format!("Unexpected Sahara CMD: {}", cmd)));
+            return Err(EdlError::ProgrammerFailed(format!(
+                "Unexpected Sahara CMD: {}",
+                cmd
+            )));
         }
     }
     Ok(())
 }
 
 pub fn firehose_send(handle: &DeviceHandle<GlobalContext>, xml: &str) -> Result<String, EdlError> {
-    handle.write_bulk(EP_OUT, xml.as_bytes(), TIMEOUT)
+    handle
+        .write_bulk(EP_OUT, xml.as_bytes(), TIMEOUT)
         .map_err(|e| EdlError::UsbError(e.to_string()))?;
 
     let mut buf = [0u8; 4096];
-    let len = handle.read_bulk(EP_IN, &mut buf, TIMEOUT)
+    let len = handle
+        .read_bulk(EP_IN, &mut buf, TIMEOUT)
         .map_err(|e| EdlError::UsbError(e.to_string()))?;
-    
+
     let resp = String::from_utf8_lossy(&buf[0..len]).to_string();
     if resp.contains("value=\"NAK\"") {
         return Err(EdlError::FirehoseNak(resp));
@@ -214,7 +240,11 @@ pub fn firehose_send(handle: &DeviceHandle<GlobalContext>, xml: &str) -> Result<
     Ok(resp)
 }
 
-pub fn firehose_configure(handle: &DeviceHandle<GlobalContext>, max_payload: u32, _sector_size: u32) -> Result<(), EdlError> {
+pub fn firehose_configure(
+    handle: &DeviceHandle<GlobalContext>,
+    max_payload: u32,
+    _sector_size: u32,
+) -> Result<(), EdlError> {
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><configure TargetName=\"sdm660\" MaxPayloadSizeToTargetInBytes=\"{}\" ZlpAwareHost=\"1\" SkipStorageInit=\"0\"/></data>",
         max_payload
@@ -223,7 +253,10 @@ pub fn firehose_configure(handle: &DeviceHandle<GlobalContext>, max_payload: u32
     Ok(())
 }
 
-pub fn firehose_erase(handle: &DeviceHandle<GlobalContext>, partition_name: &str) -> Result<(), EdlError> {
+pub fn firehose_erase(
+    handle: &DeviceHandle<GlobalContext>,
+    partition_name: &str,
+) -> Result<(), EdlError> {
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><erase SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" /></data>",
         partition_name
@@ -232,21 +265,32 @@ pub fn firehose_erase(handle: &DeviceHandle<GlobalContext>, partition_name: &str
     Ok(())
 }
 
-pub fn firehose_read_partition(handle: &DeviceHandle<GlobalContext>, partition_name: &str, num_sectors: u64, out_path: &std::path::Path) -> Result<u64, EdlError> {
+pub fn firehose_read_partition(
+    handle: &DeviceHandle<GlobalContext>,
+    partition_name: &str,
+    num_sectors: u64,
+    out_path: &std::path::Path,
+) -> Result<u64, EdlError> {
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><read SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" num_partition_sectors=\"{}\" /></data>",
         partition_name, num_sectors
     );
     firehose_send(handle, &xml)?;
-    
+
     // Abstracting out the explicit bulk loop to a dummy file writer for skeleton sake
     // In real implementation, read chunks of MaxPayloadSizeToTargetInBytes.
     std::fs::write(out_path, b"DUMMY DATA").map_err(|e| EdlError::UsbError(e.to_string()))?;
     Ok(num_sectors * 4096)
 }
 
-pub fn firehose_write_partition(handle: &DeviceHandle<GlobalContext>, partition_name: &str, data_path: &std::path::Path) -> Result<(), EdlError> {
-    let size = std::fs::metadata(data_path).map_err(|e| EdlError::UsbError(e.to_string()))?.len();
+pub fn firehose_write_partition(
+    handle: &DeviceHandle<GlobalContext>,
+    partition_name: &str,
+    data_path: &std::path::Path,
+) -> Result<(), EdlError> {
+    let size = std::fs::metadata(data_path)
+        .map_err(|e| EdlError::UsbError(e.to_string()))?
+        .len();
     let num_sectors = size.div_ceil(4096);
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><program SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" num_partition_sectors=\"{}\" /></data>",
@@ -256,17 +300,20 @@ pub fn firehose_write_partition(handle: &DeviceHandle<GlobalContext>, partition_
     Ok(())
 }
 
-pub fn firehose_get_storage_info(handle: &DeviceHandle<GlobalContext>) -> Result<StorageInfo, EdlError> {
-    let xml = "<?xml version=\"1.0\" ?><data><getStorageInfo physical_partition_number=\"0\"/></data>";
+pub fn firehose_get_storage_info(
+    handle: &DeviceHandle<GlobalContext>,
+) -> Result<StorageInfo, EdlError> {
+    let xml =
+        "<?xml version=\"1.0\" ?><data><getStorageInfo physical_partition_number=\"0\"/></data>";
     let resp = firehose_send(handle, xml)?;
-    
+
     // Naively scan XML string
     let total_blocks = if let Some(_idx) = resp.find("num_physical_partitions=") {
         1024 // Mock dummy parsing because quick-xml would be complex.
     } else {
         0
     };
-    
+
     Ok(StorageInfo {
         total_blocks,
         block_size: 4096,
@@ -275,7 +322,10 @@ pub fn firehose_get_storage_info(handle: &DeviceHandle<GlobalContext>) -> Result
 }
 
 pub fn firehose_reboot(handle: &DeviceHandle<GlobalContext>, mode: &str) -> Result<(), EdlError> {
-    let xml = format!("<?xml version=\"1.0\" ?><data><power value=\"{}\"/></data>", mode);
+    let xml = format!(
+        "<?xml version=\"1.0\" ?><data><power value=\"{}\"/></data>",
+        mode
+    );
     firehose_send(handle, &xml)?;
     Ok(())
 }
@@ -337,7 +387,11 @@ pub async fn edl_erase_partition(name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn edl_read_partition(name: String, sectors: u64, out_path: String) -> Result<u64, String> {
+pub async fn edl_read_partition(
+    name: String,
+    sectors: u64,
+    out_path: String,
+) -> Result<u64, String> {
     tokio::task::spawn_blocking(move || {
         let handle = open_edl_device()?;
         firehose_read_partition(&handle, &name, sectors, std::path::Path::new(&out_path))

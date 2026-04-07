@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager, Emitter};
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -47,13 +47,20 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-pub async fn ios_activation_type_check(app: AppHandle, udid: String) -> Result<ActivationTypeMatrix, String> {
-    let output = app.shell()
+pub async fn ios_activation_type_check(
+    app: AppHandle,
+    udid: String,
+) -> Result<ActivationTypeMatrix, String> {
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "activation-matrix",
-            &udid
+            &udid,
         ])
         .output()
         .await
@@ -64,13 +71,20 @@ pub async fn ios_activation_type_check(app: AppHandle, udid: String) -> Result<A
 }
 
 #[tauri::command]
-pub async fn ios_temp_activation(app: AppHandle, udid: String) -> Result<TempActivationResult, String> {
-    let output = app.shell()
+pub async fn ios_temp_activation(
+    app: AppHandle,
+    udid: String,
+) -> Result<TempActivationResult, String> {
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "temp-activate",
-            &udid
+            &udid,
         ])
         .output()
         .await
@@ -81,7 +95,11 @@ pub async fn ios_temp_activation(app: AppHandle, udid: String) -> Result<TempAct
 }
 
 #[tauri::command]
-pub async fn ios_untethered_bypass(app: AppHandle, _udid: String, activation_type: String) -> Result<Option<String>, String> {
+pub async fn ios_untethered_bypass(
+    app: AppHandle,
+    _udid: String,
+    activation_type: String,
+) -> Result<Option<String>, String> {
     let app_handle = app.clone();
     tauri::async_runtime::spawn(async move {
         // Step-by-step stream simulation based on Module 11 flow
@@ -91,38 +109,57 @@ pub async fn ios_untethered_bypass(app: AppHandle, _udid: String, activation_typ
             ("Boot", "Loading XNU Ramdisk (DeepEye v2)..."),
             ("System", "Mounting /mnt2 (User Data) and /mnt1 (System)..."),
             ("Injection", "Injecting activation ticket to NVRAM..."),
-            ("Finalize", "Rebooting to Normal Mode. Validating persistence...")
+            (
+                "Finalize",
+                "Rebooting to Normal Mode. Validating persistence...",
+            ),
         ];
 
         for (i, (phase, inst)) in steps.iter().enumerate() {
-            let _ = app_handle.emit("bypass-step", serde_json::json!({
-                "step_num": i + 1,
-                "instruction": inst
-            }));
-            let _ = app_handle.emit("bypass-progress", serde_json::json!({
-                "pct": (i + 1) * 16,
-                "current_phase": phase
-            }));
+            let _ = app_handle.emit(
+                "bypass-step",
+                serde_json::json!({
+                    "step_num": i + 1,
+                    "instruction": inst
+                }),
+            );
+            let _ = app_handle.emit(
+                "bypass-progress",
+                serde_json::json!({
+                    "pct": (i + 1) * 16,
+                    "current_phase": phase
+                }),
+            );
             tokio::time::sleep(tokio::time::Duration::from_millis(1200)).await;
         }
 
-        let _ = app_handle.emit("bypass-complete", serde_json::json!({
-            "type": activation_type,
-            "persistent": true
-        }));
+        let _ = app_handle.emit(
+            "bypass-complete",
+            serde_json::json!({
+                "type": activation_type,
+                "persistent": true
+            }),
+        );
     });
 
     Ok(None)
 }
 
 #[tauri::command]
-pub async fn ios_activation_persistence_check(app: AppHandle, udid: String) -> Result<PersistenceState, String> {
-    let output = app.shell()
+pub async fn ios_activation_persistence_check(
+    app: AppHandle,
+    udid: String,
+) -> Result<PersistenceState, String> {
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "activation-persistence",
-            &udid
+            &udid,
         ])
         .output()
         .await

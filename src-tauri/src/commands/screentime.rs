@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, Manager, Emitter};
-use tauri_plugin_shell::ShellExt;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HashInfo {
@@ -18,15 +18,22 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 }
 
 #[tauri::command]
-pub async fn ios_extract_screentime_hash(app: AppHandle, backup_path: String) -> Result<HashInfo, String> {
+pub async fn ios_extract_screentime_hash(
+    app: AppHandle,
+    backup_path: String,
+) -> Result<HashInfo, String> {
     println!("[COMMAND] ios_extract_screentime_hash path={}", backup_path);
-    
-    let output = app.shell()
+
+    let output = app
+        .shell()
         .command("python3")
         .args([
-            python_path(&app).join("ios_backup/cli.py").to_str().unwrap(),
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
             "screentime-hash",
-            &backup_path
+            &backup_path,
         ])
         .output()
         .await
@@ -42,27 +49,34 @@ pub async fn ios_extract_screentime_hash(app: AppHandle, backup_path: String) ->
 
 #[tauri::command]
 pub async fn ios_run_screentime_crack(
-    app: AppHandle, 
-    backup_path: String, 
-    wordlist: String, 
-    rules: String
+    app: AppHandle,
+    backup_path: String,
+    wordlist: String,
+    rules: String,
 ) -> Result<(), String> {
     println!("[COMMAND] ios_run_screentime_crack path={}", backup_path);
-    
+
     // Extract hash first
     let hash_info = ios_extract_screentime_hash(app.clone(), backup_path).await?;
-    
+
     // Format for hashcat
-    let hash_str = format!("{}:{}:{}", hash_info.hash, hash_info.salt, hash_info.iterations);
-    
-    let (mut rx, _child) = app.shell()
+    let hash_str = format!(
+        "{}:{}:{}",
+        hash_info.hash, hash_info.salt, hash_info.iterations
+    );
+
+    let (mut rx, _child) = app
+        .shell()
         .command("hashcat")
         .args([
-            "-m", &hash_info.hashcat_mode.to_string(),
-            "-a", "0",
+            "-m",
+            &hash_info.hashcat_mode.to_string(),
+            "-a",
+            "0",
             &hash_str,
             &wordlist,
-            "-r", &rules
+            "-r",
+            &rules,
         ])
         .spawn()
         .map_err(|e| e.to_string())?;

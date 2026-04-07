@@ -59,7 +59,11 @@ pub async fn uninstall_app(app: AppHandle, bundle_id: String) -> Result<String, 
 
 #[tauri::command]
 pub async fn get_app_info(app: AppHandle, bundle_id: String) -> Result<String, String> {
-    bash(&app, &format!("ideviceinstaller -l | grep '{bundle_id}' 2>&1")).await
+    bash(
+        &app,
+        &format!("ideviceinstaller -l | grep '{bundle_id}' 2>&1"),
+    )
+    .await
 }
 
 #[tauri::command]

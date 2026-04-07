@@ -12,7 +12,9 @@ pub struct UpdateInfo {
 }
 
 pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
-    let updater = app.updater().map_err(|e| format!("updater init error: {e}"))?;
+    let updater = app
+        .updater()
+        .map_err(|e| format!("updater init error: {e}"))?;
 
     match updater.check().await {
         Ok(Some(update)) => Ok(Some(UpdateInfo {
@@ -27,7 +29,9 @@ pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, Stri
 }
 
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
-    let updater = app.updater().map_err(|e| format!("updater init error: {e}"))?;
+    let updater = app
+        .updater()
+        .map_err(|e| format!("updater init error: {e}"))?;
 
     let update = updater
         .check()
