@@ -1,6 +1,6 @@
 {
   "name": "deep-eye-unlocker",
-  "version": "2027.10.0",
+  "version": "2027.10.1",
   "private": true,
   "scripts": {
     "dev": "vite",

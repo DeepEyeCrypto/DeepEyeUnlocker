@@ -33,7 +33,7 @@ jobs:
             artifact_name: release-x86_64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bundles: nsis,msi
+            bundles: nsis
             artifact_name: release-x86_64-pc-windows-msvc
 
     steps:
@@ -157,11 +157,8 @@ jobs:
               }
           elif target == "x86_64-pc-windows-msvc":
               files.extend(bundle_dir.glob("nsis/*.exe"))
-              files.extend(bundle_dir.glob("msi/*.msi"))
               files.extend(bundle_dir.glob("nsis-updater/*.zip"))
               files.extend(bundle_dir.glob("nsis-updater/*.zip.sig"))
-              files.extend(bundle_dir.glob("msi-updater/*.zip"))
-              files.extend(bundle_dir.glob("msi-updater/*.zip.sig"))
               rename = {}
           else:
               print(f"Unsupported target: {target}", file=sys.stderr)
@@ -175,14 +172,8 @@ jobs:
                       dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip"
                   elif "nsis-updater" in file_path.as_posix() and name.endswith(".zip.sig"):
                       dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip.sig"
-                  elif "msi-updater" in file_path.as_posix() and name.endswith(".zip"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-msi.zip"
-                  elif "msi-updater" in file_path.as_posix() and name.endswith(".zip.sig"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-msi.zip.sig"
                   elif name.endswith(".exe"):
                       dest_name = f"DeepEyeUnlocker_{version}_x86_64-setup.exe"
-                  elif name.endswith(".msi"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64.msi"
                   else:
                       continue
               else:
@@ -303,12 +294,7 @@ jobs:
                       "signature": signature_for(filename),
                   }
               elif filename.endswith("_x86_64-nsis.zip"):
-                  platforms["windows-x86_64-nsis"] = {
-                      "url": base_url + quote(filename),
-                      "signature": signature_for(filename),
-                  }
-              elif filename.endswith("_x86_64-msi.zip"):
-                  platforms["windows-x86_64-msi"] = {
+                  platforms["windows-x86_64"] = {
                       "url": base_url + quote(filename),
                       "signature": signature_for(filename),
                   }

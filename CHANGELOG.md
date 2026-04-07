@@ -1,3 +1,16 @@
+## [2027.10.1] — 2026-04-07
+
+### 🎨 UI Hotfixes
+- Bottom navigation now keeps labels screen-reader accessible while hiding them visually for the icon-only layout.
+- EDL detect actions now use the glass glow button treatment with shimmer and ripple feedback.
+- EDL file selection now opens the native OS picker through the Tauri dialog plugin.
+
+### 🔧 Device & Release Fixes
+- Migrated desktop ADB execution to async Tauri shell command handling for consistent runtime behavior.
+- Removed Windows MSI release packaging from the desktop bundle configuration and release workflow to avoid the CalVer + WiX blocker while keeping NSIS release artifacts.
+
+---
+
 ## [2027.10.0] — 2026-04-06
 
 ### 🚀 Release Infrastructure
