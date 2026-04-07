@@ -75,8 +75,9 @@ use commands::mtk_brom::{
 use commands::orchestrator::{ios_inject_surgical_patch, ios_poll_orchestrator};
 use commands::ramdisk::{ios_boot_ramdisk, ios_check_pwn_state, ios_run_gaster_pwn};
 use commands::rom_flasher::{
-    rom_flash_partition, rom_reboot_bootloader, rom_reboot_recovery, rom_sideload_zip,
-    rom_wipe_data,
+    fastboot_erase_partition, fastboot_get_all_variables, fastboot_list_devices,
+    fastboot_reboot_target, fastboot_unlock_bootloader, rom_flash_partition,
+    rom_reboot_bootloader, rom_reboot_recovery, rom_sideload_zip, rom_wipe_data,
 };
 use commands::samsung::{
     samsung_do_erase_frp_cmd, samsung_do_handshake_cmd, samsung_find_device_cmd,
@@ -389,9 +390,14 @@ pub fn run() {
             // Stage 27 — Custom ROM flasher
             rom_sideload_zip,
             rom_flash_partition,
+            fastboot_erase_partition,
             rom_wipe_data,
             rom_reboot_recovery,
             rom_reboot_bootloader,
+            fastboot_list_devices,
+            fastboot_get_all_variables,
+            fastboot_unlock_bootloader,
+            fastboot_reboot_target,
             // Stage 28 — Device history
             history_add_entry,
             history_get_entries,

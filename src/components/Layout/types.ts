@@ -54,7 +54,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "edl", icon: "⚡", label: "Qualcomm EDL", androidOrder: 3 },
   { id: "mtk", icon: "MT", label: "MTK Tools", visibleOn: "android", enabledOn: "android", androidOrder: 4 },
   { id: "mtkbrom", icon: "BR", label: "MTK BROM", androidOrder: 4.5 },
-  { id: "romflasher", icon: "FB", label: "Fastboot Flash", androidOrder: 5 },
+  { id: "romflasher", icon: "FB", label: "Fastboot", androidOrder: 5 },
   { id: "identity", icon: "I", label: "Identity", androidOrder: 6 },
   { id: "history", icon: "L", label: "History", androidOrder: 7 },
   { id: "updater", icon: "U", label: "Updater", androidOrder: 8 },
