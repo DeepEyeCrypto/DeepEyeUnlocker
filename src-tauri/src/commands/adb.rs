@@ -1,8 +1,7 @@
 use serde::Serialize;
-use std::process::Command;
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
-use tauri::Emitter;
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Serialize, Clone)]
 pub struct AdbDevice {
@@ -44,25 +43,18 @@ pub enum AdbError {
     DeviceOffline,
 }
 
-fn adb_bin() -> Result<String, AdbError> {
-    let candidates = ["adb", "/usr/bin/adb", "/usr/local/bin/adb"];
-    for bin in candidates {
-        if Command::new(bin).arg("version").output().is_ok() {
-            return Ok(bin.to_string());
-        }
-    }
-    Err(AdbError::AdbNotFound)
-}
-
-fn run_adb(args: &[&str]) -> Result<String, AdbError> {
-    let bin = adb_bin()?;
-    let out = Command::new(&bin)
+async fn run_adb(app: &AppHandle, args: &[&str]) -> Result<String, AdbError> {
+    let output = app.shell()
+        .command("adb")
         .args(args)
         .output()
+        .await
         .map_err(|e| AdbError::CommandFailed(e.to_string()))?;
-    let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-    if !out.status.success() && !stderr.is_empty() {
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+
+    if !output.status.success() && !stderr.is_empty() {
         if stderr.contains("Permission denied") {
             return Err(AdbError::PermissionDenied);
         }
@@ -71,8 +63,8 @@ fn run_adb(args: &[&str]) -> Result<String, AdbError> {
     Ok(stdout)
 }
 
-pub fn adb_devices() -> Result<Vec<AdbDevice>, AdbError> {
-    let output = run_adb(&["devices", "-l"])?;
+pub async fn adb_devices(app: &AppHandle) -> Result<Vec<AdbDevice>, AdbError> {
+    let output = run_adb(app, &["devices", "-l"]).await?;
     let mut devices = Vec::new();
 
     for line in output.lines().skip(1) {
@@ -94,9 +86,11 @@ pub fn adb_devices() -> Result<Vec<AdbDevice>, AdbError> {
             .map(|s| s.trim_start_matches("model:").to_string())
             .unwrap_or_default();
 
-        let android_version = adb_get_prop(&serial, "ro.build.version.release")
+        let android_version = adb_get_prop(app, &serial, "ro.build.version.release")
+            .await
             .unwrap_or_default();
-        let sdk_version = adb_get_prop(&serial, "ro.build.version.sdk")
+        let sdk_version = adb_get_prop(app, &serial, "ro.build.version.sdk")
+            .await
             .unwrap_or_default();
 
         devices.push(AdbDevice {
@@ -110,71 +104,72 @@ pub fn adb_devices() -> Result<Vec<AdbDevice>, AdbError> {
     Ok(devices)
 }
 
-pub fn adb_shell(serial: &str, cmd: &str) -> Result<String, AdbError> {
-    run_adb(&["-s", serial, "shell", cmd])
+pub async fn adb_shell(app: &AppHandle, serial: &str, cmd: &str) -> Result<String, AdbError> {
+    run_adb(app, &["-s", serial, "shell", cmd]).await
 }
 
-pub fn adb_get_prop(serial: &str, prop: &str) -> Result<String, AdbError> {
+pub async fn adb_get_prop(app: &AppHandle, serial: &str, prop: &str) -> Result<String, AdbError> {
     let cmd = format!("getprop {}", prop);
-    run_adb(&["-s", serial, "shell", &cmd])
+    run_adb(app, &["-s", serial, "shell", &cmd]).await
 }
 
-pub fn adb_reboot(serial: &str, mode: &str) -> Result<(), AdbError> {
+pub async fn adb_reboot(app: &AppHandle, serial: &str, mode: &str) -> Result<(), AdbError> {
     match mode {
-        "system" => run_adb(&["-s", serial, "reboot"])?,
-        _ => run_adb(&["-s", serial, "reboot", mode])?,
+        "system" => run_adb(app, &["-s", serial, "reboot"]).await?,
+        _ => run_adb(app, &["-s", serial, "reboot", mode]).await?,
     };
     Ok(())
 }
 
-pub fn adb_install(serial: &str, apk_path: &str) -> Result<String, AdbError> {
-    run_adb(&["-s", serial, "install", "-r", apk_path])
+pub async fn adb_install(app: &AppHandle, serial: &str, apk_path: &str) -> Result<String, AdbError> {
+    run_adb(app, &["-s", serial, "install", "-r", apk_path]).await
 }
 
-pub fn adb_push(serial: &str, local: &str, remote: &str) -> Result<(), AdbError> {
-    run_adb(&["-s", serial, "push", local, remote])?;
+pub async fn adb_push(app: &AppHandle, serial: &str, local: &str, remote: &str) -> Result<(), AdbError> {
+    run_adb(app, &["-s", serial, "push", local, remote]).await?;
     Ok(())
 }
 
-pub fn adb_pull(serial: &str, remote: &str, local: &str) -> Result<(), AdbError> {
-    run_adb(&["-s", serial, "pull", remote, local])?;
+pub async fn adb_pull(app: &AppHandle, serial: &str, remote: &str, local: &str) -> Result<(), AdbError> {
+    run_adb(app, &["-s", serial, "pull", remote, local]).await?;
     Ok(())
 }
 
-pub fn adb_sideload(serial: &str, zip_path: &str) -> Result<(), AdbError> {
-    run_adb(&["-s", serial, "sideload", zip_path])?;
+pub async fn adb_sideload(app: &AppHandle, serial: &str, zip_path: &str) -> Result<(), AdbError> {
+    run_adb(app, &["-s", serial, "sideload", zip_path]).await?;
     Ok(())
 }
 
-pub fn adb_erase_frp(serial: &str) -> Result<(), AdbError> {
+pub async fn adb_erase_frp(app: &AppHandle, serial: &str) -> Result<(), AdbError> {
     // get block size first
     let size_str = adb_shell(
+        app,
         serial,
         "blockdev --getsize64 /dev/block/by-name/frp 2>/dev/null || echo 524288",
-    )?;
+    ).await?;
     let size: u64 = size_str.trim().parse().unwrap_or(524288);
     let cmd = format!(
         "dd if=/dev/zero of=/dev/block/by-name/frp bs=4096 count={}",
         size.div_ceil(4096)
     );
-    adb_shell(serial, &cmd)?;
+    adb_shell(app, serial, &cmd).await?;
     Ok(())
 }
 
-pub fn adb_check_root(serial: &str) -> Result<bool, AdbError> {
-    let out = adb_shell(serial, "id")?;
+pub async fn adb_check_root(app: &AppHandle, serial: &str) -> Result<bool, AdbError> {
+    let out = adb_shell(app, serial, "id").await?;
     Ok(out.contains("uid=0"))
 }
 
-pub fn adb_get_device_info(serial: &str) -> Result<DeviceFullInfo, AdbError> {
-    let model = adb_get_prop(serial, "ro.product.model").unwrap_or_default();
-    let brand = adb_get_prop(serial, "ro.product.brand").unwrap_or_default();
-    let android_version = adb_get_prop(serial, "ro.build.version.release").unwrap_or_default();
-    let sdk_int = adb_get_prop(serial, "ro.build.version.sdk").unwrap_or_default();
-    let build_id = adb_get_prop(serial, "ro.build.id").unwrap_or_default();
-    let security_patch = adb_get_prop(serial, "ro.build.version.security_patch").unwrap_or_default();
+pub async fn adb_get_device_info(app: &AppHandle, serial: &str) -> Result<DeviceFullInfo, AdbError> {
+    let model = adb_get_prop(app, serial, "ro.product.model").await.unwrap_or_default();
+    let brand = adb_get_prop(app, serial, "ro.product.brand").await.unwrap_or_default();
+    let android_version = adb_get_prop(app, serial, "ro.build.version.release").await.unwrap_or_default();
+    let sdk_int = adb_get_prop(app, serial, "ro.build.version.sdk").await.unwrap_or_default();
+    let build_id = adb_get_prop(app, serial, "ro.build.id").await.unwrap_or_default();
+    let security_patch = adb_get_prop(app, serial, "ro.build.version.security_patch").await.unwrap_or_default();
 
-    let bl_raw = adb_get_prop(serial, "ro.boot.verifiedbootstate").unwrap_or_default();
+    let bl_raw = adb_get_prop(app, serial, "ro.boot.verifiedbootstate").await.unwrap_or_default();
     let bootloader_status = if bl_raw.contains("green") {
         "Locked".to_string()
     } else if bl_raw.contains("orange") {
@@ -183,12 +178,14 @@ pub fn adb_get_device_info(serial: &str) -> Result<DeviceFullInfo, AdbError> {
         bl_raw
     };
 
-    let root_status = adb_check_root(serial).unwrap_or(false);
+    let root_status = adb_check_root(app, serial).await.unwrap_or(false);
 
     let frp_raw = adb_shell(
+        app,
         serial,
         "getprop ro.frp.pst 2>/dev/null || echo unknown",
     )
+    .await
     .unwrap_or_default();
     let frp_status = if frp_raw.trim().is_empty() || frp_raw.contains("unknown") {
         "Unknown".to_string()
@@ -197,16 +194,20 @@ pub fn adb_get_device_info(serial: &str) -> Result<DeviceFullInfo, AdbError> {
     };
 
     let battery_raw = adb_shell(
+        app,
         serial,
         "dumpsys battery | grep level | awk '{print $2}'",
     )
+    .await
     .unwrap_or_default();
     let battery_level = format!("{}%", battery_raw.trim());
 
     let imei = adb_shell(
+        app,
         serial,
         "service call iphonesubinfo 1 | awk -F\"'\" '{print $2}' | tr -d '.' | tr -d '\\n'",
     )
+    .await
     .unwrap_or("Unavailable".to_string());
 
     Ok(DeviceFullInfo {
@@ -228,61 +229,63 @@ pub fn adb_get_device_info(serial: &str) -> Result<DeviceFullInfo, AdbError> {
 // ── Tauri Commands ──────────────────────────────────────────────
 
 #[tauri::command]
-pub fn adb_list_devices() -> Result<Vec<AdbDevice>, String> {
-    adb_devices().map_err(|e| e.to_string())
+pub async fn adb_list_devices(app: AppHandle) -> Result<Vec<AdbDevice>, String> {
+    adb_devices(&app).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_get_full_info(serial: String) -> Result<DeviceFullInfo, String> {
-    adb_get_device_info(&serial).map_err(|e| e.to_string())
+pub async fn adb_get_full_info(app: AppHandle, serial: String) -> Result<DeviceFullInfo, String> {
+    adb_get_device_info(&app, &serial).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_shell_command(serial: String, cmd: String) -> Result<String, String> {
-    adb_shell(&serial, &cmd).map_err(|e| e.to_string())
+pub async fn adb_shell_command(app: AppHandle, serial: String, cmd: String) -> Result<String, String> {
+    adb_shell(&app, &serial, &cmd).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_reboot_device(serial: String, mode: String) -> Result<(), String> {
-    adb_reboot(&serial, &mode).map_err(|e| e.to_string())
+pub async fn adb_reboot_device(app: AppHandle, serial: String, mode: String) -> Result<(), String> {
+    adb_reboot(&app, &serial, &mode).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_install_apk(serial: String, apk_path: String) -> Result<String, String> {
-    adb_install(&serial, &apk_path).map_err(|e| e.to_string())
+pub async fn adb_install_apk(app: AppHandle, serial: String, apk_path: String) -> Result<String, String> {
+    adb_install(&app, &serial, &apk_path).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_push_file(serial: String, local: String, remote: String) -> Result<(), String> {
-    adb_push(&serial, &local, &remote).map_err(|e| e.to_string())
+pub async fn adb_push_file(app: AppHandle, serial: String, local: String, remote: String) -> Result<(), String> {
+    adb_push(&app, &serial, &local, &remote).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_pull_file(serial: String, remote: String, local: String) -> Result<(), String> {
-    adb_pull(&serial, &remote, &local).map_err(|e| e.to_string())
+pub async fn adb_pull_file(app: AppHandle, serial: String, remote: String, local: String) -> Result<(), String> {
+    adb_pull(&app, &serial, &remote, &local).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_sideload_zip(serial: String, zip_path: String) -> Result<(), String> {
-    adb_sideload(&serial, &zip_path).map_err(|e| e.to_string())
+pub async fn adb_sideload_zip(app: AppHandle, serial: String, zip_path: String) -> Result<(), String> {
+    adb_sideload(&app, &serial, &zip_path).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_erase_frp_partition(serial: String) -> Result<(), String> {
-    adb_erase_frp(&serial).map_err(|e| e.to_string())
+pub async fn adb_erase_frp_partition(app: AppHandle, serial: String) -> Result<(), String> {
+    adb_erase_frp(&app, &serial).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_check_root_access(serial: String) -> Result<bool, String> {
-    adb_check_root(&serial).map_err(|e| e.to_string())
+pub async fn adb_check_root_access(app: AppHandle, serial: String) -> Result<bool, String> {
+    adb_check_root(&app, &serial).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn adb_test_binary(path: String) -> Result<String, String> {
+pub async fn adb_test_binary(app: AppHandle, path: String) -> Result<String, String> {
     let binary = if path.trim().is_empty() { "adb" } else { path.trim() };
-    let output = Command::new(binary)
+    let output = app.shell()
+        .command(binary)
         .arg("version")
         .output()
+        .await
         .map_err(|e| format!("failed to execute {binary}: {e}"))?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
