@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
 import { useSamsung } from "../hooks/useSamsung";
 import "../styles/samsung.css";
 
@@ -57,13 +58,11 @@ export default function SamsungPage() {
 
       {/* Workflow Steps */}
       <div className="samsung-steps">
-        <button
-          className={`samsung-step-btn ${device ? "done" : ""}`}
+        <LiquidMetalButton
+          label="Detect Device"
           onClick={detectDevice}
           disabled={isActive}
-        >
-          1. Detect Device
-        </button>
+        />
         <span className="samsung-step-arrow">→</span>
         <button
           className={`samsung-step-btn ${odinInfo ? "done" : ""}`}

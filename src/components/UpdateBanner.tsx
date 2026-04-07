@@ -1,4 +1,5 @@
 import { summarizeChangelog, type UpdateInfo } from "../lib/updater";
+import { LiquidMetalButton } from "./ui/liquid-metal-button";
 
 type UpdateBannerProps = {
   update: UpdateInfo;
@@ -23,14 +24,11 @@ export function UpdateBanner({
       </div>
 
       <div className="update-banner__actions">
-        <button
-          type="button"
-          className="update-banner__install"
-          onClick={() => void onInstall()}
+        <LiquidMetalButton
+          label={installing ? "Installing..." : "Install & Restart"}
+          onClick={onInstall}
           disabled={installing}
-        >
-          {installing ? "Installing..." : "Install & Restart"}
-        </button>
+        />
 
         <button
           type="button"

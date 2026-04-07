@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
 import { useAdb } from "../hooks/useAdb";
 import "../styles/adb.css";
 
@@ -81,9 +82,7 @@ export default function AdbPage() {
       </div>
 
       <div className="adb-scan-row">
-        <button className="adb-btn adb-btn--primary" onClick={scanDevices}>
-          Scan Devices
-        </button>
+        <LiquidMetalButton label="Scan Devices" onClick={scanDevices} />
         {selectedSerial && (
           <button className="adb-btn adb-btn--secondary" onClick={getDeviceInfo}>
             Get Full Info

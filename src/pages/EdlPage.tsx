@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEdl } from '../hooks/useEdl';
 import { DeviceSelector } from '../components/DeviceSelector';
+import { LiquidMetalButton } from '../components/ui/liquid-metal-button';
 import type { DeviceEntry } from '../lib/devices';
 import '../styles/edl.css';
 
@@ -124,13 +125,11 @@ export default function EdlPage() {
         <div className={`pipeline-step ${isStep1Done ? 'done' : (edlStatus === 'detecting' ? 'active' : '')}`}>
           <span className="step-number">Step 1</span>
           <span className="step-action">Detect Device</span>
-          <button 
-            className="edl-detect-btn"
-            onClick={() => void detect()}
+          <LiquidMetalButton
+            label="Detect Device"
+            onClick={detect}
             disabled={edlStatus === 'detecting'}
-          >
-            Detect Device
-          </button>
+          />
         </div>
 
         <div className={`pipeline-step ${isStep2Done ? 'done' : (edlStatus === 'sahara_handshake' ? 'active' : '')}`}>

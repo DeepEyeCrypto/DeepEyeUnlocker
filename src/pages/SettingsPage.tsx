@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { type as osType } from "@tauri-apps/plugin-os";
 import { useEffect, useState, type ReactNode } from "react";
+import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
 import type { AppSettings, DetectInterval } from "../lib/settings";
 import type { UpdateInfo, UpdateStatus } from "../lib/updater";
 import "../styles/settings.css";
@@ -78,14 +79,11 @@ export default function SettingsPage({
             <h2 className="settings-section__title">DeepEyeUnlocker</h2>
           </div>
 
-          <button
-            type="button"
-            className="settings-button settings-button--primary"
-            onClick={() => void onCheckForUpdates()}
+          <LiquidMetalButton
+            label={updateStatus === "checking" ? "Checking..." : "Check for Updates"}
+            onClick={onCheckForUpdates}
             disabled={updateStatus === "checking" || updateStatus === "installing"}
-          >
-            {updateStatus === "checking" ? "Checking..." : "Check for Updates"}
-          </button>
+          />
         </div>
 
         <div className="settings-grid">
