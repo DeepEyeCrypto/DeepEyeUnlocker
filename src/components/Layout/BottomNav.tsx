@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import type { NavId, ResolvedNavItem } from "./types";
 
 type BottomNavProps = {
@@ -25,7 +26,9 @@ export function BottomNav({ active, onNavigate, items }: BottomNavProps) {
               }
             }}
           >
-            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-icon">
+              {item.icon === "settings" ? <Settings className="nav-icon-svg" size={16} /> : item.icon}
+            </span>
             <span className="visually-hidden">{item.label}</span>
           </button>
         ))}

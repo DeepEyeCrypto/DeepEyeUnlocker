@@ -1,6 +1,6 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2027.8.2",
+  "version": "2027.10.0",
   "identifier": "com.deepeye.otg",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -30,9 +30,11 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": [
       "dmg",
       "nsis",
+      "msi",
       "appimage",
       "deb"
     ],
@@ -87,10 +89,12 @@
       "open": true
     },
     "updater": {
+      "active": true,
+      "dialog": true,
       "endpoints": [
-        "https://github.com/DeepEyeCrypto/DeepEyeUnlocker/releases/latest/download/latest.json"
+        "https://raw.githubusercontent.com/DeepEyeCrypto/DeepEyeUnlocker/main/releases/latest.json"
       ],
-      "pubkey": ""
+      "pubkey": "YOUR_TAURI_UPDATER_PUBKEY"
     }
   }
 }

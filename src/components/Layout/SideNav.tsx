@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import { useState } from "react";
 import type { NavId, ResolvedNavItem } from "./types";
 
@@ -29,7 +30,9 @@ export function SideNav({ active, onNavigate, items }: SideNavProps) {
             }
           }}
         >
-          <span className="sidenav-icon">{item.icon}</span>
+          <span className="sidenav-icon">
+            {item.icon === "settings" ? <Settings className="nav-icon-svg" size={16} /> : item.icon}
+          </span>
           {!collapsed && (
             <span className="sidenav-meta">
               <span className="sidenav-label">{item.label}</span>

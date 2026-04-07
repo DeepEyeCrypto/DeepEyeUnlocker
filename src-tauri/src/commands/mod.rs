@@ -29,3 +29,4 @@ pub mod edl;
 pub mod rom_flasher;
 pub mod device_history;
 pub mod unisoc;
+pub mod samsung;

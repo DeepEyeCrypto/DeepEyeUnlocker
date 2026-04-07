@@ -8,380 +8,354 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  build-matrix:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: macos-latest
-            target: universal-apple-darwin
-            label: macOS-Universal
+            target: aarch64-apple-darwin
+            bundles: dmg
+            artifact_name: release-aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+            bundles: dmg
+            artifact_name: release-x86_64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: appimage,deb
+            artifact_name: release-x86_64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            label: Windows-x64
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            label: Linux-x64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
+            bundles: nsis,msi
+            artifact_name: release-x86_64-pc-windows-msvc
 
-      - name: Setup Node
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install Rust
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target == 'universal-apple-darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
+          targets: ${{ matrix.target }}
 
-      - name: Install dependencies (Linux)
+      - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          set -euo pipefail
           sudo apt-get update
-          common_packages=(
-            build-essential
-            curl
-            file
-            libgtk-3-dev
-            librsvg2-dev
-            libssl-dev
-            patchelf
+          sudo apt-get install -y \
+            libusb-1.0-0-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            librsvg2-dev \
+            patchelf \
+            libayatana-appindicator3-dev \
             pkg-config
-          )
 
-          webkit_package=""
-          for candidate in libwebkit2gtk-4.1-dev libwebkit2gtk-4.0-dev; do
-            if apt-cache show "$candidate" >/dev/null 2>&1; then
-              webkit_package="$candidate"
-              break
-            fi
-          done
-
-          appindicator_package=""
-          for candidate in libayatana-appindicator3-dev libappindicator3-dev; do
-            if apt-cache show "$candidate" >/dev/null 2>&1; then
-              appindicator_package="$candidate"
-              break
-            fi
-          done
-
-          if [ -z "$webkit_package" ]; then
-            echo "Unable to resolve a WebKitGTK development package on this runner."
-            exit 1
-          fi
-
-          if [ -z "$appindicator_package" ]; then
-            echo "Unable to resolve an AppIndicator development package on this runner."
-            exit 1
-          fi
-
-          echo "Using Linux packages: $webkit_package $appindicator_package"
-          sudo apt-get install -y "${common_packages[@]}" "$webkit_package" "$appindicator_package"
-
-      - name: Install JS dependencies
-        shell: bash
-        run: |
-          npm ci
-
-      - name: Cache Homebrew
-        if: runner.os == 'macOS'
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/Homebrew
-          key: brew-${{ runner.os }}-create-dmg
-
-      - name: Install create-dmg (macOS only)
+      - name: Install macOS system dependencies
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          brew install create-dmg
+          set -euo pipefail
+          brew install libusb
 
-      - name: Show desktop toolchain versions
+      - name: Install Windows system dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vcpkgRoot = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { 'C:\vcpkg' }
+          & "$vcpkgRoot\vcpkg.exe" install libusb:x64-windows
+
+      - name: Install JavaScript dependencies
         shell: bash
         run: |
-          node --version
-          npm --version
-          rustc --version
-          cargo --version
-          npx tauri --version
+          set -euo pipefail
+          pnpm install --frozen-lockfile
 
-      - name: Sync version from tag
-        shell: bash
-        run: |
-          TAG="${{ github.ref_name }}"
-          VERSION="${TAG#v}"
-          export VERSION
-          # [INFERRED] Cross-platform JSON patch avoids BSD/GNU sed differences on GitHub runners.
-          node -e 'const fs=require("fs");const path="src-tauri/tauri.conf.json";const data=JSON.parse(fs.readFileSync(path,"utf8"));data.version=process.env.VERSION;fs.writeFileSync(path, JSON.stringify(data, null, 2)+"\n");'
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Synced version to $VERSION"
-
-      - name: Build frontend & Tauri app (macOS)
-        if: runner.os == 'macOS'
+      - name: Build Tauri bundles
         shell: bash
         env:
-          CI: true
-          TAURI_SKIP_NOTARIZATION: "true"
-          # [INFERRED] codesign uses "-" for ad-hoc signing; an empty string makes Tauri request a missing keychain identity.
+          CI: "true"
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_SIGNING_IDENTITY: "-"
-          # [CONFIRMED] Rust panics during macOS packaging should emit a usable backtrace in CI logs.
-          RUST_BACKTRACE: 1
+          TAURI_SKIP_NOTARIZATION: "true"
         run: |
-          npx tauri build --target ${{ matrix.target }}
+          set -euo pipefail
+          pnpm tauri build --target "${{ matrix.target }}" --bundles "${{ matrix.bundles }}"
 
-      - name: Build frontend & Tauri app (non-macOS)
-        if: runner.os != 'macOS'
-        shell: bash
-        run: |
-          npx tauri build --target ${{ matrix.target }}
-
-      - name: Inspect desktop bundle output
-        shell: bash
-        run: |
-          echo "Inspecting target after build"
-          if [ -d target ]; then
-            find target -maxdepth 6 -type f | sort
-          else
-            echo "target does not exist"
-          fi
-
-      - name: Collect desktop bundle artifacts
-        id: collect-desktop-artifacts
+      - name: Stage release artifacts
         shell: bash
         env:
           TARGET: ${{ matrix.target }}
+          VERSION: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import os
+          import shutil
           import sys
 
           target = os.environ["TARGET"]
-          target_patterns = {
-              # [INFERRED] Workspace Cargo builds emit bundles under the repository root target/ directory, not src-tauri/target/.
-              "universal-apple-darwin": [
-                  "target/universal-apple-darwin/release/bundle/dmg/*.dmg",
-              ],
-              "x86_64-pc-windows-msvc": [
-                  "target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe",
-              ],
-              "x86_64-unknown-linux-gnu": [
-                  "target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage",
-              ],
-          }
+          version = os.environ["VERSION"].removeprefix("v")
+          bundle_dir = Path("target") / target / "release" / "bundle"
+          staging = Path("release-artifacts")
+          staging.mkdir(parents=True, exist_ok=True)
 
-          patterns = target_patterns.get(target)
-          if not patterns:
-              print(f"Unsupported desktop target for artifact collection: {target}", file=sys.stderr)
+          files = []
+          if target == "aarch64-apple-darwin":
+              files.extend(bundle_dir.glob("dmg/*.dmg"))
+              files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
+              files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
+              rename = {
+                  ".dmg": f"DeepEyeUnlocker_{version}_aarch64.dmg",
+                  ".app.tar.gz": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz",
+                  ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz.sig",
+              }
+          elif target == "x86_64-apple-darwin":
+              files.extend(bundle_dir.glob("dmg/*.dmg"))
+              files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
+              files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
+              rename = {
+                  ".dmg": f"DeepEyeUnlocker_{version}_x86_64.dmg",
+                  ".app.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz",
+                  ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz.sig",
+              }
+          elif target == "x86_64-unknown-linux-gnu":
+              files.extend(bundle_dir.glob("appimage/*.AppImage"))
+              files.extend(bundle_dir.glob("appimage/*.AppImage.tar.gz"))
+              files.extend(bundle_dir.glob("appimage/*.AppImage.tar.gz.sig"))
+              files.extend(bundle_dir.glob("deb/*.deb"))
+              rename = {
+                  ".AppImage": f"DeepEyeUnlocker_{version}_x86_64.AppImage",
+                  ".AppImage.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.AppImage.tar.gz",
+                  ".AppImage.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.AppImage.tar.gz.sig",
+                  ".deb": f"DeepEyeUnlocker_{version}_x86_64.deb",
+              }
+          elif target == "x86_64-pc-windows-msvc":
+              files.extend(bundle_dir.glob("nsis/*.exe"))
+              files.extend(bundle_dir.glob("msi/*.msi"))
+              files.extend(bundle_dir.glob("nsis-updater/*.zip"))
+              files.extend(bundle_dir.glob("nsis-updater/*.zip.sig"))
+              files.extend(bundle_dir.glob("msi-updater/*.zip"))
+              files.extend(bundle_dir.glob("msi-updater/*.zip.sig"))
+              rename = {}
+          else:
+              print(f"Unsupported target: {target}", file=sys.stderr)
               sys.exit(1)
 
-          collected: list[str] = []
+          copied = []
+          for file_path in sorted({path for path in files if path.is_file()}):
+              name = file_path.name
+              if target == "x86_64-pc-windows-msvc":
+                  if "nsis-updater" in file_path.as_posix() and name.endswith(".zip"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip"
+                  elif "nsis-updater" in file_path.as_posix() and name.endswith(".zip.sig"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip.sig"
+                  elif "msi-updater" in file_path.as_posix() and name.endswith(".zip"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-msi.zip"
+                  elif "msi-updater" in file_path.as_posix() and name.endswith(".zip.sig"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-msi.zip.sig"
+                  elif name.endswith(".exe"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-setup.exe"
+                  elif name.endswith(".msi"):
+                      dest_name = f"DeepEyeUnlocker_{version}_x86_64.msi"
+                  else:
+                      continue
+              else:
+                  dest_name = None
+                  for suffix, candidate in rename.items():
+                      if name.endswith(suffix):
+                          dest_name = candidate
+                          break
+                  if dest_name is None:
+                      continue
 
-          for pattern in patterns:
-              for entry in sorted(Path(".").glob(pattern)):
-                  if entry.is_file():
-                      collected.append(entry.as_posix())
+              destination = staging / dest_name
+              shutil.copy2(file_path, destination)
+              copied.append(destination.as_posix())
 
-          collected = sorted(dict.fromkeys(collected))
-
-          if not collected:
-              print("Checked artifact patterns:", file=sys.stderr)
-              for pattern in patterns:
-                  print(f" - {pattern}", file=sys.stderr)
-              print(f"No desktop bundle artifacts found for target {target}", file=sys.stderr)
+          if not copied:
+              print(f"No release artifacts found for {target}", file=sys.stderr)
               sys.exit(1)
 
-          print("Discovered desktop bundle artifacts:")
-          for item in collected:
+          print("Staged artifacts:")
+          for item in copied:
               print(item)
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write("paths<<EOF\n")
-              fh.write("\n".join(collected))
-              fh.write("\nEOF\n")
           PY
 
-      - name: Upload artifact
+      - name: Upload platform artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: DeepEyeUnlocker_${{ matrix.label }}
-          path: ${{ steps.collect-desktop-artifacts.outputs.paths }}
-          retention-days: 30
+          name: ${{ matrix.artifact_name }}
+          path: release-artifacts/*
           if-no-files-found: error
-
-  build-android:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with: { version: 9 }
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - uses: android-actions/setup-android@v3
-      - name: Install pinned Android NDK
-        shell: bash
-        run: |
-          # [INFERRED] P007/P008 remediation from the DeepEye v7 CI hardening brief.
-          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          echo "y" | sdkmanager "ndk;27.0.12077973" --sdk_root="$SDK_ROOT"
-          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
-          echo "NDK_HOME=$SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
-          ls "$SDK_ROOT/ndk/" | grep "27.0"
-      - name: Install Android build-tools for APK signing
-        shell: bash
-        run: |
-          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          # [INFERRED] r0adkll/sign-android-release@v1 defaults to build-tools 29.0.3 for zipalign/apksigner.
-          echo "y" | sdkmanager "build-tools;29.0.3" --sdk_root="$SDK_ROOT"
-          ls "$SDK_ROOT/build-tools/" | grep "29.0.3"
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: >-
-            aarch64-linux-android,
-            armv7-linux-androideabi,
-            i686-linux-android,
-            x86_64-linux-android
-      - name: Install JS dependencies
-        shell: bash
-        run: |
-          pnpm install
-
-      - name: Show Android toolchain versions
-        shell: bash
-        run: |
-          node --version
-          pnpm --version
-          java -version
-          rustc --version
-          cargo --version
-          pnpm exec tauri --version
-
-      - name: Sync version from tag
-        shell: bash
-        run: |
-          TAG="${{ github.ref_name }}"
-          VERSION="${TAG#v}"
-          export VERSION
-          # [INFERRED] Cross-platform JSON patch avoids BSD/GNU sed differences on GitHub runners.
-          node -e 'const fs=require("fs");const path="src-tauri/tauri.conf.json";const data=JSON.parse(fs.readFileSync(path,"utf8"));data.version=process.env.VERSION;fs.writeFileSync(path, JSON.stringify(data, null, 2)+"\n");'
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Synced version to $VERSION"
-
-      - run: pnpm tauri android init
-      - run: pnpm tauri android build --apk
-
-      - name: Inspect Android output
-        shell: bash
-        run: |
-          echo "Inspecting src-tauri/gen/android/app/build/outputs after build"
-          if [ -d src-tauri/gen/android/app/build/outputs ]; then
-            find src-tauri/gen/android/app/build/outputs -maxdepth 8 -type f | sort
-          else
-            echo "src-tauri/gen/android/app/build/outputs does not exist"
-          fi
-
-      - name: Sign APK
-        id: sign_apk
-        shell: bash
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-
-          # [INFERRED] Manual zipalign/apksigner execution avoids the deprecated set-output usage emitted by r0adkll/sign-android-release@v1.
-          RELEASE_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-          UNSIGNED_APK="$(find "$RELEASE_DIR" -maxdepth 1 -type f -name '*-unsigned.apk' | head -n 1)"
-
-          if [ -z "$UNSIGNED_APK" ]; then
-            echo "No unsigned APK found in $RELEASE_DIR"
-            exit 1
-          fi
-
-          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          BUILD_TOOLS="$SDK_ROOT/build-tools/29.0.3"
-          KEYSTORE_PATH="$RUNNER_TEMP/deepeye-release.jks"
-          ALIGNED_APK="${UNSIGNED_APK%-unsigned.apk}-aligned.apk"
-          SIGNED_APK="${UNSIGNED_APK%-unsigned.apk}-signed.apk"
-
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
-          "$BUILD_TOOLS/zipalign" -f -p 4 "$UNSIGNED_APK" "$ALIGNED_APK"
-          "$BUILD_TOOLS/apksigner" sign \
-            --ks "$KEYSTORE_PATH" \
-            --ks-key-alias "$ANDROID_KEY_ALIAS" \
-            --ks-pass pass:"$ANDROID_STORE_PASSWORD" \
-            --key-pass pass:"$ANDROID_KEY_PASSWORD" \
-            --out "$SIGNED_APK" \
-            "$ALIGNED_APK"
-          "$BUILD_TOOLS/apksigner" verify "$SIGNED_APK"
-
-          echo "signed_apk=$SIGNED_APK" >> "$GITHUB_OUTPUT"
-
-      - name: Rename signed APK
-        id: rename_signed_apk
-        shell: bash
-        run: |
-          SIGNED_PATH="${{ steps.sign_apk.outputs.signed_apk }}"
-          if [ ! -f "$SIGNED_PATH" ]; then
-            echo "Signed APK not found at $SIGNED_PATH"
-            exit 1
-          fi
-
-          # [INFERRED] The signing action resolves the final signed path; rename after signing to keep a stable release filename.
-          FINAL_PATH="$(dirname "$SIGNED_PATH")/DeepEyeUnlocker_${VERSION}.apk"
-          mv "$SIGNED_PATH" "$FINAL_PATH"
-          echo "path=$FINAL_PATH" >> "$GITHUB_OUTPUT"
-          echo "Renamed signed APK to $FINAL_PATH"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: DeepEyeUnlocker-Android
           retention-days: 30
-          path: ${{ steps.rename_signed_apk.outputs.path }}
-          if-no-files-found: error
 
   create-release:
-    needs: [build, build-android]
+    name: Create GitHub release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
+    needs: build-matrix
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./artifacts
+          path: artifacts
 
-      - name: Inspect downloaded artifacts
+      - name: Generate release notes from changelog
         shell: bash
         run: |
-          if [ -d ./artifacts ]; then
-            find ./artifacts -maxdepth 8 -type f | sort
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          sections = []
+          current = []
+          for line in changelog.splitlines():
+              if line.startswith("## ["):
+                  if current:
+                      sections.append("\n".join(current).strip())
+                  current = [line]
+              elif current:
+                  current.append(line)
+          if current:
+              sections.append("\n".join(current).strip())
+
+          release_notes = sections[0] if sections else "Release notes unavailable."
+          Path("release_notes.md").write_text(release_notes + "\n", encoding="utf-8")
+          PY
+
+      - name: Generate latest.json
+        shell: bash
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import quote
+          import datetime as dt
+          import json
+          import os
+          import sys
+
+          artifacts_dir = Path("artifacts")
+          files = {path.name: path for path in artifacts_dir.rglob("*") if path.is_file()}
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = tag.removeprefix("v")
+          repository = os.environ["GITHUB_REPOSITORY"]
+          notes = Path("release_notes.md").read_text(encoding="utf-8").strip()
+          base_url = f"https://github.com/{repository}/releases/download/{tag}/"
+
+          def signature_for(filename: str) -> str:
+              sig_name = f"{filename}.sig"
+              sig_path = files.get(sig_name)
+              if sig_path is None:
+                  raise FileNotFoundError(sig_name)
+              return sig_path.read_text(encoding="utf-8").strip()
+
+          platforms: dict[str, dict[str, str]] = {}
+
+          for filename in sorted(files):
+              if filename.endswith("_aarch64.app.tar.gz"):
+                  platforms["darwin-aarch64"] = {
+                      "url": base_url + quote(filename),
+                      "signature": signature_for(filename),
+                  }
+              elif filename.endswith("_x86_64.app.tar.gz"):
+                  platforms["darwin-x86_64"] = {
+                      "url": base_url + quote(filename),
+                      "signature": signature_for(filename),
+                  }
+              elif filename.endswith("_x86_64.AppImage.tar.gz"):
+                  platforms["linux-x86_64"] = {
+                      "url": base_url + quote(filename),
+                      "signature": signature_for(filename),
+                  }
+              elif filename.endswith("_x86_64-nsis.zip"):
+                  platforms["windows-x86_64-nsis"] = {
+                      "url": base_url + quote(filename),
+                      "signature": signature_for(filename),
+                  }
+              elif filename.endswith("_x86_64-msi.zip"):
+                  platforms["windows-x86_64-msi"] = {
+                      "url": base_url + quote(filename),
+                      "signature": signature_for(filename),
+                  }
+
+          if not platforms:
+              print("No updater artifacts found to build latest.json", file=sys.stderr)
+              sys.exit(1)
+
+          latest = {
+              "version": version,
+              "notes": notes,
+              "pub_date": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+              "platforms": platforms,
+          }
+
+          Path("latest.json").write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Sync releases/latest.json to main branch
+        shell: bash
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B main origin/main
+          mkdir -p releases
+          cp latest.json releases/latest.json
+          if ! git diff --quiet -- releases/latest.json; then
+            git add releases/latest.json
+            git commit -m "chore(release): update latest.json for ${GITHUB_REF_NAME}"
+            git push origin HEAD:main
           else
-            echo "No downloaded artifacts directory found"
-            exit 1
+            echo "releases/latest.json already up to date"
           fi
 
-      - name: Create GitHub Release
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body_path: release_notes.md
           files: |
-            ./artifacts/**/*
-          body_path: .github/release-template.md
+            artifacts/**/*
+            latest.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

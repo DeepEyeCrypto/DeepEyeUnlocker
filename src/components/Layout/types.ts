@@ -23,7 +23,9 @@ export type NavId =
   | "mtk"
   | "romflasher"
   | "history"
-  | "mtkbrom";
+  | "mtkbrom"
+  | "settings"
+  | "samsung";
 
 type NavAvailability = "all" | "desktop" | "android";
 
@@ -56,6 +58,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "identity", icon: "I", label: "Identity", androidOrder: 6 },
   { id: "history", icon: "L", label: "History", androidOrder: 7 },
   { id: "updater", icon: "U", label: "Updater", androidOrder: 8 },
+  { id: "settings", icon: "settings", label: "Settings", androidOrder: 8.5 },
+  { id: "samsung", icon: "S", label: "Samsung", androidOrder: 9 },
   { id: "activation", icon: "A", label: "Activation", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "DESKTOP", androidOrder: 20 },
   { id: "jailbreak", icon: "J", label: "Jailbreak", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "DESKTOP", androidOrder: 21 },
   { id: "toolbox", icon: "T", label: "Toolbox", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "DESKTOP", androidOrder: 22 },

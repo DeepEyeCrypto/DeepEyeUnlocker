@@ -19,7 +19,15 @@ mod developer;
 mod error;
 
 use commands::ios_backup::{ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack};
-use commands::adb::stream_adb_logs;
+use commands::adb::{
+    adb_list_devices, adb_get_full_info, adb_shell_command, adb_reboot_device,
+    adb_install_apk, adb_push_file, adb_pull_file, adb_sideload_zip,
+    adb_erase_frp_partition, adb_check_root_access, adb_test_binary, stream_adb_logs
+};
+use commands::samsung::{
+    samsung_find_device_cmd, samsung_do_handshake_cmd, samsung_get_pit_cmd,
+    samsung_flash_part_cmd, samsung_do_erase_frp_cmd, samsung_reboot_device_cmd
+};
 use commands::dfu_restore::{ios_detect_dfu_state, ios_enter_dfu, ios_restore_device, ios_download_ipsw};
 use commands::activation::{ios_check_activation_state, ios_run_checkra1n, ios_patch_activation_record};
 use commands::apple_id::{ios_apple_id_state, ios_remove_apple_id, ios_fmi_state};
@@ -68,7 +76,7 @@ use commands::mtk_brom::{
     mtk_read_imei, mtk_reboot, mtk_upload_da, mtk_write_imei,
 };
 use commands::bruteforce::run_pin_bruteforce;
-use commands::updater::{check_for_update, install_update};
+use commands::updater::{check_update, do_install_update};
 use commands::edl::{edl_find_device, edl_sahara_handshake, edl_upload_programmer, edl_configure, edl_read_partition, edl_write_partition, edl_erase_partition, edl_get_storage_info, edl_reboot};
 use commands::rom_flasher::{rom_sideload_zip, rom_flash_partition, rom_wipe_data, rom_reboot_recovery, rom_reboot_bootloader};
 use commands::device_history::{history_add_entry, history_get_entries, history_clear, history_delete_entry, history_export_json};
@@ -163,6 +171,10 @@ use developer::{
     list_processes, get_screenshot
 };
 
+
+// ── ADB and Samsung Commands are now imported from their modules directly ──
+
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // [CONFIRMED] Release builds use panic=abort, so startup errors must be logged instead of panicking.
@@ -170,6 +182,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -178,6 +191,23 @@ pub fn run() {
             ios_extract_screentime,
             ios_run_crack,
             stream_adb_logs,
+            adb_list_devices,
+            adb_get_full_info,
+            adb_shell_command,
+            adb_reboot_device,
+            adb_install_apk,
+            adb_push_file,
+            adb_pull_file,
+            adb_sideload_zip,
+            adb_erase_frp_partition,
+            adb_check_root_access,
+            adb_test_binary,
+            samsung_find_device_cmd,
+            samsung_do_handshake_cmd,
+            samsung_get_pit_cmd,
+            samsung_flash_part_cmd,
+            samsung_do_erase_frp_cmd,
+            samsung_reboot_device_cmd,
             ios_detect_dfu_state,
             ios_enter_dfu,
             ios_restore_device,
@@ -355,8 +385,8 @@ pub fn run() {
             ios_bypass_full,
             run_pin_bruteforce,
             // Stage 25 — Auto-updater
-            check_for_update,
-            install_update,
+            check_update,
+            do_install_update,
             // Stage 26 — EDL mode
             edl_find_device,
             edl_sahara_handshake,

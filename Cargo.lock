@@ -659,7 +659,7 @@ dependencies = [
 
 [[package]]
 name = "deep-eye-unlocker-desktop"
-version = "2027.8.2"
+version = "2027.10.0"
 dependencies = [
  "chrono",
  "quick-xml 0.37.5",

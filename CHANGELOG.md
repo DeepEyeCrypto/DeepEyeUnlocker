@@ -1,3 +1,18 @@
+## [2027.10.0] — 2026-04-06
+
+### 🚀 Release Infrastructure
+- Added GitHub Actions release orchestration for tag-driven desktop bundles, GitHub Releases publishing, and updater metadata generation.
+- Added a dedicated CI workflow covering Rust formatting, clippy with `-D warnings`, `cargo check`, and frontend production builds.
+
+### 🔄 Auto-Updater
+- Upgraded Tauri updater configuration with signed updater artifacts, raw `latest.json` endpoints, and install-and-restart support.
+- Added build-time app metadata exposure for release-aware frontend surfaces.
+
+### ⚙️ Settings & Runtime Control
+- Added persistent settings storage for ADB path, TCP configuration, USB detection interval, and USB debug logging.
+
+---
+
 ## [2027.8.2] — 2026-04-06
 
 ### 🔧 Bug Fixes

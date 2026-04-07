@@ -1,43 +1,26 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { UPDATER_COMMANDS, type UpdateInfo } from "../../lib/updater";
+import {
+  summarizeChangelog,
+  type UpdateInfo,
+  type UpdateStatus,
+} from "../../lib/updater";
 import { Card } from "../ui/Card";
 
-export default function UpdaterPage() {
-  const [status, setStatus] = useState<"idle" | "checking" | "available" | "installing" | "done" | "error">("idle");
-  const [update, setUpdate] = useState<UpdateInfo | null>(null);
-  const [message, setMessage] = useState("");
+type UpdaterPageProps = {
+  status: UpdateStatus;
+  update: UpdateInfo | null;
+  message: string;
+  onCheck: () => Promise<void>;
+  onInstall: () => Promise<void>;
+};
 
-  const checkUpdate = async () => {
-    setStatus("checking");
-    setMessage("");
-    try {
-      const info = await invoke<UpdateInfo>(UPDATER_COMMANDS.CHECK);
-      if (info.available) {
-        setUpdate(info);
-        setStatus("available");
-      } else {
-        setStatus("idle");
-        setMessage("You are on the latest version.");
-      }
-    } catch (e: unknown) {
-      setStatus("error");
-      setMessage(String(e));
-    }
-  };
-
-  const installUpdate = async () => {
-    setStatus("installing");
-    setMessage("");
-    try {
-      const result = await invoke<string>(UPDATER_COMMANDS.INSTALL);
-      setMessage(result);
-      setStatus("done");
-    } catch (e: unknown) {
-      setStatus("error");
-      setMessage(String(e));
-    }
-  };
+export default function UpdaterPage({
+  status,
+  update,
+  message,
+  onCheck,
+  onInstall,
+}: UpdaterPageProps) {
+  const summary = update ? summarizeChangelog(update.body, 4) : "";
 
   return (
     <div className="page">
@@ -46,7 +29,7 @@ export default function UpdaterPage() {
         <button
           className="btn btn-primary btn-sm"
           disabled={status === "checking" || status === "installing"}
-          onClick={checkUpdate}
+          onClick={() => void onCheck()}
         >
           {status === "checking" ? "Checking..." : "Check for Updates"}
         </button>
@@ -57,7 +40,7 @@ export default function UpdaterPage() {
           <p className="muted">Click "Check for Updates" to see if a new version is available.</p>
         )}
 
-        {status === "idle" && message && (
+        {status === "upToDate" && message && (
           <div className="panel">
             <span className="action-title">{message}</span>
           </div>
@@ -80,14 +63,17 @@ export default function UpdaterPage() {
                   <span className="device-field-value">{update.date || "N/A"}</span>
                 </div>
               </div>
-              {update.body && (
+              {summary && (
                 <div className="meta-text" style={{ marginTop: "var(--space-3)", whiteSpace: "pre-wrap" }}>
-                  {update.body}
+                  {summary}
                 </div>
               )}
+              <div className="meta-text" style={{ marginTop: "var(--space-3)", wordBreak: "break-all" }}>
+                {update.downloadUrl}
+              </div>
             </div>
-            <button className="btn btn-success btn-md" onClick={installUpdate}>
-              Download &amp; Install
+            <button className="btn btn-success btn-md" onClick={() => void onInstall()}>
+              Install &amp; Restart
             </button>
           </div>
         )}
@@ -96,12 +82,6 @@ export default function UpdaterPage() {
           <div className="panel pulse-panel">
             <div className="action-title">Downloading and installing update...</div>
             <p className="meta-text">Do not close the application.</p>
-          </div>
-        )}
-
-        {status === "done" && (
-          <div className="panel">
-            <div className="action-title">{message}</div>
           </div>
         )}
 

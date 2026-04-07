@@ -209,3 +209,163 @@
 .terminal-line {
   line-height: 1.5;
 }
+
+/* ── Fancy Glow Button ───────────────────── */
+.edl-detect-btn {
+  position: relative;
+  padding: 0.55rem 1.4rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5, #2563eb);
+  background-size: 200% 200%;
+  color: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  overflow: hidden;
+  animation: btn-gradient-shift 3s ease infinite;
+  box-shadow:
+    0 0 12px rgba(124, 58, 237, 0.5),
+    0 0 28px rgba(79, 70, 229, 0.3),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* shimmer sweep */
+.edl-detect-btn::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  animation: btn-shimmer 2.5s infinite;
+}
+
+/* ripple on click */
+.edl-detect-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0.12);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.edl-detect-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 20px rgba(124, 58, 237, 0.7),
+    0 0 40px rgba(79, 70, 229, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.edl-detect-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.edl-detect-btn:active::after { opacity: 1; }
+
+.edl-detect-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  animation: none;
+  box-shadow: none;
+  transform: none;
+}
+
+@keyframes btn-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes btn-shimmer {
+  0%   { left: -75%; }
+  100% { left: 125%; }
+}
+
+/* File Picker Styles */
+.edl-file-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.edl-file-display {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #0a0e1a;
+  border: 1px solid #312e81;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.edl-file-display:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 0 8px rgba(124,58,237,0.3);
+}
+
+.edl-file-icon { font-size: 1rem; flex-shrink: 0; }
+
+.edl-file-name {
+  font-size: 0.82rem;
+  color: #a5b4fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* tooltip on hover showing full path */
+.edl-file-path-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #1e1b4b;
+  border: 1px solid #4f46e5;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  color: #c7d2fe;
+  white-space: nowrap;
+  z-index: 100;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edl-file-display:hover .edl-file-path-tooltip { display: block; }
+
+.edl-browse-btn {
+  padding: 0.5rem 1rem;
+  background: #1e1b4b;
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #a5b4fc;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.edl-browse-btn:hover {
+  background: #312e81;
+  color: #c7d2fe;
+  box-shadow: 0 0 8px rgba(99,102,241,0.4);
+}

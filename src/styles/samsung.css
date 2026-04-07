@@ -1,0 +1,248 @@
+.samsung-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #080d1a;
+  min-height: 100vh;
+  color: #e2e8f0;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.samsung-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.samsung-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.samsung-title h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #22d3ee;
+}
+
+.samsung-subtitle {
+  font-size: 0.72rem;
+  color: #475569;
+  letter-spacing: 0.05em;
+}
+
+.samsung-icon { font-size: 1.6rem; }
+
+.samsung-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: #1e293b;
+  color: #64748b;
+}
+
+.samsung-status--detected    { background: #064e3b; color: #34d399; }
+.samsung-status--handshaking { background: #1a3a5c; color: #38bdf8; }
+.samsung-status--reading_pit { background: #1a3a5c; color: #22d3ee; }
+.samsung-status--flashing    { background: #312e81; color: #a5b4fc; }
+.samsung-status--erasing_frp { background: #7f1d1d; color: #f87171; }
+.samsung-status--error       { background: #7f1d1d; color: #f87171; }
+
+.samsung-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.samsung-step-btn {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+}
+
+.samsung-step-btn:hover:not(:disabled) { border-color: #22d3ee; color: #22d3ee; }
+.samsung-step-btn.done { border-color: #34d399; color: #34d399; background: #064e3b22; }
+.samsung-step-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.samsung-step-arrow { color: #334155; font-size: 1.2rem; }
+
+.samsung-error {
+  padding: 0.75rem;
+  background: #7f1d1d33;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.samsung-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) { .samsung-two-col { grid-template-columns: 1fr; } }
+
+.samsung-card {
+  background: #0d1420;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.samsung-card h2 {
+  font-size: 0.85rem;
+  color: #22d3ee;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.samsung-info-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.samsung-info-list > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  background: #1e293b;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+.samsung-info-list span { color: #475569; }
+.samsung-info-list strong { color: #e2e8f0; }
+.samsung-placeholder { color: #334155; font-size: 0.85rem; }
+
+.samsung-ops { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.samsung-btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #94a3b8;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.samsung-btn:hover:not(:disabled) { border-color: #22d3ee; color: #22d3ee; }
+.samsung-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.samsung-btn--primary { background: #0e3a4a; border-color: #22d3ee; color: #67e8f9; }
+.samsung-btn--primary:hover:not(:disabled) { background: #0891b2; color: white; }
+.samsung-btn--danger { border-color: #ef4444; color: #f87171; }
+.samsung-btn--danger:hover:not(:disabled) { background: #7f1d1d; }
+
+.samsung-table-wrap { overflow-x: auto; }
+
+.samsung-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.samsung-table th {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  color: #334155;
+  font-weight: 600;
+  border-bottom: 1px solid #1e293b;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+
+.samsung-table td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid #1e293b33;
+}
+
+.samsung-table tr:hover { background: #1e293b44; }
+.samsung-row--frp { background: #7f1d1d22 !important; }
+.samsung-row--frp .samsung-part-name { color: #f87171; }
+.samsung-part-name { color: #22d3ee; font-weight: 600; }
+.samsung-mono { color: #94a3b8; font-family: monospace; }
+.samsung-filename { color: #475569; }
+
+.samsung-flash-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.samsung-input {
+  flex: 1;
+  min-width: 140px;
+  background: #080d1a;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 0.45rem 0.75rem;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.samsung-input:focus { border-color: #22d3ee; }
+.samsung-input--file { color: #475569; }
+
+.samsung-progress-bar {
+  position: relative;
+  background: #1e293b;
+  border-radius: 999px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.samsung-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0891b2, #22d3ee);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.samsung-progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+}
+
+.samsung-log-card { max-height: 280px; }
+
+.samsung-log {
+  max-height: 220px;
+  overflow-y: auto;
+  background: #050810;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.samsung-log-empty { color: #334155; }
+.samsung-log-line { color: #64748b; }
+.samsung-log--error { color: #f87171; }
+.samsung-log--success { color: #34d399; }

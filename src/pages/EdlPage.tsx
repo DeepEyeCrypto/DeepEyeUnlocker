@@ -19,6 +19,7 @@ export default function EdlPage() {
   const [partitionInput, setPartitionInput] = useState('');
   const [sectorsInput, setSectorsInput] = useState('128');
   const [programmerName, setProgrammerName] = useState('');
+  const [flashFile, setFlashFile] = useState('');
   const logRef = useRef<HTMLDivElement>(null);
 
   const addLog = (msg: string) => {
@@ -67,6 +68,24 @@ export default function EdlPage() {
     }
   };
 
+  const handlePickFlashFile = async () => {
+    try {
+      const path = await open({
+        filters: [{
+          name: 'Flash Images',
+          extensions: ['img', 'bin', 'raw']
+        }]
+      });
+      if (path && typeof path === 'string') {
+        const filename = path.split(/[\\/]/).pop() || path;
+        setFlashFile(path);
+        addLog(`> Selected flash file: ${filename}`);
+      }
+    } catch (e) {
+      addLog(`[ERROR] ${String(e)}`);
+    }
+  };
+
   const isStep1Done = deviceInfo !== null;
   const isStep2Done = saharaInfo !== null;
   const isStep3Done = edlStatus === 'programmer_ready' || storageInfo !== null;
@@ -106,11 +125,11 @@ export default function EdlPage() {
           <span className="step-number">Step 1</span>
           <span className="step-action">Detect Device</span>
           <button 
-            className="btn btn-primary btn-sm" 
-            style={{ marginTop: 'auto' }}
+            className="edl-detect-btn"
             onClick={() => void detect()}
+            disabled={edlStatus === 'detecting'}
           >
-            Detect EDL
+            Detect Device
           </button>
         </div>
 
@@ -118,9 +137,8 @@ export default function EdlPage() {
           <span className="step-number">Step 2</span>
           <span className="step-action">Sahara Protocol</span>
           <button 
-            className="btn btn-primary btn-sm" 
-            disabled={!isStep1Done}
-            style={{ marginTop: 'auto' }}
+            className="edl-detect-btn"
+            disabled={!isStep2Done}
             onClick={() => void saharaHandshake()}
           >
             Handshake
@@ -246,6 +264,33 @@ export default function EdlPage() {
           onClick={() => void erasePartition(partitionInput)}
         >
           Erase ✕
+        </button>
+        <div style={{ width: '200px' }}>
+          <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '0.5rem' }}>
+            Flash File
+          </label>
+          <input 
+            type="text" 
+            className="input glass-input" 
+            placeholder="Select file..."
+            value={flashFile.split(/[\\/]/).pop() || ''}
+            readOnly
+            style={{ width: '100%' }}
+          />
+        </div>
+        <button 
+          className="btn btn-secondary" 
+          disabled={!isStep3Done}
+          onClick={() => void handlePickFlashFile()}
+        >
+          Select File
+        </button>
+        <button 
+          className="btn btn-success" 
+          disabled={!isStep3Done || !flashFile}
+          onClick={() => void writePartition('all', flashFile)}
+        >
+          Flash All
         </button>
       </div>
 
