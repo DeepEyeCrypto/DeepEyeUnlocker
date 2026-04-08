@@ -1,3 +1,22 @@
+## [2027.16.0] — 2026-04-08
+
+### ✨ Release Highlights
+- Added Day 16 ROM Manager with ZIP inspection, archive classification, compatibility analysis, and flash queue planning.
+- Shipped Day 15 real-time ADB Logcat Viewer with live streaming, export, and filtering controls.
+- Finalized Device Intelligence routing, Guided FRP flows, Kotlin-to-Rust sync, and the Android glass UI rollout.
+
+### 🔌 Protocol Coverage
+- Operational desktop and mobile workflows now cover MTK BROM, Qualcomm EDL, ADB, Samsung Odin, and Fastboot paths.
+
+### ✅ Validation
+- `cargo check --manifest-path src-tauri/Cargo.toml`
+- `cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings`
+- `npx tsc --noEmit`
+- `bash deepeye-test.sh`
+- `./gradlew compileDebug`
+
+---
+
 ## [2027.10.1] — 2026-04-07
 
 ### 🎨 UI Hotfixes
