@@ -1,5 +1,9 @@
-import { useCallback, useMemo } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import rawDeviceDatabase from "../../app/src/main/assets/device_database.json";
+
+// --- LEGACY TYPES & DATA (from original useDeviceDB.ts) ---
 
 export const FRP_BRAND_SELECTOR = [
   "Samsung",
@@ -20,6 +24,32 @@ export type FrpBrandSelection = (typeof FRP_BRAND_SELECTOR)[number];
 export type ChipsetFamily = "qualcomm" | "mediatek" | "unisoc" | "exynos" | "unknown";
 export type ProgrammingFileType = "firehose" | "scatter" | "da";
 
+export interface ProgrammingFile {
+  brand: string;
+  model: string;
+  chipset: string;
+  file_type: "firehose" | "scatter" | "da";
+  file_path: string;
+  verified: boolean;
+}
+
+export type ProgrammingLookup = {
+  brand: string;
+  model: string;
+  chipset: string;
+  chipsetFamily?: ChipsetFamily;
+};
+
+export type DeviceRecord = {
+  key: string;
+  brand: string;
+  name: string;
+  model: string;
+  codename?: string;
+  chipset: string;
+  chipsetFamily: ChipsetFamily;
+};
+
 type RawDatabaseModel = {
   name: string;
   chipset: string;
@@ -35,39 +65,6 @@ type RawDeviceDatabase = {
   totalModels: number;
   lastUpdated: string;
   brands: Record<string, RawDatabaseBrand>;
-};
-
-type ProgrammingTemplate = {
-  family: ChipsetFamily;
-  matcher: (chipset: string) => boolean;
-  file_type: ProgrammingFileType;
-  file_path: string;
-};
-
-export type DeviceRecord = {
-  key: string;
-  brand: string;
-  name: string;
-  model: string;
-  codename?: string;
-  chipset: string;
-  chipsetFamily: ChipsetFamily;
-};
-
-export interface ProgrammingFile {
-  brand: string;
-  model: string;
-  chipset: string;
-  file_type: "firehose" | "scatter" | "da";
-  file_path: string;
-  verified: boolean;
-}
-
-type ProgrammingLookup = {
-  brand: string;
-  model: string;
-  chipset: string;
-  chipsetFamily?: ChipsetFamily;
 };
 
 const deviceDatabase = rawDeviceDatabase as RawDeviceDatabase;
@@ -93,29 +90,28 @@ const BRAND_ALIASES: Record<string, string> = {
 
 const PRIORITY_BRANDS = new Set<string>(FRP_BRAND_SELECTOR.filter((brand) => brand !== "Others"));
 
-// [INFERRED] Programming file coverage is derived from assets physically present in the repository.
-const PROGRAMMING_TEMPLATES: readonly ProgrammingTemplate[] = [
+const PROGRAMMING_TEMPLATES = [
   {
     family: "qualcomm",
-    matcher: (chipset) => /\bSM6115\b/i.test(chipset),
+    matcher: (chipset: string) => /\bSM6115\b/i.test(chipset),
     file_type: "firehose",
     file_path: "app/src/main/assets/prog/sm6115_emmc_firehose.elf",
   },
   {
     family: "qualcomm",
-    matcher: (chipset) => /\bSM8250\b/i.test(chipset),
+    matcher: (chipset: string) => /\bSM8250\b/i.test(chipset),
     file_type: "firehose",
     file_path: "app/src/main/assets/prog/sm8250_ufs_firehose.elf",
   },
   {
     family: "qualcomm",
-    matcher: (chipset) => /\bSM8350\b/i.test(chipset),
+    matcher: (chipset: string) => /\bSM8350\b/i.test(chipset),
     file_type: "firehose",
     file_path: "app/src/main/assets/prog/sm8350_emmc_firehose.elf",
   },
   {
     family: "qualcomm",
-    matcher: (chipset) => /\bSM8350\b/i.test(chipset),
+    matcher: (chipset: string) => /\bSM8350\b/i.test(chipset),
     file_type: "firehose",
     file_path: "app/src/main/assets/prog/sm8350_ufs_firehose.elf",
   },
@@ -135,60 +131,21 @@ const PROGRAMMING_TEMPLATES: readonly ProgrammingTemplate[] = [
 
 export function formatChipsetFamilyLabel(family: ChipsetFamily): string {
   switch (family) {
-    case "qualcomm":
-      return "Qualcomm";
-    case "mediatek":
-      return "MediaTek";
-    case "unisoc":
-      return "Unisoc";
-    case "exynos":
-      return "Exynos";
-    default:
-      return "Unknown";
+    case "qualcomm": return "Qualcomm";
+    case "mediatek": return "MediaTek";
+    case "unisoc": return "Unisoc";
+    case "exynos": return "Exynos";
+    default: return "Unknown";
   }
 }
 
 export function detectChipsetFamily(chipset: string): ChipsetFamily {
   const normalized = chipset.trim().toLowerCase();
-
-  if (!normalized || normalized.includes("auto-detect")) {
-    return "unknown";
-  }
-
-  if (normalized.includes("exynos")) {
-    return "exynos";
-  }
-
-  if (
-    normalized.includes("unisoc") ||
-    normalized.includes("spreadtrum") ||
-    /^sc\d+/i.test(normalized) ||
-    /^ums\d+/i.test(normalized) ||
-    /^t\d{3}/i.test(normalized)
-  ) {
-    return "unisoc";
-  }
-
-  if (
-    normalized.startsWith("mt") ||
-    normalized.includes("mediatek") ||
-    normalized.includes("dimensity") ||
-    normalized.includes("helio")
-  ) {
-    return "mediatek";
-  }
-
-  if (
-    normalized.startsWith("sm") ||
-    normalized.startsWith("sdm") ||
-    normalized.startsWith("msm") ||
-    normalized.startsWith("qcm") ||
-    normalized.includes("snapdragon") ||
-    normalized.includes("qualcomm")
-  ) {
-    return "qualcomm";
-  }
-
+  if (!normalized || normalized.includes("auto-detect")) return "unknown";
+  if (normalized.includes("exynos")) return "exynos";
+  if (normalized.includes("unisoc") || normalized.includes("spreadtrum") || /^sc\d+/i.test(normalized) || /^ums\d+/i.test(normalized) || /^t\d{3}/i.test(normalized)) return "unisoc";
+  if (normalized.startsWith("mt") || normalized.includes("mediatek") || normalized.includes("dimensity") || normalized.includes("helio")) return "mediatek";
+  if (normalized.startsWith("sm") || normalized.startsWith("sdm") || normalized.startsWith("msm") || normalized.startsWith("qcm") || normalized.includes("snapdragon") || normalized.includes("qualcomm")) return "qualcomm";
   return "unknown";
 }
 
@@ -201,7 +158,6 @@ function buildRecordKey(brand: string, name: string, chipset: string): string {
   return `${brand}::${name}::${chipset}`.toLowerCase();
 }
 
-// [INFERRED] The curated JSON database is the authoritative source for brand/model/chipset mapping in this hub.
 function buildDeviceRecords(database: RawDeviceDatabase): DeviceRecord[] {
   return Object.entries(database.brands)
     .flatMap(([brandName, brandData]) => {
@@ -218,140 +174,102 @@ function buildDeviceRecords(database: RawDeviceDatabase): DeviceRecord[] {
     })
     .sort((left, right) => {
       const brandCompare = left.brand.localeCompare(right.brand);
-      if (brandCompare !== 0) {
-        return brandCompare;
-      }
+      if (brandCompare !== 0) return brandCompare;
       return left.name.localeCompare(right.name);
     });
 }
 
-function isOtherBrand(brand: string): boolean {
-  return !PRIORITY_BRANDS.has(brand);
-}
-
-function matchesBrandSelection(record: DeviceRecord, brandSelection: FrpBrandSelection): boolean {
-  if (brandSelection === "Others") {
-    return isOtherBrand(record.brand);
-  }
-  return record.brand === brandSelection;
-}
-
-function getQueryScore(record: DeviceRecord, query: string): number {
-  if (!query) {
-    return 1;
-  }
-
-  const fields = [record.name, record.model, record.codename ?? "", record.chipset];
-  let score = 0;
-
-  for (const field of fields) {
-    const normalizedField = field.toLowerCase();
-
-    if (!normalizedField) {
-      continue;
-    }
-
-    if (normalizedField === query) {
-      score = Math.max(score, 400);
-    } else if (normalizedField.startsWith(query)) {
-      score = Math.max(score, 280);
-    } else if (normalizedField.includes(query)) {
-      score = Math.max(score, 180);
-    }
-  }
-
-  return score;
-}
-
-function dedupeProgrammingFiles(files: ProgrammingFile[]): ProgrammingFile[] {
-  const seen = new Set<string>();
-  return files.filter((file) => {
-    const key = `${file.file_type}:${file.file_path}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
-function resolveProgrammingFiles(lookup: ProgrammingLookup): ProgrammingFile[] {
-  const family = lookup.chipsetFamily ?? detectChipsetFamily(lookup.chipset);
-  const normalizedChipset = lookup.chipset.trim().toUpperCase();
-
-  const matchedFiles = PROGRAMMING_TEMPLATES.filter((template) => {
-    if (template.family !== family) {
-      return false;
-    }
-    return template.matcher(normalizedChipset);
-  }).map<ProgrammingFile>((template) => ({
-    brand: lookup.brand,
-    model: lookup.model,
-    chipset: lookup.chipset,
-    file_type: template.file_type,
-    file_path: template.file_path,
-    verified: true,
-  }));
-
-  return dedupeProgrammingFiles(matchedFiles);
-}
-
 const DEVICE_RECORDS = buildDeviceRecords(deviceDatabase);
 
+// --- MODERN TYPES (for useDeviceDb / Tauri) ---
+
+export interface DeviceEntry {
+  brand: string;
+  model: string;
+  codename: string;
+  soc: string;
+  soc_family: "Qualcomm" | "MediaTek" | "Samsung" | "Unisoc" | "Kirin" | "Unknown";
+  chipset_id: string;
+  protocol: "Edl" | "MtkBrom" | "SamsungOdin" | "Adb" | "Fastboot" | "Unknown";
+  vid: number | null;
+  pid: number | null;
+  firehose_path: string | null;
+  da_file: string | null;
+  notes: string | null;
+}
+
+export interface RoutingPreFill {
+  firehose_path: string | null;
+  da_path: string | null;
+  partition_hints: string[];
+}
+
+export interface HardwareGuide {
+  mode_name: string;
+  button_combo: string;
+  test_point: string | null;
+  steps: string[];
+  warning: string | null;
+  danger_zone: boolean;
+}
+
+export interface RoutingResult {
+  device: DeviceEntry | null;
+  protocol: string;
+  strategy?: string;
+  route_to: string;
+  confidence: number;
+  pre_fill: RoutingPreFill;
+  hardware_guide: HardwareGuide;
+  frp_partitions: string[];
+  danger_zone: boolean;
+}
+
+// --- LEGACY HOOK ---
 export function useDeviceDB() {
   const records = useMemo(() => DEVICE_RECORDS, []);
-
+  
   const brandsInDatabase = useMemo(() => {
-    const uniqueBrands = [...new Set(records.map((record) => record.brand))];
-    const prioritized = FRP_BRAND_SELECTOR.filter(
-      (brand): brand is Exclude<FrpBrandSelection, "Others"> => brand !== "Others" && uniqueBrands.includes(brand),
-    );
-    const others = uniqueBrands.filter((brand) => isOtherBrand(brand)).sort((left, right) => left.localeCompare(right));
+    const uniqueBrands = [...new Set(records.map((r) => r.brand))];
+    const prioritized = FRP_BRAND_SELECTOR.filter((b): b is Exclude<FrpBrandSelection, "Others"> => b !== "Others" && uniqueBrands.includes(b));
+    const others = uniqueBrands.filter((b) => !PRIORITY_BRANDS.has(b)).sort();
     return [...prioritized, ...others];
   }, [records]);
 
-  const otherBrands = useMemo(
-    () => brandsInDatabase.filter((brand) => isOtherBrand(brand)),
-    [brandsInDatabase],
-  );
+  const otherBrands = useMemo(() => brandsInDatabase.filter(b => !PRIORITY_BRANDS.has(b)), [brandsInDatabase]);
 
-  const getBrandModels = useCallback(
-    (brandSelection: FrpBrandSelection): DeviceRecord[] =>
-      records.filter((record) => matchesBrandSelection(record, brandSelection)),
-    [records],
-  );
+  const getBrandModels = useCallback((brand: FrpBrandSelection) => 
+    records.filter(r => brand === "Others" ? !PRIORITY_BRANDS.has(r.brand) : r.brand === brand), [records]);
 
-  const searchModels = useCallback(
-    (query: string, brandSelection: FrpBrandSelection, limit = 8): DeviceRecord[] => {
-      const normalizedQuery = query.trim().toLowerCase();
+  const searchModels = useCallback((query: string, brand: FrpBrandSelection, limit = 8) => {
+    const q = query.trim().toLowerCase();
+    return getBrandModels(brand)
+      .map(record => {
+        let score = 0;
+        const fields = [record.name, record.model, record.codename ?? "", record.chipset];
+        for (const f of fields) {
+          const nf = f.toLowerCase();
+          if (nf === q) score = Math.max(score, 400);
+          else if (nf.startsWith(q)) score = Math.max(score, 280);
+          else if (nf.includes(q)) score = Math.max(score, 180);
+        }
+        return { record, score };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score || a.record.name.localeCompare(b.record.name))
+      .slice(0, limit)
+      .map(x => x.record);
+  }, [getBrandModels]);
 
-      return getBrandModels(brandSelection)
-        .map((record) => ({ record, score: getQueryScore(record, normalizedQuery) }))
-        .filter(({ score }) => score > 0)
-        .sort((left, right) => {
-          if (left.score !== right.score) {
-            return right.score - left.score;
-          }
-          return left.record.name.localeCompare(right.record.name);
-        })
-        .slice(0, limit)
-        .map(({ record }) => record);
-    },
-    [getBrandModels],
-  );
+  const resolveModel = useCallback((query: string, brand: FrpBrandSelection) => searchModels(query, brand, 1)[0] ?? null, [searchModels]);
 
-  const resolveModel = useCallback(
-    (query: string, brandSelection: FrpBrandSelection): DeviceRecord | null => {
-      const [match] = searchModels(query, brandSelection, 1);
-      return match ?? null;
-    },
-    [searchModels],
-  );
-
-  const getProgrammingFiles = useCallback(
-    (lookup: ProgrammingLookup): ProgrammingFile[] => resolveProgrammingFiles(lookup),
-    [],
-  );
+  const getProgrammingFiles = useCallback((lookup: ProgrammingLookup): ProgrammingFile[] => {
+    const family = lookup.chipsetFamily ?? detectChipsetFamily(lookup.chipset);
+    const norm = lookup.chipset.trim().toUpperCase();
+    return PROGRAMMING_TEMPLATES
+      .filter(t => t.family === family && t.matcher(norm))
+      .map(t => ({ brand: lookup.brand, model: lookup.model, chipset: lookup.chipset, file_type: t.file_type, file_path: t.file_path, verified: true }));
+  }, []);
 
   return {
     databaseVersion: deviceDatabase.version,
@@ -367,5 +285,92 @@ export function useDeviceDB() {
     getProgrammingFiles,
     detectChipsetFamily,
     formatChipsetFamilyLabel,
+  };
+}
+
+// --- MODERN HOOK (Tauri-backed) ---
+export function useDeviceDb() {
+  const [results, setResults] = useState<DeviceEntry[]>([]);
+  const [allDevices, setAllDevices] = useState<DeviceEntry[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<DeviceEntry | null>(null);
+  const [routingResult, setRoutingResult] = useState<RoutingResult | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    invoke<DeviceEntry[]>("db_list_all").then(setAllDevices).catch(console.error);
+  }, []);
+
+  const search = useCallback((query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) { setResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await invoke<DeviceEntry[]>("db_search_devices", { query });
+        setResults(res);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  }, []);
+
+  const searchDevices = useCallback(async (query: string): Promise<DeviceEntry[]> => {
+    if (!query.trim()) {
+      setResults([]);
+      return [];
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await invoke<DeviceEntry[]>("db_search_devices", { query });
+      setResults(res);
+      return res;
+    } catch (error) {
+      console.error(error);
+      return [];
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const lookupModel = useCallback(async (model: string) => {
+    const entry = await invoke<DeviceEntry | null>("db_lookup_model", { model });
+    setSelectedDevice(entry);
+  }, []);
+
+  const autoRoute = useCallback(async (model: string): Promise<RoutingResult> => {
+    const result = await invoke<RoutingResult>("db_auto_route", { model });
+    setRoutingResult(result);
+    await emit("navigate-to-protocol", {
+      route: result.route_to,
+      device: result.device,
+      pre_fill: result.pre_fill,
+    });
+    return result;
+  }, []);
+
+  const lookupVidPid = useCallback(async (vid: number, pid: number) => {
+    const entry = await invoke<DeviceEntry | null>("db_lookup_vid_pid", { vid, pid });
+    setSelectedDevice(entry ?? null);
+    if (entry) {
+      const result = await invoke<RoutingResult>("db_auto_route", { model: entry.model });
+      setRoutingResult(result);
+    }
+  }, []);
+
+  return {
+    results,
+    allDevices,
+    selectedDevice,
+    routingResult,
+    isSearching,
+    search,
+    searchDevices,
+    lookupModel,
+    autoRoute,
+    lookupVidPid,
   };
 }

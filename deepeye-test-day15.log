@@ -1,0 +1,42 @@
+=== DeepEye v7 Pre-Commit Test Suite ===
+[1/5] cargo check...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.58s
+✅ cargo check passed
+[2/5] cargo clippy (all targets)...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.60s
+✅ clippy passed (zero warnings)
+[3/5] Pattern scan...
+⚠️ WARN: src-tauri/tauri.conf.json version is pinned to 2027.10.1; expected an AUTO placeholder for tag-synced releases
+⚠️ WARN: src-tauri/tauri.conf.json version (2027.10.1) does not match latest release tag v2027.11.0
+⚠️ WARN: Release CI will patch the version from the tag, but the checked-in config looks stale
+✅ Pattern scan passed
+[4/5] YAML validate...
+✅ YAML valid
+[5/6] cargo test...
+   Compiling deep-eye-unlocker-desktop v2027.10.1 (/Users/enayat/Documents/DeepEyeUnlocker/src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10m 50s
+     Running unittests src/lib.rs (target/debug/deps/deep_eye_unlocker_lib-d779de3942b6287b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/deep_eye_unlocker_desktop-66cbbb91184c8e41)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests deep_eye_unlocker_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+✅ Tests passed
+[6/6] Tauri startup smoke test (P009)...
+✅ Startup smoke test passed (P009 guard)
+
+===================================
+✅ ALL CHECKS PASSED — Safe to commit
+===================================

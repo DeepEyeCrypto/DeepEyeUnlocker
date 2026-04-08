@@ -66,6 +66,7 @@ export default function MtkBromPage() {
   } = useMtkBrom();
 
   const [selectedDevice, setSelectedDevice] = useState<DeviceEntry | null>(null);
+  const [autoRouted, setAutoRouted] = useState(false);
   const [log, setLog] = useState<string[]>(["[system] MTK BROM interface ready"]);
   const [imei1Input, setImei1Input] = useState("");
   const [imei2Input, setImei2Input] = useState("");
@@ -91,6 +92,20 @@ export default function MtkBromPage() {
       setImei2Input(imeiInfo.imei2 ?? "");
     }
   }, [imeiInfo]);
+
+  // Handle auto-routing data
+  useEffect(() => {
+    const state = window.history.state;
+    if (state?.autoRouted && state?.device) {
+      setAutoRouted(true);
+      addLog(`[info] Auto-routed intelligence: ${state.device.brand} ${state.device.model}`);
+      if (state.preFill?.da_path) {
+        addLog(`[info] Suggested DA: ${state.preFill.da_path}`);
+      }
+      // Clear state flag to prevent re-toast
+      window.history.replaceState({ ...state, autoRouted: false }, "");
+    }
+  }, [addLog]);
 
   const working = isWorking(bromStatus);
   const daReady = isDaReady(bromStatus);
@@ -206,6 +221,11 @@ export default function MtkBromPage() {
           <p className="page-subtitle">
             MediaTek Boot ROM protocol — DA upload, partition access, FRP bypass
           </p>
+          {autoRouted && (
+            <div className="mtk-chip-label" style={{background: 'rgba(245, 158, 11, 0.2)', border: '1px solid #f59e0b', color: '#f59e0b'}}>
+              ✨ <strong> INTELLIGENCE ACTIVE:</strong> Auto-Routing for Detected Model
+            </div>
+          )}
           {chipInfo && (
             <div className="mtk-chip-label">
               Chip: <strong>{chipInfo.chip_name}</strong>

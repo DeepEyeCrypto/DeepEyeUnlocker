@@ -1,40 +1,312 @@
 {
+  "version": "1.0.0",
+  "updated": "2027-04-08",
   "devices": [
     {
-      "brand": "Xiaomi",
-      "model": "Redmi Note 9",
-      "series": "Note 9",
-      "year": 2020,
-      "type": "smartphone",
-      "chipset": "MT6769Z",
-      "brom_support": "full"
+      "brand": "Xiaomi", "model": "Redmi Note 10", "codename": "mojito",
+      "soc": "Snapdragon 678", "soc_family": "Qualcomm", "chipset_id": "sm6150",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sdm670.elf", "da_file": null, "frp_partition": "config", "notes": null
     },
     {
-      "brand": "Infinix",
-      "model": "Hot 10S",
-      "series": "Hot",
-      "year": 2021,
-      "type": "smartphone",
-      "chipset": "MT6769Z",
-      "brom_support": "full"
+      "brand": "Xiaomi", "model": "Redmi Note 9", "codename": "merlin",
+      "soc": "Helio G85", "soc_family": "MediaTek", "chipset_id": "mt6769",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6769.bin", "frp_partition": null, "notes": null
     },
     {
-      "brand": "Samsung",
-      "model": "Galaxy A32",
-      "series": "A Series",
-      "year": 2021,
-      "type": "smartphone",
-      "chipset": "MT6853",
-      "brom_support": "partial"
+      "brand": "Xiaomi", "model": "Redmi Note 8", "codename": "ginkgo",
+      "soc": "Snapdragon 665", "soc_family": "Qualcomm", "chipset_id": "sm6125",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6125.elf", "da_file": null, "frp_partition": "config", "notes": null
     },
     {
-      "brand": "Poco",
-      "model": "X3 Pro",
-      "series": "X",
-      "year": 2021,
-      "type": "smartphone",
-      "chipset": "Snapdragon 860",
-      "brom_support": "edl_only"
+      "brand": "Xiaomi", "model": "Redmi 9", "codename": "lancelot",
+      "soc": "Helio G80", "soc_family": "MediaTek", "chipset_id": "mt6769",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6769.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Mi 11", "codename": "venus",
+      "soc": "Snapdragon 888", "soc_family": "Qualcomm", "chipset_id": "sm8350",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm8350.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Redmi 10C", "codename": "fog",
+      "soc": "Snapdragon 680", "soc_family": "Qualcomm", "chipset_id": "sm6225",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6225.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Poco M2 Pro", "codename": "gram",
+      "soc": "Snapdragon 720G", "soc_family": "Qualcomm", "chipset_id": "sm7125",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm7125.elf", "da_file": null, "frp_partition": "config", "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Poco X3", "codename": "surya",
+      "soc": "Snapdragon 732G", "soc_family": "Qualcomm", "chipset_id": "sm7150",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm7150.elf", "da_file": null, "frp_partition": "config", "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy S21", "codename": "o1s",
+      "soc": "Exynos 2100", "soc_family": "Samsung", "chipset_id": "exynos2100",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26717,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy S22", "codename": "r0s",
+      "soc": "Exynos 2200", "soc_family": "Samsung", "chipset_id": "exynos2200",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26717,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy A52", "codename": "a52q",
+      "soc": "Snapdragon 720G", "soc_family": "Qualcomm", "chipset_id": "sm7125",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26460,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy A32", "codename": "a32",
+      "soc": "Helio G80", "soc_family": "MediaTek", "chipset_id": "mt6769",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26460,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy M32", "codename": "m32",
+      "soc": "Helio G80", "soc_family": "MediaTek", "chipset_id": "mt6769",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26460,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy A53", "codename": "a53x",
+      "soc": "Exynos 1280", "soc_family": "Samsung", "chipset_id": "exynos1280",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26717,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy F23", "codename": "f23",
+      "soc": "Snapdragon 750G", "soc_family": "Qualcomm", "chipset_id": "sm7225",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26460,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Realme", "model": "Realme 8", "codename": "race",
+      "soc": "Helio G95", "soc_family": "MediaTek", "chipset_id": "mt6785",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6785.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Realme", "model": "Realme Narzo 50", "codename": "RM6785",
+      "soc": "Helio G96", "soc_family": "MediaTek", "chipset_id": "mt6781",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6781.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Realme", "model": "Realme GT", "codename": "RMX2202",
+      "soc": "Snapdragon 888", "soc_family": "Qualcomm", "chipset_id": "sm8350",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm8350.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Realme", "model": "Realme 9i", "codename": "RMX3491",
+      "soc": "Snapdragon 680", "soc_family": "Qualcomm", "chipset_id": "sm6225",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6225.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "OnePlus", "model": "OnePlus 9", "codename": "lemonade",
+      "soc": "Snapdragon 888", "soc_family": "Qualcomm", "chipset_id": "sm8350",
+      "protocol": "Fastboot", "vid": 4116, "pid": 16389,
+      "firehose_path": null, "da_file": null, "notes": "Unlockable bootloader"
+    },
+    {
+      "brand": "OnePlus", "model": "OnePlus Nord CE", "codename": "ebba",
+      "soc": "Snapdragon 750G", "soc_family": "Qualcomm", "chipset_id": "sm7225",
+      "protocol": "Fastboot", "vid": 4116, "pid": 16389,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "OnePlus", "model": "OnePlus 8T", "codename": "kebab",
+      "soc": "Snapdragon 865", "soc_family": "Qualcomm", "chipset_id": "sm8250",
+      "protocol": "Fastboot", "vid": 4116, "pid": 16389,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Oppo", "model": "Oppo A74", "codename": "OP4F3F",
+      "soc": "Snapdragon 662", "soc_family": "Qualcomm", "chipset_id": "sm6115",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6115.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Oppo", "model": "Oppo A16", "codename": "OP4F95",
+      "soc": "Helio G35", "soc_family": "MediaTek", "chipset_id": "mt6765",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6765.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Oppo", "model": "Oppo Reno6", "codename": "OP4HB5",
+      "soc": "Dimensity 900", "soc_family": "MediaTek", "chipset_id": "mt6877",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6877.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Vivo", "model": "Vivo Y21", "codename": "V2111",
+      "soc": "Helio P35", "soc_family": "MediaTek", "chipset_id": "mt6765",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6765.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Vivo", "model": "Vivo V23", "codename": "V2130",
+      "soc": "Dimensity 920", "soc_family": "MediaTek", "chipset_id": "mt6877t",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6877T.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Vivo", "model": "Vivo Y75", "codename": "V2208",
+      "soc": "Dimensity 700", "soc_family": "MediaTek", "chipset_id": "mt6833",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6833.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Motorola", "model": "Moto G40 Fusion", "codename": "hanoip",
+      "soc": "Snapdragon 732G", "soc_family": "Qualcomm", "chipset_id": "sm7150",
+      "protocol": "Fastboot", "vid": 5840, "pid": 4100,
+      "firehose_path": null, "da_file": null, "notes": "Fastboot unlockable"
+    },
+    {
+      "brand": "Motorola", "model": "Moto G60", "codename": "rhodep",
+      "soc": "Snapdragon 732G", "soc_family": "Qualcomm", "chipset_id": "sm7150",
+      "protocol": "Fastboot", "vid": 5840, "pid": 4100,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Motorola", "model": "Moto E7 Power", "codename": "cebu",
+      "soc": "Helio G25", "soc_family": "MediaTek", "chipset_id": "mt6762",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6762.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Nokia", "model": "Nokia G21", "codename": "SP6B_N",
+      "soc": "Unisoc T606", "soc_family": "Unisoc", "chipset_id": "ums9230",
+      "protocol": "Adb", "vid": null, "pid": null,
+      "firehose_path": null, "da_file": null, "notes": "Unisoc — ADB flash"
+    },
+    {
+      "brand": "Nokia", "model": "Nokia C30", "codename": "NKC30",
+      "soc": "Unisoc SC9863A", "soc_family": "Unisoc", "chipset_id": "sc9863a",
+      "protocol": "Adb", "vid": null, "pid": null,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Infinix", "model": "Infinix Hot 12", "codename": "X6817",
+      "soc": "Helio G85", "soc_family": "MediaTek", "chipset_id": "mt6769",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6769.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Tecno", "model": "Tecno Spark 9", "codename": "KH6",
+      "soc": "Helio G37", "soc_family": "MediaTek", "chipset_id": "mt6765",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6765.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Poco", "model": "Poco F3", "codename": "alioth",
+      "soc": "Snapdragon 870", "soc_family": "Qualcomm", "chipset_id": "sm8250ac",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm8250.elf", "da_file": null, "frp_partition": "config", "notes": null
+    },
+    {
+      "brand": "Poco", "model": "Poco M3", "codename": "citrus",
+      "soc": "Snapdragon 662", "soc_family": "Qualcomm", "chipset_id": "sm6115",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6115.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Poco", "model": "Poco M4 Pro", "codename": "fleur",
+      "soc": "Dimensity 810", "soc_family": "MediaTek", "chipset_id": "mt6833",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6833.bin", "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "iQOO", "model": "iQOO Z6", "codename": "V2206A",
+      "soc": "Snapdragon 778G", "soc_family": "Qualcomm", "chipset_id": "sm7325",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm7325.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Redmi Note 11", "codename": "spes",
+      "soc": "Snapdragon 680", "soc_family": "Qualcomm", "chipset_id": "sm6225",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6225.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Redmi Note 12", "codename": "tapas",
+      "soc": "Snapdragon 4 Gen 1", "soc_family": "Qualcomm", "chipset_id": "sm4350ac",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm4350.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy A23", "codename": "a23",
+      "soc": "Snapdragon 680", "soc_family": "Qualcomm", "chipset_id": "sm6225",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26460,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy A73", "codename": "a73xq",
+      "soc": "Snapdragon 778G", "soc_family": "Qualcomm", "chipset_id": "sm7325",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26717,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Realme", "model": "Realme C35", "codename": "RMX3511",
+      "soc": "Unisoc T616", "soc_family": "Unisoc", "chipset_id": "ums9230",
+      "protocol": "Adb", "vid": null, "pid": null,
+      "firehose_path": null, "da_file": null, "notes": "Unisoc — ADB only"
+    },
+    {
+      "brand": "OnePlus", "model": "OnePlus 10 Pro", "codename": "waipio",
+      "soc": "Snapdragon 8 Gen 1", "soc_family": "Qualcomm", "chipset_id": "sm8450",
+      "protocol": "Fastboot", "vid": 4116, "pid": 16389,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Oppo", "model": "Oppo Find X5", "codename": "OP516F",
+      "soc": "Snapdragon 8 Gen 1", "soc_family": "Qualcomm", "chipset_id": "sm8450",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm8450.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Motorola", "model": "Moto G82", "codename": "rhodey",
+      "soc": "Snapdragon 695", "soc_family": "Qualcomm", "chipset_id": "sm6375",
+      "protocol": "Fastboot", "vid": 5840, "pid": 4100,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Mi A3", "codename": "laurel_sprout",
+      "soc": "Snapdragon 665", "soc_family": "Qualcomm", "chipset_id": "sm6125",
+      "protocol": "Fastboot", "vid": 4116, "pid": 16389,
+      "firehose_path": null, "da_file": null, "notes": "Android One — Fastboot unlock"
+    },
+    {
+      "brand": "Vivo", "model": "Vivo T1", "codename": "V2157A",
+      "soc": "Snapdragon 695", "soc_family": "Qualcomm", "chipset_id": "sm6375",
+      "protocol": "Edl", "vid": null, "pid": null,
+      "firehose_path": "sm6375.elf", "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Samsung", "model": "Galaxy S20 FE", "codename": "r8s",
+      "soc": "Snapdragon 865", "soc_family": "Qualcomm", "chipset_id": "sm8250",
+      "protocol": "SamsungOdin", "vid": 18664, "pid": 26717,
+      "firehose_path": null, "da_file": null, "frp_partition": null, "notes": null
+    },
+    {
+      "brand": "Xiaomi", "model": "Poco C31", "codename": "gusto",
+      "soc": "Helio G35", "soc_family": "MediaTek", "chipset_id": "mt6765",
+      "protocol": "MtkBrom", "vid": 8507, "pid": 16394,
+      "firehose_path": null, "da_file": "DA_MT6765.bin", "frp_partition": null, "notes": null
     }
   ]
 }

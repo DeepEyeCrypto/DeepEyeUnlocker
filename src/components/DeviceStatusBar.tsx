@@ -98,6 +98,15 @@ export function DeviceStatusBar({ onNavigate }: DeviceStatusBarProps) {
       <button
         type="button"
         className="device-status-bar__item"
+        onClick={() => onNavigate("guidedfrp")}
+      >
+        <span className="device-status-bar__emoji">🛡️</span>
+        <span>Guided FRP</span>
+      </button>
+
+      <button
+        type="button"
+        className="device-status-bar__item"
         onClick={() => onNavigate("edl")}
       >
         <span className="device-status-bar__emoji">🟣</span>

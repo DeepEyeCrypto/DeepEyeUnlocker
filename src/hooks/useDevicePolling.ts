@@ -65,11 +65,25 @@ export function useDevicePolling(pollIntervalMs = 2000) {
   useEffect(() => {
     void refresh();
 
+    // Event-driven refresh (Tauri backend usb_detector)
+    let unlisten: any;
+    const setupListener = async () => {
+      const { listen } = await import('@tauri-apps/api/event');
+      unlisten = await listen('usb-devices-changed', () => {
+        console.log("[usb] devices changed event received, refreshing...");
+        void refresh(true);
+      });
+    };
+    setupListener();
+
     const timer = window.setInterval(() => {
       void refresh(true);
     }, pollIntervalMs);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (unlisten) unlisten();
+    };
   }, [pollIntervalMs, refresh]);
 
   return {

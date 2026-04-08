@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+import { Settings, Terminal } from "lucide-react";
 import type { NavId, ResolvedNavItem } from "./types";
 
 type BottomNavProps = {
@@ -8,6 +8,18 @@ type BottomNavProps = {
 };
 
 export function BottomNav({ active, onNavigate, items }: BottomNavProps) {
+  const renderIcon = (icon: string) => {
+    if (icon === "settings") {
+      return <Settings className="nav-icon-svg" size={16} />;
+    }
+
+    if (icon === "terminal") {
+      return <Terminal className="nav-icon-svg" size={16} />;
+    }
+
+    return icon;
+  };
+
   return (
     <nav className="bottom-nav">
       <div className="bottom-nav-track">
@@ -27,7 +39,7 @@ export function BottomNav({ active, onNavigate, items }: BottomNavProps) {
             }}
           >
             <span className="bottom-nav-icon">
-              {item.icon === "settings" ? <Settings className="nav-icon-svg" size={16} /> : item.icon}
+              {renderIcon(item.icon)}
             </span>
             <span className="visually-hidden">{item.label}</span>
           </button>
