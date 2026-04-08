@@ -41,6 +41,10 @@ use commands::bypass_advanced::{
 use commands::checkm8::run_checkm8;
 use commands::connected_devices::get_connected_devices;
 use commands::connected_devices::get_supported_brands;
+use commands::device_db::{
+    db_auto_route, db_list_all, db_lookup_model, db_lookup_vid_pid, db_search_devices,
+    frp_execute_protocol,
+};
 use commands::device_history::{
     history_add_entry, history_clear, history_delete_entry, history_export_json,
     history_get_entries,
@@ -89,8 +93,21 @@ use commands::ticket::{
 };
 use commands::unisoc::unisoc_detect_device;
 use commands::updater::{check_update, do_install_update};
+use commands::usb_detector::start_usb_watcher;
 use commands::usb_utils::usb_debug_list_devices;
 use commands::vault::ios_create_deepvault;
+use commands::diagnostics::diag_test_handshake;
+use commands::logcat::{
+    adb_logcat_clear, adb_logcat_dump, adb_logcat_export, adb_logcat_start, adb_logcat_stop,
+    clear_logcat_buffer, export_logcat_to_file, start_logcat_stream, stop_logcat_stream,
+};
+use commands::reporter::reporter_generate_audit;
+use commands::rom_manager::{
+    rom_add_to_queue, rom_build_flash_plan, rom_clear_queue, rom_detect_type, rom_get_queue,
+    rom_inspect_zip, rom_move_queue_item, rom_remove_from_queue, rom_select_file,
+    rom_toggle_queue_partition, rom_validate_package,
+};
+use commands::cloud_sync::cloud_sync_db;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -168,6 +185,10 @@ use developer::{
 pub fn run() {
     // [CONFIRMED] Release builds use panic=abort, so startup errors must be logged instead of panicking.
     let app_result = tauri::Builder::default()
+        .setup(|app| {
+            start_usb_watcher(app.handle().clone());
+            Ok(())
+        })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -403,7 +424,38 @@ pub fn run() {
             history_get_entries,
             history_clear,
             history_delete_entry,
-            history_export_json
+            history_export_json,
+            // Stage 12 — Device Database
+            db_search_devices,
+            db_lookup_model,
+            db_auto_route,
+            db_lookup_vid_pid,
+            db_list_all,
+            frp_execute_protocol,
+            // Stage 15 — Global Upgrade
+            diag_test_handshake,
+            start_logcat_stream,
+            stop_logcat_stream,
+            clear_logcat_buffer,
+            export_logcat_to_file,
+            adb_logcat_start,
+            adb_logcat_stop,
+            adb_logcat_clear,
+            adb_logcat_dump,
+            adb_logcat_export,
+            reporter_generate_audit,
+            rom_select_file,
+            rom_detect_type,
+            rom_inspect_zip,
+            rom_build_flash_plan,
+            rom_validate_package,
+            rom_get_queue,
+            rom_add_to_queue,
+            rom_remove_from_queue,
+            rom_clear_queue,
+            rom_move_queue_item,
+            rom_toggle_queue_partition,
+            cloud_sync_db
         ])
         .run(tauri::generate_context!());
 

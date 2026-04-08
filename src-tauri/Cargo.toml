@@ -24,6 +24,9 @@ chrono = { version = "0.4", features = ["serde"] }
 rusb = { version = "0.9.4", features = ["vendored"] }
 thiserror = "1"
 quick-xml = "0.37"
+zip = "2.1"
+sha2 = "0.10"
+hex = "0.4"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

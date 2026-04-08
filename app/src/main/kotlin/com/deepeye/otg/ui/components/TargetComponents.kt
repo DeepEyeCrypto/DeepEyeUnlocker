@@ -42,16 +42,24 @@ import com.deepeye.otg.usb.UsbLifecycleState
 fun ProtocolFamily.getAccentColor(): Color = when (this) {
     ProtocolFamily.BROM, ProtocolFamily.MTK, ProtocolFamily.PRELOADER -> StitchTokens.Semantic.ProtocolMtk
     ProtocolFamily.ADB -> StitchTokens.Semantic.ProtocolAdb
-    ProtocolFamily.EDL, ProtocolFamily.ROUTER -> StitchTokens.Semantic.ProtocolEdl
+    ProtocolFamily.EDL, ProtocolFamily.QC, ProtocolFamily.ROUTER -> StitchTokens.Semantic.ProtocolEdl
     ProtocolFamily.FASTBOOT -> StitchTokens.Semantic.ProtocolFastboot
     ProtocolFamily.APPLE_DFU, ProtocolFamily.APPLE_RECOVERY, ProtocolFamily.APPLE_NORMAL -> StitchTokens.Semantic.ProtocolApple
-    ProtocolFamily.SAMSUNG, ProtocolFamily.ODIN -> Color(0xFF2979FF) // Samsung Blue
+    ProtocolFamily.SAMSUNG, ProtocolFamily.ODIN -> StitchTokens.Semantic.ProtocolSamsung
     else -> StitchTokens.Primary
 }
 
 @Composable
 fun ProtocolBadge(family: ProtocolFamily) {
     val accent = family.getAccentColor()
+    val label = when (family) {
+        ProtocolFamily.BROM, ProtocolFamily.MTK, ProtocolFamily.PRELOADER -> "MTK BROM"
+        ProtocolFamily.EDL, ProtocolFamily.QC -> "QC EDL"
+        ProtocolFamily.SAMSUNG, ProtocolFamily.ODIN -> "ODIN"
+        ProtocolFamily.FASTBOOT -> "FASTBOOT"
+        ProtocolFamily.ADB -> "ADB"
+        else -> family.name.uppercase()
+    }
     Surface(
         shape = CircleShape,
         color = accent.copy(alpha = 0.15f),
@@ -69,7 +77,7 @@ fun ProtocolBadge(family: ProtocolFamily) {
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = family.name.uppercase(),
+                text = label,
                 style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
                 color = accent
             )
@@ -108,8 +116,24 @@ fun ConnectionAuraCard(
     content: @Composable BoxScope.() -> Unit
 ) {
     val isConnected = state.isConnected
-    val protocolFamily = if (state is UsbLifecycleState.Connected) state.protocolFamily else ProtocolFamily.UNKNOWN
-    val accent = if (isConnected) protocolFamily.getAccentColor() else StitchTokens.Semantic.StatusIdle
+    val protocolFamily = when (state) {
+        is UsbLifecycleState.Connected -> state.protocolFamily
+        is UsbLifecycleState.DeviceDetected -> state.protocolFamily
+        is UsbLifecycleState.Connecting -> state.protocolFamily
+        else -> ProtocolFamily.UNKNOWN
+    }
+    val accent = when (state) {
+        is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+        is UsbLifecycleState.PermissionDenied,
+        is UsbLifecycleState.Error,
+        is UsbLifecycleState.Dead,
+        is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
+        else -> if (isConnected || state is UsbLifecycleState.DeviceDetected || state is UsbLifecycleState.Connecting) {
+            protocolFamily.getAccentColor()
+        } else {
+            StitchTokens.Semantic.StatusIdle
+        }
+    }
 
     val pulseAlpha by rememberInfiniteTransition(label = "aura_pulse").animateFloat(
         initialValue = 0.4f,
@@ -162,7 +186,7 @@ fun MissionTopBar(
         is UsbLifecycleState.PermissionDenied -> "USB permission denied"
         is UsbLifecycleState.Error -> selectedSession.message
         is UsbLifecycleState.Dead -> selectedSession.reason
-        else -> if (sessions.isEmpty()) "Awaiting target" else "${sessions.size} target(s) available"
+        else -> if (sessions.isEmpty()) "Connected Devices" else "${sessions.size} device(s) available"
     }
 
     Surface(
@@ -173,7 +197,7 @@ fun MissionTopBar(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             MissionQueueHeader(
-                queueTitle = "MISSION_QUEUE",
+                queueTitle = "DeepEyeUnlocker",
                 queueValue = selectedLabel
             )
 
@@ -296,8 +320,8 @@ private fun HeaderTextBlock(
     Column(modifier = modifier) {
         Text(
             text = title,
-            color = StitchTokens.TextSecondary,
-            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 1.sp),
+            color = StitchTokens.Primary,
+            style = StitchTokens.LabelSmall.copy(fontSize = 11.sp, letterSpacing = 0.8.sp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -307,7 +331,7 @@ private fun HeaderTextBlock(
         Text(
             text = value,
             color = StitchTokens.TextPrimary,
-            style = StitchTokens.BodyMedium,
+            style = StitchTokens.BodyMedium.copy(fontSize = 13.sp),
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

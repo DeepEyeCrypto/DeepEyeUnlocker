@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { AppShell } from "./components/Layout/AppShell";
 import type { NavId } from "./components/Layout/types";
@@ -44,17 +45,23 @@ const UpdaterPage = React.lazy(() => import("./components/pages/Updater.tsx"));
 const EdlPage = React.lazy(() => import("./pages/EdlPage.tsx"));
 const MtkToolsPage = React.lazy(() => import("./components/pages/MtkTools.tsx"));
 const RomFlasherPage = React.lazy(() => import("./components/pages/RomFlasher.tsx"));
+const RomManagerPage = React.lazy(() => import("./components/pages/RomManager.tsx"));
 const DeviceHistoryPage = React.lazy(() => import("./components/pages/DeviceHistory.tsx"));
 const MtkBromPage = React.lazy(() => import("./pages/MtkBromPage.tsx"));
 const AdbPage = React.lazy(() => import("./pages/AdbPage.tsx"));
 const SamsungPage = React.lazy(() => import("./pages/SamsungPage.tsx"));
+const DeviceDbPage = React.lazy(() => import("./components/pages/DeviceDb.tsx"));
+const GuidedFrpPage = React.lazy(() => import("./components/pages/GuidedFRP.tsx"));
+const LogcatViewerPage = React.lazy(() => import("./components/pages/LogcatViewer.tsx"));
 const SettingsPage = React.lazy(() => import("./pages/SettingsPage.tsx"));
 
 const PAGE_PATHS: Record<NavId, string> = {
   dashboard: "/",
   adbtools: "/adb",
+  logcat: "/logcat",
   samsung: "/samsung",
   frp: "/frp",
+  guidedfrp: "/guided-frp",
   activation: "/activation",
   fmi: "/fmi",
   jailbreak: "/jailbreak",
@@ -73,8 +80,10 @@ const PAGE_PATHS: Record<NavId, string> = {
   edl: "/edl",
   mtk: "/mtk",
   romflasher: "/romflasher",
+  rommanager: "/rom-manager",
   history: "/history",
   mtkbrom: "/mtk-brom",
+  devicedb: "/device-db",
   settings: "/settings",
 };
 
@@ -121,7 +130,7 @@ export default function App() {
     saveAppSettings(settings);
   }, [settings]);
 
-  const navigateTo = useCallback((nextPage: NavId) => {
+  const navigateTo = useCallback((nextPage: NavId, routeState?: any) => {
     setPage(nextPage);
 
     if (typeof window === "undefined") {
@@ -130,9 +139,26 @@ export default function App() {
 
     const nextPath = PAGE_PATHS[nextPage];
     if (normalizePathname(window.location.pathname) !== nextPath) {
-      window.history.pushState({ page: nextPage }, "", nextPath);
+      window.history.pushState({ page: nextPage, ...routeState }, "", nextPath);
     }
   }, []);
+
+  useEffect(() => {
+    const unlisten = listen("navigate-to-protocol", (event: any) => {
+      const { route, pre_fill } = event.payload;
+      if (route) {
+        // Find NavId from path
+        const navId = Object.entries(PAGE_PATHS).find(([_, path]) => path === route)?.[0] as NavId;
+        if (navId) {
+          navigateTo(navId, { autoRouted: true, preFill: pre_fill });
+        }
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [navigateTo]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -209,6 +235,26 @@ export default function App() {
     updateInfo !== null &&
     !updateDismissed &&
     (updateStatus === "available" || updateStatus === "installing");
+  
+  useEffect(() => {
+    let unlisten: any;
+    
+    async function setupListener() {
+      unlisten = await listen("navigate-to-protocol", (event: any) => {
+        const { route, preFill, device } = event.payload;
+        console.log("Auto-routing to:", route, preFill);
+        
+        // Find NavId from path
+        const navId = Object.entries(PAGE_PATHS).find(([, path]) => path === route)?.[0] as NavId;
+        if (navId) {
+          navigateTo(navId, { autoRouted: true, preFill, device });
+        }
+      });
+    }
+
+    setupListener();
+    return () => { if (unlisten) unlisten(); };
+  }, [navigateTo]);
 
   const pages: Record<NavId, JSX.Element> = {
     dashboard: (
@@ -221,8 +267,10 @@ export default function App() {
       />
     ),
     adbtools: <Suspense fallback={<PageSkeleton />}><AdbPage /></Suspense>,
+    logcat: <Suspense fallback={<PageSkeleton />}><LogcatViewerPage /></Suspense>,
     samsung: <Suspense fallback={<PageSkeleton />}><SamsungPage /></Suspense>,
     frp: <Suspense fallback={<PageSkeleton />}><FrpBypassPage /></Suspense>,
+    guidedfrp: <Suspense fallback={<PageSkeleton />}><GuidedFrpPage /></Suspense>,
     activation: <Suspense fallback={<PageSkeleton />}><Activation /></Suspense>,
     fmi: <Suspense fallback={<PageSkeleton />}><FMIPage /></Suspense>,
     jailbreak: <Suspense fallback={<PageSkeleton />}><Jailbreak /></Suspense>,
@@ -251,8 +299,10 @@ export default function App() {
     edl: <Suspense fallback={<PageSkeleton />}><EdlPage /></Suspense>,
     mtk: <Suspense fallback={<PageSkeleton />}><MtkToolsPage /></Suspense>,
     romflasher: <Suspense fallback={<PageSkeleton />}><RomFlasherPage /></Suspense>,
+    rommanager: <Suspense fallback={<PageSkeleton />}><RomManagerPage /></Suspense>,
     history: <Suspense fallback={<PageSkeleton />}><DeviceHistoryPage /></Suspense>,
     mtkbrom: <Suspense fallback={<PageSkeleton />}><MtkBromPage /></Suspense>,
+    devicedb: <Suspense fallback={<PageSkeleton />}><DeviceDbPage /></Suspense>,
     settings: (
       <Suspense fallback={<PageSkeleton />}>
         <SettingsPage

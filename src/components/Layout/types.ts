@@ -3,7 +3,9 @@ import type { Platform } from "../../lib/platform";
 export type NavId =
   | "dashboard"
   | "adbtools"
+  | "logcat"
   | "frp"
+  | "guidedfrp"
   | "activation"
   | "jailbreak"
   | "toolbox"
@@ -22,9 +24,11 @@ export type NavId =
   | "edl"
   | "mtk"
   | "romflasher"
+  | "rommanager"
   | "history"
   | "mtkbrom"
   | "settings"
+  | "devicedb"
   | "samsung";
 
 type NavAvailability = "all" | "desktop" | "android";
@@ -49,12 +53,16 @@ const DESKTOP_ONLY_HINT = "Available on Desktop only";
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", icon: "H", label: "Dashboard", androidOrder: 0 },
+  { id: "devicedb", icon: "DB", label: "Device DB", androidOrder: 0.5 },
+  { id: "guidedfrp", icon: "GF", label: "Guided FRP", androidOrder: 1.5, badge: "NEW" },
   { id: "adbtools", icon: "AD", label: "ADB Tools", visibleOn: "android", enabledOn: "android", androidOrder: 1 },
-  { id: "frp", icon: "FR", label: "FRP Bypass", androidOrder: 2 },
+  { id: "logcat", icon: "terminal", label: "Logcat", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "DESKTOP", androidOrder: 1.25 },
+  { id: "frp", icon: "FR", label: "FRP Legacy", androidOrder: 2 },
   { id: "edl", icon: "⚡", label: "Qualcomm EDL", androidOrder: 3 },
   { id: "mtk", icon: "MT", label: "MTK Tools", visibleOn: "android", enabledOn: "android", androidOrder: 4 },
   { id: "mtkbrom", icon: "BR", label: "MTK BROM", androidOrder: 4.5 },
   { id: "romflasher", icon: "FB", label: "Fastboot", androidOrder: 5 },
+  { id: "rommanager", icon: "RM", label: "ROM Manager", visibleOn: "desktop", enabledOn: "desktop", disabledHint: DESKTOP_ONLY_HINT, badge: "NEW", androidOrder: 5.25 },
   { id: "identity", icon: "I", label: "Identity", androidOrder: 6 },
   { id: "history", icon: "L", label: "History", androidOrder: 7 },
   { id: "updater", icon: "U", label: "Updater", androidOrder: 8 },

@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -58,8 +59,8 @@ fun DeepEyeTheme(
     if (!view.isInEditMode) {
         androidx.compose.runtime.SideEffect {
             val window = (context as? android.app.Activity)?.window ?: return@SideEffect
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            window.statusBarColor = StitchTokens.BackgroundDark.toArgb()
+            window.navigationBarColor = StitchTokens.BackgroundDark.toArgb()
             
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = false // Keep icons white

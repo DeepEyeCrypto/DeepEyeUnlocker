@@ -1,0 +1,494 @@
+.rom-manager-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rom-manager-page--drag-active {
+  filter: saturate(1.05);
+}
+
+.rom-manager-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rom-manager-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid rgba(103, 232, 249, 0.2);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(125, 211, 252, 0.92);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rom-manager-title {
+  margin: 0.85rem 0 0.3rem;
+  font-size: clamp(1.9rem, 2.4vw, 2.65rem);
+  font-weight: 800;
+  color: rgba(248, 250, 252, 0.98);
+}
+
+.rom-manager-subtitle {
+  max-width: 64rem;
+  margin: 0;
+  color: rgba(191, 219, 254, 0.82);
+  line-height: 1.6;
+}
+
+.rom-manager-hero__actions,
+.rom-manager-chip-row,
+.rom-manager-device-row,
+.rom-manager-queue-item__actions,
+.rom-manager-queue-summary,
+.rom-manager-plan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.rom-manager-banner {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(226, 232, 240, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.rom-manager-banner--info {
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+.rom-manager-banner--warn {
+  border-color: rgba(245, 158, 11, 0.28);
+  color: rgba(254, 240, 138, 0.95);
+}
+
+.rom-manager-banner--error {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: rgba(254, 202, 202, 0.96);
+  white-space: pre-wrap;
+}
+
+.rom-manager-grid,
+.rom-manager-detail-grid,
+.rom-manager-analysis-grid,
+.rom-manager-metrics-grid,
+.rom-manager-details-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.rom-manager-grid {
+  grid-template-columns: minmax(0, 1.85fr) minmax(18rem, 0.95fr);
+  align-items: start;
+}
+
+.rom-manager-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rom-manager-analysis-grid,
+.rom-manager-metrics-grid,
+.rom-manager-details-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rom-manager-card {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.7)),
+    linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(34, 197, 94, 0.05));
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(24px);
+}
+
+.rom-manager-drop-card .card-body,
+.rom-manager-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rom-manager-dropzone {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  min-height: 11rem;
+  padding: 1.2rem;
+  border: 1px dashed rgba(125, 211, 252, 0.26);
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(15, 23, 42, 0.45));
+  transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
+}
+
+.rom-manager-dropzone.active {
+  border-color: rgba(103, 232, 249, 0.64);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(15, 23, 42, 0.7));
+  transform: translateY(-1px);
+}
+
+.rom-manager-dropzone__icon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  background: rgba(8, 47, 73, 0.66);
+  color: rgba(103, 232, 249, 0.96);
+}
+
+.rom-manager-dropzone__content h2,
+.rom-manager-package-name,
+.rom-manager-empty-state h2 {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.98);
+}
+
+.rom-manager-dropzone__content p,
+.rom-manager-package-path,
+.rom-manager-empty-state p,
+.rom-manager-empty-text {
+  margin: 0.35rem 0 0;
+  color: rgba(191, 219, 254, 0.74);
+}
+
+.rom-manager-dropzone__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.rom-manager-dropzone__hint,
+.rom-manager-inline-note,
+.rom-manager-detail-label,
+.rom-manager-section__header h3,
+.rom-manager-metric span {
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 0.82rem;
+}
+
+.rom-manager-device-pill,
+.rom-manager-chip,
+.rom-manager-risk,
+.rom-manager-compatibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.62);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.rom-manager-chip--ready,
+.rom-manager-compatibility--positive {
+  border-color: rgba(34, 197, 94, 0.28);
+  color: rgba(187, 247, 208, 0.96);
+}
+
+.rom-manager-chip--warn,
+.rom-manager-compatibility--warn,
+.rom-manager-risk--medium {
+  border-color: rgba(245, 158, 11, 0.28);
+  color: rgba(254, 240, 138, 0.96);
+}
+
+.rom-manager-chip--error,
+.rom-manager-compatibility--error,
+.rom-manager-risk--high,
+.rom-manager-risk--critical {
+  border-color: rgba(239, 68, 68, 0.28);
+  color: rgba(254, 202, 202, 0.96);
+}
+
+.rom-manager-chip--idle,
+.rom-manager-compatibility--neutral,
+.rom-manager-risk--low {
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+.rom-manager-button,
+.rom-manager-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 0.9rem;
+  padding: 0.72rem 0.95rem;
+  background: rgba(15, 23, 42, 0.74);
+  color: rgba(248, 250, 252, 0.96);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.rom-manager-button:hover,
+.rom-manager-icon-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 211, 252, 0.28);
+}
+
+.rom-manager-button:disabled,
+.rom-manager-icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rom-manager-button--primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.9), rgba(6, 182, 212, 0.9));
+  border-color: rgba(125, 211, 252, 0.3);
+}
+
+.rom-manager-button--secondary {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.rom-manager-button--ghost,
+.rom-manager-icon-button {
+  padding: 0.55rem 0.72rem;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.rom-manager-icon-button--danger {
+  border-color: rgba(239, 68, 68, 0.24);
+  color: rgba(254, 202, 202, 0.94);
+}
+
+.rom-manager-summary-head,
+.rom-manager-section,
+.rom-manager-empty-state,
+.rom-manager-queue-item__select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.rom-manager-metrics-grid,
+.rom-manager-details-grid {
+  padding-top: 0.2rem;
+}
+
+.rom-manager-metric,
+.rom-manager-detail-block {
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.rom-manager-metric strong,
+.rom-manager-detail-block strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(248, 250, 252, 0.98);
+}
+
+.rom-manager-mono {
+  font-family: "SFMono-Regular", SFMono-Regular, ui-monospace, monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.rom-manager-table-wrap,
+.rom-manager-archive-preview,
+.rom-manager-queue-list {
+  overflow: auto;
+}
+
+.rom-manager-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rom-manager-table th,
+.rom-manager-table td {
+  padding: 0.78rem 0.65rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rom-manager-table th {
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rom-manager-source-cell {
+  min-width: 16rem;
+}
+
+.rom-manager-source-cell span,
+.rom-manager-archive-row span {
+  color: rgba(226, 232, 240, 0.92);
+  word-break: break-word;
+}
+
+.rom-manager-source-cell small {
+  display: block;
+  margin-top: 0.3rem;
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.rom-manager-target-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rom-manager-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: rgb(14, 165, 233);
+}
+
+.rom-manager-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+  color: rgba(191, 219, 254, 0.92);
+}
+
+.rom-manager-list,
+.rom-manager-mini-list {
+  margin: 0;
+  padding-left: 1rem;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.rom-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.rom-manager-list--warn {
+  color: rgba(254, 240, 138, 0.96);
+}
+
+.rom-manager-list--error {
+  color: rgba(254, 202, 202, 0.96);
+}
+
+.rom-manager-mini-list {
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.rom-manager-archive-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 14rem;
+}
+
+.rom-manager-archive-row,
+.rom-manager-queue-item__head,
+.rom-manager-queue-item__meta,
+.rom-manager-queue-item__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.rom-manager-archive-row {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.8rem;
+  background: rgba(15, 23, 42, 0.44);
+}
+
+.rom-manager-archive-row strong,
+.rom-manager-queue-item__meta,
+.rom-manager-queue-item__footer {
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 0.82rem;
+}
+
+.rom-manager-queue-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.rom-manager-queue-item.selected {
+  border-color: rgba(56, 189, 248, 0.34);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(15, 23, 42, 0.7));
+}
+
+.rom-manager-queue-item__select {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rom-manager-empty-state,
+.rom-manager-empty-text {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.rom-manager-empty-state {
+  min-height: 14rem;
+}
+
+@media (max-width: 1200px) {
+  .rom-manager-grid,
+  .rom-manager-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .rom-manager-hero,
+  .rom-manager-dropzone {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .rom-manager-dropzone__actions {
+    align-items: flex-start;
+  }
+
+  .rom-manager-analysis-grid,
+  .rom-manager-metrics-grid,
+  .rom-manager-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .rom-manager-table-wrap {
+    overflow-x: auto;
+  }
+
+  .rom-manager-table {
+    min-width: 48rem;
+  }
+}

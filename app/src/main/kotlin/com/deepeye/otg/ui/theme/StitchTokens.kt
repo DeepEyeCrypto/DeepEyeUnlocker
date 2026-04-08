@@ -14,43 +14,44 @@ import androidx.compose.ui.text.font.FontWeight
  */
 object StitchTokens {
     // ── Primary Colors ──────────────────────────────────────────────────────────
-    val BackgroundDark    = Color(0xFF0D0D1A) // From Stitch background-dark
-    val SurfaceDark       = Color(0xFF13132B) // From Stitch surface-dark
-    val Primary           = Color(0xFF135BEC) // From Stitch primary (Neon Blue)
+    val BackgroundDark    = Color(0xFF080A12)
+    val SurfaceDark       = Color(0xFF111827)
+    val Primary           = Color(0xFFA855F7)
     
     // ── Glassmorphism Surface ──────────────────────────────────────────────────
-    val GlassSurface      = Color(0x0FFFFFFF) // 6% white translucency
-    val GlassBorder       = Color(0x1AFFFFFF) // 10% white border
+    val GlassSurface      = Color(0x661E293B)
+    val GlassBorder       = Color(0x4D94A3B8)
     val GlassBorderActive = Primary.copy(alpha = 0.3f)
     
     // ── Text Colors ────────────────────────────────────────────────────────────
-    val TextPrimary       = Color(0xFFF1F5F9) // Slate 100 (Deep White)
-    val TextSecondary     = Color(0xFF94A3B8) // Slate 400 (Secondary Label)
-    val TextMono          = Color(0xFF64FFDA) // Terminal Green (Accent)
+    val TextPrimary       = Color(0xFFE2E8F0)
+    val TextSecondary     = Color(0xFF94A3B8)
+    val TextMono          = Color(0xFF22D3EE)
     
     // ── Mode Accents ───────────────────────────────────────────────────────────
-    val AccentBrom        = Color(0xFFFF6B35) // MTK BROM Orange
-    val AccentAdb         = Color(0xFF00E5FF) // ADB Cyan
-    val AccentEdl         = Color(0xFFFF1744) // EDL Red
-    val AccentError       = Color(0xFFFF1744) // Alias for theme error color
-    val AccentFastboot    = Color(0xFF2979FF) // Fastboot Blue
-    val AccentApple       = Color(0xFFE0E0E0) // Apple DFU/Recovery Silver (spec Stage 20)
-    val AccentSuccess     = Color(0xFF4ADE80) // Success Green
-    val AccentWarning     = Color(0xFFFFD740) // Amber Warning
+    val AccentBrom        = Color(0xFF22C55E)
+    val AccentAdb         = Color(0xFF3B82F6)
+    val AccentEdl         = Color(0xFFA855F7)
+    val AccentSamsung     = Color(0xFF22D3EE)
+    val AccentError       = Color(0xFFF87171)
+    val AccentFastboot    = Color(0xFFF59E0B)
+    val AccentApple       = Color(0xFFE2E8F0)
+    val AccentSuccess     = Color(0xFF34D399)
+    val AccentWarning     = Color(0xFFF59E0B)
     
     // ── Connectivity States (V3.0) ──────────────────────────────────────────────
-    val ConnectionPulse   = Primary           // Glow for active session
-    val ConnectionIdle    = Color(0xFF455A64) // Slate for standby
-    val ConnectionError   = Color(0xFFFF1744) // Hardware conflict
+    val ConnectionPulse   = Primary
+    val ConnectionIdle    = Color(0xFF6B7280)
+    val ConnectionError   = AccentError
     
     // ── Risk Hierarchy (Mission Safety) ─────────────────────────────────────────
-    val RiskSafe          = Color(0xFF4ADE80).copy(alpha = 0.15f) // Success Green (Low Impact)
-    val RiskAdvanced      = Color(0xFFFFAB40).copy(alpha = 0.15f) // Amber (Medium Impact)
-    val RiskDanger        = Color(0xFFFF1744).copy(alpha = 0.15f) // Red (Destructive Impact)
+    val RiskSafe          = AccentSuccess.copy(alpha = 0.15f)
+    val RiskAdvanced      = AccentWarning.copy(alpha = 0.15f)
+    val RiskDanger        = AccentError.copy(alpha = 0.15f)
     
-    val BorderSafe        = Color(0xFF4ADE80).copy(alpha = 0.3f)
-    val BorderAdvanced    = Color(0xFFFFAB40).copy(alpha = 0.3f)
-    val BorderDanger      = Color(0xFFFF1744).copy(alpha = 0.3f)
+    val BorderSafe        = AccentSuccess.copy(alpha = 0.3f)
+    val BorderAdvanced    = AccentWarning.copy(alpha = 0.3f)
+    val BorderDanger      = AccentError.copy(alpha = 0.3f)
     
     // ── Spacing & Shapes ────────────────────────────────────────────────────────
     val GridBase          = 4.dp
@@ -68,24 +69,28 @@ object StitchTokens {
     // ── Typography Scale ────────────────────────────────────────────────────────
     val DisplayLarge = TextStyle(
         fontSize = 32.sp,
+        fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
         letterSpacing = (-1).sp
     )
     
     val TitleLarge = TextStyle(
         fontSize = 20.sp,
+        fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
         letterSpacing = 0.sp
     )
     
     val BodyMedium = TextStyle(
         fontSize = 14.sp,
+        fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Normal,
         letterSpacing = 0.sp
     )
     
     val LabelSmall = TextStyle(
         fontSize = 11.sp,
+        fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
         letterSpacing = 0.5.sp
     )
@@ -109,7 +114,7 @@ object StitchTokens {
         val BorderActive        = GlassBorderActive
         
         // Protocol Status Accents
-        val StatusConnected     = Primary
+        val StatusConnected     = AccentSuccess
         val StatusIdle          = ConnectionIdle
         val StatusHandshaking   = AccentWarning
         
@@ -117,6 +122,7 @@ object StitchTokens {
         val ProtocolMtk         = AccentBrom
         val ProtocolAdb         = AccentAdb
         val ProtocolEdl         = AccentEdl
+        val ProtocolSamsung     = AccentSamsung
         val ProtocolFastboot    = AccentFastboot
         val ProtocolApple       = AccentApple
         

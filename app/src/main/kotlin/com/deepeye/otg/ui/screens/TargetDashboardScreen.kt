@@ -56,7 +56,8 @@ fun TargetDashboardScreen(viewModel: UsbViewModel, hazeState: dev.chrisbanes.haz
             // ── 1. MISSION STATUS INDICATOR ────────────────────────────────────
             item {
                 MissionStatusRow(
-                    status = if (selectedSession is UsbLifecycleState.Connected) "TARGET_ACQUIRED" else "SEARCHING_TARGET"
+                    state = selectedSession,
+                    sessionCount = sessions.size
                 )
             }
 
@@ -79,9 +80,9 @@ fun TargetDashboardScreen(viewModel: UsbViewModel, hazeState: dev.chrisbanes.haz
             // ── 3. TRIAGE ACTION GRID (CLEAN/NON-INVASIVE) ────────────────────
             item {
                 TriageActionGrid(
-                    onReadInfo = { viewModel.queueOperation("READ_INFO") },
-                    onSecurityScan = { viewModel.queueOperation("SECURITY_SCAN") },
-                    isEnabled = selectedSession is UsbLifecycleState.Connected
+                    state = selectedSession,
+                    viewModel = viewModel,
+                    hazeState = hazeState
                 )
             }
 
@@ -96,14 +97,52 @@ fun TargetDashboardScreen(viewModel: UsbViewModel, hazeState: dev.chrisbanes.haz
 
         // ── 5. GROUNDED ACTIVITY FEED ────────────────────────────────────
         TerminalMiniPreview(
-            logs = logs.takeLast(5),
+            logs = logs.takeLast(6),
+            hazeState = hazeState,
             modifier = Modifier.padding(bottom = 24.dp)
         )
     }
 }
 
 @Composable
-private fun MissionStatusRow(status: String) {
+private fun MissionStatusRow(state: UsbLifecycleState, sessionCount: Int) {
+    val isScanning = state is UsbLifecycleState.DeviceDetected ||
+        state is UsbLifecycleState.Connecting ||
+        state is UsbLifecycleState.PermissionPending
+    val status = when (state) {
+        is UsbLifecycleState.Connected -> "Device Connected"
+        is UsbLifecycleState.DeviceDetected,
+        is UsbLifecycleState.Connecting,
+        is UsbLifecycleState.PermissionPending -> "Scanning OTG..."
+        is UsbLifecycleState.PermissionDenied -> "USB Permission Needed"
+        is UsbLifecycleState.Error -> "Connection Error"
+        is UsbLifecycleState.Dead -> "Session Lost"
+        is UsbLifecycleState.NoOtgSupport -> "OTG Not Supported"
+        else -> "No Device Connected"
+    }
+    val subtitle = when (state) {
+        is UsbLifecycleState.Connected -> "${state.brand} • ${state.chipset}"
+        is UsbLifecycleState.DeviceDetected -> "${state.brand} detected • requesting secure access"
+        is UsbLifecycleState.Connecting -> "Establishing ${state.protocolFamily.name.uppercase()} session"
+        is UsbLifecycleState.PermissionPending -> "Allow USB access to continue"
+        is UsbLifecycleState.PermissionDenied -> state.deviceName
+        is UsbLifecycleState.Error -> state.message
+        is UsbLifecycleState.Dead -> state.reason
+        is UsbLifecycleState.NoOtgSupport -> "This phone cannot act as a USB host"
+        else -> "Plug device → auto-detect"
+    }
+    val accent = when (state) {
+        is UsbLifecycleState.Connected -> state.protocolFamily.getAccentColor()
+        is UsbLifecycleState.DeviceDetected -> state.protocolFamily.getAccentColor()
+        is UsbLifecycleState.Connecting -> state.protocolFamily.getAccentColor()
+        is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+        is UsbLifecycleState.PermissionDenied,
+        is UsbLifecycleState.Error,
+        is UsbLifecycleState.Dead,
+        is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
+        else -> StitchTokens.ConnectionIdle
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,16 +150,31 @@ private fun MissionStatusRow(status: String) {
     ) {
         Column {
             Text(
-                text = "MISSION_TRACKER",
+                text = "Connected Devices",
                 style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
                 color = StitchTokens.TextSecondary
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PulsingStatusDot(color = accent, active = isScanning || state is UsbLifecycleState.Connected)
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = status,
+                    style = StitchTokens.TitleLarge.copy(letterSpacing = 0.2.sp, fontSize = 18.sp),
+                    color = if (state is UsbLifecycleState.Connected || isScanning) accent else StitchTokens.TextPrimary
+                )
+            }
             Text(
-                text = status,
-                style = StitchTokens.TitleLarge.copy(letterSpacing = 1.sp, fontSize = 18.sp),
-                color = if (status.startsWith("TARGET")) StitchTokens.AccentSuccess else StitchTokens.TextPrimary
+                text = subtitle,
+                style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
+                color = StitchTokens.TextSecondary,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
+
+        StatusPill(
+            text = if (sessionCount == 0) "IDLE" else "$sessionCount LIVE"
+        )
     }
 }
 
@@ -174,21 +228,46 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                     is UsbLifecycleState.Connecting -> state.protocolFamily
                     else -> ProtocolFamily.UNKNOWN
                 }
-                val protocolColor = if (state.isConnected || state is UsbLifecycleState.DeviceDetected) 
-                    protocol.getAccentColor() 
-                else StitchTokens.Primary
+                val protocolColor = when (state) {
+                    is UsbLifecycleState.Connected,
+                    is UsbLifecycleState.DeviceDetected,
+                    is UsbLifecycleState.Connecting -> protocol.getAccentColor()
+                    is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+                    is UsbLifecycleState.PermissionDenied,
+                    is UsbLifecycleState.Error,
+                    is UsbLifecycleState.Dead,
+                    is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
+                    else -> StitchTokens.ConnectionIdle
+                }
+                val haloAlpha by rememberInfiniteTransition(label = "heroPulse").animateFloat(
+                    initialValue = 0.35f,
+                    targetValue = 0.85f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1400),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "heroAlpha"
+                )
                 
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(76.dp)
                         .clip(CircleShape)
-                        .background(protocolColor.copy(alpha = 0.1f))
+                        .background(protocolColor.copy(alpha = 0.14f * haloAlpha))
                 )
                 Icon(
-                    imageVector = if (isConnected) Icons.Default.PhoneAndroid else Icons.Default.UsbOff,
+                    imageVector = when {
+                        isConnected -> Icons.Default.PhoneAndroid
+                        state is UsbLifecycleState.PermissionDenied || state is UsbLifecycleState.Error || state is UsbLifecycleState.Dead -> Icons.Default.UsbOff
+                        else -> Icons.Default.Usb
+                    },
                     contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = if (isConnected) protocolColor else StitchTokens.TextSecondary
+                    modifier = Modifier.size(34.dp),
+                    tint = if (isConnected || state is UsbLifecycleState.DeviceDetected || state is UsbLifecycleState.Connecting) {
+                        protocolColor
+                    } else {
+                        StitchTokens.TextSecondary
+                    }
                 )
             }
 
@@ -212,8 +291,8 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                     }
 
                     Text(
-                        text = name.uppercase(),
-                        style = StitchTokens.DisplayLarge.copy(fontSize = 22.sp, letterSpacing = 1.sp),
+                        text = name,
+                        style = StitchTokens.DisplayLarge.copy(fontSize = 22.sp, letterSpacing = 0.sp),
                         color = StitchTokens.TextPrimary
                     )
                     Spacer(Modifier.height(8.dp))
@@ -222,17 +301,59 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                         Spacer(Modifier.width(12.dp))
                         ConfidenceBadge(confidence)
                     }
+                    Text(
+                        text = listOf(state.brand, state.chipset, "SB ${state.secureBootStatus}")
+                            .filter { it.isNotBlank() }
+                            .joinToString(" • "),
+                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
+                        color = StitchTokens.TextSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                } else if (state is UsbLifecycleState.DeviceDetected) {
+                    Text(
+                        text = state.brand,
+                        style = StitchTokens.TitleLarge.copy(fontSize = 20.sp),
+                        color = StitchTokens.TextPrimary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        ProtocolBadge(state.protocolFamily)
+                        Spacer(Modifier.width(12.dp))
+                        ConfidenceBadge(state.confidence)
+                    }
+                    Text(
+                        text = "${state.chipset} • waiting for permission",
+                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
+                        color = StitchTokens.TextSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 } else {
                     Text(
-                        text = "AWAITING_PHYSICAL_LINK",
-                        style = StitchTokens.TitleLarge.copy(letterSpacing = 2.sp),
-                        color = StitchTokens.TextSecondary
+                        text = when (state) {
+                            is UsbLifecycleState.Connecting -> "Scanning OTG..."
+                            is UsbLifecycleState.PermissionPending -> "USB Permission Needed"
+                            is UsbLifecycleState.PermissionDenied -> "Permission Denied"
+                            is UsbLifecycleState.Error -> "Connection Error"
+                            is UsbLifecycleState.Dead -> "Session Lost"
+                            is UsbLifecycleState.NoOtgSupport -> "OTG Not Supported"
+                            else -> "No Device Connected"
+                        },
+                        style = StitchTokens.TitleLarge.copy(letterSpacing = 0.sp, fontSize = 20.sp),
+                        color = StitchTokens.TextPrimary
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Connect device via OTG to start triage",
-                        style = StitchTokens.BodyMedium,
-                        color = StitchTokens.TextSecondary.copy(alpha = 0.5f)
+                        text = when (state) {
+                            is UsbLifecycleState.Connecting -> "Establishing secure transport"
+                            is UsbLifecycleState.PermissionPending -> "Approve the Android USB dialog"
+                            is UsbLifecycleState.PermissionDenied -> state.deviceName
+                            is UsbLifecycleState.Error -> state.message
+                            is UsbLifecycleState.Dead -> state.reason
+                            is UsbLifecycleState.NoOtgSupport -> "Use a device with USB host capability"
+                            else -> "Plug device → auto-detect"
+                        },
+                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
+                        color = StitchTokens.TextSecondary
                     )
                 }
             }
@@ -242,68 +363,106 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
 
 @Composable
 private fun TriageActionGrid(
-    onReadInfo: () -> Unit,
-    onSecurityScan: () -> Unit,
-    isEnabled: Boolean
+    state: UsbLifecycleState,
+    viewModel: UsbViewModel,
+    hazeState: dev.chrisbanes.haze.HazeState
 ) {
-    Column {
-        Text(
-            text = "SAFE_TRIAGE_ACTIONS",
-            style = StitchTokens.LabelSmall,
-            color = StitchTokens.TextSecondary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            TriageActionCard(
-                label = "READ INFO",
-                icon = Icons.Default.Dns,
-                onClick = onReadInfo,
-                modifier = Modifier.weight(1f),
-                isEnabled = isEnabled
-            )
-            TriageActionCard(
-                label = "SECURITY SCAN",
-                icon = Icons.Default.Security,
-                onClick = onSecurityScan,
-                modifier = Modifier.weight(1f),
-                isEnabled = isEnabled
-            )
-        }
+    val isEnabled = state is UsbLifecycleState.Connected
+    val protocol = when (state) {
+        is UsbLifecycleState.Connected -> state.protocolFamily
+        is UsbLifecycleState.DeviceDetected -> state.protocolFamily
+        is UsbLifecycleState.Connecting -> state.protocolFamily
+        else -> ProtocolFamily.UNKNOWN
     }
-}
+    val deviceLabel = when (state) {
+        is UsbLifecycleState.Connected -> listOf(state.brand, state.deviceName, state.chipset)
+        is UsbLifecycleState.DeviceDetected -> listOf(state.brand, state.chipset)
+        is UsbLifecycleState.Connecting -> listOf("Linking", state.protocolFamily.name.uppercase())
+        else -> emptyList()
+    }.filter { it.isNotBlank() }.joinToString(" • ")
+    val accent = when (state) {
+        is UsbLifecycleState.Connected -> state.protocolFamily.getAccentColor()
+        is UsbLifecycleState.DeviceDetected -> state.protocolFamily.getAccentColor()
+        is UsbLifecycleState.Connecting -> state.protocolFamily.getAccentColor()
+        else -> StitchTokens.AccentAdb
+    }
 
-@Composable
-private fun TriageActionCard(
-    label: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isEnabled: Boolean = true
-) {
-    Surface(
-        onClick = onClick,
-        enabled = isEnabled,
-        modifier = modifier.height(64.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = if (isEnabled) 0.05f else 0.02f),
-        border = BorderStroke(1.dp, StitchTokens.Semantic.ProtocolAdb.copy(alpha = if (isEnabled) 0.4f else 0.1f))
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        hazeState = hazeState,
+        accentColor = accent
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                icon, null, 
-                modifier = Modifier.size(18.dp), 
-                tint = if (isEnabled) StitchTokens.AccentSuccess else StitchTokens.TextSecondary
-            )
-            Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.padding(16.dp)) {
+            SectionLabel(text = "OPERATION CONSOLE")
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (protocol != ProtocolFamily.UNKNOWN) {
+                ProtocolBadge(protocol)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             Text(
-                text = label,
-                style = StitchTokens.LabelSmall,
-                color = if (isEnabled) StitchTokens.TextPrimary else StitchTokens.TextSecondary
+                text = if (deviceLabel.isBlank()) "Connected Devices" else deviceLabel,
+                color = StitchTokens.TextPrimary,
+                style = StitchTokens.BodyMedium.copy(fontSize = 13.sp)
             )
+            Text(
+                text = if (isEnabled) {
+                    "Live partition and recovery actions are ready."
+                } else {
+                    "Plug device → grant USB permission → actions unlock automatically."
+                },
+                color = StitchTokens.TextSecondary,
+                style = StitchTokens.BodyMedium.copy(fontSize = 11.sp),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            SectionLabel(text = "PARTITION OPERATIONS")
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RustActionButton(
+                    text = "Read Info",
+                    accentColor = StitchTokens.AccentAdb,
+                    enabled = isEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.queueOperation(DeepEyeOperation.DEEP_DEVICE_INFO) }
+                )
+                RustActionButton(
+                    text = "FRP Erase",
+                    accentColor = StitchTokens.AccentError,
+                    enabled = isEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.queueOperation(DeepEyeOperation.ERASE_FRP) }
+                )
+                RustActionButton(
+                    text = "Safe Wipe",
+                    accentColor = StitchTokens.AccentFastboot,
+                    enabled = isEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.queueOperation(DeepEyeOperation.SAFE_WIPE) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RustActionButton(
+                    text = "Unlock BL",
+                    accentColor = StitchTokens.AccentBrom,
+                    enabled = isEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.queueOperation(DeepEyeOperation.UNLOCK_BOOTLOADER) }
+                )
+                RustActionButton(
+                    text = "Read IMEI",
+                    accentColor = StitchTokens.AccentSamsung,
+                    enabled = isEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = viewModel::readImei
+                )
+            }
         }
     }
 }
@@ -326,7 +485,7 @@ private fun HardwareContextCard(state: UsbLifecycleState, hazeState: dev.chrisba
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.DeveloperBoard, null, tint = StitchTokens.TextSecondary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text("HARDWARE_DESCRIPTORS", style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
+                    Text("DEVICE DETAILS", style = StitchTokens.LabelSmall.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -357,42 +516,134 @@ private fun DescriptorRow(key: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(key, style = StitchTokens.MonoCode.copy(fontSize = 11.sp), color = StitchTokens.TextSecondary)
-        Text(value, style = StitchTokens.MonoCode.copy(fontSize = 11.sp), color = StitchTokens.TextMono)
+        Text(value, style = StitchTokens.MonoCode.copy(fontSize = 11.sp), color = StitchTokens.TextPrimary)
     }
 }
 
 @Composable
 private fun TerminalMiniPreview(
     logs: List<com.deepeye.otg.ui.viewmodel.LogEntry>,
+    hazeState: dev.chrisbanes.haze.HazeState,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = "TELEMETRY_STREAM",
-            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
-            color = StitchTokens.TextSecondary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        Surface(
-            modifier = Modifier.fillMaxWidth().height(100.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = Color.Black.copy(0.6f),
-            border = BorderStroke(1.dp, Color.White.copy(0.05f))
-        ) {
-            LazyColumn(modifier = Modifier.padding(12.dp)) {
-                items(logs) { log ->
-                    Text(
-                        text = "> ${log.message}",
-                        style = StitchTokens.MonoCode.copy(fontSize = 10.sp, letterSpacing = 0.5.sp),
-                        color = when (log.type) {
-                            "ERROR" -> Color(0xFFF87171)
-                            "SUCCESS" -> Color(0xFF4ADE80)
-                            else -> com.deepeye.otg.ui.theme.StitchTokens.Semantic.TextTechnical.copy(alpha = 0.8f)
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        hazeState = hazeState,
+        accentColor = Color.White.copy(alpha = 0.08f)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            SectionLabel(text = "FRP LOG")
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(StitchTokens.Semantic.TerminalBackground.copy(alpha = 0.96f))
+                    .border(1.dp, Color.White.copy(alpha = 0.04f), RoundedCornerShape(8.dp))
+                    .padding(10.dp)
+            ) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (logs.isEmpty()) {
+                        item {
+                            Text(
+                                text = "> Awaiting device telemetry...",
+                                style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
+                                color = StitchTokens.TextSecondary
+                            )
                         }
-                    )
+                    }
+
+                    items(logs) { log ->
+                        Text(
+                            text = "> ${log.message}",
+                            style = StitchTokens.MonoCode.copy(fontSize = 10.sp, letterSpacing = 0.4.sp),
+                            color = when (log.type) {
+                                "ERROR" -> StitchTokens.AccentError
+                                "SUCCESS" -> StitchTokens.AccentSuccess
+                                else -> StitchTokens.TextSecondary
+                            }
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        color = StitchTokens.TextSecondary,
+        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp, letterSpacing = 1.1.sp)
+    )
+}
+
+@Composable
+private fun StatusPill(text: String) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(StitchTokens.SurfaceDark.copy(alpha = 0.9f))
+            .border(1.dp, StitchTokens.GlassBorder, RoundedCornerShape(999.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = text,
+            style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
+            color = StitchTokens.TextSecondary
+        )
+    }
+}
+
+@Composable
+private fun PulsingStatusDot(color: Color, active: Boolean) {
+    val animatedAlpha by rememberInfiniteTransition(label = "statusDot").animateFloat(
+        initialValue = 1f,
+        targetValue = 0.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "statusDotAlpha"
+    )
+    Box(
+        modifier = Modifier
+            .size(10.dp)
+            .clip(CircleShape)
+            .background(color.copy(alpha = if (active) animatedAlpha else 0.8f))
+    )
+}
+
+@Composable
+private fun RustActionButton(
+    text: String,
+    accentColor: Color,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (enabled) accentColor.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.04f))
+            .border(
+                1.dp,
+                if (enabled) accentColor.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.08f),
+                RoundedCornerShape(10.dp)
+            )
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
+            color = if (enabled) accentColor else StitchTokens.TextSecondary
+        )
     }
 }
 @Composable
