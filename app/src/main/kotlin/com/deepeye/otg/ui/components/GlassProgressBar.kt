@@ -32,7 +32,7 @@ fun GlassProgressBar(
             .fillMaxWidth()
             .height(6.dp)
             .clip(RoundedCornerShape(50))
-            .background(com.deepeye.otg.ui.theme.StitchTokens.GlassBorder)
+            .background(com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_LOW.copy(0.3f))
     ) {
         Box(
             modifier = Modifier
@@ -41,7 +41,7 @@ fun GlassProgressBar(
                 .clip(RoundedCornerShape(50))
                 .background(
                     androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        listOf(com.deepeye.otg.ui.theme.StitchTokens.Primary, com.deepeye.otg.ui.theme.StitchTokens.AccentAdb)
+                        listOf(com.deepeye.otg.ui.theme.DeepEyeColors.NEON_PURPLE, com.deepeye.otg.ui.theme.DeepEyeColors.NEON_BLUE)
                     )
                 )
         )

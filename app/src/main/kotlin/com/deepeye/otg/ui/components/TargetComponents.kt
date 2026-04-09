@@ -32,7 +32,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.ProtocolFamily
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.usb.UsbLifecycleState
 
 /**
@@ -40,13 +41,13 @@ import com.deepeye.otg.usb.UsbLifecycleState
  */
 @Composable
 fun ProtocolFamily.getAccentColor(): Color = when (this) {
-    ProtocolFamily.BROM, ProtocolFamily.MTK, ProtocolFamily.PRELOADER -> StitchTokens.Semantic.ProtocolMtk
-    ProtocolFamily.ADB -> StitchTokens.Semantic.ProtocolAdb
-    ProtocolFamily.EDL, ProtocolFamily.QC, ProtocolFamily.ROUTER -> StitchTokens.Semantic.ProtocolEdl
-    ProtocolFamily.FASTBOOT -> StitchTokens.Semantic.ProtocolFastboot
-    ProtocolFamily.APPLE_DFU, ProtocolFamily.APPLE_RECOVERY, ProtocolFamily.APPLE_NORMAL -> StitchTokens.Semantic.ProtocolApple
-    ProtocolFamily.SAMSUNG, ProtocolFamily.ODIN -> StitchTokens.Semantic.ProtocolSamsung
-    else -> StitchTokens.Primary
+    ProtocolFamily.BROM, ProtocolFamily.MTK, ProtocolFamily.PRELOADER -> DeepEyeColors.NEON_GREEN
+    ProtocolFamily.ADB -> DeepEyeColors.NEON_BLUE
+    ProtocolFamily.EDL, ProtocolFamily.QC, ProtocolFamily.ROUTER -> DeepEyeColors.NEON_PURPLE
+    ProtocolFamily.FASTBOOT -> DeepEyeColors.NEON_ORANGE
+    ProtocolFamily.APPLE_DFU, ProtocolFamily.APPLE_RECOVERY, ProtocolFamily.APPLE_NORMAL -> DeepEyeColors.WHITE_HIGH
+    ProtocolFamily.SAMSUNG, ProtocolFamily.ODIN -> DeepEyeColors.NEON_CYAN
+    else -> DeepEyeColors.NEON_PURPLE
 }
 
 @Composable
@@ -78,7 +79,7 @@ fun ProtocolBadge(family: ProtocolFamily) {
             Spacer(Modifier.width(6.dp))
             Text(
                 text = label,
-                style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
                 color = accent
             )
         }
@@ -88,9 +89,9 @@ fun ProtocolBadge(family: ProtocolFamily) {
 @Composable
 fun ConfidenceBadge(confidence: Int) {
     val color = when {
-        confidence >= 90 -> StitchTokens.AccentSuccess
-        confidence >= 60 -> StitchTokens.AccentWarning
-        else -> StitchTokens.AccentError
+        confidence >= 90 -> DeepEyeColors.NEON_GREEN
+        confidence >= 60 -> DeepEyeColors.NEON_YELLOW
+        else -> DeepEyeColors.NEON_PINK
     }
     
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,8 +104,8 @@ fun ConfidenceBadge(confidence: Int) {
         Spacer(Modifier.width(4.dp))
         Text(
             text = "$confidence% CONFIDENCE",
-            style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
-            color = StitchTokens.TextSecondary
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
+            color = DeepEyeColors.WHITE_MED
         )
     }
 }
@@ -123,15 +124,15 @@ fun ConnectionAuraCard(
         else -> ProtocolFamily.UNKNOWN
     }
     val accent = when (state) {
-        is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+        is UsbLifecycleState.PermissionPending -> DeepEyeColors.NEON_YELLOW
         is UsbLifecycleState.PermissionDenied,
         is UsbLifecycleState.Error,
         is UsbLifecycleState.Dead,
-        is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
+        is UsbLifecycleState.NoOtgSupport -> DeepEyeColors.NEON_PINK
         else -> if (isConnected || state is UsbLifecycleState.DeviceDetected || state is UsbLifecycleState.Connecting) {
             protocolFamily.getAccentColor()
         } else {
-            StitchTokens.Semantic.StatusIdle
+            DeepEyeColors.WHITE_MED
         }
     }
 
@@ -190,7 +191,7 @@ fun MissionTopBar(
     }
 
     Surface(
-        color = StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.8f),
+        color = DeepEyeColors.BG_SURFACE.copy(alpha = 0.8f),
         modifier = Modifier
             .fillMaxWidth()
             .height(if (compactMode) 136.dp else 104.dp) // Adjusted heights for new responsive header
@@ -240,7 +241,7 @@ private fun SessionSelectorRow(
             val accent = if (state.isConnected || state is UsbLifecycleState.DeviceDetected) {
                 protocol.getAccentColor()
             } else {
-                StitchTokens.Semantic.StatusIdle
+                DeepEyeColors.WHITE_MED
             }
 
             Box(
@@ -256,7 +257,7 @@ private fun SessionSelectorRow(
                     imageVector = if (state.isConnected) Icons.Default.Smartphone else Icons.Default.Usb,
                     contentDescription = null,
                     modifier = Modifier.size(if (compactMode) 16.dp else 14.dp),
-                    tint = if (isSelected) accent else StitchTokens.TextSecondary
+                    tint = if (isSelected) accent else DeepEyeColors.WHITE_MED
                 )
             }
         }
@@ -266,9 +267,9 @@ private fun SessionSelectorRow(
 @Composable
 private fun TelemetryBadge(label: String, value: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = label, style = StitchTokens.LabelSmall.copy(fontSize = 8.sp), color = StitchTokens.TextSecondary)
+        Text(text = label, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 8.sp), color = DeepEyeColors.WHITE_MED)
         Spacer(Modifier.width(4.dp))
-        Text(text = value, style = StitchTokens.MonoCode.copy(fontSize = 10.sp), color = color)
+        Text(text = value, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp), color = color)
     }
 }
 
@@ -281,7 +282,7 @@ fun MissionQueueHeader(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .background(StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.5f))
+            .background(DeepEyeColors.BG_SURFACE.copy(alpha = 0.5f))
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         val compact = maxWidth < 390.dp
@@ -320,8 +321,8 @@ private fun HeaderTextBlock(
     Column(modifier = modifier) {
         Text(
             text = title,
-            color = StitchTokens.Primary,
-            style = StitchTokens.LabelSmall.copy(fontSize = 11.sp, letterSpacing = 0.8.sp),
+            color = DeepEyeColors.NEON_PURPLE,
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 11.sp, letterSpacing = 0.8.sp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -330,8 +331,8 @@ private fun HeaderTextBlock(
 
         Text(
             text = value,
-            color = StitchTokens.TextPrimary,
-            style = StitchTokens.BodyMedium.copy(fontSize = 13.sp),
+            color = DeepEyeColors.WHITE_HIGH,
+            style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 13.sp),
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -362,7 +363,7 @@ fun BottomActionButtons(
             Icon(
                 imageVector = Icons.Default.BugReport,
                 contentDescription = "Bug Tools",
-                tint = StitchTokens.Primary,
+                tint = DeepEyeColors.NEON_PURPLE,
                 modifier = Modifier.size(iconSize)
             )
         }
@@ -388,7 +389,7 @@ fun BottomActionButtons(
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings",
-                tint = StitchTokens.TextSecondary,
+                tint = DeepEyeColors.WHITE_MED,
                 modifier = Modifier.size(iconSize)
             )
         }

@@ -20,7 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.usb.UsbLifecycleState
 import com.deepeye.otg.usb.UsbDescriptorSnapshot
@@ -51,12 +52,12 @@ fun DebugOverlayPanel(viewModel: UsbViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Terminal, null, tint = StitchTokens.Primary, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Terminal, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "REAL-TIME USB DESCRIPTOR", 
-                            style = StitchTokens.LabelSmall, 
-                            color = StitchTokens.TextPrimary
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), 
+                            color = DeepEyeColors.WHITE_HIGH
                         )
                     }
                     IconButton(onClick = { viewModel.toggleDebugPanel() }, modifier = Modifier.size(24.dp)) {
@@ -84,7 +85,7 @@ fun DebugOverlayPanel(viewModel: UsbViewModel) {
                                 item { DebugRow("MODE", state.detectedDeviceMode.name) }
                             }
                             else -> {
-                                item { Text("WAITING FOR ATTACH...", style = StitchTokens.MonoCode, color = Color.Gray, modifier = Modifier.padding(8.dp)) }
+                                item { Text("WAITING FOR ATTACH...", style = DeepEyeType.MONO.copy(fontSize = 12.sp), color = Color.Gray, modifier = Modifier.padding(8.dp)) }
                             }
                         }
                     }
@@ -114,7 +115,7 @@ private fun DebugRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label.uppercase(), style = StitchTokens.LabelSmall.copy(fontSize = 9.sp), color = StitchTokens.TextSecondary)
-        Text(value, style = StitchTokens.MonoCode.copy(fontSize = 10.sp), color = StitchTokens.TextMono)
+        Text(label.uppercase(), style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp), color = DeepEyeColors.WHITE_MED)
+        Text(value, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp), color = DeepEyeColors.NEON_CYAN)
     }
 }

@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import dev.chrisbanes.haze.HazeState
 
 @Composable
@@ -34,7 +35,7 @@ fun CompleteScreen(
     onViewAudit: () -> Unit
 ) {
     val hazeState = remember { HazeState() }
-    val accentColor = if (success) Color(0xFF4ADE80) else StitchTokens.AccentEdl
+    val accentColor = if (success) Color(0xFF4ADE80) else DeepEyeColors.NEON_PURPLE
     val icon = if (success) Icons.Default.CheckCircle else Icons.Default.Error
 
     Box(
@@ -66,7 +67,7 @@ fun CompleteScreen(
 
             Text(
                 text = if (success) "EXECUTION COMPLETE" else "EXECUTION FAILED",
-                style = StitchTokens.LabelSmall,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
                 color = accentColor,
                 letterSpacing = 2.sp
             )
@@ -75,8 +76,8 @@ fun CompleteScreen(
 
             Text(
                 text = message,
-                style = StitchTokens.TitleLarge,
-                color = StitchTokens.TextPrimary,
+                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                color = DeepEyeColors.WHITE_HIGH,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -85,8 +86,8 @@ fun CompleteScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = "ID: ${op.id.uppercase()}",
-                    style = StitchTokens.MonoCode.copy(fontSize = 11.sp),
-                    color = StitchTokens.TextSecondary
+                    style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 11.sp),
+                    color = DeepEyeColors.WHITE_MED
                 )
             }
 

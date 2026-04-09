@@ -38,7 +38,8 @@ import com.deepeye.otg.protocol.apple.iphone15.Iphone15Session
 import com.deepeye.otg.protocol.apple.iphone15.IphoneChip
 import com.deepeye.otg.protocol.apple.iphone15.ResearchChainStatus
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
@@ -63,7 +64,7 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(StitchTokens.BackgroundDark, StitchTokens.SurfaceDark)
+                    colors = listOf(DeepEyeColors.BG_VOID, DeepEyeColors.BG_SURFACE)
                 )
             )
     ) {
@@ -80,31 +81,31 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { viewModel.setNav(NavTarget.DASHBOARD) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = DeepEyeColors.WHITE_HIGH)
                     }
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = "iPhone 15 Research",
-                        style = StitchTokens.TitleLarge,
-                        color = StitchTokens.TextPrimary
+                        style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                        color = DeepEyeColors.WHITE_HIGH
                     )
                 }
             }
 
             if (profile == null) {
                 item {
-                    GlassCard(hazeState = null, accentColor = StitchTokens.AccentApple) {
+                    GlassCard(hazeState = null, accentColor = DeepEyeColors.WHITE_HIGH) {
                         Column(Modifier.padding(16.dp)) {
                             Text(
                                 text = "No active Apple session",
-                                style = StitchTokens.TitleLarge,
-                                color = StitchTokens.TextPrimary
+                                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                                color = DeepEyeColors.WHITE_HIGH
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 text = "Connect an iPhone in DFU/Recovery/Normal mode to populate A16/A17 research intelligence.",
-                                style = StitchTokens.BodyMedium,
-                                color = StitchTokens.TextSecondary
+                                style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                                color = DeepEyeColors.WHITE_MED
                             )
                         }
                     }
@@ -113,53 +114,53 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.AccentApple) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.WHITE_HIGH) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             text = profile.modelName,
-                            style = StitchTokens.TitleLarge,
-                            color = StitchTokens.TextPrimary
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                            color = DeepEyeColors.WHITE_HIGH
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = "${chipLabel(profile.chip)} • ${profile.boardConfig} • iOS ${profile.iosVersion}",
-                            style = StitchTokens.MonoCode,
-                            color = StitchTokens.TextMono
+                            style = DeepEyeType.MONO.copy(fontSize = 12.sp),
+                            color = DeepEyeColors.NEON_CYAN
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
                             text = "Security: PAC ✓  MTE ✓  PPL ✓",
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                     }
                 }
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.Primary) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.NEON_PURPLE) {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Cable, null, tint = StitchTokens.Primary)
+                            Icon(Icons.Default.Cable, null, tint = DeepEyeColors.NEON_PURPLE)
                             Spacer(Modifier.width(8.dp))
-                            Text("USB-C Surface", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+                            Text("USB-C Surface", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
                         }
                         Spacer(Modifier.height(10.dp))
                         Text(
                             text = "USB3: ${if (profile.usbSurface.usb3Capable) "Yes" else "No"}  |  Thunderbolt: ${if (profile.usbSurface.thunderboltCapable) "Possible" else "No"}",
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                         Text(
                             text = "PD: ${profile.usbSurface.usbPdVersion}  |  Alt Mode: ${profile.usbSurface.altMode}",
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                         Spacer(Modifier.height(10.dp))
                         LinearProgressIndicator(
                             progress = { profile.usbSurface.fuzzingCoverageHint / 100f },
                             modifier = Modifier.fillMaxWidth(),
-                            color = StitchTokens.Primary,
+                            color = DeepEyeColors.NEON_PURPLE,
                             trackColor = Color.White.copy(alpha = 0.12f)
                         )
                     }
@@ -167,12 +168,12 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.AccentWarning) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.NEON_YELLOW) {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Bolt, null, tint = StitchTokens.AccentWarning)
+                            Icon(Icons.Default.Bolt, null, tint = DeepEyeColors.NEON_YELLOW)
                             Spacer(Modifier.width(8.dp))
-                            Text("Exploit Chain Status", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+                            Text("Exploit Chain Status", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
                         }
                         Spacer(Modifier.height(8.dp))
                         profile.exploitChains.forEach { chain ->
@@ -181,8 +182,8 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(chain.name, style = StitchTokens.BodyMedium, color = StitchTokens.TextSecondary)
-                                Text(statusLabel(chain.status), style = StitchTokens.LabelSmall, color = statusColor(chain.status))
+                                Text(chain.name, style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_MED)
+                                Text(statusLabel(chain.status), style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = statusColor(chain.status))
                             }
                             Spacer(Modifier.height(6.dp))
                         }
@@ -191,16 +192,16 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.AccentAdb) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.NEON_BLUE) {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Memory, null, tint = StitchTokens.AccentAdb)
+                            Icon(Icons.Default.Memory, null, tint = DeepEyeColors.NEON_BLUE)
                             Spacer(Modifier.width(8.dp))
-                            Text("Safe Capabilities", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+                            Text("Safe Capabilities", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
                         }
                         Spacer(Modifier.height(8.dp))
                         profile.safeCapabilities.forEach {
-                            Text("• $it", style = StitchTokens.BodyMedium, color = StitchTokens.TextSecondary)
+                            Text("• $it", style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_MED)
                             Spacer(Modifier.height(4.dp))
                         }
                     }
@@ -208,16 +209,16 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.AccentError) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.NEON_PINK) {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Security, null, tint = StitchTokens.AccentError)
+                            Icon(Icons.Default.Security, null, tint = DeepEyeColors.NEON_PINK)
                             Spacer(Modifier.width(8.dp))
-                            Text("Honest Limitations", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+                            Text("Honest Limitations", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
                         }
                         Spacer(Modifier.height(8.dp))
                         profile.knownLimitations.forEach {
-                            Text("• $it", style = StitchTokens.BodyMedium, color = StitchTokens.TextSecondary)
+                            Text("• $it", style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_MED)
                             Spacer(Modifier.height(4.dp))
                         }
                     }
@@ -225,9 +226,9 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
             }
 
             item {
-                GlassCard(hazeState = null, accentColor = StitchTokens.AccentFastboot) {
+                GlassCard(hazeState = null, accentColor = DeepEyeColors.NEON_ORANGE) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Applicable Public CVEs (${profile.applicableCves.size})", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
+                        Text("Applicable Public CVEs (${profile.applicableCves.size})", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
                         Spacer(Modifier.height(8.dp))
                         profile.applicableCves.take(8).forEach { cve ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -238,7 +239,7 @@ fun Iphone15ResearchScreen(viewModel: UsbViewModel) {
                                         .background(Color(0xFF4ADE80), CircleShape)
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("${cve.cve} • ${cve.component}", style = StitchTokens.BodyMedium, color = StitchTokens.TextSecondary)
+                                Text("${cve.cve} • ${cve.component}", style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_MED)
                             }
                             Spacer(Modifier.height(4.dp))
                         }

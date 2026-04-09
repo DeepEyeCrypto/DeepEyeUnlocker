@@ -23,7 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 import org.json.JSONArray
 import org.json.JSONObject
@@ -66,12 +67,12 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                         viewModel.setNav(NavTarget.LAB_HOME)
                     }
                 }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = StitchTokens.TextPrimary)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = DeepEyeColors.WHITE_HIGH)
                 }
                 Spacer(Modifier.width(8.dp))
                 Column {
-                    Text("File Explorer", style = StitchTokens.TitleLarge, color = StitchTokens.TextPrimary)
-                    Text(currentPath, style = StitchTokens.LabelSmall, color = StitchTokens.Primary)
+                    Text("File Explorer", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = DeepEyeColors.WHITE_HIGH)
+                    Text(currentPath, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.NEON_PURPLE)
                 }
             }
 
@@ -81,7 +82,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(StitchTokens.RadiusDefault))
-                    .background(StitchTokens.GlassSurface)
+                    .background(DeepEyeColors.BG_SURFACE.copy(0.6f))
             ) {
                 items(files) { file ->
                     FileRow(file) {
@@ -91,7 +92,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
                             viewModel.openFile(file.path)
                         }
                     }
-                    HorizontalDivider(color = StitchTokens.GlassBorder.copy(alpha = 0.5f), thickness = 0.5.dp)
+                    HorizontalDivider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.5f), thickness = 0.5.dp)
                 }
             }
         }
@@ -117,14 +118,14 @@ private fun FileRow(file: FileEntry, onClick: () -> Unit) {
         Icon(
             imageVector = if (file.isDir) Icons.Default.Folder else Icons.Default.Description,
             contentDescription = null,
-            tint = if (file.isDir) StitchTokens.Primary else StitchTokens.TextSecondary,
+            tint = if (file.isDir) DeepEyeColors.NEON_PURPLE else DeepEyeColors.WHITE_MED,
             modifier = Modifier.size(24.dp)
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(file.name, style = StitchTokens.BodyMedium, color = StitchTokens.TextPrimary, fontWeight = FontWeight.Bold)
+            Text(file.name, style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_HIGH, fontWeight = FontWeight.Bold)
             if (!file.isDir) {
-                Text(formatSize(file.size), style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
+                Text(formatSize(file.size), style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_MED)
             }
         }
     }

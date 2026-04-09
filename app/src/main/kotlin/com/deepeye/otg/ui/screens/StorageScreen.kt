@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.otg.usb.gpt.GptStructure
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.StorageViewModel
 import com.deepeye.otg.viewmodel.ForensicSearchHit
 import com.deepeye.otg.viewmodel.SecurityArtifact
@@ -90,7 +91,7 @@ fun StorageScreen(
                 .background(Color(0xFF020202))
                 .padding(16.dp)
                 .then(
-                    if (remoteActive) Modifier.border(2.dp, StitchTokens.Primary.copy(alpha = tunnelAlpha), RoundedCornerShape(0.dp))
+                    if (remoteActive) Modifier.border(2.dp, DeepEyeColors.NEON_PURPLE.copy(alpha = tunnelAlpha), RoundedCornerShape(0.dp))
                     else Modifier
                 )
         ) {
@@ -182,16 +183,16 @@ fun StorageScreen(
             Surface(
                 color = Color.Black,
                 shape = RoundedCornerShape(bottomStart = 8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, StitchTokens.Primary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DeepEyeColors.NEON_PURPLE),
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 80.dp)
             ) {
                 Row(
                     Modifier.padding(horizontal = 12.dp, vertical = 6.dp).clickable { showRemoteLogs = !showRemoteLogs },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(Modifier.size(6.dp).background(StitchTokens.Primary, CircleShape))
+                    Box(Modifier.size(6.dp).background(DeepEyeColors.NEON_PURPLE, CircleShape))
                     Spacer(Modifier.width(8.dp))
-                    Text("REMOTE: ${tunnelUrl?.split("/")?.last()}", color = Color.White, fontSize = 9.sp, style = StitchTokens.MonoCode)
+                    Text("REMOTE: ${tunnelUrl?.split("/")?.last()}", color = Color.White, fontSize = 9.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
                     Spacer(Modifier.width(8.dp))
                     Icon(if (showRemoteLogs) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, tint = Color.Gray, modifier = Modifier.size(12.dp))
                 }
@@ -212,11 +213,11 @@ fun StorageScreen(
                 modifier = Modifier.width(280.dp).heightIn(max = 300.dp)
             ) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("REMOTE ACTIVITY CONSOLE", color = StitchTokens.Primary, fontWeight = FontWeight.Black, fontSize = 10.sp)
+                    Text("REMOTE ACTIVITY CONSOLE", color = DeepEyeColors.NEON_PURPLE, fontWeight = FontWeight.Black, fontSize = 10.sp)
                     Spacer(Modifier.height(8.dp))
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         items(remoteLogs) { log ->
-                            Text(log, color = Color.LightGray, fontSize = 9.sp, style = StitchTokens.MonoCode)
+                            Text(log, color = Color.LightGray, fontSize = 9.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
                         }
                     }
                 }
@@ -234,14 +235,14 @@ fun StorageScreen(
             Surface(
                 color = Color.Black,
                 shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, StitchTokens.Primary),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DeepEyeColors.NEON_PURPLE),
                 shadowElevation = 8.dp
             ) {
                 Text(
                     statusValue ?: "",
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                    style = StitchTokens.MonoCode,
+                    style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                     fontSize = 12.sp
                 )
             }
@@ -289,13 +290,13 @@ fun LivePatchDialog(
                 )
                 Spacer(Modifier.height(16.dp))
                 Text("PARTITION: ${hit.partition.uppercase()}", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Text("OFFSET: 0x${"%X".format(hit.offset)}", color = StitchTokens.Primary, style = StitchTokens.MonoCode, fontSize = 11.sp)
+                Text("OFFSET: 0x${"%X".format(hit.offset)}", color = DeepEyeColors.NEON_PURPLE, style = DeepEyeType.MONO.copy(fontSize = 12.sp), fontSize = 11.sp)
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = patchHex,
                     onValueChange = { patchHex = it },
                     label = { Text("PATCH BYTES (HEX)", fontSize = 10.sp) },
-                    textStyle = StitchTokens.MonoCode.copy(fontSize = 12.sp, color = Color.White),
+                    textStyle = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 12.sp, color = Color.White),
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Color.Transparent,
@@ -342,7 +343,7 @@ fun StorageHeader(
             Icon(
                 Icons.Default.Memory,
                 contentDescription = null,
-                tint = if (remoteActive) StitchTokens.Primary else Color.Gray,
+                tint = if (remoteActive) DeepEyeColors.NEON_PURPLE else Color.Gray,
                 modifier = Modifier.size(28.dp)
             )
             Spacer(Modifier.width(12.dp))
@@ -363,7 +364,7 @@ fun StorageHeader(
                     )
                     Text(
                         activeView,
-                        color = StitchTokens.Primary,
+                        color = DeepEyeColors.NEON_PURPLE,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black
                     )
@@ -374,23 +375,23 @@ fun StorageHeader(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(
                 onClick = onRemoteToggle,
-                modifier = Modifier.size(36.dp).background(if (remoteActive) StitchTokens.Primary.copy(0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
-            ) { Icon(Icons.Default.CloudSync, null, tint = if (remoteActive) StitchTokens.Primary else Color.Gray, modifier = Modifier.size(18.dp)) }
+                modifier = Modifier.size(36.dp).background(if (remoteActive) DeepEyeColors.NEON_PURPLE.copy(0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
+            ) { Icon(Icons.Default.CloudSync, null, tint = if (remoteActive) DeepEyeColors.NEON_PURPLE else Color.Gray, modifier = Modifier.size(18.dp)) }
 
             IconButton(
                 onClick = { onViewChange("MAP") },
                 modifier = Modifier.size(36.dp).background(if (activeView == "MAP") Color.White.copy(0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
-            ) { Icon(Icons.Default.Map, null, tint = if (activeView == "MAP") StitchTokens.Primary else Color.Gray, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Default.Map, null, tint = if (activeView == "MAP") DeepEyeColors.NEON_PURPLE else Color.Gray, modifier = Modifier.size(18.dp)) }
             
             IconButton(
                 onClick = { onViewChange("SEARCH") },
                 modifier = Modifier.size(36.dp).background(if (activeView == "SEARCH") Color.White.copy(0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
-            ) { Icon(Icons.Default.Search, null, tint = if (activeView == "SEARCH") StitchTokens.Primary else Color.Gray, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Default.Search, null, tint = if (activeView == "SEARCH") DeepEyeColors.NEON_PURPLE else Color.Gray, modifier = Modifier.size(18.dp)) }
 
             IconButton(
                 onClick = onAudit,
                 modifier = Modifier.size(36.dp).background(if (activeView == "AUDIT") Color.White.copy(0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
-            ) { Icon(Icons.Default.Security, null, tint = if (activeView == "AUDIT") StitchTokens.Primary else Color.Gray, modifier = Modifier.size(18.dp)) }
+            ) { Icon(Icons.Default.Security, null, tint = if (activeView == "AUDIT") DeepEyeColors.NEON_PURPLE else Color.Gray, modifier = Modifier.size(18.dp)) }
 
             IconButton(
                 onClick = onExport,
@@ -435,15 +436,15 @@ fun ForensicAuditView(
             Surface(
                 color = Color(0xFF101010),
                 shape = RoundedCornerShape(6.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, StitchTokens.Primary.copy(0.3f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DeepEyeColors.NEON_PURPLE.copy(0.3f)),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             ) {
                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Description, null, tint = StitchTokens.Primary)
+                    Icon(Icons.Default.Description, null, tint = DeepEyeColors.NEON_PURPLE)
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text("CASE REPORT FINALIZED", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        Text(reportPath.split("/").last(), color = Color.Gray, fontSize = 10.sp, style = StitchTokens.MonoCode)
+                        Text(reportPath.split("/").last(), color = Color.Gray, fontSize = 10.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
                     }
                 }
             }
@@ -451,9 +452,9 @@ fun ForensicAuditView(
 
         if (isAnalyzing && artifacts.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = StitchTokens.Primary, strokeWidth = 2.dp)
+                CircularProgressIndicator(color = DeepEyeColors.NEON_PURPLE, strokeWidth = 2.dp)
                 Spacer(Modifier.height(12.dp))
-                Text("COMPILING FORENSIC EVIDENCE...", color = Color.Gray, fontSize = 10.sp, style = StitchTokens.MonoCode)
+                Text("COMPILING FORENSIC EVIDENCE...", color = Color.Gray, fontSize = 10.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -483,7 +484,7 @@ fun SecurityArtifactCard(artifact: SecurityArtifact) {
                     Spacer(Modifier.width(8.dp))
                     Text(artifact.partition.uppercase(), color = Color.Gray, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                 }
-                Text("at 0x${"%08X".format(artifact.offset)}", color = StitchTokens.Primary, fontSize = 10.sp, style = StitchTokens.MonoCode)
+                Text("at 0x${"%08X".format(artifact.offset)}", color = DeepEyeColors.NEON_PURPLE, fontSize = 10.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
                 Spacer(Modifier.height(4.dp))
                 Text(artifact.desc, color = Color.LightGray, fontSize = 11.sp)
             }
@@ -506,13 +507,13 @@ fun ForensicSearchView(
             onValueChange = onSearch,
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text("Search raw strings or hex pattern...", color = Color.Gray, fontSize = 13.sp) },
-            leadingIcon = { Icon(Icons.Default.Fingerprint, null, tint = StitchTokens.Primary) },
+            leadingIcon = { Icon(Icons.Default.Fingerprint, null, tint = DeepEyeColors.NEON_PURPLE) },
             trailingIcon = { if (isSearching) CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp) },
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color(0xFF0F0F0F),
                 focusedContainerColor = Color(0xFF0F0F0F),
                 unfocusedIndicatorColor = Color(0xFF222222),
-                focusedIndicatorColor = StitchTokens.Primary
+                focusedIndicatorColor = DeepEyeColors.NEON_PURPLE
             ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true
@@ -522,7 +523,7 @@ fun ForensicSearchView(
 
         if (results.isEmpty() && !isSearching) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("NO RESULTS FOUND", color = Color.DarkGray, fontSize = 12.sp, style = StitchTokens.MonoCode)
+                Text("NO RESULTS FOUND", color = Color.DarkGray, fontSize = 12.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -545,9 +546,9 @@ fun SearchHitCard(hit: ForensicSearchHit, onClick: () -> Unit) {
         Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("LBA: ${hit.lba}", color = StitchTokens.Primary, fontWeight = FontWeight.Black, fontSize = 10.sp)
+                    Text("LBA: ${hit.lba}", color = DeepEyeColors.NEON_PURPLE, fontWeight = FontWeight.Black, fontSize = 10.sp)
                     Spacer(Modifier.width(12.dp))
-                    Text("OFFSET: 0x${"%08X".format(hit.offset)}", color = Color.Gray, fontSize = 10.sp, style = StitchTokens.MonoCode)
+                    Text("OFFSET: 0x${"%08X".format(hit.offset)}", color = Color.Gray, fontSize = 10.sp, style = DeepEyeType.MONO.copy(fontSize = 12.sp))
                 }
                 Text(hit.partition.uppercase(), color = Color.White.copy(0.3f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
             }
@@ -555,7 +556,7 @@ fun SearchHitCard(hit: ForensicSearchHit, onClick: () -> Unit) {
             Text(
                 hit.context,
                 color = Color.White,
-                style = StitchTokens.MonoCode,
+                style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                 fontSize = 11.sp,
                 modifier = Modifier.background(Color.Black.copy(0.3f)).padding(8.dp).fillMaxWidth()
             )
@@ -577,14 +578,14 @@ fun PartitionExplorerHeader(
         Column {
             Text(
                 "EXPLORING: ${partition.name.uppercase()}",
-                color = StitchTokens.Primary,
+                color = DeepEyeColors.NEON_PURPLE,
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp
             )
             Text(
                 path,
                 color = Color.Gray,
-                style = StitchTokens.MonoCode,
+                style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                 fontSize = 11.sp
             )
         }
@@ -630,7 +631,7 @@ fun FileSystemBrowser(
                 
                 if (!file.isDir) {
                     IconButton(onClick = { onFileClick(file) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Save, null, tint = StitchTokens.Primary, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Save, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(18.dp))
                     }
                 } else {
                     Icon(Icons.Default.ChevronRight, null, tint = Color.DarkGray, modifier = Modifier.size(16.dp))
@@ -656,12 +657,12 @@ fun ScanningProgress() {
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = StitchTokens.Primary, strokeWidth = 2.dp)
+            CircularProgressIndicator(color = DeepEyeColors.NEON_PURPLE, strokeWidth = 2.dp)
             Spacer(Modifier.height(16.dp))
             Text(
                 "MAPPING GPT STRUCTURE...",
-                color = StitchTokens.Primary.copy(alpha = alpha),
-                style = StitchTokens.MonoCode,
+                color = DeepEyeColors.NEON_PURPLE.copy(alpha = alpha),
+                style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                 fontSize = 12.sp
             )
         }
@@ -769,7 +770,7 @@ fun PartitionRow(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(partition.name.uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Text(sizeText, color = StitchTokens.Primary, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                    Text(sizeText, color = DeepEyeColors.NEON_PURPLE, fontWeight = FontWeight.Black, fontSize = 11.sp)
                 }
             }
             

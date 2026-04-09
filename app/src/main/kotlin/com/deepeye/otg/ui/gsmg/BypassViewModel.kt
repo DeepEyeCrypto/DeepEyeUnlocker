@@ -195,7 +195,15 @@ class BypassViewModel @Inject constructor(
 
     fun onConfirmPlan() {
         val plan = _state.value.activePlan ?: return
-        _state.update { it.copy(showPlanDialog = false, isExecuting = true) }
+        _state.update {
+            it.copy(
+                showPlanDialog = false,
+                isExecuting = true,
+                latestEvent = null,
+                activeFeatureId = plan.feature.id,
+                activePlan = null,
+            )
+        }
         
         executionJob?.cancel()
         executionJob = viewModelScope.launch {
@@ -211,24 +219,57 @@ class BypassViewModel @Inject constructor(
                     sessionId = plan.sessionId
                 ).collect { event ->
                     _state.update { it.copy(latestEvent = event) }
-                    
-                    if (event is BypassEvent.Completed) {
-                        delay(2000)
-                        _state.update { it.copy(isExecuting = false, successMessage = "Operation Successful") }
-                    }
-                    if (event is BypassEvent.Failed) {
-                        _state.update { it.copy(errorMessage = event.reason) }
+
+                    when (event) {
+                        is BypassEvent.Completed -> {
+                            _state.update {
+                                it.copy(
+                                    isExecuting = false,
+                                    successMessage = "Operation Successful",
+                                    activeFeatureId = null,
+                                )
+                            }
+                            delay(2500)
+                            _state.update { it.copy(latestEvent = null) }
+                        }
+
+                        is BypassEvent.Failed -> {
+                            _state.update {
+                                it.copy(
+                                    errorMessage = event.reason,
+                                    isExecuting = false,
+                                    activeFeatureId = null,
+                                )
+                            }
+                            delay(2500)
+                            _state.update { it.copy(latestEvent = null) }
+                        }
+
+                        else -> Unit
                     }
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(errorMessage = e.localizedMessage, isExecuting = false) }
+                _state.update {
+                    it.copy(
+                        errorMessage = e.localizedMessage ?: "Unknown execution failure",
+                        isExecuting = false,
+                        activeFeatureId = null,
+                    )
+                }
             }
         }
     }
 
     fun cancelExecution() {
         executionJob?.cancel()
-        _state.update { it.copy(isExecuting = false, latestEvent = null) }
+        _state.update {
+            it.copy(
+                isExecuting = false,
+                latestEvent = null,
+                activeFeatureId = null,
+                activePlan = null,
+            )
+        }
     }
 
     // ── Helper: Protocol to ChipRange Mapper ──────────────────
@@ -243,7 +284,7 @@ class BypassViewModel @Inject constructor(
     }
 
     // ── Other UI state management (Clear errors, etc) ─────────
-    fun onDismissPlan() = _state.update { it.copy(showPlanDialog = false) }
+    fun onDismissPlan() = _state.update { it.copy(showPlanDialog = false, activePlan = null) }
     fun onClearError() = _state.update { it.copy(errorMessage = null) }
     fun onClearSuccess() = _state.update { it.copy(successMessage = null) }
     

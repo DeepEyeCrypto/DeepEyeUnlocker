@@ -22,7 +22,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.domain.models.ProtocolFamily
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +42,9 @@ fun EdlConsole(
             CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Terminal, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Terminal, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("EDL CONSOLE", style = StitchTokens.LabelSmall, color = StitchTokens.TextPrimary)
+                        Text("EDL CONSOLE", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_HIGH)
                     }
                 },
                 navigationIcon = {
@@ -52,7 +53,7 @@ fun EdlConsole(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = StitchTokens.BackgroundDark.copy(alpha = 0.9f)
+                    containerColor = DeepEyeColors.BG_VOID.copy(alpha = 0.9f)
                 )
             )
         },
@@ -69,9 +70,9 @@ fun EdlConsole(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.1f) else StitchTokens.AccentError.copy(alpha = 0.1f)
+                    containerColor = if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.1f) else DeepEyeColors.NEON_PINK.copy(alpha = 0.1f)
                 ),
-                border = BorderStroke(1.dp, if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.3f) else StitchTokens.AccentError.copy(alpha = 0.3f))
+                border = BorderStroke(1.dp, if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.3f) else DeepEyeColors.NEON_PINK.copy(alpha = 0.3f))
             ) {
                 Row(
                     modifier = Modifier
@@ -83,23 +84,23 @@ fun EdlConsole(
                     Column {
                         Text(
                             text = if (isConnected) "EDL MODE ACTIVE" else "NOT IN EDL MODE",
-                            style = StitchTokens.TitleLarge,
-                            color = if (isConnected) StitchTokens.AccentSuccess else StitchTokens.AccentError
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                            color = if (isConnected) DeepEyeColors.NEON_GREEN else DeepEyeColors.NEON_PINK
                         )
                         Text(
                             text = when (lifecycleState) {
                                 is com.deepeye.otg.usb.UsbLifecycleState.Connected -> "Protocol: ${(lifecycleState as com.deepeye.otg.usb.UsbLifecycleState.Connected).protocolFamily}"
                                 else -> "Connect device in EDL (Sahara) mode"
                             },
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                     }
                     if (isConnected) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = StitchTokens.AccentSuccess,
+                            tint = DeepEyeColors.NEON_GREEN,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -109,8 +110,8 @@ fun EdlConsole(
             // Quick Actions
             Text(
                 text = "EDL OPERATIONS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 letterSpacing = 2.sp
             )
 
@@ -164,7 +165,7 @@ fun EdlConsole(
                         icon = Icons.Default.Delete,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.FACTORY_RESET) },
-                        accentColor = StitchTokens.AccentWarning
+                        accentColor = DeepEyeColors.NEON_YELLOW
                     )
                 }
 
@@ -175,7 +176,7 @@ fun EdlConsole(
                         icon = Icons.Default.LockOpen,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.ERASE_FRP) },
-                        accentColor = StitchTokens.AccentError
+                        accentColor = DeepEyeColors.NEON_PINK
                     )
                 }
 
@@ -196,18 +197,18 @@ fun EdlConsole(
                         icon = Icons.Default.BrokenImage,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.SAFE_DUMP) },
-                        accentColor = StitchTokens.Primary
+                        accentColor = DeepEyeColors.NEON_PURPLE
                     )
                 }
             }
 
-            Divider(color = StitchTokens.GlassBorder.copy(alpha = 0.3f))
+            Divider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.3f))
 
             // Recent Logs Preview
             Text(
                 text = "RECENT LOGS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 letterSpacing = 2.sp
             )
 
@@ -218,11 +219,11 @@ fun EdlConsole(
                 items(logs.takeLast(10).reversed()) { log ->
                     Text(
                         text = "[${log.timestamp}] ${log.type}: ${log.message}",
-                        style = StitchTokens.MonoCode,
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                         color = when (log.type.uppercase()) {
-                            "ERROR" -> StitchTokens.AccentError
-                            "SUCCESS" -> StitchTokens.AccentSuccess
-                            else -> StitchTokens.TextSecondary
+                            "ERROR" -> DeepEyeColors.NEON_PINK
+                            "SUCCESS" -> DeepEyeColors.NEON_GREEN
+                            else -> DeepEyeColors.WHITE_MED
                         },
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                     )
@@ -239,14 +240,14 @@ private fun ActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isEnabled: Boolean,
     onClick: () -> Unit,
-    accentColor: Color = StitchTokens.Primary
+    accentColor: Color = DeepEyeColors.NEON_PURPLE
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = StitchTokens.Semantic.SurfaceCard.copy(alpha = 0.6f)
+            containerColor = DeepEyeColors.BG_SURFACE.copy(alpha = 0.6f)
         ),
-        border = BorderStroke(1.dp, if (isEnabled) accentColor.copy(alpha = 0.3f) else StitchTokens.GlassBorder),
+        border = BorderStroke(1.dp, if (isEnabled) accentColor.copy(alpha = 0.3f) else DeepEyeColors.WHITE_LOW.copy(0.3f)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -259,13 +260,13 @@ private fun ActionButton(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (isEnabled) accentColor.copy(alpha = 0.15f) else StitchTokens.TextSecondary.copy(alpha = 0.1f)),
+                    .background(if (isEnabled) accentColor.copy(alpha = 0.15f) else DeepEyeColors.WHITE_MED.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (isEnabled) accentColor else StitchTokens.TextSecondary,
+                    tint = if (isEnabled) accentColor else DeepEyeColors.WHITE_MED,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -275,13 +276,13 @@ private fun ActionButton(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = StitchTokens.TitleLarge,
-                    color = if (isEnabled) StitchTokens.TextPrimary else StitchTokens.TextSecondary
+                    style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                    color = if (isEnabled) DeepEyeColors.WHITE_HIGH else DeepEyeColors.WHITE_MED
                 )
                 Text(
                     text = description,
-                    style = StitchTokens.BodyMedium,
-                    color = StitchTokens.TextSecondary
+                    style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                    color = DeepEyeColors.WHITE_MED
                 )
             }
 
@@ -289,8 +290,8 @@ private fun ActionButton(
                 onClick = onClick,
                 enabled = isEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isEnabled) accentColor else StitchTokens.TextSecondary,
-                    contentColor = if (isEnabled) Color.White else StitchTokens.TextSecondary
+                    containerColor = if (isEnabled) accentColor else DeepEyeColors.WHITE_MED,
+                    contentColor = if (isEnabled) Color.White else DeepEyeColors.WHITE_MED
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {

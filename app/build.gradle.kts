@@ -91,7 +91,20 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3:1.4.0-alpha10")
+    implementation("androidx.compose.material:material-icons-extended")
+    
+    // Haze - Real glassmorphism blur
+    implementation("dev.chrisbanes.haze:haze:1.5.1")
+    implementation("dev.chrisbanes.haze:haze-materials:1.5.1")
+    
+    // Compose Animation extras
+    implementation("androidx.compose.animation:animation:1.8.0")
+    implementation("androidx.compose.animation:animation-graphics:1.8.0")
+    
+    // Coil for image loading
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    
     implementation("androidx.test.ext:junit:1.1.5")
     implementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation(platform("androidx.compose:compose-bom:2023.08.00"))

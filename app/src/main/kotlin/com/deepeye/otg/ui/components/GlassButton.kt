@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.ui.theme.GlassTokens
 
 @Composable
@@ -52,17 +53,17 @@ fun GlassButton(
                 scaleY = scaleAnim
                 alpha = opacity
             }
-            .shadow(if (accent) 8.dp else 2.dp, RoundedCornerShape(12.dp), spotColor = if (accent) com.deepeye.otg.ui.theme.StitchTokens.Primary.copy(alpha = 0.3f) else Color.Black)
+            .shadow(if (accent) 8.dp else 2.dp, RoundedCornerShape(12.dp), spotColor = if (accent) com.deepeye.otg.ui.theme.DeepEyeColors.NEON_PURPLE.copy(alpha = 0.3f) else Color.Black)
             .clip(RoundedCornerShape(12.dp))
             .then(
                 if (accent) Modifier.background(
                     androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        listOf(com.deepeye.otg.ui.theme.StitchTokens.Primary, com.deepeye.otg.ui.theme.StitchTokens.AccentAdb)
+                        listOf(com.deepeye.otg.ui.theme.DeepEyeColors.NEON_PURPLE, com.deepeye.otg.ui.theme.DeepEyeColors.NEON_BLUE)
                     )
                 )
                 else Modifier
-                    .background(com.deepeye.otg.ui.theme.StitchTokens.GlassSurface)
-                    .border(1.dp, com.deepeye.otg.ui.theme.StitchTokens.GlassBorder, RoundedCornerShape(12.dp))
+                    .background(com.deepeye.otg.ui.theme.DeepEyeColors.BG_SURFACE.copy(0.6f))
+                    .border(1.dp, com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(12.dp))
             )
             .clickable(
                 interactionSource = interactionSource,
@@ -74,8 +75,8 @@ fun GlassButton(
     ) {
         Text(
             text = label.uppercase(),
-            color = if (accent) Color.White else com.deepeye.otg.ui.theme.StitchTokens.TextPrimary,
-            style = com.deepeye.otg.ui.theme.StitchTokens.LabelSmall,
+            color = if (accent) Color.White else com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_HIGH,
+            style = com.deepeye.otg.ui.theme.DeepEyeType.CAPTION.copy(fontSize = 11.sp),
             letterSpacing = 1.sp
         )
     }

@@ -23,7 +23,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.domain.models.ProtocolFamily
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,9 +48,9 @@ fun UnlockScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.LockOpen, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.LockOpen, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("UNLOCK & BYPASS", style = StitchTokens.LabelSmall, color = StitchTokens.TextPrimary)
+                        Text("UNLOCK & BYPASS", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_HIGH)
                     }
                 },
                 navigationIcon = {
@@ -58,7 +59,7 @@ fun UnlockScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = StitchTokens.BackgroundDark.copy(alpha = 0.9f)
+                    containerColor = DeepEyeColors.BG_VOID.copy(alpha = 0.9f)
                 )
             )
         },
@@ -75,9 +76,9 @@ fun UnlockScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.1f) else StitchTokens.AccentWarning.copy(alpha = 0.1f)
+                    containerColor = if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.1f) else DeepEyeColors.NEON_YELLOW.copy(alpha = 0.1f)
                 ),
-                border = BorderStroke(1.dp, if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.3f) else StitchTokens.AccentWarning.copy(alpha = 0.3f))
+                border = BorderStroke(1.dp, if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.3f) else DeepEyeColors.NEON_YELLOW.copy(alpha = 0.3f))
             ) {
                 Row(
                     modifier = Modifier
@@ -89,19 +90,19 @@ fun UnlockScreen(
                     Column {
                         Text(
                             text = if (isConnected) "DEVICE CONNECTED" else "NO DEVICE",
-                            style = StitchTokens.TitleLarge,
-                            color = if (isConnected) StitchTokens.AccentSuccess else StitchTokens.AccentWarning
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                            color = if (isConnected) DeepEyeColors.NEON_GREEN else DeepEyeColors.NEON_YELLOW
                         )
                         Text(
                             text = deviceName,
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextPrimary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_HIGH
                         )
                         if (selectedDeviceKey != null) {
                             Text(
                                 text = "Key: $selectedDeviceKey",
-                                style = StitchTokens.LabelSmall,
-                                color = StitchTokens.TextSecondary
+                                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                                color = DeepEyeColors.WHITE_MED
                             )
                         }
                     }
@@ -110,14 +111,14 @@ fun UnlockScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.15f) else StitchTokens.AccentWarning.copy(alpha = 0.15f))
-                            .border(1.dp, if (isConnected) StitchTokens.AccentSuccess.copy(alpha = 0.3f) else StitchTokens.AccentWarning.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .background(if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.15f) else DeepEyeColors.NEON_YELLOW.copy(alpha = 0.15f))
+                            .border(1.dp, if (isConnected) DeepEyeColors.NEON_GREEN.copy(alpha = 0.3f) else DeepEyeColors.NEON_YELLOW.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = if (isConnected) "READY" else "WAITING",
-                            style = StitchTokens.LabelSmall,
-                            color = if (isConnected) StitchTokens.AccentSuccess else StitchTokens.AccentWarning
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                            color = if (isConnected) DeepEyeColors.NEON_GREEN else DeepEyeColors.NEON_YELLOW
                         )
                     }
                 }
@@ -127,9 +128,9 @@ fun UnlockScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = StitchTokens.AccentError.copy(alpha = 0.1f)
+                    containerColor = DeepEyeColors.NEON_PINK.copy(alpha = 0.1f)
                 ),
-                border = BorderStroke(1.dp, StitchTokens.AccentError.copy(alpha = 0.3f))
+                border = BorderStroke(1.dp, DeepEyeColors.NEON_PINK.copy(alpha = 0.3f))
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
@@ -138,21 +139,21 @@ fun UnlockScreen(
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        tint = StitchTokens.AccentError,
+                        tint = DeepEyeColors.NEON_PINK,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "LEGAL COMPLIANCE NOTICE",
-                            style = StitchTokens.LabelSmall,
-                            color = StitchTokens.AccentError,
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                            color = DeepEyeColors.NEON_PINK,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "Only perform on devices you own. Bypassing security features may violate laws in your jurisdiction.",
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                     }
                 }
@@ -161,8 +162,8 @@ fun UnlockScreen(
             // Unlock Operations
             Text(
                 text = "UNLOCK OPERATIONS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 letterSpacing = 2.sp
             )
 
@@ -177,7 +178,7 @@ fun UnlockScreen(
                         icon = Icons.Default.AccountCircle,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.ERASE_FRP) },
-                        accentColor = StitchTokens.AccentError,
+                        accentColor = DeepEyeColors.NEON_PINK,
                         requires = "EDL / Fastboot / ADB"
                     )
                 }
@@ -190,7 +191,7 @@ fun UnlockScreen(
                         icon = Icons.Default.CloudOff,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.MTK_METAMODE_FRP) },
-                        accentColor = StitchTokens.AccentError,
+                        accentColor = DeepEyeColors.NEON_PINK,
                         requires = "EDL / Download Mode"
                     )
                 }
@@ -203,7 +204,7 @@ fun UnlockScreen(
                         icon = Icons.Default.CloudQueue,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.REMOVE_MI_CLOUD) },
-                        accentColor = StitchTokens.AccentWarning,
+                        accentColor = DeepEyeColors.NEON_YELLOW,
                         requires = "MTK EDL"
                     )
                 }
@@ -216,7 +217,7 @@ fun UnlockScreen(
                         icon = Icons.Default.FlashAuto,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.UNLOCK_BOOTLOADER) },
-                        accentColor = StitchTokens.Primary,
+                        accentColor = DeepEyeColors.NEON_PURPLE,
                         requires = "Fastboot / EDL"
                     )
                 }
@@ -229,7 +230,7 @@ fun UnlockScreen(
                         icon = Icons.Default.LockOpen,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.REMOVE_SCREEN_LOCK) },
-                        accentColor = StitchTokens.AccentWarning,
+                        accentColor = DeepEyeColors.NEON_YELLOW,
                         requires = "EDL (userdata access)"
                     )
                 }
@@ -242,7 +243,7 @@ fun UnlockScreen(
                         icon = Icons.Default.AdminPanelSettings,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.EFRP_MDM_HOOK) },
-                        accentColor = StitchTokens.AccentError,
+                        accentColor = DeepEyeColors.NEON_PINK,
                         requires = "EDL / ADB"
                     )
                 }
@@ -255,26 +256,26 @@ fun UnlockScreen(
                         icon = Icons.Default.Shop,
                         isEnabled = isConnected,
                         onClick = { mainViewModel.queueOperation(DeepEyeOperation.DEMO_UNLOCK) },
-                        accentColor = StitchTokens.Primary,
+                        accentColor = DeepEyeColors.NEON_PURPLE,
                         requires = "EDL / Fastboot"
                     )
                 }
             }
 
-            Divider(color = StitchTokens.GlassBorder.copy(alpha = 0.3f))
+            Divider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.3f))
 
             // Operation Status
             Text(
                 text = "OPERATION STATUS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 letterSpacing = 2.sp
             )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = StitchTokens.Semantic.SurfaceCard.copy(alpha = 0.6f)
+                    containerColor = DeepEyeColors.BG_SURFACE.copy(alpha = 0.6f)
                 )
             ) {
                 Column(
@@ -287,13 +288,13 @@ fun UnlockScreen(
                     ) {
                         Text(
                             text = "Current Operation:",
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                         Text(
                             text = "IDLE", // TODO: Connect to actual queue status
-                            style = StitchTokens.LabelSmall,
-                            color = StitchTokens.Primary
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                            color = DeepEyeColors.NEON_PURPLE
                         )
                     }
 
@@ -301,21 +302,21 @@ fun UnlockScreen(
                     LinearProgressIndicator(
                         progress = { 0f },
                         modifier = Modifier.fillMaxWidth(),
-                        color = StitchTokens.Primary,
-                        trackColor = StitchTokens.GlassBorder
+                        color = DeepEyeColors.NEON_PURPLE,
+                        trackColor = DeepEyeColors.WHITE_LOW.copy(0.3f)
                     )
                     Text(
                         text = "0% - No active operation",
-                        style = StitchTokens.BodyMedium,
-                        color = StitchTokens.TextSecondary,
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                        color = DeepEyeColors.WHITE_MED,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Operation control note
                     Text(
                         text = "Operations execute automatically. Monitor logs for progress.",
-                        style = StitchTokens.BodyMedium,
-                        color = StitchTokens.TextSecondary,
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                        color = DeepEyeColors.WHITE_MED,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
@@ -324,8 +325,8 @@ fun UnlockScreen(
             // Recent Logs Preview
             Text(
                 text = "RECENT ACTIVITY",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 letterSpacing = 2.sp
             )
 
@@ -336,12 +337,12 @@ fun UnlockScreen(
                 items(logs.takeLast(8).reversed()) { log ->
                     Text(
                         text = "[${log.timestamp}] ${log.type}: ${log.message}",
-                        style = StitchTokens.MonoCode,
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                         color = when (log.type.uppercase()) {
-                            "ERROR" -> StitchTokens.AccentError
-                            "SUCCESS" -> StitchTokens.AccentSuccess
-                            "INFO" -> StitchTokens.Primary
-                            else -> StitchTokens.TextSecondary
+                            "ERROR" -> DeepEyeColors.NEON_PINK
+                            "SUCCESS" -> DeepEyeColors.NEON_GREEN
+                            "INFO" -> DeepEyeColors.NEON_PURPLE
+                            else -> DeepEyeColors.WHITE_MED
                         },
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                     )
@@ -364,9 +365,9 @@ private fun ActionButton(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = StitchTokens.Semantic.SurfaceCard.copy(alpha = 0.6f)
+            containerColor = DeepEyeColors.BG_SURFACE.copy(alpha = 0.6f)
         ),
-        border = BorderStroke(1.dp, if (isEnabled) accentColor.copy(alpha = 0.3f) else StitchTokens.GlassBorder),
+        border = BorderStroke(1.dp, if (isEnabled) accentColor.copy(alpha = 0.3f) else DeepEyeColors.WHITE_LOW.copy(0.3f)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
@@ -382,13 +383,13 @@ private fun ActionButton(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isEnabled) accentColor.copy(alpha = 0.15f) else StitchTokens.TextSecondary.copy(alpha = 0.1f)),
+                        .background(if (isEnabled) accentColor.copy(alpha = 0.15f) else DeepEyeColors.WHITE_MED.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (isEnabled) accentColor else StitchTokens.TextSecondary,
+                        tint = if (isEnabled) accentColor else DeepEyeColors.WHITE_MED,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -398,18 +399,18 @@ private fun ActionButton(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
-                        style = StitchTokens.TitleLarge,
-                        color = if (isEnabled) StitchTokens.TextPrimary else StitchTokens.TextSecondary
+                        style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                        color = if (isEnabled) DeepEyeColors.WHITE_HIGH else DeepEyeColors.WHITE_MED
                     )
                     Text(
                         text = description,
-                        style = StitchTokens.BodyMedium,
-                        color = StitchTokens.TextSecondary
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                        color = DeepEyeColors.WHITE_MED
                     )
                     Text(
                         text = "Requires: $requires",
-                        style = StitchTokens.LabelSmall,
-                        color = StitchTokens.TextSecondary,
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                        color = DeepEyeColors.WHITE_MED,
                         fontSize = 10.sp
                     )
                 }
@@ -418,8 +419,8 @@ private fun ActionButton(
                     onClick = onClick,
                     enabled = isEnabled,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isEnabled) accentColor else StitchTokens.TextSecondary,
-                        contentColor = if (isEnabled) Color.White else StitchTokens.TextSecondary
+                        containerColor = if (isEnabled) accentColor else DeepEyeColors.WHITE_MED,
+                        contentColor = if (isEnabled) Color.White else DeepEyeColors.WHITE_MED
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {

@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.ui.components.GlassBadge
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
 
 sealed class MissionCategory(val title: String, val icon: ImageVector) {
     object Activation : MissionCategory("Activation", Icons.Default.FlashOn)
@@ -98,7 +98,7 @@ fun MissionHubScreen(
         containerColor = Color.Transparent
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(
-            Brush.verticalGradient(listOf(StitchTokens.Semantic.BackgroundBase, Color.Black))
+            Brush.verticalGradient(listOf(DeepEyeColors.BG_VOID, Color.Black))
         )) {
             Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                 // Category Selector
@@ -153,7 +153,7 @@ fun CategoryTab(
         Icon(
             imageVector = category.icon,
             contentDescription = category.title,
-            tint = if (isSelected) StitchTokens.Primary else Color.Gray,
+            tint = if (isSelected) DeepEyeColors.NEON_PURPLE else Color.Gray,
             modifier = Modifier.size(28.dp)
         )
         Text(
@@ -191,9 +191,9 @@ fun MissionCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     GlassBadge(
                         label = "PRO",
-                        fillColor = StitchTokens.Primary.copy(alpha = 0.1f),
-                        borderColor = StitchTokens.Primary.copy(alpha = 0.2f),
-                        textColor = StitchTokens.Primary
+                        fillColor = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.1f),
+                        borderColor = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.2f),
+                        textColor = DeepEyeColors.NEON_PURPLE
                     )
                 }
             }
@@ -208,7 +208,7 @@ fun MissionCard(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = StitchTokens.Primary,
+                tint = DeepEyeColors.NEON_PURPLE,
                 modifier = Modifier.align(Alignment.End).size(20.dp)
             )
         }

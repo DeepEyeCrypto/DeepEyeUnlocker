@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import dev.chrisbanes.haze.HazeState
 
 @Composable
@@ -52,21 +53,21 @@ fun WaitingScreen(
                 Box(
                     modifier = Modifier
                         .size(180.dp * scale)
-                        .border(1.dp, StitchTokens.Primary.copy(alpha = 0.2f * alpha), CircleShape)
+                        .border(1.dp, DeepEyeColors.NEON_PURPLE.copy(alpha = 0.2f * alpha), CircleShape)
                 )
                 
                 // Content Card
                 GlassCard(
                     hazeState = hazeState,
                     cornerRadius = 100.dp,
-                    accentColor = StitchTokens.Primary,
+                    accentColor = DeepEyeColors.NEON_PURPLE,
                     modifier = Modifier.size(120.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.HourglassEmpty,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp).align(Alignment.Center),
-                        tint = StitchTokens.Primary
+                        tint = DeepEyeColors.NEON_PURPLE
                     )
                 }
             }
@@ -75,8 +76,8 @@ fun WaitingScreen(
 
             Text(
                 text = "AWAITING HARDWARE",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.Primary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.NEON_PURPLE,
                 letterSpacing = 2.sp
             )
 
@@ -84,8 +85,8 @@ fun WaitingScreen(
 
             Text(
                 text = "Please connect the target device\nvia OTG to proceed.",
-                style = StitchTokens.TitleLarge,
-                color = StitchTokens.TextPrimary,
+                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                color = DeepEyeColors.WHITE_HIGH,
                 textAlign = TextAlign.Center,
                 lineHeight = 28.sp
             )
@@ -95,15 +96,15 @@ fun WaitingScreen(
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(StitchTokens.Primary.copy(0.1f))
-                        .border(1.dp, StitchTokens.Primary.copy(0.2f), CircleShape)
+                        .background(DeepEyeColors.NEON_PURPLE.copy(0.1f))
+                        .border(1.dp, DeepEyeColors.NEON_PURPLE.copy(0.2f), CircleShape)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "QUEUED: ${op.label}",
-                        style = StitchTokens.LabelSmall,
-                        color = StitchTokens.Primary
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                        color = DeepEyeColors.NEON_PURPLE
                     )
                 }
             }

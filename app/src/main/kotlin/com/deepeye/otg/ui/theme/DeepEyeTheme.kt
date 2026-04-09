@@ -11,39 +11,41 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+// DeepEyeType is defined in StitchTokens.kt
+
 // ── Dark-First Color Scheme (Mode: Security/Terminal) ──────────────────────────
 private val DeepEyeDarkColorScheme = darkColorScheme(
-    primary = StitchTokens.Primary,
-    onPrimary = Color.White,
-    primaryContainer = StitchTokens.Primary.copy(alpha = 0.2f),
-    onPrimaryContainer = StitchTokens.TextPrimary,
+    primary = DeepEyeColors.NEON_PURPLE,
+    onPrimary = DeepEyeColors.WHITE_HIGH,
+    primaryContainer = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.2f),
+    onPrimaryContainer = DeepEyeColors.WHITE_HIGH,
     
-    secondary = StitchTokens.AccentAdb,
-    onSecondary = Color.Black,
-    secondaryContainer = StitchTokens.AccentAdb.copy(alpha = 0.2f),
-    onSecondaryContainer = StitchTokens.TextPrimary,
+    secondary = DeepEyeColors.NEON_BLUE,
+    onSecondary = DeepEyeColors.BG_VOID,
+    secondaryContainer = DeepEyeColors.NEON_BLUE.copy(alpha = 0.2f),
+    onSecondaryContainer = DeepEyeColors.WHITE_HIGH,
     
-    background = StitchTokens.BackgroundDark,
-    onBackground = StitchTokens.TextPrimary,
+    background = DeepEyeColors.BG_VOID,
+    onBackground = DeepEyeColors.WHITE_HIGH,
     
-    surface = StitchTokens.SurfaceDark,
-    onSurface = StitchTokens.TextPrimary,
-    surfaceVariant = StitchTokens.GlassSurface,
-    onSurfaceVariant = StitchTokens.TextSecondary,
+    surface = DeepEyeColors.BG_SURFACE,
+    onSurface = DeepEyeColors.WHITE_HIGH,
+    surfaceVariant = DeepEyeColors.BG_SURFACE.copy(alpha = 0.6f),
+    onSurfaceVariant = DeepEyeColors.WHITE_MED,
     
-    outline = StitchTokens.GlassBorder,
-    outlineVariant = Color.White.copy(alpha = 0.05f),
+    outline = DeepEyeColors.WHITE_LOW.copy(0.3f),
+    outlineVariant = DeepEyeColors.WHITE_HIGH.copy(alpha = 0.05f),
     
-    error = Color(0xFFFF1744), // Direct color to avoid reference issues
-    onError = Color.White
+    error = DeepEyeColors.NEON_PINK,
+    onError = DeepEyeColors.WHITE_HIGH
 )
 
 private val DeepEyeTypography = Typography(
-    displayLarge = StitchTokens.DisplayLarge,
-    titleLarge = StitchTokens.TitleLarge,
-    bodyLarge = StitchTokens.BodyMedium.copy(fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = StitchTokens.BodyMedium,
-    labelSmall = StitchTokens.LabelSmall
+    displayLarge = DeepEyeType.HEADER.copy(fontSize = 32.sp),
+    titleLarge = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+    bodyLarge = DeepEyeType.BODY.copy(fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = DeepEyeType.BODY.copy(fontSize = 14.sp),
+    labelSmall = DeepEyeType.CAPTION.copy(fontSize = 11.sp)
 )
 
 @Composable
@@ -59,8 +61,8 @@ fun DeepEyeTheme(
     if (!view.isInEditMode) {
         androidx.compose.runtime.SideEffect {
             val window = (context as? android.app.Activity)?.window ?: return@SideEffect
-            window.statusBarColor = StitchTokens.BackgroundDark.toArgb()
-            window.navigationBarColor = StitchTokens.BackgroundDark.toArgb()
+            window.statusBarColor = DeepEyeColors.BG_VOID.toArgb()
+            window.navigationBarColor = DeepEyeColors.BG_VOID.toArgb()
             
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = false // Keep icons white

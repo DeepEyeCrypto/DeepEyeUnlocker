@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.deepeye.otg.ui.theme.DeepEyeType
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -36,7 +37,7 @@ fun GlassTabRow(
 ) {
     val hazeStyle = remember {
         HazeStyle(
-            backgroundColor = com.deepeye.otg.ui.theme.StitchTokens.BackgroundDark,
+            backgroundColor = com.deepeye.otg.ui.theme.DeepEyeColors.BG_VOID,
             tint = HazeTint(Color.White.copy(alpha = 0.05f)),
             blurRadius = 24.dp,
             noiseFactor = 0.02f
@@ -50,9 +51,9 @@ fun GlassTabRow(
             .clip(RoundedCornerShape(16.dp))
             .then(
                 if (!performanceMode) Modifier.hazeEffect(state = hazeState, style = hazeStyle)
-                else Modifier.background(com.deepeye.otg.ui.theme.StitchTokens.SurfaceDark)
+                else Modifier.background(com.deepeye.otg.ui.theme.DeepEyeColors.BG_SURFACE)
             )
-            .border(1.dp, com.deepeye.otg.ui.theme.StitchTokens.GlassBorder, RoundedCornerShape(16.dp)),
+            .border(1.dp, com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         ScrollableTabRow(
@@ -64,7 +65,7 @@ fun GlassTabRow(
                 SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
                     height = 2.dp,
-                    color = com.deepeye.otg.ui.theme.StitchTokens.Primary
+                    color = com.deepeye.otg.ui.theme.DeepEyeColors.NEON_PURPLE
                 )
             }
         ) {
@@ -77,8 +78,8 @@ fun GlassTabRow(
                 ) {
                     Text(
                         text = title.uppercase(),
-                        style = com.deepeye.otg.ui.theme.StitchTokens.LabelSmall,
-                        color = if (selected) com.deepeye.otg.ui.theme.StitchTokens.TextPrimary else com.deepeye.otg.ui.theme.StitchTokens.TextSecondary,
+                        style = com.deepeye.otg.ui.theme.DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                        color = if (selected) com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_HIGH else com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_MED,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }

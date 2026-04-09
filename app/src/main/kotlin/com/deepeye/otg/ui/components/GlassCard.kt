@@ -21,12 +21,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.deepeye.otg.ui.theme.GlassTokens
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
+/**
+ * @deprecated Use GlassCard from Atoms.kt instead which provides better performance with pure drawBehind implementation
+ */
+@Deprecated("Use GlassCard from Atoms.kt instead", ReplaceWith("GlassCard", "com.deepeye.otg.ui.components.AtomsKt"))
 @Composable
 fun GlassCard(
     hazeState: HazeState?,
@@ -49,7 +53,7 @@ fun GlassCard(
     // ── CRITICAL: backgroundColor MUST be specified ──────────
     val hazeStyle = remember(accentColor) {
         HazeStyle(
-            backgroundColor = StitchTokens.Semantic.BackgroundBase,
+            backgroundColor = DeepEyeColors.BG_VOID,
             tint = HazeTint(if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f)),
             blurRadius = 20.dp,
             noiseFactor = 0.02f
@@ -66,12 +70,12 @@ fun GlassCard(
                 if (hazeState != null && !performanceMode) {
                     Modifier.hazeEffect(state = hazeState, style = hazeStyle)
                 } else {
-                    Modifier.background(StitchTokens.Semantic.SurfaceCard.copy(alpha = 0.8f))
+                    Modifier.background(DeepEyeColors.BG_SURFACE.copy(alpha = 0.8f))
                 }
             )
             .border(
                 width = 1.dp,
-                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else StitchTokens.Semantic.BorderSubtle,
+                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else DeepEyeColors.WHITE_LOW.copy(0.3f),
                 shape = shape
             )
             .clip(shape)

@@ -18,7 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 
 /**
  * Stage 15.1 — AI Forensic Intel Panel.
@@ -35,7 +36,7 @@ fun ForensicIntelPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        accentColor = StitchTokens.Primary
+        accentColor = DeepEyeColors.NEON_PURPLE
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(
@@ -47,14 +48,14 @@ fun ForensicIntelPanel(
                     Icon(
                         imageVector = Icons.Default.Psychology,
                         contentDescription = null,
-                        tint = StitchTokens.TextMono,
+                        tint = DeepEyeColors.NEON_CYAN,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "AI FORENSIC INTEL",
-                        style = StitchTokens.LabelSmall,
-                        color = StitchTokens.TextPrimary
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                        color = DeepEyeColors.WHITE_HIGH
                     )
                 }
                 
@@ -62,13 +63,13 @@ fun ForensicIntelPanel(
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
                         strokeWidth = 2.dp,
-                        color = StitchTokens.Primary
+                        color = DeepEyeColors.NEON_PURPLE
                     )
                 } else {
                     Text(
                         "CONFIDENCE: ${(confidence * 100).toInt()}%",
-                        style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
-                        color = StitchTokens.TextMono
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp),
+                        color = DeepEyeColors.NEON_CYAN
                     )
                 }
             }
@@ -80,13 +81,13 @@ fun ForensicIntelPanel(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.Black.copy(alpha = 0.3f))
-                    .border(1.dp, StitchTokens.GlassBorder, RoundedCornerShape(8.dp))
+                    .border(1.dp, DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(8.dp))
                     .padding(12.dp)
             ) {
                 Text(
                     text = if (isProcessing) "Analyzing chipset entropy and NVRAM parity..." else analysis,
-                    style = StitchTokens.MonoCode,
-                    color = StitchTokens.TextSecondary,
+                    style = DeepEyeType.MONO.copy(fontSize = 12.sp),
+                    color = DeepEyeColors.WHITE_MED,
                     lineHeight = 18.sp
                 )
             }
@@ -99,8 +100,8 @@ fun ForensicIntelPanel(
                 ) {
                     Text(
                         "SUGGESTED ACTION: RESTORE IDENTITY →",
-                        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
-                        color = StitchTokens.Primary
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
+                        color = DeepEyeColors.NEON_PURPLE
                     )
                 }
             }

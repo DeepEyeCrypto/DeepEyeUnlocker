@@ -32,7 +32,8 @@ import androidx.compose.ui.window.Dialog
 import com.deepeye.otg.ui.components.ForensicIntelPanel
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.repair.NvBridge
 import dev.chrisbanes.haze.HazeState
 
@@ -62,7 +63,7 @@ fun ImeiRepairScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(StitchTokens.BackgroundDark)
+            .background(DeepEyeColors.BG_VOID)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 100.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -107,7 +108,7 @@ fun ImeiRepairScreen(
             title = "IDENTITY RESTORATION ENGINE",
             hazeState = hazeState,
             perfMode = perfMode,
-            accent = StitchTokens.Primary
+            accent = DeepEyeColors.NEON_PURPLE
         ) {
             Column {
                 RestorationInput(
@@ -134,7 +135,7 @@ fun ImeiRepairScreen(
                     onClick = { showSafetyConfirm = true },
                     enabled = (isImei1Valid && imei1.isNotEmpty()) || (isImei2Valid && imei2.isNotEmpty()),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = StitchTokens.Primary,
+                        containerColor = DeepEyeColors.NEON_PURPLE,
                         disabledContainerColor = Color.DarkGray
                     ),
                     modifier = Modifier
@@ -147,7 +148,7 @@ fun ImeiRepairScreen(
                         Spacer(Modifier.width(12.dp))
                         Text(
                             "INITIATE RESTORATION CHAIN", 
-                            style = StitchTokens.TitleLarge.copy(fontSize = 14.sp),
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 14.sp),
                             color = Color.White
                         )
                     }
@@ -189,19 +190,19 @@ private fun TacticalHeader() {
         Icon(
             imageVector = Icons.Default.Shield,
             contentDescription = null,
-            tint = StitchTokens.Primary.copy(alpha = alpha),
+            tint = DeepEyeColors.NEON_PURPLE.copy(alpha = alpha),
             modifier = Modifier.size(48.dp)
         )
         Spacer(Modifier.height(16.dp))
         Text(
             "MAGIC REPAIR CENTER",
-            style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp),
-            color = StitchTokens.TextPrimary
+            style = DeepEyeType.HEADER.copy(fontSize = 32.sp).copy(fontSize = 24.sp),
+            color = DeepEyeColors.WHITE_HIGH
         )
         Text(
             "RESTRICTED IDENTITY RESTORATION PROTOCOL (G7)",
-            style = StitchTokens.LabelSmall.copy(letterSpacing = 2.sp),
-            color = StitchTokens.Primary
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(letterSpacing = 2.sp),
+            color = DeepEyeColors.NEON_PURPLE
         )
     }
 }
@@ -211,13 +212,13 @@ private fun SecurityCard(
     title: String,
     hazeState: HazeState?,
     perfMode: Boolean,
-    accent: Color = StitchTokens.TextSecondary,
+    accent: Color = DeepEyeColors.WHITE_MED,
     content: @Composable () -> Unit
 ) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = title,
-            style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
             color = accent,
             modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
         )
@@ -237,11 +238,11 @@ private fun SecurityCard(
 @Composable
 private fun IdentityBlock(label: String, value: String) {
     Column {
-        Text(label, style = StitchTokens.MonoCode.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
+        Text(label, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp), color = DeepEyeColors.WHITE_MED)
         Text(
             text = value,
-            style = StitchTokens.TitleLarge.copy(fontSize = 18.sp),
-            color = StitchTokens.TextPrimary,
+            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 18.sp),
+            color = DeepEyeColors.WHITE_HIGH,
             modifier = Modifier.padding(top = 4.dp)
         )
     }
@@ -259,29 +260,29 @@ private fun RestorationInput(
     Column {
         Text(
             text = label,
-            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
-            color = StitchTokens.TextSecondary,
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 10.sp),
+            color = DeepEyeColors.WHITE_MED,
             modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
         )
         TextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
-            textStyle = StitchTokens.MonoCode.copy(fontSize = 16.sp),
-            placeholder = { Text(placeholder, style = StitchTokens.MonoCode, color = Color.Gray) },
+            textStyle = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 16.sp),
+            placeholder = { Text(placeholder, style = DeepEyeType.MONO.copy(fontSize = 12.sp), color = Color.Gray) },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.White.copy(0.05f),
                 unfocusedContainerColor = Color.White.copy(0.02f),
-                focusedIndicatorColor = if (isValid) StitchTokens.Primary else Color.Red,
-                unfocusedIndicatorColor = if (value.isEmpty()) Color.Transparent else if (isValid) StitchTokens.Primary else Color.Red,
-                cursorColor = StitchTokens.Primary
+                focusedIndicatorColor = if (isValid) DeepEyeColors.NEON_PURPLE else Color.Red,
+                unfocusedIndicatorColor = if (value.isEmpty()) Color.Transparent else if (isValid) DeepEyeColors.NEON_PURPLE else Color.Red,
+                cursorColor = DeepEyeColors.NEON_PURPLE
             ),
             trailingIcon = {
                 if (value.length == 15) {
                     Icon(
                         imageVector = if (isValid) Icons.Default.Fingerprint else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = if (isValid) StitchTokens.Primary else Color.Red,
+                        tint = if (isValid) DeepEyeColors.NEON_PURPLE else Color.Red,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -295,18 +296,18 @@ private fun G7SafetyDialog(onCancel: () -> Unit, onConfirm: () -> Unit) {
     Dialog(onDismissRequest = onCancel) {
         GlassCard(hazeState = null, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.Warning, null, tint = StitchTokens.AccentWarning, modifier = Modifier.size(48.dp))
+                Icon(Icons.Default.Warning, null, tint = DeepEyeColors.NEON_YELLOW, modifier = Modifier.size(48.dp))
                 Spacer(Modifier.height(16.dp))
                 Text(
                     "CRITICAL SECURITY OVERRIDE",
-                    style = StitchTokens.TitleLarge,
-                    color = StitchTokens.TextPrimary
+                    style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+                    color = DeepEyeColors.WHITE_HIGH
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "You are about to modify low-level radio metadata (NVRAM). This operation will be logged in the Forensic Audit Trail. DeepEye will auto-dump a rollback image before commit.",
-                    style = StitchTokens.BodyMedium,
-                    color = StitchTokens.TextSecondary,
+                    style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                    color = DeepEyeColors.WHITE_MED,
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(32.dp))

@@ -31,7 +31,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.otg.data.db.entities.DeviceEntity
 import com.deepeye.otg.data.db.entities.OperationLogEntity
 import com.deepeye.otg.data.db.entities.SessionEntity
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.ForensicVaultViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -63,7 +64,7 @@ fun VaultScreen(
                 Icon(
                     Icons.Default.Storage,
                     contentDescription = null,
-                    tint = StitchTokens.Primary,
+                    tint = DeepEyeColors.NEON_PURPLE,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(Modifier.width(12.dp))
@@ -109,14 +110,14 @@ fun VaultScreen(
             Surface(
                 color = Color(0xFF111111),
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, StitchTokens.Primary),
+                border = BorderStroke(1.dp, DeepEyeColors.NEON_PURPLE),
                 shadowElevation = 12.dp
             ) {
                 Text(
                     exportStatus ?: "",
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                    style = StitchTokens.MonoCode,
+                    style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                     fontSize = 11.sp
                 )
             }
@@ -180,11 +181,11 @@ fun DeviceCard(device: DeviceEntity, onClick: () -> Unit) {
             }
             Text(
                 device.status,
-                color = StitchTokens.Primary,
+                color = DeepEyeColors.NEON_PURPLE,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Black,
                 modifier = Modifier
-                    .border(1.dp, StitchTokens.Primary, RoundedCornerShape(4.dp))
+                    .border(1.dp, DeepEyeColors.NEON_PURPLE, RoundedCornerShape(4.dp))
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             )
         }
@@ -199,7 +200,7 @@ fun SessionList(deviceKey: String, sessions: List<SessionEntity>, onSelect: (Lon
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "← REGISTERED DEVICES",
-                color = StitchTokens.Primary,
+                color = DeepEyeColors.NEON_PURPLE,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 modifier = Modifier.clickable { onBack() }.padding(vertical = 8.dp)
@@ -233,7 +234,7 @@ fun SessionList(deviceKey: String, sessions: List<SessionEntity>, onSelect: (Lon
                     }
                     Text(
                         session.resultStatus,
-                        color = if (session.resultStatus == "ACTIVE") StitchTokens.AccentSuccess else Color.Gray,
+                        color = if (session.resultStatus == "ACTIVE") DeepEyeColors.NEON_GREEN else Color.Gray,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -255,7 +256,7 @@ fun LogList(sessionId: Long, logs: List<OperationLogEntity>, onExport: (Long) ->
         ) {
             Text(
                 "← DEVICE SESSIONS",
-                color = StitchTokens.Primary,
+                color = DeepEyeColors.NEON_PURPLE,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 modifier = Modifier.clickable { onBack() }.padding(vertical = 8.dp)
@@ -265,10 +266,10 @@ fun LogList(sessionId: Long, logs: List<OperationLogEntity>, onExport: (Long) ->
                 onClick = { onExport(sessionId) },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.05f)),
                 shape = RoundedCornerShape(4.dp),
-                border = BorderStroke(1.dp, StitchTokens.Primary.copy(0.5f)),
+                border = BorderStroke(1.dp, DeepEyeColors.NEON_PURPLE.copy(0.5f)),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
-                Icon(Icons.Default.Description, null, modifier = Modifier.size(16.dp), tint = StitchTokens.Primary)
+                Icon(Icons.Default.Description, null, modifier = Modifier.size(16.dp), tint = DeepEyeColors.NEON_PURPLE)
                 Spacer(Modifier.width(8.dp))
                 Text("EXPORT AUDIT", fontSize = 10.sp, color = Color.White)
             }
@@ -296,13 +297,13 @@ fun LogList(sessionId: Long, logs: List<OperationLogEntity>, onExport: (Long) ->
                             Text(
                                 "[${dateFormat.format(Date(log.timestamp))}]",
                                 color = Color.DarkGray,
-                                style = StitchTokens.MonoCode,
+                                style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                                 fontSize = 10.sp
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 log.operationType,
-                                color = if (log.result == "FAILED") Color.Red else StitchTokens.Primary,
+                                color = if (log.result == "FAILED") Color.Red else DeepEyeColors.NEON_PURPLE,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 10.sp
                             )
@@ -310,7 +311,7 @@ fun LogList(sessionId: Long, logs: List<OperationLogEntity>, onExport: (Long) ->
                         Text(
                             log.details,
                             color = Color.White,
-                            style = StitchTokens.MonoCode,
+                            style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                             fontSize = 12.sp,
                             modifier = Modifier.padding(top = 2.dp)
                         )

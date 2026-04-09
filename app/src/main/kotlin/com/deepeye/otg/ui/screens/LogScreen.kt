@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,9 +44,9 @@ fun LogScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.List, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.List, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("SYSTEM LOGS", style = StitchTokens.LabelSmall, color = StitchTokens.TextPrimary)
+                        Text("SYSTEM LOGS", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_HIGH)
                     }
                 },
                 navigationIcon = {
@@ -57,11 +58,11 @@ fun LogScreen(
                     TextButton(
                         onClick = { /* TODO: Add clear logs functionality */ }
                     ) {
-                        Text("CLEAR", color = StitchTokens.Primary)
+                        Text("CLEAR", color = DeepEyeColors.NEON_PURPLE)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = StitchTokens.BackgroundDark.copy(alpha = 0.9f)
+                    containerColor = DeepEyeColors.BG_VOID.copy(alpha = 0.9f)
                 )
             )
         },
@@ -81,12 +82,12 @@ fun LogScreen(
             ) {
                 Text(
                     text = "Total entries: ${logs.size}",
-                    style = StitchTokens.LabelSmall,
-                    color = StitchTokens.TextSecondary
+                    style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                    color = DeepEyeColors.WHITE_MED
                 )
             }
 
-            Divider(color = StitchTokens.GlassBorder.copy(alpha = 0.3f))
+            Divider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.3f))
 
             LazyColumn(
                 state = listState,
@@ -96,11 +97,11 @@ fun LogScreen(
             ) {
                 items(logs) { log ->
                     val logColor = when (log.type.uppercase()) {
-                        "ERROR", "FAIL" -> StitchTokens.AccentError
-                        "SUCCESS", "OK" -> StitchTokens.AccentSuccess
-                        "WARNING", "WARN" -> StitchTokens.AccentWarning
-                        "INFO" -> StitchTokens.Primary
-                        else -> StitchTokens.TextSecondary
+                        "ERROR", "FAIL" -> DeepEyeColors.NEON_PINK
+                        "SUCCESS", "OK" -> DeepEyeColors.NEON_GREEN
+                        "WARNING", "WARN" -> DeepEyeColors.NEON_YELLOW
+                        "INFO" -> DeepEyeColors.NEON_PURPLE
+                        else -> DeepEyeColors.WHITE_MED
                     }
 
                     Row(
@@ -111,8 +112,8 @@ fun LogScreen(
                     ) {
                         Text(
                             text = log.timestamp,
-                            style = StitchTokens.LabelSmall,
-                            color = StitchTokens.TextSecondary,
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                            color = DeepEyeColors.WHITE_MED,
                             modifier = Modifier.width(80.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -124,7 +125,7 @@ fun LogScreen(
                         ) {
                             Text(
                                 text = log.type,
-                                style = StitchTokens.LabelSmall,
+                                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
                                 color = logColor,
                                 fontSize = 10.sp
                             )
@@ -132,8 +133,8 @@ fun LogScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = log.message,
-                            style = StitchTokens.BodyMedium,
-                            color = StitchTokens.TextPrimary,
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+                            color = DeepEyeColors.WHITE_HIGH,
                             fontFamily = FontFamily.Monospace
                         )
                     }

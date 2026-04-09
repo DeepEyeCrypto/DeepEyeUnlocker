@@ -1,8 +1,23 @@
 package com.deepeye.otg.ui.gsmg
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +27,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -34,13 +52,28 @@ import com.deepeye.otg.data.gsmg.DevicePlatform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,9 +83,6 @@ import com.deepeye.otg.data.gsmg.BypassFeature
 import com.deepeye.otg.data.gsmg.DeviceState
 import com.deepeye.otg.data.gsmg.ExecutionPlan
 import com.deepeye.otg.data.gsmg.UnifiedBypassRegistry
-import com.deepeye.otg.ui.components.LiquidGlassButton
-import com.deepeye.otg.ui.components.SignalBadge
-import com.deepeye.otg.ui.components.shimmerBorder
 
 private val screenBg = Color(0xFF050505)
 private val panelBg = Color(0xFF121212)
@@ -98,6 +128,7 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
+            userScrollEnabled = true,
         ) {
             item(
                 key = "summary",
@@ -198,15 +229,30 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 )
             }
 
-            items(
-                items = uiState.displayedFeatures,
-                key = { feature -> feature.id },
-            ) { feature ->
-                FeatureCard(
-                    feature = feature,
-                    isActive = uiState.activeFeatureId == feature.id,
-                    onExecute = { viewModel.onRequestExecute(feature) },
-                )
+            if (uiState.displayedFeatures.isEmpty()) {
+                item(
+                    key = "empty_state",
+                    span = { GridItemSpan(maxLineSpan) },
+                ) {
+                    EmptyState(query = uiState.filters.searchQuery)
+                }
+            } else {
+                items(
+                    items = uiState.displayedFeatures,
+                    key = { feature -> feature.id },
+                    contentType = { "bypass_feature" },
+                ) { feature ->
+                    FeatureCard(
+                        feature = feature,
+                        status = resolveFeatureRunStatus(
+                            featureId = feature.id,
+                            activeFeatureId = uiState.activeFeatureId,
+                            isExecuting = uiState.isExecuting,
+                            latestEvent = uiState.latestEvent,
+                        ),
+                        onExecute = { viewModel.onRequestExecute(feature) },
+                    )
+                }
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -313,6 +359,12 @@ private fun CompactOverviewChip(
     value: Int,
     color: Color,
 ) {
+    val animatedValue by animateIntAsState(
+        targetValue = value,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "overview_count_$label",
+    )
+
     Box(
         modifier = modifier
             .background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
@@ -328,10 +380,11 @@ private fun CompactOverviewChip(
                 maxLines = 1,
             )
             Text(
-                text = value.toString(),
+                text = animatedValue.toString(),
                 color = color,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
+                fontFeatureSettings = "tnum",
                 maxLines = 1,
             )
         }
@@ -566,160 +619,661 @@ private fun FilterCard(
 @Composable
 private fun FeatureCard(
     feature: BypassFeature,
-    isActive: Boolean,
+    status: FeatureRunStatus,
     onExecute: () -> Unit,
 ) {
-    val currentBorder = if (isActive) accent.copy(alpha = 0.85f) else outline.copy(alpha = 0.72f)
-    val frameColors = when {
-        feature.signalAfter -> listOf(success, accent, Color(0xFF26C6DA))
-        feature.dataLoss -> listOf(danger, warning, accent)
-        else -> listOf(Color(0xFF7C4DFF), accent, success)
+    var expanded by remember(feature.id) { mutableStateOf(false) }
+    val isRunning = status == FeatureRunStatus.RUNNING
+    val connectionTint = connectionColor(feature.connectionMode)
+    val framePrimary = when {
+        status == FeatureRunStatus.SUCCESS -> success
+        status == FeatureRunStatus.ERROR -> danger
+        feature.signalAfter -> success
+        feature.dataLoss -> danger
+        else -> Color(0xFF7C4DFF)
+    }
+    val frameSecondary = when {
+        status == FeatureRunStatus.SUCCESS -> Color(0xFF86EFAC)
+        status == FeatureRunStatus.ERROR -> Color(0xFFFF6B9A)
+        feature.dataLoss -> warning
+        else -> connectionTint
     }
     val headerLabel = feature.supportedBrands.firstOrNull()?.uppercase() ?: feature.chipRange.displayName.uppercase()
-    val actionLabel = when {
-        isActive -> "RUNNING"
-        feature.isFree -> "RUN"
-        else -> "RUN ${feature.costCredits}¢"
-    }
+    val priceLabel = if (feature.isFree) "FREE" else "${feature.costCredits}¢"
+    val priceColor = if (feature.isFree) success else warning
+    val targetLabel = if (feature.isUntethered) "UNTH" else feature.chipRange.displayName
+    val priorityScore = featurePriorityScore(feature)
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 0f else 180f,
+        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing),
+        label = "feature_expand_${feature.id}",
+    )
+    val borderTransition = rememberInfiniteTransition(label = "feature-border-${feature.id}")
+    val borderAngle by borderTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3600, easing = LinearEasing),
+        ),
+        label = "feature-border-angle-${feature.id}",
+    )
+    val shape = RoundedCornerShape(18.dp)
+    val strokeWidth = if (isRunning) 1.6.dp else 1.1.dp
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(168.dp)
-            .shimmerBorder(
-                colors = frameColors,
-                borderWidth = if (isActive) 1.6.dp else 1.dp,
-                cornerRadius = 18.dp,
-            )
-            .border(1.dp, currentBorder, RoundedCornerShape(18.dp)),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = panelBg.copy(alpha = 0.96f)),
+            .heightIn(min = 168.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { expanded = !expanded }
+            .clip(shape)
+            .drawWithCache {
+                val strokePx = strokeWidth.toPx()
+                val inset = strokePx / 2f
+                val cornerPx = 18.dp.toPx()
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val glowCenter = Offset(x = size.width * 0.18f, y = size.height * 0.14f)
+                val borderBrush = Brush.sweepGradient(
+                    colors = listOf(
+                        framePrimary.copy(alpha = 0.04f),
+                        framePrimary.copy(alpha = if (isRunning) 0.92f else 0.74f),
+                        frameSecondary.copy(alpha = 0.52f),
+                        framePrimary.copy(alpha = 0.04f),
+                        Color.Transparent,
+                    ),
+                    center = center,
+                )
+
+                onDrawWithContent {
+                    drawRoundRect(
+                        color = Color(0xFF080810),
+                        size = size,
+                        cornerRadius = CornerRadius(cornerPx, cornerPx),
+                    )
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(framePrimary.copy(alpha = 0.07f), Color.Transparent),
+                            center = glowCenter,
+                            radius = size.width * 0.7f,
+                        ),
+                        center = glowCenter,
+                        radius = size.width * 0.7f,
+                    )
+                    drawRoundRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.White.copy(alpha = 0.04f), Color.Transparent),
+                            startY = 0f,
+                            endY = size.height * 0.3f,
+                        ),
+                        size = size,
+                        cornerRadius = CornerRadius(cornerPx, cornerPx),
+                    )
+                    drawContent()
+
+                    rotate(degrees = borderAngle, pivot = center) {
+                        drawRoundRect(
+                            brush = borderBrush,
+                            topLeft = Offset(inset, inset),
+                            size = Size(size.width - strokePx, size.height - strokePx),
+                            cornerRadius = CornerRadius(cornerPx, cornerPx),
+                            style = Stroke(
+                                width = strokePx,
+                                pathEffect = PathEffect.cornerPathEffect(cornerPx),
+                            ),
+                        )
+                    }
+
+                    drawRoundRect(
+                        color = if (isRunning) framePrimary.copy(alpha = 0.16f) else outline.copy(alpha = 0.82f),
+                        topLeft = Offset(inset, inset),
+                        size = Size(size.width - strokePx, size.height - strokePx),
+                        cornerRadius = CornerRadius(cornerPx, cornerPx),
+                        style = Stroke(width = 0.8.dp.toPx()),
+                    )
+                }
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 9.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                    ) {
-                        Text(
-                            text = headerLabel,
-                            color = textMuted,
-                            fontSize = 8.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = feature.displayName,
-                            color = textPrimary,
-                            fontSize = 11.sp,
-                            lineHeight = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    val price = if (feature.isFree) "FREE" else "${feature.costCredits}¢"
-                    Text(
-                        text = price,
-                        color = warning,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-
-                Text(
-                    text = feature.description,
-                    color = textSecondary,
-                    fontSize = 9.sp,
-                    lineHeight = 11.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    CompactStatBadge(
-                        text = feature.connectionMode,
-                        color = connectionColor(feature.connectionMode),
-                    )
-                    SignalBadge(hasSignal = feature.signalAfter)
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    CompactStatBadge(
-                        text = if (feature.isUntethered) "UNTH" else feature.chipRange.displayName,
-                        color = if (feature.isUntethered) warning else textMuted,
-                    )
-                    CompactStatBadge(
-                        text = if (feature.dataLoss) "WIPE" else "SAFE",
-                        color = if (feature.dataLoss) danger else success,
-                    )
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    if (isActive) {
-                        Box(
-                            modifier = Modifier
-                                .background(success, RoundedCornerShape(999.dp))
-                                .height(6.dp)
-                                .width(6.dp),
-                        )
-                    }
                     Text(
-                        text = feature.mechanism.displayName,
-                        color = if (isActive) success else textMuted,
-                        fontSize = 8.sp,
+                        text = headerLabel,
+                        color = textMuted,
+                        fontSize = 7.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    Text(
+                        text = feature.displayName,
+                        color = textPrimary,
+                        fontSize = 11.sp,
+                        lineHeight = 13.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    PriorityBadge(score = priorityScore)
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(999.dp))
+                            .border(0.6.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(999.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "⌃",
+                            color = Color.White.copy(alpha = 0.45f),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
+                        )
+                    }
+                }
+            }
 
-                LiquidGlassButton(
-                    onClick = onExecute,
-                    enabled = !isActive,
+            Text(
+                text = feature.description,
+                color = textSecondary,
+                fontSize = 9.sp,
+                lineHeight = 11.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                SignalStatusChip(hasSignal = feature.signalAfter)
+                CompactFeatureBadge(
+                    text = feature.connectionMode,
+                    color = connectionTint,
+                    background = connectionTint.copy(alpha = 0.12f),
+                )
+                CompactFeatureBadge(
+                    text = priceLabel,
+                    color = priceColor,
+                    background = priceColor.copy(alpha = 0.12f),
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CompactFeatureBadge(
+                    text = feature.mechanism.displayName,
+                    color = textSecondary,
+                    background = Color.White.copy(alpha = 0.05f),
+                    borderColor = Color.White.copy(alpha = 0.12f),
+                    modifier = Modifier.weight(1f),
+                )
+                CompactFeatureBadge(
+                    text = targetLabel,
+                    color = if (feature.isUntethered) warning else textMuted,
+                    background = if (feature.isUntethered) warning.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
+                )
+                CompactFeatureBadge(
+                    text = if (feature.dataLoss) "WIPE" else "SAFE",
+                    color = if (feature.dataLoss) danger else success,
+                    background = if (feature.dataLoss) danger.copy(alpha = 0.12f) else success.copy(alpha = 0.12f),
+                )
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(150)),
+                exit = shrinkVertically(animationSpec = tween(180)) + fadeOut(animationSpec = tween(120)),
+            ) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(30.dp),
+                        .padding(top = 3.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White.copy(alpha = 0.04f))
+                        .padding(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
+                    InfoRow(
+                        label = "SOURCE",
+                        value = feature.source.displayName,
+                        color = Color.White.copy(alpha = 0.5f),
+                    )
+                    InfoRow(
+                        label = "CHIP",
+                        value = feature.supportedChipsets.firstOrNull() ?: feature.chipRange.displayName,
+                        color = Color(0xFF60A5FA),
+                    )
+                    InfoRow(
+                        label = "WINDOW",
+                        value = "${feature.estimatedMinutes.first}-${feature.estimatedMinutes.last} min",
+                        color = accent,
+                    )
+                    InfoRow(
+                        label = "MODE",
+                        value = when {
+                            feature.requiresInternet -> "ONLINE REQUIRED"
+                            feature.isUntethered -> "UNTETHERED"
+                            feature.requiresDfu -> "DFU REQUIRED"
+                            else -> "STANDARD"
+                        },
+                        color = when {
+                            feature.requiresInternet -> warning
+                            feature.isUntethered -> success
+                            feature.requiresDfu -> accent
+                            else -> Color.White.copy(alpha = 0.45f)
+                        },
+                    )
                     Text(
-                        text = actionLabel,
-                        color = if (isActive) success else textPrimary,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = feature.detailedDescription.ifBlank { feature.description },
+                        color = Color.White.copy(alpha = 0.32f),
+                        fontSize = 6.sp,
+                        lineHeight = 8.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            EnhancedRunButton(
+                status = status,
+                onClick = onExecute,
+            )
         }
     }
 }
 
 @Composable
-private fun CompactStatBadge(text: String, color: Color) {
+private fun SignalStatusChip(hasSignal: Boolean) {
+    val signalColor = if (hasSignal) success else textMuted
+
     Box(
         modifier = Modifier
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
-            .border(1.dp, color.copy(alpha = 0.24f), RoundedCornerShape(999.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp),
+            .clip(RoundedCornerShape(4.dp))
+            .background(if (hasSignal) success.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f))
+            .border(0.6.dp, signalColor.copy(alpha = 0.32f), RoundedCornerShape(4.dp))
+            .padding(horizontal = 5.dp, vertical = 2.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            PulsingDot(color = signalColor, isActive = hasSignal)
+            Text(
+                text = if (hasSignal) "SIGNAL+" else "NO SIGNAL",
+                color = signalColor,
+                fontSize = 6.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PulsingDot(color: Color, isActive: Boolean) {
+    if (!isActive) {
+        Box(
+            modifier = Modifier
+                .size(4.dp)
+                .background(color.copy(alpha = 0.5f), RoundedCornerShape(999.dp)),
+        )
+        return
+    }
+
+    val dotTransition = rememberInfiniteTransition(label = "signal_dot")
+    val scale by dotTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "signal_dot_scale",
+    )
+
+    Box(
+        modifier = Modifier
+            .size(4.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .background(color, RoundedCornerShape(999.dp)),
+    )
+}
+
+@Composable
+private fun CompactFeatureBadge(
+    text: String,
+    color: Color,
+    background: Color,
+    modifier: Modifier = Modifier,
+    borderColor: Color = color.copy(alpha = 0.32f),
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(background)
+            .border(0.6.dp, borderColor, RoundedCornerShape(4.dp))
+            .padding(horizontal = 5.dp, vertical = 2.dp),
     ) {
         Text(
             text = text,
             color = color,
-            fontSize = 8.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 6.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String, color: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.2f),
+            fontSize = 6.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = value,
+            color = color,
+            fontSize = 6.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun PriorityBadge(score: Int) {
+    val glowAlpha = if (score >= 90) {
+        val glowTransition = rememberInfiniteTransition(label = "priority_glow_$score")
+        val animatedAlpha by glowTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 0.8f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1200),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "priority_glow_alpha_$score",
+        )
+        animatedAlpha
+    } else {
+        0f
+    }
+    val (pillBg, pillBorder, pillText) = when {
+        score >= 90 -> Triple(
+            Color(0xFFEAB308).copy(alpha = 0.18f),
+            Color(0xFFEAB308).copy(alpha = 0.55f),
+            Color(0xFFFEF08A),
+        )
+        score >= 75 -> Triple(
+            Color(0xFF22C55E).copy(alpha = 0.18f),
+            Color(0xFF22C55E).copy(alpha = 0.45f),
+            Color(0xFF86EFAC),
+        )
+        else -> Triple(
+            Color.White.copy(alpha = 0.06f),
+            Color.White.copy(alpha = 0.12f),
+            Color.White.copy(alpha = 0.4f),
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .size(18.dp)
+            .drawBehind {
+                if (score >= 90) {
+                    drawCircle(
+                        color = Color(0xFFEAB308).copy(alpha = glowAlpha * 0.4f),
+                        radius = size.width * 0.8f,
+                        blendMode = BlendMode.Screen,
+                    )
+                }
+            }
+            .background(pillBg, RoundedCornerShape(999.dp))
+            .border(0.6.dp, pillBorder, RoundedCornerShape(999.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = score.toString(),
+            color = pillText,
+            fontSize = 6.sp,
+            fontWeight = FontWeight.Black,
+            fontFeatureSettings = "tnum",
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun EnhancedRunButton(
+    status: FeatureRunStatus,
+    onClick: () -> Unit,
+) {
+    val style = when (status) {
+        FeatureRunStatus.IDLE -> RunButtonStyle(
+            background = Color(0xFF7C3AED).copy(alpha = 0.12f),
+            border = Color(0xFF7C3AED).copy(alpha = 0.34f),
+            text = Color(0xFFC4B5FD),
+            label = "▶ RUN",
+        )
+        FeatureRunStatus.RUNNING -> RunButtonStyle(
+            background = Color(0xFF00FFFF).copy(alpha = 0.08f),
+            border = Color(0xFF00FFFF).copy(alpha = 0.44f),
+            text = Color(0xFF00FFFF),
+            label = "● RUNNING",
+        )
+        FeatureRunStatus.SUCCESS -> RunButtonStyle(
+            background = Color(0xFF39FF14).copy(alpha = 0.12f),
+            border = Color(0xFF39FF14).copy(alpha = 0.46f),
+            text = Color(0xFF39FF14),
+            label = "✓ DONE",
+        )
+        FeatureRunStatus.ERROR -> RunButtonStyle(
+            background = Color(0xFFFF007F).copy(alpha = 0.12f),
+            border = Color(0xFFFF007F).copy(alpha = 0.46f),
+            text = Color(0xFFFF007F),
+            label = "✗ FAILED",
+        )
+    }
+    val scale = if (status == FeatureRunStatus.RUNNING) {
+        val pulseTransition = rememberInfiniteTransition(label = "feature-run-pulse")
+        val animatedScale by pulseTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.03f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 650),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "feature-run-scale",
+        )
+        animatedScale
+    } else {
+        1f
+    }
+    val shape = RoundedCornerShape(8.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(style.background)
+            .border(0.5.dp, style.border, shape)
+            .clickable(
+                enabled = status == FeatureRunStatus.IDLE,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (status == FeatureRunStatus.SUCCESS) {
+            val rippleTransition = rememberInfiniteTransition(label = "feature-success-ripple")
+            val rippleScale by rippleTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 800),
+                    repeatMode = RepeatMode.Restart,
+                ),
+                label = "feature-success-ripple-scale",
+            )
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawBehind {
+                        drawCircle(
+                            color = Color(0xFF39FF14).copy(alpha = (1f - rippleScale) * 0.3f),
+                            radius = size.width * rippleScale * 0.5f,
+                        )
+                    },
+            )
+        }
+
+        Text(
+            text = style.label,
+            color = style.text,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+private fun resolveFeatureRunStatus(
+    featureId: String,
+    activeFeatureId: String?,
+    isExecuting: Boolean,
+    latestEvent: BypassEvent?,
+): FeatureRunStatus {
+    if (isExecuting && activeFeatureId == featureId) {
+        return FeatureRunStatus.RUNNING
+    }
+
+    return when (latestEvent) {
+        is BypassEvent.Completed -> if (latestEvent.featureId == featureId) FeatureRunStatus.SUCCESS else FeatureRunStatus.IDLE
+        is BypassEvent.Failed -> if (latestEvent.featureId == featureId) FeatureRunStatus.ERROR else FeatureRunStatus.IDLE
+        is BypassEvent.Started -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.StepBegin -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.StepDone -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.ProgressUpdate -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.NeedUserAction -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.RetryingNow -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        is BypassEvent.WarningIssued -> if (latestEvent.featureId == featureId) FeatureRunStatus.RUNNING else FeatureRunStatus.IDLE
+        else -> FeatureRunStatus.IDLE
+    }
+}
+
+private data class RunButtonStyle(
+    val background: Color,
+    val border: Color,
+    val text: Color,
+    val label: String,
+)
+
+private enum class FeatureRunStatus {
+    IDLE,
+    RUNNING,
+    SUCCESS,
+    ERROR,
+}
+
+@Composable
+private fun EmptyState(query: String) {
+    val floatTransition = rememberInfiniteTransition(label = "empty_state_float")
+    val floatAnim by floatTransition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "empty_state_y",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "◎",
+            fontSize = 28.sp,
+            color = Color.White.copy(alpha = 0.15f),
+            modifier = Modifier.graphicsLayer { translationY = floatAnim },
+        )
+        Text(
+            text = if (query.isBlank()) "No bypasses loaded" else "No match for \"$query\"",
+            color = Color.White.copy(alpha = 0.3f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = if (query.isBlank()) "Check your data source" else "Try a different carrier or model",
+            color = Color.White.copy(alpha = 0.15f),
+            fontSize = 9.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+private fun featurePriorityScore(feature: BypassFeature): Int {
+    var score = 48
+    if (feature.signalAfter) score += 16
+    if (feature.isUntethered) score += 14
+    if (feature.isFree) score += 10
+    if (!feature.dataLoss) score += 8
+
+    score += when (feature.riskLevel) {
+        com.deepeye.otg.data.gsmg.RiskLevel.LOW -> 14
+        com.deepeye.otg.data.gsmg.RiskLevel.MEDIUM -> 8
+        com.deepeye.otg.data.gsmg.RiskLevel.HIGH -> 4
+        com.deepeye.otg.data.gsmg.RiskLevel.EXTREME -> 0
+    }
+
+    score += when (feature.confidence) {
+        com.deepeye.otg.data.gsmg.ConfidenceLevel.CONFIRMED -> 12
+        com.deepeye.otg.data.gsmg.ConfidenceLevel.INFERRED -> 6
+        com.deepeye.otg.data.gsmg.ConfidenceLevel.HYPOTHESIS -> 0
+    }
+
+    return score.coerceIn(0, 99)
 }
 
 @Composable

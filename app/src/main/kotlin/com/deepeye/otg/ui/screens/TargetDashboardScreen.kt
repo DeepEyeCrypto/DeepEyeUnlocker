@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.ui.components.*
 import com.deepeye.otg.domain.models.*
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.usb.UsbLifecycleState
 import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.intelligence.vulndb.RiskLevel
@@ -135,12 +136,12 @@ private fun MissionStatusRow(state: UsbLifecycleState, sessionCount: Int) {
         is UsbLifecycleState.Connected -> state.protocolFamily.getAccentColor()
         is UsbLifecycleState.DeviceDetected -> state.protocolFamily.getAccentColor()
         is UsbLifecycleState.Connecting -> state.protocolFamily.getAccentColor()
-        is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+        is UsbLifecycleState.PermissionPending -> DeepEyeColors.NEON_YELLOW
         is UsbLifecycleState.PermissionDenied,
         is UsbLifecycleState.Error,
         is UsbLifecycleState.Dead,
-        is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
-        else -> StitchTokens.ConnectionIdle
+        is UsbLifecycleState.NoOtgSupport -> DeepEyeColors.NEON_PINK
+        else -> DeepEyeColors.WHITE_MED
     }
 
     Row(
@@ -151,8 +152,8 @@ private fun MissionStatusRow(state: UsbLifecycleState, sessionCount: Int) {
         Column {
             Text(
                 text = "Connected Devices",
-                style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
-                color = StitchTokens.TextSecondary
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 10.sp),
+                color = DeepEyeColors.WHITE_MED
             )
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -160,14 +161,14 @@ private fun MissionStatusRow(state: UsbLifecycleState, sessionCount: Int) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = status,
-                    style = StitchTokens.TitleLarge.copy(letterSpacing = 0.2.sp, fontSize = 18.sp),
-                    color = if (state is UsbLifecycleState.Connected || isScanning) accent else StitchTokens.TextPrimary
+                    style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(letterSpacing = 0.2.sp, fontSize = 18.sp),
+                    color = if (state is UsbLifecycleState.Connected || isScanning) accent else DeepEyeColors.WHITE_HIGH
                 )
             }
             Text(
                 text = subtitle,
-                style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 12.sp),
+                color = DeepEyeColors.WHITE_MED,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -188,24 +189,24 @@ private fun MissionHeader(sessionCount: Int, status: String) {
         Column {
             Text(
                 text = "MISSION_STATUS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED
             )
             Text(
                 text = status,
-                style = StitchTokens.TitleLarge.copy(letterSpacing = 2.sp),
-                color = if (status.startsWith("TARGET")) StitchTokens.AccentSuccess else StitchTokens.TextPrimary
+                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(letterSpacing = 2.sp),
+                color = if (status.startsWith("TARGET")) DeepEyeColors.NEON_GREEN else DeepEyeColors.WHITE_HIGH
             )
         }
         
         Badge(
-            containerColor = StitchTokens.Primary.copy(alpha = 0.1f),
-            contentColor = StitchTokens.Primary
+            containerColor = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.1f),
+            contentColor = DeepEyeColors.NEON_PURPLE
         ) {
             Text(
                 text = "$sessionCount ACTIVE SESSIONS",
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                style = StitchTokens.LabelSmall
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp)
             )
         }
     }
@@ -232,12 +233,12 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                     is UsbLifecycleState.Connected,
                     is UsbLifecycleState.DeviceDetected,
                     is UsbLifecycleState.Connecting -> protocol.getAccentColor()
-                    is UsbLifecycleState.PermissionPending -> StitchTokens.AccentWarning
+                    is UsbLifecycleState.PermissionPending -> DeepEyeColors.NEON_YELLOW
                     is UsbLifecycleState.PermissionDenied,
                     is UsbLifecycleState.Error,
                     is UsbLifecycleState.Dead,
-                    is UsbLifecycleState.NoOtgSupport -> StitchTokens.AccentError
-                    else -> StitchTokens.ConnectionIdle
+                    is UsbLifecycleState.NoOtgSupport -> DeepEyeColors.NEON_PINK
+                    else -> DeepEyeColors.WHITE_MED
                 }
                 val haloAlpha by rememberInfiniteTransition(label = "heroPulse").animateFloat(
                     initialValue = 0.35f,
@@ -266,7 +267,7 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                     tint = if (isConnected || state is UsbLifecycleState.DeviceDetected || state is UsbLifecycleState.Connecting) {
                         protocolColor
                     } else {
-                        StitchTokens.TextSecondary
+                        DeepEyeColors.WHITE_MED
                     }
                 )
             }
@@ -292,8 +293,8 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
 
                     Text(
                         text = name,
-                        style = StitchTokens.DisplayLarge.copy(fontSize = 22.sp, letterSpacing = 0.sp),
-                        color = StitchTokens.TextPrimary
+                        style = DeepEyeType.HEADER.copy(fontSize = 32.sp).copy(fontSize = 22.sp, letterSpacing = 0.sp),
+                        color = DeepEyeColors.WHITE_HIGH
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -305,15 +306,15 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                         text = listOf(state.brand, state.chipset, "SB ${state.secureBootStatus}")
                             .filter { it.isNotBlank() }
                             .joinToString(" • "),
-                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
-                        color = StitchTokens.TextSecondary,
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 12.sp),
+                        color = DeepEyeColors.WHITE_MED,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 } else if (state is UsbLifecycleState.DeviceDetected) {
                     Text(
                         text = state.brand,
-                        style = StitchTokens.TitleLarge.copy(fontSize = 20.sp),
-                        color = StitchTokens.TextPrimary
+                        style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 20.sp),
+                        color = DeepEyeColors.WHITE_HIGH
                     )
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -323,8 +324,8 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                     }
                     Text(
                         text = "${state.chipset} • waiting for permission",
-                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
-                        color = StitchTokens.TextSecondary,
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 12.sp),
+                        color = DeepEyeColors.WHITE_MED,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 } else {
@@ -338,8 +339,8 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                             is UsbLifecycleState.NoOtgSupport -> "OTG Not Supported"
                             else -> "No Device Connected"
                         },
-                        style = StitchTokens.TitleLarge.copy(letterSpacing = 0.sp, fontSize = 20.sp),
-                        color = StitchTokens.TextPrimary
+                        style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(letterSpacing = 0.sp, fontSize = 20.sp),
+                        color = DeepEyeColors.WHITE_HIGH
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -352,8 +353,8 @@ private fun TargetHeroCard(state: UsbLifecycleState, hazeState: dev.chrisbanes.h
                             is UsbLifecycleState.NoOtgSupport -> "Use a device with USB host capability"
                             else -> "Plug device → auto-detect"
                         },
-                        style = StitchTokens.BodyMedium.copy(fontSize = 12.sp),
-                        color = StitchTokens.TextSecondary
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 12.sp),
+                        color = DeepEyeColors.WHITE_MED
                     )
                 }
             }
@@ -384,7 +385,7 @@ private fun TriageActionGrid(
         is UsbLifecycleState.Connected -> state.protocolFamily.getAccentColor()
         is UsbLifecycleState.DeviceDetected -> state.protocolFamily.getAccentColor()
         is UsbLifecycleState.Connecting -> state.protocolFamily.getAccentColor()
-        else -> StitchTokens.AccentAdb
+        else -> DeepEyeColors.NEON_BLUE
     }
 
     GlassCard(
@@ -403,8 +404,8 @@ private fun TriageActionGrid(
 
             Text(
                 text = if (deviceLabel.isBlank()) "Connected Devices" else deviceLabel,
-                color = StitchTokens.TextPrimary,
-                style = StitchTokens.BodyMedium.copy(fontSize = 13.sp)
+                color = DeepEyeColors.WHITE_HIGH,
+                style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 13.sp)
             )
             Text(
                 text = if (isEnabled) {
@@ -412,8 +413,8 @@ private fun TriageActionGrid(
                 } else {
                     "Plug device → grant USB permission → actions unlock automatically."
                 },
-                color = StitchTokens.TextSecondary,
-                style = StitchTokens.BodyMedium.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
+                style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 11.sp),
                 modifier = Modifier.padding(top = 4.dp)
             )
 
@@ -424,21 +425,21 @@ private fun TriageActionGrid(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RustActionButton(
                     text = "Read Info",
-                    accentColor = StitchTokens.AccentAdb,
+                    accentColor = DeepEyeColors.NEON_BLUE,
                     enabled = isEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = { viewModel.queueOperation(DeepEyeOperation.DEEP_DEVICE_INFO) }
                 )
                 RustActionButton(
                     text = "FRP Erase",
-                    accentColor = StitchTokens.AccentError,
+                    accentColor = DeepEyeColors.NEON_PINK,
                     enabled = isEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = { viewModel.queueOperation(DeepEyeOperation.ERASE_FRP) }
                 )
                 RustActionButton(
                     text = "Safe Wipe",
-                    accentColor = StitchTokens.AccentFastboot,
+                    accentColor = DeepEyeColors.NEON_ORANGE,
                     enabled = isEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = { viewModel.queueOperation(DeepEyeOperation.SAFE_WIPE) }
@@ -450,14 +451,14 @@ private fun TriageActionGrid(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RustActionButton(
                     text = "Unlock BL",
-                    accentColor = StitchTokens.AccentBrom,
+                    accentColor = DeepEyeColors.NEON_GREEN,
                     enabled = isEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = { viewModel.queueOperation(DeepEyeOperation.UNLOCK_BOOTLOADER) }
                 )
                 RustActionButton(
                     text = "Read IMEI",
-                    accentColor = StitchTokens.AccentSamsung,
+                    accentColor = DeepEyeColors.NEON_CYAN,
                     enabled = isEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = viewModel::readImei
@@ -483,14 +484,14 @@ private fun HardwareContextCard(state: UsbLifecycleState, hazeState: dev.chrisba
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.DeveloperBoard, null, tint = StitchTokens.TextSecondary, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.DeveloperBoard, null, tint = DeepEyeColors.WHITE_MED, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text("DEVICE DETAILS", style = StitchTokens.LabelSmall.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
+                    Text("DEVICE DETAILS", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 10.sp), color = DeepEyeColors.WHITE_MED)
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = StitchTokens.TextSecondary
+                    tint = DeepEyeColors.WHITE_MED
                 )
             }
             
@@ -502,7 +503,7 @@ private fun HardwareContextCard(state: UsbLifecycleState, hazeState: dev.chrisba
                     DescriptorRow("SERIAL", state.deviceKey.take(8).uppercase())
                     DescriptorRow("PROTOCOL", state.mode.name)
                 } else {
-                    Text("No hardware context available", style = StitchTokens.BodyMedium, color = StitchTokens.TextSecondary)
+                    Text("No hardware context available", style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = DeepEyeColors.WHITE_MED)
                 }
             }
         }
@@ -515,8 +516,8 @@ private fun DescriptorRow(key: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(key, style = StitchTokens.MonoCode.copy(fontSize = 11.sp), color = StitchTokens.TextSecondary)
-        Text(value, style = StitchTokens.MonoCode.copy(fontSize = 11.sp), color = StitchTokens.TextPrimary)
+        Text(key, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_MED)
+        Text(value, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_HIGH)
     }
 }
 
@@ -540,7 +541,7 @@ private fun TerminalMiniPreview(
                     .fillMaxWidth()
                     .height(120.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(StitchTokens.Semantic.TerminalBackground.copy(alpha = 0.96f))
+                    .background(DeepEyeColors.BG_VOID.copy(alpha = 0.96f))
                     .border(1.dp, Color.White.copy(alpha = 0.04f), RoundedCornerShape(8.dp))
                     .padding(10.dp)
             ) {
@@ -549,8 +550,8 @@ private fun TerminalMiniPreview(
                         item {
                             Text(
                                 text = "> Awaiting device telemetry...",
-                                style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
-                                color = StitchTokens.TextSecondary
+                                style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp),
+                                color = DeepEyeColors.WHITE_MED
                             )
                         }
                     }
@@ -558,11 +559,11 @@ private fun TerminalMiniPreview(
                     items(logs) { log ->
                         Text(
                             text = "> ${log.message}",
-                            style = StitchTokens.MonoCode.copy(fontSize = 10.sp, letterSpacing = 0.4.sp),
+                            style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp, letterSpacing = 0.4.sp),
                             color = when (log.type) {
-                                "ERROR" -> StitchTokens.AccentError
-                                "SUCCESS" -> StitchTokens.AccentSuccess
-                                else -> StitchTokens.TextSecondary
+                                "ERROR" -> DeepEyeColors.NEON_PINK
+                                "SUCCESS" -> DeepEyeColors.NEON_GREEN
+                                else -> DeepEyeColors.WHITE_MED
                             }
                         )
                     }
@@ -576,8 +577,8 @@ private fun TerminalMiniPreview(
 private fun SectionLabel(text: String) {
     Text(
         text = text,
-        color = StitchTokens.TextSecondary,
-        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp, letterSpacing = 1.1.sp)
+        color = DeepEyeColors.WHITE_MED,
+        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp, letterSpacing = 1.1.sp)
     )
 }
 
@@ -586,14 +587,14 @@ private fun StatusPill(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(StitchTokens.SurfaceDark.copy(alpha = 0.9f))
-            .border(1.dp, StitchTokens.GlassBorder, RoundedCornerShape(999.dp))
+            .background(DeepEyeColors.BG_SURFACE.copy(alpha = 0.9f))
+            .border(1.dp, DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(999.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
-            style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
-            color = StitchTokens.TextSecondary
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
+            color = DeepEyeColors.WHITE_MED
         )
     }
 }
@@ -641,8 +642,8 @@ private fun RustActionButton(
     ) {
         Text(
             text = text,
-            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
-            color = if (enabled) accentColor else StitchTokens.TextSecondary
+            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
+            color = if (enabled) accentColor else DeepEyeColors.WHITE_MED
         )
     }
 }
@@ -684,12 +685,12 @@ private fun VulnerabilityRiskCard(
                     Column {
                         Text(
                             "VULN_INTELLIGENCE_REPORT", 
-                            style = StitchTokens.LabelSmall, 
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), 
+                            color = DeepEyeColors.WHITE_MED
                         )
                         Text(
                             "RISK_LEVEL: ${report.overallRiskLevel}", 
-                            style = StitchTokens.TitleLarge.copy(fontSize = 16.sp),
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 16.sp),
                             color = riskColor
                         )
                     }
@@ -706,7 +707,7 @@ private fun VulnerabilityRiskCard(
                         Text(
                             "⚡ CISA KEV",
                             color = Color(0xFFFF1744),
-                            style = StitchTokens.LabelSmall.copy(fontWeight = FontWeight.Bold)
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
@@ -723,7 +724,7 @@ private fun VulnerabilityRiskCard(
                 StatItem(
                     label = "EXPOSED CVEs",
                     value = report.exposedCves.size.toString(),
-                    color = if (report.exposedCves.isNotEmpty()) riskColor else StitchTokens.TextSecondary,
+                    color = if (report.exposedCves.isNotEmpty()) riskColor else DeepEyeColors.WHITE_MED,
                     modifier = Modifier.weight(1f).clickable { if(report.exposedCves.isNotEmpty()) detailsVisible = true }
                 )
                 
@@ -754,7 +755,7 @@ private fun VulnerabilityRiskCard(
                     Spacer(Modifier.width(12.dp))
                     Text(
                         "ACTIVATE COMPROMISE CHAIN", 
-                        style = StitchTokens.LabelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     )
                 }
             }
@@ -769,9 +770,9 @@ private fun CveExposuresDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = StitchTokens.BackgroundDark,
+        containerColor = DeepEyeColors.BG_VOID,
         title = {
-            Text("EXPOSED_VULNERABILITIES", style = StitchTokens.TitleLarge, color = Color.White)
+            Text("EXPOSED_VULNERABILITIES", style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp), color = Color.White)
         },
         text = {
             LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
@@ -784,13 +785,13 @@ private fun CveExposuresDialog(
                                     .background(if (cve.exploitedInWild == true) Color.Red else Color.Gray, CircleShape)
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(cve.cveId, style = StitchTokens.MonoCode, color = StitchTokens.Primary)
+                            Text(cve.cveId, style = DeepEyeType.MONO.copy(fontSize = 12.sp), color = DeepEyeColors.NEON_PURPLE)
                         }
-                        Text(cve.title, style = StitchTokens.BodyMedium, color = Color.LightGray)
+                        Text(cve.title, style = DeepEyeType.BODY.copy(fontSize = 14.sp), color = Color.LightGray)
                         Text(
                             text = "BUG_CLASS: ${cve.bugClass}",
-                            style = StitchTokens.LabelSmall.copy(fontSize = 10.sp),
-                            color = StitchTokens.TextSecondary
+                            style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 10.sp),
+                            color = DeepEyeColors.WHITE_MED
                         )
                     }
                     Divider(color = Color.White.copy(alpha = 0.1f))
@@ -799,7 +800,7 @@ private fun CveExposuresDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("CLOSE", color = StitchTokens.Primary)
+                Text("CLOSE", color = DeepEyeColors.NEON_PURPLE)
             }
         }
     )
@@ -808,7 +809,7 @@ private fun CveExposuresDialog(
 @Composable
 private fun StatItem(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Column(modifier) {
-        Text(label, style = StitchTokens.LabelSmall.copy(fontSize = 9.sp), color = StitchTokens.TextSecondary)
-        Text(value, style = StitchTokens.MonoCode.copy(fontSize = 18.sp), color = color)
+        Text(label, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp), color = DeepEyeColors.WHITE_MED)
+        Text(value, style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 18.sp), color = color)
     }
 }

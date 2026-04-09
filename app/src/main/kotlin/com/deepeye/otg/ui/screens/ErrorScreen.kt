@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import dev.chrisbanes.haze.HazeState
 
 @Composable
@@ -41,12 +42,12 @@ fun ErrorScreen(
         ) {
             // Error Icon with Glow
             Box(contentAlignment = Alignment.Center) {
-                Box(Modifier.size(100.dp).background(StitchTokens.AccentEdl.copy(0.1f), CircleShape))
+                Box(Modifier.size(100.dp).background(DeepEyeColors.NEON_PURPLE.copy(0.1f), CircleShape))
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
                     modifier = Modifier.size(56.dp),
-                    tint = StitchTokens.AccentEdl
+                    tint = DeepEyeColors.NEON_PURPLE
                 )
             }
 
@@ -54,8 +55,8 @@ fun ErrorScreen(
 
             Text(
                 "ENGINE FAULT DETECTED",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.AccentEdl,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.NEON_PURPLE,
                 letterSpacing = 2.sp
             )
 
@@ -63,8 +64,8 @@ fun ErrorScreen(
 
             Text(
                 text = message,
-                style = StitchTokens.TitleLarge.copy(lineHeight = 28.sp),
-                color = StitchTokens.TextPrimary,
+                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(lineHeight = 28.sp),
+                color = DeepEyeColors.WHITE_HIGH,
                 textAlign = TextAlign.Center
             )
 
@@ -81,8 +82,8 @@ fun ErrorScreen(
             
             Text(
                 "Frequent errors may indicate cable failure or incompatible DA.",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )

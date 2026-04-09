@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.usb.UsbLifecycleState
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
 import com.deepeye.otg.viewmodel.UsbViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
@@ -143,7 +143,7 @@ fun LabActionCard(
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp, 
-            if (holdProgress > 0f) StitchTokens.Primary.copy(alpha = holdProgress) else Color.White.copy(0.05f)
+            if (holdProgress > 0f) DeepEyeColors.NEON_PURPLE.copy(alpha = holdProgress) else Color.White.copy(0.05f)
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -258,7 +258,7 @@ fun ForensicLabHeader(session: UsbLifecycleState) {
         Column(Modifier.weight(1f)) {
             Text(
                 "MISSION HUB: LAB",
-                color = StitchTokens.Primary,
+                color = DeepEyeColors.NEON_PURPLE,
                 fontWeight = FontWeight.Black,
                 fontSize = 12.sp,
                 letterSpacing = 2.sp
@@ -336,7 +336,7 @@ fun OperationConfirmationDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (operation.effectiveRisk == RiskLevel.DANGER) Color.Red else StitchTokens.Primary
+                    containerColor = if (operation.effectiveRisk == RiskLevel.DANGER) Color.Red else DeepEyeColors.NEON_PURPLE
                 )
             ) {
                 Text("EXECUTE", fontWeight = FontWeight.Black)

@@ -25,7 +25,8 @@ import com.deepeye.otg.domain.models.DeepEyeOperation
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.components.GlassProgressBar
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import dev.chrisbanes.haze.HazeState
 
@@ -63,8 +64,8 @@ fun ExecutingScreen(
             // ── Primary Header ──────────────────────────────────────────────────
             Text(
                 "ENGINE EXECUTION ACTIVE",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.Primary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.NEON_PURPLE,
                 letterSpacing = 2.sp
             )
             
@@ -73,7 +74,7 @@ fun ExecutingScreen(
             // ── Progress Card ───────────────────────────────────────────────────
             GlassCard(
                 hazeState = hazeState,
-                accentColor = StitchTokens.Primary,
+                accentColor = DeepEyeColors.NEON_PURPLE,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -85,21 +86,21 @@ fun ExecutingScreen(
                         Column {
                             Text(
                                 text = op?.label?.uppercase() ?: "RUNNING OPERATION",
-                                style = StitchTokens.TitleLarge.copy(fontSize = 18.sp),
-                                color = StitchTokens.TextPrimary
+                                style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 18.sp),
+                                color = DeepEyeColors.WHITE_HIGH
                             )
                             Text(
                                 text = "TASK ID: ${op?.id?.uppercase() ?: "UNKNOWN"}",
-                                style = StitchTokens.LabelSmall,
-                                color = StitchTokens.TextSecondary
+                                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                                color = DeepEyeColors.WHITE_MED
                             )
                         }
                         
                         // Animated % display
                         Text(
                             text = "$progress%",
-                            style = StitchTokens.DisplayLarge.copy(fontSize = 32.sp),
-                            color = StitchTokens.Primary
+                            style = DeepEyeType.HEADER.copy(fontSize = 32.sp).copy(fontSize = 32.sp),
+                            color = DeepEyeColors.NEON_PURPLE
                         )
                     }
 
@@ -112,8 +113,8 @@ fun ExecutingScreen(
 
                     Text(
                         text = statusMsg,
-                        style = StitchTokens.MonoCode,
-                        color = StitchTokens.Primary.copy(0.8f)
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp),
+                        color = DeepEyeColors.NEON_PURPLE.copy(0.8f)
                     )
                 }
             }
@@ -123,8 +124,8 @@ fun ExecutingScreen(
             // ── Terminal Log Card ───────────────────────────────────────────────
             Text(
                 "HARDWARE BUS LOGS",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.TextSecondary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.WHITE_MED,
                 modifier = Modifier.align(Alignment.Start).padding(start = 8.dp, bottom = 8.dp)
             )
 
@@ -166,19 +167,19 @@ private fun LogLine(log: LogEntry) {
         "SUCCESS" -> Color(0xFF4ADE80)
         "ERROR" -> Color(0xFFF87171)
         "WARNING" -> Color(0xFFFBBF24)
-        else -> StitchTokens.TextMono
+        else -> DeepEyeColors.NEON_CYAN
     }
     
     Row(modifier = Modifier.padding(vertical = 4.dp)) {
         Text(
             text = "[${log.timestamp}]",
-            style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
+            style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp),
             color = Color.White.copy(alpha = 0.3f)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = log.message,
-            style = StitchTokens.MonoCode,
+            style = DeepEyeType.MONO.copy(fontSize = 12.sp),
             color = color,
             lineHeight = 18.sp
         )
@@ -205,7 +206,7 @@ private fun ProgressBarWithPulse(progress: Float) {
                 .clip(CircleShape)
                 .background(
                     Brush.horizontalGradient(
-                        colors = listOf(StitchTokens.Primary.copy(alpha), StitchTokens.Primary)
+                        colors = listOf(DeepEyeColors.NEON_PURPLE.copy(alpha), DeepEyeColors.NEON_PURPLE)
                     )
                 )
         )

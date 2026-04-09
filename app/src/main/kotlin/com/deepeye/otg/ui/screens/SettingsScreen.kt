@@ -24,7 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.BuildConfig
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable
@@ -46,7 +47,7 @@ fun SettingsScreen(viewModel: UsbViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(StitchTokens.BackgroundDark)
+            .background(DeepEyeColors.BG_VOID)
             .statusBarsPadding()
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 24.dp)
@@ -54,10 +55,10 @@ fun SettingsScreen(viewModel: UsbViewModel) {
         // Section header
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { viewModel.setNav(NavTarget.DASHBOARD) }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = StitchTokens.TextPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DeepEyeColors.WHITE_HIGH)
             }
             Spacer(Modifier.width(8.dp))
-            Text("ENGINE SETTINGS", style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp))
+            Text("ENGINE SETTINGS", style = DeepEyeType.HEADER.copy(fontSize = 32.sp).copy(fontSize = 24.sp))
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -139,19 +140,19 @@ fun SettingsScreen(viewModel: UsbViewModel) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(Modifier.size(40.dp).clip(CircleShape).background(StitchTokens.Primary.copy(0.1f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.VerifiedUser, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
+                Box(Modifier.size(40.dp).clip(CircleShape).background(DeepEyeColors.NEON_PURPLE.copy(0.1f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.VerifiedUser, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Current License Plan", style = StitchTokens.BodyMedium, fontWeight = FontWeight.Bold, color = StitchTokens.TextPrimary)
-                    Text(licenseStatus.name, style = StitchTokens.LabelSmall, color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color(0xFF4ADE80) else Color.Gray)
+                    Text("Current License Plan", style = DeepEyeType.BODY.copy(fontSize = 14.sp), fontWeight = FontWeight.Bold, color = DeepEyeColors.WHITE_HIGH)
+                    Text(licenseStatus.name, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = if (licenseStatus == com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) Color(0xFF4ADE80) else Color.Gray)
                 }
                 if (licenseStatus != com.deepeye.otg.domain.models.LicenseStatus.ACTIVE) {
                     Text(
                         "UPGRADE",
-                        style = StitchTokens.LabelSmall,
-                        color = StitchTokens.Primary,
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                        color = DeepEyeColors.NEON_PURPLE,
                         modifier = Modifier.clickable { viewModel.setActivationVisibility(true) }
                     )
                 }
@@ -160,8 +161,8 @@ fun SettingsScreen(viewModel: UsbViewModel) {
 
         Spacer(Modifier.height(40.dp))
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-            Text("DeepEye OTG Universal v${BuildConfig.VERSION_NAME}", style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
-            Text("Engine: NativeCore x64/arm64 2.5.0", style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary.copy(0.5f))
+            Text("DeepEye OTG Universal v${BuildConfig.VERSION_NAME}", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_MED)
+            Text("Engine: NativeCore x64/arm64 2.5.0", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_MED.copy(0.5f))
         }
         
         Spacer(modifier = Modifier.height(100.dp)) // Nav bar space
@@ -171,13 +172,13 @@ fun SettingsScreen(viewModel: UsbViewModel) {
 @Composable
 private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column {
-        Text(title, style = StitchTokens.LabelSmall, color = StitchTokens.Primary, modifier = Modifier.padding(start = 12.dp, bottom = 8.dp))
+        Text(title, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.NEON_PURPLE, modifier = Modifier.padding(start = 12.dp, bottom = 8.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(StitchTokens.SurfaceDark)
-                .border(1.dp, StitchTokens.GlassBorder, RoundedCornerShape(20.dp))
+                .background(DeepEyeColors.BG_SURFACE)
+                .border(1.dp, DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(20.dp))
                 .padding(16.dp)
         ) {
             content()
@@ -197,18 +198,18 @@ private fun ToggleRow(
         modifier = Modifier.fillMaxWidth().clickable { onToggle() }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, modifier = Modifier.size(24.dp), tint = StitchTokens.TextSecondary)
+        Icon(icon, null, modifier = Modifier.size(24.dp), tint = DeepEyeColors.WHITE_MED)
         Spacer(modifier = Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = StitchTokens.BodyMedium, fontWeight = FontWeight.Bold, color = StitchTokens.TextPrimary)
-            Text(subtitle, style = StitchTokens.BodyMedium.copy(fontSize = 10.sp), color = StitchTokens.TextSecondary)
+            Text(title, style = DeepEyeType.BODY.copy(fontSize = 14.sp), fontWeight = FontWeight.Bold, color = DeepEyeColors.WHITE_HIGH)
+            Text(subtitle, style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 10.sp), color = DeepEyeColors.WHITE_MED)
         }
         Switch(
             checked = checked,
             onCheckedChange = { onToggle() },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = StitchTokens.Primary,
-                checkedTrackColor = StitchTokens.Primary.copy(0.2f),
+                checkedThumbColor = DeepEyeColors.NEON_PURPLE,
+                checkedTrackColor = DeepEyeColors.NEON_PURPLE.copy(0.2f),
                 uncheckedThumbColor = Color.Gray,
                 uncheckedTrackColor = Color.Transparent,
                 uncheckedBorderColor = Color.White.copy(0.2f)

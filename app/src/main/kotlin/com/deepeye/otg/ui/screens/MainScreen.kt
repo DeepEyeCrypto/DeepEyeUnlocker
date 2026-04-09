@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.engine.AvailabilityEngine
 import com.deepeye.otg.domain.models.*
 import com.deepeye.otg.ui.components.*
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.research.CveDashboardViewModel
 import com.deepeye.otg.intelligence.vulndb.RiskLevel
 import com.deepeye.otg.intelligence.vulndb.SplStatus
@@ -50,6 +51,18 @@ import com.deepeye.otg.ui.screens.LogScreen
 import com.deepeye.otg.ui.screens.UnlockScreen
 import com.deepeye.otg.viewmodel.UsbViewModel
 
+// Mapping from SpotlightNavDestination to NavTarget
+private fun spotlightToNavTarget(dest: com.deepeye.otg.ui.components.SpotlightNavDestination): NavTarget = when (dest) {
+    com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD -> NavTarget.DASHBOARD
+    com.deepeye.otg.ui.components.SpotlightNavDestination.LAB -> NavTarget.LAB_HOME
+    com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS -> NavTarget.MISSION_HUB
+    com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL -> NavTarget.LAB_HOME
+    com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE -> NavTarget.SETTINGS
+    com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS -> NavTarget.SETTINGS
+    com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE -> NavTarget.REMOTE_SHARE
+    com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE -> NavTarget.SETTINGS
+}
+
 @Composable
 fun MainScreen(
     viewModel: UsbViewModel,
@@ -62,13 +75,39 @@ fun MainScreen(
     val currentNav by viewModel.currentNav.collectAsStateWithLifecycle()
     val perfMode by viewModel.performanceMode.collectAsStateWithLifecycle()
     val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+    
+    // Spotlight bottom bar state
+    var spotlightDestination by remember { 
+        mutableStateOf(
+            when (currentNav) {
+                NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+                NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
+                NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
+                NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
+                NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE
+                else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+            }
+        )
+    }
+    
+    // Update spotlight destination when currentNav changes externally
+    LaunchedEffect(currentNav) {
+        spotlightDestination = when (currentNav) {
+            NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+            NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE, NavTarget.FILE_EXPLORER -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
+            NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
+            NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
+            NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE
+            else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(StitchTokens.Semantic.BackgroundBase, StitchTokens.Semantic.BackgroundElevated)
+                    colors = listOf(DeepEyeColors.BG_VOID, DeepEyeColors.BG_SURFACE)
                 )
             )
     ) {
@@ -101,9 +140,31 @@ fun MainScreen(
                     hidViewModel = hidViewModel
                 )
 
-                MissionNavigationBar(
-                    viewModel = viewModel
-                )
+                // Spotlight Bottom Navigation Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF06060F))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SpotlightBottomBar(
+                        destinations = listOf(
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.LAB,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE,
+                        ),
+                        activeDestination = spotlightDestination,
+                        onDestinationSelected = { dest ->
+                            spotlightDestination = dest
+                            viewModel.setNav(spotlightToNavTarget(dest))
+                        }
+                    )
+                }
             }
         } else {
             Row(modifier = Modifier.fillMaxSize()) {
@@ -258,27 +319,27 @@ private fun DisconnectedView(hazeState: HazeState) {
             Box(
                 modifier = Modifier
                     .size(200.dp)
-                    .background(StitchTokens.Primary.copy(alpha = 0.15f * glowAlpha), CircleShape)
-                    .border(1.dp, StitchTokens.Primary.copy(alpha = 0.2f), CircleShape)
+                    .background(DeepEyeColors.NEON_PURPLE.copy(alpha = 0.15f * glowAlpha), CircleShape)
+                    .border(1.dp, DeepEyeColors.NEON_PURPLE.copy(alpha = 0.2f), CircleShape)
             )
             Icon(
                 imageVector = Icons.Default.Usb,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = StitchTokens.Primary.copy(alpha = 0.8f)
+                tint = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.8f)
             )
         }
 
         Spacer(modifier = Modifier.height(40.dp))
         Text(
             text = "Connect a device via OTG",
-            style = StitchTokens.TitleLarge,
-            color = StitchTokens.TextPrimary
+            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp),
+            color = DeepEyeColors.WHITE_HIGH
         )
         Text(
             text = "Supports MTK BROM • EDL • Fastboot • ADB • Odin",
-            style = StitchTokens.BodyMedium,
-            color = StitchTokens.TextSecondary,
+            style = DeepEyeType.BODY.copy(fontSize = 14.sp),
+            color = DeepEyeColors.WHITE_MED,
             modifier = Modifier.padding(top = 8.dp)
         )
 
@@ -292,7 +353,7 @@ private fun DisconnectedView(hazeState: HazeState) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatusChip(Icons.Default.CheckCircle, "USB Host Mode ✓", Color(0xFF4ADE80))
-            StatusChip(Icons.Default.Info, "Root Optional", StitchTokens.Primary)
+            StatusChip(Icons.Default.Info, "Root Optional", DeepEyeColors.NEON_PURPLE)
             StatusChip(Icons.Default.Cable, "OTG Cable Required", Color(0xFFFBBF24))
         }
     }
@@ -329,7 +390,7 @@ private fun ActiveSessionView(
             Box(Modifier.fillMaxWidth().height(1.dp).background(modeAccent.copy(alpha = 0.2f)))
             
             // Bottom Window: Forensic Intel & Logs
-            Box(Modifier.weight(0.45f).background(StitchTokens.BackgroundDark)) {
+            Box(Modifier.weight(0.45f).background(DeepEyeColors.BG_VOID)) {
                 ForensicWorkspace(viewModel, modeAccent)
             }
         }
@@ -372,12 +433,12 @@ private fun OperationCatalog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(10.dp).background(modeAccent, CircleShape))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(state.deviceName, style = StitchTokens.DisplayLarge.copy(fontSize = 24.sp))
+                        Text(state.deviceName, style = DeepEyeType.HEADER.copy(fontSize = 32.sp).copy(fontSize = 24.sp))
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "VID: ${state.vendorId} | PID: ${state.productId} | MODE: ${sessionState.deviceMode}",
-                        style = StitchTokens.MonoCode,
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                         color = modeAccent
                     )
                 }
@@ -389,8 +450,8 @@ private fun OperationCatalog(
             item {
                 Text(
                     text = group.title.uppercase(),
-                    style = StitchTokens.LabelSmall,
-                    color = StitchTokens.TextSecondary,
+                    style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                    color = DeepEyeColors.WHITE_MED,
                     modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
                 )
             }
@@ -428,11 +489,11 @@ private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
     
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("FORENSIC WORKSPACE", style = StitchTokens.LabelSmall, color = accent)
+            Text("FORENSIC WORKSPACE", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = accent)
             Text(
                 text = "EXPORT REPORT",
-                style = StitchTokens.LabelSmall,
-                color = StitchTokens.Primary,
+                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
+                color = DeepEyeColors.NEON_PURPLE,
                 modifier = Modifier.clickable { viewModel.generateForensicPdf() }
             )
         }
@@ -442,10 +503,10 @@ private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             GlassCard(hazeState = null, modifier = Modifier.weight(1f).height(100.dp), accentColor = accent.copy(0.2f)) {
                 Column(Modifier.padding(8.dp)) {
-                    Text("AI INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = accent)
+                    Text("AI INTEL", style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 9.sp), color = accent)
                     Text(
                         text = aiAnalysis.ifEmpty { "Waiting for session telemetry..." },
-                        style = StitchTokens.BodyMedium.copy(fontSize = 11.sp),
+                        style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 11.sp),
                         color = Color.LightGray,
                         maxLines = 4
                     )
@@ -463,23 +524,23 @@ private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
                 
                 GlassCard(hazeState = null, modifier = Modifier.width(140.dp).height(100.dp), accentColor = riskColor.copy(0.2f)) {
                     Column(Modifier.padding(8.dp)) {
-                        Text("VULN_INTEL", style = StitchTokens.MonoCode.copy(fontSize = 9.sp), color = riskColor)
+                        Text("VULN_INTEL", style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 9.sp), color = riskColor)
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = report.overallRiskLevel.name,
-                            style = StitchTokens.TitleLarge.copy(fontSize = 14.sp),
+                            style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 14.sp),
                             color = riskColor
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = "Exposures: ${report.exposedCves.size}",
-                            style = StitchTokens.BodyMedium.copy(fontSize = 10.sp),
+                            style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 10.sp),
                             color = Color.LightGray
                         )
                         if (report.exposedCves.any { it.cisaKev }) {
                             Text(
                                 text = "⚠️ CISA KEV",
-                                style = StitchTokens.LabelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                                style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
                                 color = Color(0xFFFF1744)
                             )
                         }
@@ -496,11 +557,11 @@ private fun ForensicWorkspace(viewModel: UsbViewModel, accent: Color) {
                 items(logs) { log ->
                     Text(
                         text = "> ${log.message}",
-                        style = StitchTokens.MonoCode.copy(fontSize = 10.sp),
+                        style = DeepEyeType.MONO.copy(fontSize = 12.sp).copy(fontSize = 10.sp),
                         color = when (log.type) {
                             "ERROR" -> Color(0xFFF87171)
                             "SUCCESS" -> Color(0xFF4ADE80)
-                            else -> StitchTokens.TextMono
+                            else -> DeepEyeColors.NEON_CYAN
                         }
                     )
                 }
@@ -527,18 +588,18 @@ private fun FeatureActionCard(
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text(op.label, style = StitchTokens.TitleLarge.copy(fontSize = 14.sp))
+                Text(op.label, style = DeepEyeType.SUBHEADER.copy(fontSize = 20.sp).copy(fontSize = 14.sp))
                 Text(
                     text = if (availability.enabled) op.description else availability.reason ?: "Locked",
-                    style = StitchTokens.BodyMedium.copy(fontSize = 10.sp),
-                    color = if (availability.enabled) StitchTokens.TextSecondary else Color(0xFFFCA5A5),
+                    style = DeepEyeType.BODY.copy(fontSize = 14.sp).copy(fontSize = 10.sp),
+                    color = if (availability.enabled) DeepEyeColors.WHITE_MED else Color(0xFFFCA5A5),
                     maxLines = 2
                 )
             }
             if (availability.enabled) {
                 Text(
                     text = "EXECUTE →",
-                    style = StitchTokens.LabelSmall,
+                    style = DeepEyeType.CAPTION.copy(fontSize = 11.sp),
                     color = accent,
                     modifier = Modifier.align(Alignment.End)
                 )
@@ -559,7 +620,7 @@ private fun StatusChip(icon: ImageVector, label: String, color: Color) {
     ) {
         Icon(icon, null, modifier = Modifier.size(14.dp), tint = color)
         Spacer(modifier = Modifier.width(6.dp))
-        Text(label, style = StitchTokens.LabelSmall, color = StitchTokens.TextSecondary)
+        Text(label, style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_MED)
     }
 }
 
@@ -574,11 +635,11 @@ private fun LogTailView(logs: List<com.deepeye.otg.ui.viewmodel.LogEntry>) {
             items(logs) { log ->
                 Text(
                     text = "> ${log.message}",
-                    style = StitchTokens.MonoCode,
+                    style = DeepEyeType.MONO.copy(fontSize = 12.sp),
                     color = when (log.type) {
                         "ERROR" -> Color(0xFFF87171)
                         "SUCCESS" -> Color(0xFF4ADE80)
-                        else -> StitchTokens.TextMono
+                        else -> DeepEyeColors.NEON_CYAN
                     },
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
@@ -606,12 +667,12 @@ private fun ErrorOverlay(message: String, onDismiss: () -> Unit) {
 
 // Accent lookup
 private fun accentColorForMode(mode: DeviceMode): Color = when (mode) {
-    DeviceMode.MTK_BROM -> StitchTokens.AccentBrom
-    DeviceMode.ADB -> StitchTokens.AccentAdb
-    DeviceMode.QC_EDL -> StitchTokens.AccentEdl
-    DeviceMode.FASTBOOT -> StitchTokens.AccentFastboot
-    DeviceMode.APPLE_DFU, DeviceMode.APPLE_RECOVERY, DeviceMode.APPLE_NORMAL -> StitchTokens.AccentApple
-    else -> StitchTokens.Primary
+    DeviceMode.MTK_BROM -> DeepEyeColors.NEON_GREEN
+    DeviceMode.ADB -> DeepEyeColors.NEON_BLUE
+    DeviceMode.QC_EDL -> DeepEyeColors.NEON_PURPLE
+    DeviceMode.FASTBOOT -> DeepEyeColors.NEON_ORANGE
+    DeviceMode.APPLE_DFU, DeviceMode.APPLE_RECOVERY, DeviceMode.APPLE_NORMAL -> DeepEyeColors.WHITE_HIGH
+    else -> DeepEyeColors.NEON_PURPLE
 }
 
 @Composable
@@ -624,7 +685,7 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
             Icon(
                 imageVector = Icons.Default.Cyclone,
                 contentDescription = "DeepEye",
-                tint = StitchTokens.Primary,
+                tint = DeepEyeColors.NEON_PURPLE,
                 modifier = Modifier.size(32.dp).padding(vertical = 16.dp)
             )
         },
@@ -639,19 +700,19 @@ private fun MissionNavigationRail(viewModel: UsbViewModel) {
                     Icon(
                         imageVector = hub.icon,
                         contentDescription = hub.label,
-                        tint = if (isSelected) Color.White else StitchTokens.TextSecondary
+                        tint = if (isSelected) Color.White else DeepEyeColors.WHITE_MED
                     )
                 },
                 label = {
                     Text(
                         text = hub.label.uppercase(),
-                        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp),
-                        color = if (isSelected) StitchTokens.Primary else StitchTokens.TextSecondary
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp),
+                        color = if (isSelected) DeepEyeColors.NEON_PURPLE else DeepEyeColors.WHITE_MED
                     )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationRailItemDefaults.colors(
-                    indicatorColor = StitchTokens.Primary.copy(alpha = 0.1f)
+                    indicatorColor = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.1f)
                 )
             )
         }
@@ -665,7 +726,7 @@ private fun MissionNavigationBar(viewModel: UsbViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(StitchTokens.Semantic.BackgroundElevated.copy(alpha = 0.96f)),
+            .background(DeepEyeColors.BG_SURFACE.copy(alpha = 0.96f)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         NavigationBar(
@@ -688,16 +749,16 @@ private fun MissionNavigationBar(viewModel: UsbViewModel) {
                 label = {
                     Text(
                         text = hub.label,
-                        style = StitchTokens.LabelSmall.copy(fontSize = 9.sp)
+                        style = DeepEyeType.CAPTION.copy(fontSize = 11.sp).copy(fontSize = 9.sp)
                     )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,
-                    selectedTextColor = StitchTokens.Primary,
-                    indicatorColor = StitchTokens.Primary.copy(alpha = 0.12f),
-                    unselectedIconColor = StitchTokens.TextSecondary,
-                    unselectedTextColor = StitchTokens.TextSecondary
+                    selectedTextColor = DeepEyeColors.NEON_PURPLE,
+                    indicatorColor = DeepEyeColors.NEON_PURPLE.copy(alpha = 0.12f),
+                    unselectedIconColor = DeepEyeColors.WHITE_MED,
+                    unselectedTextColor = DeepEyeColors.WHITE_MED
                 )
             )
         }

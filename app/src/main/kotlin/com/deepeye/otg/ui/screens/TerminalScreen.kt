@@ -28,7 +28,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.deepeye.otg.ui.theme.StitchTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.viewmodel.TerminalViewModel
 import com.deepeye.otg.viewmodel.UsbViewModel
@@ -59,9 +60,9 @@ fun TerminalScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Terminal, null, tint = StitchTokens.Primary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Terminal, null, tint = DeepEyeColors.NEON_PURPLE, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("FORENSIC CONSOLE", style = StitchTokens.LabelSmall, color = StitchTokens.TextPrimary)
+                        Text("FORENSIC CONSOLE", style = DeepEyeType.CAPTION.copy(fontSize = 11.sp), color = DeepEyeColors.WHITE_HIGH)
                     }
                 },
                 navigationIcon = {
@@ -70,7 +71,7 @@ fun TerminalScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = StitchTokens.BackgroundDark.copy(alpha = 0.9f)
+                    containerColor = DeepEyeColors.BG_VOID.copy(alpha = 0.9f)
                 )
             )
         },
@@ -115,7 +116,7 @@ fun TerminalScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .border(1.dp, StitchTokens.Primary.copy(alpha = 0.3f), MaterialTheme.shapes.small),
+                    .border(1.dp, DeepEyeColors.NEON_PURPLE.copy(alpha = 0.3f), MaterialTheme.shapes.small),
                 color = Color.DarkGray.copy(alpha = 0.1f),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -126,7 +127,7 @@ fun TerminalScreen(
                     Icon(
                         Icons.Default.ChevronRight,
                         null,
-                        tint = if (isProcessing) Color.Yellow else StitchTokens.Primary,
+                        tint = if (isProcessing) Color.Yellow else DeepEyeColors.NEON_PURPLE,
                         modifier = Modifier.size(20.dp)
                     )
                     
@@ -142,7 +143,7 @@ fun TerminalScreen(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 14.sp
                         ),
-                        cursorBrush = SolidColor(StitchTokens.Primary),
+                        cursorBrush = SolidColor(DeepEyeColors.NEON_PURPLE),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(
                             onDone = {
@@ -159,7 +160,7 @@ fun TerminalScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = StitchTokens.Primary
+                            color = DeepEyeColors.NEON_PURPLE
                         )
                     }
                 }
@@ -174,7 +175,7 @@ fun TerminalScreen(
 }
 
 private fun colorForLogType(type: String): Color = when (type) {
-    "COMMAND" -> StitchTokens.Primary
+    "COMMAND" -> DeepEyeColors.NEON_PURPLE
     "ERROR" -> Color(0xFFF87171)
     "SUCCESS" -> Color(0xFF4ADE80)
     "WARNING" -> Color(0xFFFACC15)
