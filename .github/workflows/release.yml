@@ -101,7 +101,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
       - name: Prepare Tauri release config
         shell: bash
