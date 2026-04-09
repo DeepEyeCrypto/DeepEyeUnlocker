@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -163,7 +164,13 @@ fun NeonDivider(color: Color = DeepEyeColors.WHITE_LOW, modifier: Modifier = Mod
 fun AnimatedCounter(count: Int, color: Color, label: String, size: TextUnit = 9.sp) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         PulsingDot(color = color, size = 5.dp, active = count > 0)
-        Text("$count", color = color, fontSize = size, fontWeight = FontWeight.Black, fontFeatureSettings = "tnum")
+        Text(
+            "$count",
+            color = color,
+            fontSize = size,
+            fontWeight = FontWeight.Black,
+            style = TextStyle(fontFeatureSettings = "tnum")
+        )
         Text(label, color = color.copy(0.5f), fontSize = size * 0.8f)
     }
 }

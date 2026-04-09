@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -383,7 +384,7 @@ private fun CompactOverviewChip(
                 color = color,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                fontFeatureSettings = "tnum",
+                style = TextStyle(fontFeatureSettings = "tnum"),
                 maxLines = 1
             )
         }
@@ -1066,7 +1067,7 @@ private fun PriorityBadge(score: Int) {
             color = pillText,
             fontSize = 6.sp,
             fontWeight = FontWeight.Black,
-            fontFeatureSettings = "tnum",
+            style = TextStyle(fontFeatureSettings = "tnum"),
             maxLines = 1
         )
     }
