@@ -1,7 +1,7 @@
 use rusb::{Context, UsbContext};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
 use std::time::Duration;
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -33,7 +33,7 @@ pub struct DetectedUsbDevice {
 
 pub fn detect_device_mode(vid: u16, pid: u16, product: &str) -> DeviceMode {
     let product_lc = product.to_lowercase();
-    
+
     // MediaTek
     if vid == 0x0E8D {
         return match pid {
@@ -52,7 +52,10 @@ pub fn detect_device_mode(vid: u16, pid: u16, product: &str) -> DeviceMode {
     if vid == 0x04E8 && (pid == 0x685D || pid == 0x6860 || pid == 0x685E) {
         return DeviceMode::SamsungOdin;
     }
-    if vid == 0x04E8 && (product_lc.contains("samsung") && (product_lc.contains("odin") || product_lc.contains("download"))) {
+    if vid == 0x04E8
+        && (product_lc.contains("samsung")
+            && (product_lc.contains("odin") || product_lc.contains("download")))
+    {
         return DeviceMode::SamsungOdin;
     }
 
@@ -123,8 +126,9 @@ pub fn start_usb_watcher(app: AppHandle) {
                                 serial = handle.read_serial_number_string_ascii(&desc).ok();
                             }
 
-                            let mode = detect_device_mode(vid, pid, product.as_deref().unwrap_or(""));
-                            
+                            let mode =
+                                detect_device_mode(vid, pid, product.as_deref().unwrap_or(""));
+
                             detected.push(DetectedUsbDevice {
                                 vid,
                                 pid,

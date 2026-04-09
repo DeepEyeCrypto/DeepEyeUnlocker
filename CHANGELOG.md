@@ -1,3 +1,11 @@
+## [2027.17.0] — 2026-04-09
+
+### 🚀 Release
+- Synchronized desktop, Android, Rust, and npm version metadata for the v2027.17.0 release pipeline.
+- Prepared the repository for tag-triggered GitHub Actions publishing.
+
+---
+
 ## [2027.16.0] — 2026-04-08
 
 ### ✨ Release Highlights

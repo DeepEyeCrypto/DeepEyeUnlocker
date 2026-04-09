@@ -102,9 +102,11 @@ pub enum DbError {
 impl DeviceDb {
     pub fn load() -> Result<Self, DbError> {
         let json = include_str!("../../../src/assets/supported_devices.json");
-        let db_file: DbFile = serde_json::from_str(json)
-            .map_err(|e| DbError::ParseError(e.to_string()))?;
-        Ok(Self { entries: db_file.devices })
+        let db_file: DbFile =
+            serde_json::from_str(json).map_err(|e| DbError::ParseError(e.to_string()))?;
+        Ok(Self {
+            entries: db_file.devices,
+        })
     }
 
     pub fn global() -> &'static DeviceDb {
@@ -133,7 +135,11 @@ impl DeviceDb {
             .iter()
             .filter_map(|e| {
                 let score = Self::score(e, &q);
-                if score > 0 { Some((e, score)) } else { None }
+                if score > 0 {
+                    Some((e, score))
+                } else {
+                    None
+                }
             })
             .collect();
         results.sort_by(|a, b| b.1.cmp(&a.1));
@@ -146,12 +152,22 @@ impl DeviceDb {
         let codename = entry.codename.to_lowercase();
         let soc = entry.soc.to_lowercase();
 
-        if model == *q || brand == *q || codename == *q { return 100; }
+        if model == *q || brand == *q || codename == *q {
+            return 100;
+        }
         let mut score: u8 = 0;
-        if model.contains(q) { score = score.saturating_add(40); }
-        if brand.contains(q) { score = score.saturating_add(30); }
-        if codename.contains(q) { score = score.saturating_add(20); }
-        if soc.contains(q) { score = score.saturating_add(10); }
+        if model.contains(q) {
+            score = score.saturating_add(40);
+        }
+        if brand.contains(q) {
+            score = score.saturating_add(30);
+        }
+        if codename.contains(q) {
+            score = score.saturating_add(20);
+        }
+        if soc.contains(q) {
+            score = score.saturating_add(10);
+        }
         score
     }
 
@@ -164,12 +180,36 @@ impl DeviceDb {
             } else {
                 75
             };
-            
+
             let (guide_name, combo, steps, warning, danger) = match entry.soc_family {
-                SocFamily::MediaTek => ("BROM Mode", "Vol+ & Vol-", vec!["Power off", "Hold Vol Up/Down", "Connect USB"], Some("Ensure battery > 30%"), true),
-                SocFamily::Qualcomm => ("EDL Mode (9008)", "Vol+ & Vol-", vec!["Power off", "Hold Vol Up/Down", "Connect USB"], Some("Check Device Manager for 9008"), true),
-                SocFamily::Samsung => ("Download Mode", "Vol- + Home + Power", vec!["Power off", "Hold combo", "Vol Up to confirm"], None, false),
-                _ => ("ADB / MTP", "N/A", vec!["Enable ADB", "Trust Computer"], Some("Requires valid authorization"), false),
+                SocFamily::MediaTek => (
+                    "BROM Mode",
+                    "Vol+ & Vol-",
+                    vec!["Power off", "Hold Vol Up/Down", "Connect USB"],
+                    Some("Ensure battery > 30%"),
+                    true,
+                ),
+                SocFamily::Qualcomm => (
+                    "EDL Mode (9008)",
+                    "Vol+ & Vol-",
+                    vec!["Power off", "Hold Vol Up/Down", "Connect USB"],
+                    Some("Check Device Manager for 9008"),
+                    true,
+                ),
+                SocFamily::Samsung => (
+                    "Download Mode",
+                    "Vol- + Home + Power",
+                    vec!["Power off", "Hold combo", "Vol Up to confirm"],
+                    None,
+                    false,
+                ),
+                _ => (
+                    "ADB / MTP",
+                    "N/A",
+                    vec!["Enable ADB", "Trust Computer"],
+                    Some("Requires valid authorization"),
+                    false,
+                ),
             };
 
             RoutingResult {
@@ -200,16 +240,16 @@ impl DeviceDb {
                 danger_zone: danger,
             }
         } else {
-            let (protocol, route_to, confidence) =
-                if m.contains("samsung") || m.contains("exynos") {
-                    (FlashProtocol::SamsungOdin, "/samsung".into(), 60u8)
-                } else if m.contains("mt") || m.contains("helio") || m.contains("dimensity") {
-                    (FlashProtocol::MtkBrom, "/mtk".into(), 55u8)
-                } else if m.contains("snapdragon") || m.contains("sm") || m.contains("sdm") {
-                    (FlashProtocol::Edl, "/edl".into(), 55u8)
-                } else {
-                    (FlashProtocol::Adb, "/adb".into(), 30u8)
-                };
+            let (protocol, route_to, confidence) = if m.contains("samsung") || m.contains("exynos")
+            {
+                (FlashProtocol::SamsungOdin, "/samsung".into(), 60u8)
+            } else if m.contains("mt") || m.contains("helio") || m.contains("dimensity") {
+                (FlashProtocol::MtkBrom, "/mtk".into(), 55u8)
+            } else if m.contains("snapdragon") || m.contains("sm") || m.contains("sdm") {
+                (FlashProtocol::Edl, "/edl".into(), 55u8)
+            } else {
+                (FlashProtocol::Adb, "/adb".into(), 30u8)
+            };
 
             let danger = matches!(protocol, FlashProtocol::MtkBrom | FlashProtocol::Edl);
 
@@ -312,7 +352,12 @@ pub async fn frp_execute_protocol(
             app.emit("frp-progress", 30).ok();
             samsung::samsung_erase_frp().map_err(|e| e.to_string())?;
         }
-        _ => return Err(format!("Protocol {:?} not yet automated via Guided FRP", protocol)),
+        _ => {
+            return Err(format!(
+                "Protocol {:?} not yet automated via Guided FRP",
+                protocol
+            ))
+        }
     }
 
     app.emit("frp-progress", 100).ok();

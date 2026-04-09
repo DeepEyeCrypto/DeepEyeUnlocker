@@ -60,7 +60,11 @@ struct ActiveLogcatStream {
 }
 
 type LogcatTaskHandle = tauri::async_runtime::JoinHandle<()>;
-type DetachedLogcatStream = (Option<CommandChild>, Option<LogcatTaskHandle>, Option<String>);
+type DetachedLogcatStream = (
+    Option<CommandChild>,
+    Option<LogcatTaskHandle>,
+    Option<String>,
+);
 
 static LOGCAT_STREAM: OnceLock<Mutex<ActiveLogcatStream>> = OnceLock::new();
 
@@ -139,7 +143,8 @@ impl LogcatFilter {
         }
 
         if let Some(keyword) = normalize_filter_text(&self.keyword) {
-            let search_space = format!("{} {} {}", entry.tag, entry.message, entry.raw).to_lowercase();
+            let search_space =
+                format!("{} {} {}", entry.tag, entry.message, entry.raw).to_lowercase();
             if !search_space.contains(&keyword.to_lowercase()) {
                 return false;
             }
@@ -256,7 +261,10 @@ fn drain_lines(buffer: &mut String, chunk: &str) -> Vec<String> {
 }
 
 fn flush_line(buffer: &mut String) -> Option<String> {
-    let normalized = buffer.trim_end_matches(&['\r', '\n'][..]).trim().to_string();
+    let normalized = buffer
+        .trim_end_matches(&['\r', '\n'][..])
+        .trim()
+        .to_string();
     buffer.clear();
 
     if normalized.is_empty() {
@@ -318,7 +326,10 @@ async fn stop_logcat_stream_internal(app: &AppHandle, message: &str) -> Result<(
     Ok(())
 }
 
-async fn dump_logcat_entries(app: &AppHandle, filter: &LogcatFilter) -> Result<Vec<LogcatEntry>, String> {
+async fn dump_logcat_entries(
+    app: &AppHandle,
+    filter: &LogcatFilter,
+) -> Result<Vec<LogcatEntry>, String> {
     let output = run_adb_output(app, build_logcat_args(&filter.serial, true)).await?;
 
     Ok(output
@@ -333,16 +344,15 @@ fn format_entry_for_export(entry: &LogcatEntry) -> String {
         return entry.raw.clone();
     }
 
-    let pid = entry.pid.map_or_else(|| "-".to_string(), |value| value.to_string());
-    let tid = entry.tid.map_or_else(|| "-".to_string(), |value| value.to_string());
+    let pid = entry
+        .pid
+        .map_or_else(|| "-".to_string(), |value| value.to_string());
+    let tid = entry
+        .tid
+        .map_or_else(|| "-".to_string(), |value| value.to_string());
     format!(
         "{} {:>6} {:>6} {} {}: {}",
-        entry.timestamp,
-        pid,
-        tid,
-        entry.level,
-        entry.tag,
-        entry.message
+        entry.timestamp, pid, tid, entry.level, entry.tag, entry.message
     )
 }
 
@@ -429,7 +439,12 @@ pub async fn start_logcat_stream(app: AppHandle, filter: LogcatFilter) -> Result
 
         if let Some(message) = error_message {
             emit_error(&task_app, message.clone());
-            emit_status(&task_app, false, active_serial, format!("Logcat stopped: {message}"));
+            emit_status(
+                &task_app,
+                false,
+                active_serial,
+                format!("Logcat stopped: {message}"),
+            );
         } else {
             emit_status(&task_app, false, active_serial, "Logcat stream stopped");
         }
@@ -486,7 +501,10 @@ pub async fn clear_logcat_buffer(app: AppHandle, serial: Option<String>) -> Resu
 }
 
 #[tauri::command]
-pub async fn export_logcat_to_file(entries: Vec<LogcatEntry>, file_path: String) -> Result<String, String> {
+pub async fn export_logcat_to_file(
+    entries: Vec<LogcatEntry>,
+    file_path: String,
+) -> Result<String, String> {
     let export_path = Path::new(&file_path);
 
     if let Some(parent) = export_path.parent() {
@@ -502,7 +520,8 @@ pub async fn export_logcat_to_file(entries: Vec<LogcatEntry>, file_path: String)
         .collect::<Vec<_>>()
         .join("\n");
 
-    fs::write(export_path, payload).map_err(|error| format!("failed to write export file: {error}"))?;
+    fs::write(export_path, payload)
+        .map_err(|error| format!("failed to write export file: {error}"))?;
     Ok(file_path)
 }
 
@@ -547,6 +566,9 @@ pub async fn adb_logcat_dump(
 }
 
 #[tauri::command]
-pub async fn adb_logcat_export(entries: Vec<LogcatEntry>, output_path: String) -> Result<String, String> {
+pub async fn adb_logcat_export(
+    entries: Vec<LogcatEntry>,
+    output_path: String,
+) -> Result<String, String> {
     export_logcat_to_file(entries, output_path).await
 }

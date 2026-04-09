@@ -295,12 +295,8 @@ async fn reboot_via_adb_or_fastboot(
     adb_mode: &str,
     fastboot_target: &str,
 ) -> Result<String, String> {
-    let adb_attempt = run_tool_command(
-        app,
-        "adb",
-        vec!["reboot".to_string(), adb_mode.to_string()],
-    )
-    .await;
+    let adb_attempt =
+        run_tool_command(app, "adb", vec!["reboot".to_string(), adb_mode.to_string()]).await;
 
     if let Ok(output) = adb_attempt {
         if output.exit_code == 0 {
@@ -338,12 +334,7 @@ async fn reboot_via_adb_or_fastboot(
 pub async fn rom_sideload_zip(app: AppHandle, zip_path: String) -> Result<FlashResult, String> {
     ensure_existing_file(&zip_path, Some("zip"))?;
 
-    let output = run_tool_command(
-        &app,
-        "adb",
-        vec!["sideload".to_string(), zip_path],
-    )
-    .await?;
+    let output = run_tool_command(&app, "adb", vec!["sideload".to_string(), zip_path]).await?;
 
     if output.exit_code != 0 {
         return Ok(FlashResult {
@@ -398,12 +389,8 @@ pub async fn fastboot_erase_partition(
 ) -> Result<FlashResult, String> {
     validate_token("partition", &partition)?;
 
-    let output = run_fastboot_action(
-        &app,
-        serial,
-        vec!["erase".to_string(), partition.clone()],
-    )
-    .await?;
+    let output =
+        run_fastboot_action(&app, serial, vec!["erase".to_string(), partition.clone()]).await?;
 
     Ok(FlashResult {
         success: output.exit_code == 0,
@@ -434,15 +421,15 @@ pub async fn rom_wipe_data(app: AppHandle, serial: Option<String>) -> Result<Str
         return Err(format_command_message("Fastboot wipe failed", &userdata));
     }
 
-    let cache = run_fastboot_action(
-        &app,
-        serial,
-        vec!["erase".to_string(), "cache".to_string()],
-    )
-    .await?;
+    let cache =
+        run_fastboot_action(&app, serial, vec!["erase".to_string(), "cache".to_string()]).await?;
 
     let combined = CommandOutput {
-        exit_code: if cache.exit_code == 0 { 0 } else { cache.exit_code },
+        exit_code: if cache.exit_code == 0 {
+            0
+        } else {
+            cache.exit_code
+        },
         stdout: [userdata.stdout, cache.stdout]
             .into_iter()
             .filter(|value| !value.trim().is_empty())
@@ -491,12 +478,8 @@ pub async fn fastboot_get_all_variables(
     serial: Option<String>,
 ) -> Result<FastbootQueryResult, String> {
     let requested_serial = serial.clone().filter(|value| !value.trim().is_empty());
-    let output = run_fastboot_action(
-        &app,
-        serial,
-        vec!["getvar".to_string(), "all".to_string()],
-    )
-    .await?;
+    let output =
+        run_fastboot_action(&app, serial, vec!["getvar".to_string(), "all".to_string()]).await?;
 
     let raw_output = output.combined_output();
     let variables = parse_fastboot_variables(&raw_output);

@@ -18,6 +18,11 @@ const cargoVersion =
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
     __CARGO_PKG_VERSION__: JSON.stringify(cargoVersion),

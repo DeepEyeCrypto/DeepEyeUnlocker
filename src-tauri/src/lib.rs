@@ -33,12 +33,13 @@ use commands::apple::{
 };
 use commands::apple_id::{ios_apple_id_state, ios_fmi_state, ios_remove_apple_id};
 use commands::bruteforce::run_pin_bruteforce;
-use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass};
+use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass, run_bypass};
 use commands::bypass_advanced::{
     ios_activation_persistence_check, ios_activation_type_check, ios_temp_activation,
     ios_untethered_bypass,
 };
 use commands::checkm8::run_checkm8;
+use commands::cloud_sync::cloud_sync_db;
 use commands::connected_devices::get_connected_devices;
 use commands::connected_devices::get_supported_brands;
 use commands::device_db::{
@@ -52,6 +53,7 @@ use commands::device_history::{
 use commands::dfu_restore::{
     ios_detect_dfu_state, ios_download_ipsw, ios_enter_dfu, ios_restore_device,
 };
+use commands::diagnostics::diag_test_handshake;
 use commands::edl::{
     edl_configure, edl_erase_partition, edl_find_device, edl_get_storage_info, edl_read_partition,
     edl_reboot, edl_sahara_handshake, edl_upload_programmer, edl_write_partition,
@@ -65,6 +67,10 @@ use commands::ios_backup::{
     ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack,
 };
 use commands::ios_bypass::ios_bypass_full;
+use commands::logcat::{
+    adb_logcat_clear, adb_logcat_dump, adb_logcat_export, adb_logcat_start, adb_logcat_stop,
+    clear_logcat_buffer, export_logcat_to_file, start_logcat_stream, stop_logcat_stream,
+};
 use commands::mdm::{ios_list_profiles, ios_mdm_state, ios_remove_mdm};
 use commands::mtk::{
     mtk_device_info, mtk_erase_partition, mtk_read_partition, mtk_run_command,
@@ -78,10 +84,16 @@ use commands::mtk_brom::{
 };
 use commands::orchestrator::{ios_inject_surgical_patch, ios_poll_orchestrator};
 use commands::ramdisk::{ios_boot_ramdisk, ios_check_pwn_state, ios_run_gaster_pwn};
+use commands::reporter::reporter_generate_audit;
 use commands::rom_flasher::{
     fastboot_erase_partition, fastboot_get_all_variables, fastboot_list_devices,
-    fastboot_reboot_target, fastboot_unlock_bootloader, rom_flash_partition,
-    rom_reboot_bootloader, rom_reboot_recovery, rom_sideload_zip, rom_wipe_data,
+    fastboot_reboot_target, fastboot_unlock_bootloader, rom_flash_partition, rom_reboot_bootloader,
+    rom_reboot_recovery, rom_sideload_zip, rom_wipe_data,
+};
+use commands::rom_manager::{
+    rom_add_to_queue, rom_build_flash_plan, rom_clear_queue, rom_detect_type, rom_get_queue,
+    rom_inspect_zip, rom_move_queue_item, rom_remove_from_queue, rom_select_file,
+    rom_toggle_queue_partition, rom_validate_package,
 };
 use commands::samsung::{
     samsung_do_erase_frp_cmd, samsung_do_handshake_cmd, samsung_find_device_cmd,
@@ -96,18 +108,6 @@ use commands::updater::{check_update, do_install_update};
 use commands::usb_detector::start_usb_watcher;
 use commands::usb_utils::usb_debug_list_devices;
 use commands::vault::ios_create_deepvault;
-use commands::diagnostics::diag_test_handshake;
-use commands::logcat::{
-    adb_logcat_clear, adb_logcat_dump, adb_logcat_export, adb_logcat_start, adb_logcat_stop,
-    clear_logcat_buffer, export_logcat_to_file, start_logcat_stream, stop_logcat_stream,
-};
-use commands::reporter::reporter_generate_audit;
-use commands::rom_manager::{
-    rom_add_to_queue, rom_build_flash_plan, rom_clear_queue, rom_detect_type, rom_get_queue,
-    rom_inspect_zip, rom_move_queue_item, rom_remove_from_queue, rom_select_file,
-    rom_toggle_queue_partition, rom_validate_package,
-};
-use commands::cloud_sync::cloud_sync_db;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -235,6 +235,7 @@ pub fn run() {
             ios_remove_mdm,
             ios_check_hello_state,
             ios_run_hello_bypass,
+            run_bypass,
             ios_create_deepvault,
             ios_check_pwn_state,
             ios_run_gaster_pwn,

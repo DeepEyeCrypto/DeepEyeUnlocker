@@ -325,7 +325,10 @@ enum RomManagerError {
     #[error("Dialog error: {0}")]
     Dialog(String),
     #[error("XML parse error in {source_file}: {message}")]
-    Xml { source_file: String, message: String },
+    Xml {
+        source_file: String,
+        message: String,
+    },
     #[error("Queue index out of range")]
     QueueIndexOutOfRange,
     #[error("Queue item not found: {0}")]
@@ -551,7 +554,8 @@ fn detect_odin_package_name(lower_name: &str) -> bool {
 
 fn inspect_archive(file_path: &Path) -> Result<InspectionContext, RomManagerError> {
     let file = File::open(file_path).map_err(|error| RomManagerError::Io(error.to_string()))?;
-    let mut archive = ZipArchive::new(file).map_err(|error| RomManagerError::Archive(error.to_string()))?;
+    let mut archive =
+        ZipArchive::new(file).map_err(|error| RomManagerError::Archive(error.to_string()))?;
     let mut context = InspectionContext::default();
 
     for index in 0..archive.len() {
@@ -592,18 +596,26 @@ fn inspect_archive(file_path: &Path) -> Result<InspectionContext, RomManagerErro
             context.checksum_files.insert(normalized_path.clone());
         }
 
-        if !is_dir && looks_like_text_manifest(&lower_path) && uncompressed_size <= MAX_TEXT_ENTRY_SIZE {
+        if !is_dir
+            && looks_like_text_manifest(&lower_path)
+            && uncompressed_size <= MAX_TEXT_ENTRY_SIZE
+        {
             let mut bytes = Vec::with_capacity(uncompressed_size as usize);
             entry
                 .read_to_end(&mut bytes)
                 .map_err(|error| RomManagerError::Io(error.to_string()))?;
-            context
-                .text_files
-                .insert(lower_path.clone(), String::from_utf8_lossy(&bytes).to_string());
+            context.text_files.insert(
+                lower_path.clone(),
+                String::from_utf8_lossy(&bytes).to_string(),
+            );
         }
 
-        context.total_compressed_size = context.total_compressed_size.saturating_add(compressed_size);
-        context.total_uncompressed_size = context.total_uncompressed_size.saturating_add(uncompressed_size);
+        context.total_compressed_size = context
+            .total_compressed_size
+            .saturating_add(compressed_size);
+        context.total_uncompressed_size = context
+            .total_uncompressed_size
+            .saturating_add(uncompressed_size);
 
         context.archive_entries.push(ArchiveEntryInfo {
             path: normalized_path.clone(),
@@ -625,10 +637,9 @@ fn inspect_archive(file_path: &Path) -> Result<InspectionContext, RomManagerErro
 }
 
 fn build_indicators(context: &InspectionContext) -> RomIndicators {
-    let has_images_dir = context
-        .collected_entries
-        .iter()
-        .any(|entry| entry.lower_path.starts_with("images/") || entry.lower_path.contains("/images/"));
+    let has_images_dir = context.collected_entries.iter().any(|entry| {
+        entry.lower_path.starts_with("images/") || entry.lower_path.contains("/images/")
+    });
     let has_flash_all_script = context.collected_entries.iter().any(|entry| {
         matches!(
             entry.lower_file_name.as_str(),
@@ -655,18 +666,17 @@ fn build_indicators(context: &InspectionContext) -> RomIndicators {
         .collected_entries
         .iter()
         .any(|entry| entry.lower_file_name == "care_map.pb");
-    let has_meta_inf = context
-        .collected_entries
-        .iter()
-        .any(|entry| entry.lower_path.starts_with("meta-inf/") || entry.lower_path.contains("/meta-inf/"));
+    let has_meta_inf = context.collected_entries.iter().any(|entry| {
+        entry.lower_path.starts_with("meta-inf/") || entry.lower_path.contains("/meta-inf/")
+    });
     let has_scatter = context
         .collected_entries
         .iter()
         .any(|entry| is_scatter_file(&entry.lower_path));
-    let has_preloader = context
-        .collected_entries
-        .iter()
-        .any(|entry| entry.lower_file_name.starts_with("preloader") || entry.lower_file_name.contains("preloader"));
+    let has_preloader = context.collected_entries.iter().any(|entry| {
+        entry.lower_file_name.starts_with("preloader")
+            || entry.lower_file_name.contains("preloader")
+    });
     let has_rawprogram_xml = context
         .collected_entries
         .iter()
@@ -722,7 +732,10 @@ fn detect_rom_type(indicators: &RomIndicators) -> RomType {
         RomType::OtaPackage
     } else if indicators.has_meta_inf {
         RomType::RecoveryZip
-    } else if indicators.has_images_dir || indicators.has_flash_all_script || indicators.has_android_info {
+    } else if indicators.has_images_dir
+        || indicators.has_flash_all_script
+        || indicators.has_android_info
+    {
         RomType::Fastboot
     } else {
         RomType::Unknown
@@ -834,8 +847,12 @@ fn hint_token_is_usable(token: &str) -> bool {
     !normalized.is_empty()
         && normalized.len() >= 3
         && normalized.len() <= 32
-        && normalized.chars().any(|character| character.is_ascii_alphabetic())
-        && !normalized.chars().all(|character| character.is_ascii_digit())
+        && normalized
+            .chars()
+            .any(|character| character.is_ascii_alphabetic())
+        && !normalized
+            .chars()
+            .all(|character| character.is_ascii_digit())
         && !hint_token_is_reserved(&normalized)
 }
 
@@ -845,7 +862,10 @@ fn push_hint(set: &mut BTreeSet<String>, value: &str) {
         return;
     }
 
-    let bounded = trimmed.chars().take(MAX_BUILD_HINT_LENGTH).collect::<String>();
+    let bounded = trimmed
+        .chars()
+        .take(MAX_BUILD_HINT_LENGTH)
+        .collect::<String>();
     if bounded.is_empty() {
         return;
     }
@@ -854,9 +874,9 @@ fn push_hint(set: &mut BTreeSet<String>, value: &str) {
 }
 
 fn add_name_tokens(input: &str, target: &mut BTreeSet<String>) {
-    for token in input
-        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_' && character != '-')
-    {
+    for token in input.split(|character: char| {
+        !character.is_ascii_alphanumeric() && character != '_' && character != '-'
+    }) {
         if hint_token_is_usable(token) {
             push_hint(target, token);
         }
@@ -865,7 +885,10 @@ fn add_name_tokens(input: &str, target: &mut BTreeSet<String>) {
 
 fn add_split_values(values: &str, target: &mut BTreeSet<String>) {
     for item in values.split(|character: char| {
-        matches!(character, '|' | ',' | ';' | ' ' | '\t' | '(' | ')' | '[' | ']')
+        matches!(
+            character,
+            '|' | ',' | ';' | ' ' | '\t' | '(' | ')' | '[' | ']'
+        )
     }) {
         if hint_token_is_usable(item) {
             push_hint(target, item);
@@ -903,7 +926,9 @@ fn parse_metadata_text(text: &str, hints: &mut HintAccumulator) {
             .unwrap_or_else(|| (String::new(), String::new()));
 
         match key.as_str() {
-            "pre-device" | "post-device" | "serialno" => add_split_values(&value, &mut hints.codename),
+            "pre-device" | "post-device" | "serialno" => {
+                add_split_values(&value, &mut hints.codename)
+            }
             "post-build" | "pre-build" | "post-build-incremental" | "ota-type" => {
                 push_hint(&mut hints.build, &format!("{key}={value}"));
             }
@@ -934,7 +959,10 @@ fn parse_build_prop(text: &str, hints: &mut HintAccumulator) {
             | "ro.build.description"
             | "ro.build.version.release"
             | "ro.build.version.security_patch" => {
-                push_hint(&mut hints.build, &format!("{}={}", key.trim(), value.trim()));
+                push_hint(
+                    &mut hints.build,
+                    &format!("{}={}", key.trim(), value.trim()),
+                );
             }
             _ => {}
         }
@@ -1124,7 +1152,10 @@ fn find_best_database_entry(
         if !entry_codename.is_empty() && codenames.iter().any(|hint| hint == &entry_codename) {
             score += 120;
         }
-        if products.iter().any(|hint| !hint.is_empty() && (hint == &entry_model || entry_model.contains(hint))) {
+        if products
+            .iter()
+            .any(|hint| !hint.is_empty() && (hint == &entry_model || entry_model.contains(hint)))
+        {
             score += 80;
         }
         if let Some(brand) = &detected_brand {
@@ -1232,7 +1263,9 @@ fn is_fastboot_candidate(entry: &CollectedEntry) -> bool {
         return false;
     }
 
-    if entry.lower_file_name.ends_with(".img") || entry.lower_file_name.contains(".img_sparsechunk.") {
+    if entry.lower_file_name.ends_with(".img")
+        || entry.lower_file_name.contains(".img_sparsechunk.")
+    {
         return true;
     }
 
@@ -1501,7 +1534,10 @@ fn parse_scatter_file(
 
         let file_name = current_file_name.take().unwrap_or_default();
         let normalized_file_name = file_name.trim();
-        if !*is_download || normalized_file_name.is_empty() || normalized_file_name.eq_ignore_ascii_case("none") {
+        if !*is_download
+            || normalized_file_name.is_empty()
+            || normalized_file_name.eq_ignore_ascii_case("none")
+        {
             *is_download = true;
             return;
         }
@@ -1510,7 +1546,9 @@ fn parse_scatter_file(
         let estimated_size = lookup_entry_size(context, &resolved_source);
         let mut notes = vec![format!("Derived from scatter file {source_file}")];
         if estimated_size.is_none() {
-            notes.push("Referenced payload is not present at the expected archive path.".to_string());
+            notes.push(
+                "Referenced payload is not present at the expected archive path.".to_string(),
+            );
         }
 
         records.push(FlashCandidateRecord {
@@ -1564,7 +1602,9 @@ fn build_scatter_entries(context: &InspectionContext) -> Vec<FlashEntry> {
             let flash_entry = candidate_to_flash_entry(context, FlashMode::BromDownload, record);
             let replace = dedup
                 .get(&partition)
-                .map(|existing| existing.estimated_size.unwrap_or(0) < flash_entry.estimated_size.unwrap_or(0))
+                .map(|existing| {
+                    existing.estimated_size.unwrap_or(0) < flash_entry.estimated_size.unwrap_or(0)
+                })
                 .unwrap_or(true);
             if replace {
                 dedup.insert(partition, flash_entry);
@@ -1624,14 +1664,19 @@ fn parse_rawprogram_xml(
                     .or_else(|| lookup_entry_size(context, &resolved_source));
                 let mut notes = vec![format!("Derived from rawprogram XML {source_file}")];
                 if estimated_size.is_none() {
-                    notes.push("Referenced payload is not present at the expected archive path.".to_string());
+                    notes.push(
+                        "Referenced payload is not present at the expected archive path."
+                            .to_string(),
+                    );
                 }
 
                 records.push(FlashCandidateRecord {
                     partition: label
                         .map(|value| value.to_ascii_lowercase())
                         .filter(|value| !value.trim().is_empty())
-                        .unwrap_or_else(|| partition_from_source_file(&file_name).to_ascii_lowercase()),
+                        .unwrap_or_else(|| {
+                            partition_from_source_file(&file_name).to_ascii_lowercase()
+                        }),
                     source_file: resolved_source,
                     estimated_size,
                     action_type: FlashActionType::ProgramRaw,
@@ -1663,14 +1708,18 @@ fn build_edl_entries(context: &InspectionContext) -> Result<Vec<FlashEntry>, Rom
                 let flash_entry = candidate_to_flash_entry(context, FlashMode::Edl, record);
                 let replace = dedup
                     .get(&partition)
-                    .map(|existing| existing.estimated_size.unwrap_or(0) < flash_entry.estimated_size.unwrap_or(0))
+                    .map(|existing| {
+                        existing.estimated_size.unwrap_or(0)
+                            < flash_entry.estimated_size.unwrap_or(0)
+                    })
                     .unwrap_or(true);
                 if replace {
                     dedup.insert(partition, flash_entry);
                 }
             }
         } else if is_patch_file(path) {
-            let partition = partition_from_source_file(&archive_file_name(path)).to_ascii_lowercase();
+            let partition =
+                partition_from_source_file(&archive_file_name(path)).to_ascii_lowercase();
             let record = FlashCandidateRecord {
                 partition,
                 source_file: path.clone(),
@@ -1727,7 +1776,9 @@ fn build_odin_entries(context: &InspectionContext) -> Vec<FlashEntry> {
             notes.push("CSC package typically applies a factory-reset style wipe.".to_string());
         }
         if partition == "home-csc-package" {
-            notes.push("HOME_CSC package is typically preferred when preserving userdata.".to_string());
+            notes.push(
+                "HOME_CSC package is typically preferred when preserving userdata.".to_string(),
+            );
         }
 
         entries.push(FlashEntry {
@@ -1897,7 +1948,10 @@ async fn build_compatibility_report(
 
     let matched_database_entry = matched_entry.map(device_match_from_entry);
 
-    let Some(connected) = android_devices.first().filter(|_| android_devices.len() == 1) else {
+    let Some(connected) = android_devices
+        .first()
+        .filter(|_| android_devices.len() == 1)
+    else {
         return CompatibilityReport {
             state: CompatibilityState::Unknown,
             score: 35,
@@ -1907,7 +1961,9 @@ async fn build_compatibility_report(
         };
     };
 
-    let connected_db_entry = DeviceDb::global().lookup_by_model(&connected.model).cloned();
+    let connected_db_entry = DeviceDb::global()
+        .lookup_by_model(&connected.model)
+        .cloned();
     if connected_db_entry.is_none() {
         reasons.push(
             "Connected device could not be resolved in Device DB, so only generic model matching was applied."
@@ -1935,38 +1991,60 @@ async fn build_compatibility_report(
     let package_brand = detected_brand.map(normalize_match_token);
 
     let score: u8;
-    let state = if let (Some(package_entry), Some(device_entry)) = (matched_entry, connected_db_entry.as_ref()) {
+    let state = if let (Some(package_entry), Some(device_entry)) =
+        (matched_entry, connected_db_entry.as_ref())
+    {
         if !package_entry.codename.is_empty()
             && !device_entry.codename.is_empty()
-            && normalize_match_token(&package_entry.codename) == normalize_match_token(&device_entry.codename)
+            && normalize_match_token(&package_entry.codename)
+                == normalize_match_token(&device_entry.codename)
         {
             score = 98;
-            reasons.push("Connected device codename matches the package codename exactly.".to_string());
+            reasons.push(
+                "Connected device codename matches the package codename exactly.".to_string(),
+            );
             CompatibilityState::Compatible
-        } else if normalize_match_token(&package_entry.model) == normalize_match_token(&device_entry.model) {
+        } else if normalize_match_token(&package_entry.model)
+            == normalize_match_token(&device_entry.model)
+        {
             score = 92;
             reasons.push("Connected device model matches the package model exactly.".to_string());
             CompatibilityState::Compatible
-        } else if normalize_match_token(&package_entry.brand) == normalize_match_token(&device_entry.brand) {
+        } else if normalize_match_token(&package_entry.brand)
+            == normalize_match_token(&device_entry.brand)
+        {
             score = 72;
-            reasons.push("Connected device brand matches the package brand, but codename/model differ.".to_string());
+            reasons.push(
+                "Connected device brand matches the package brand, but codename/model differ."
+                    .to_string(),
+            );
             CompatibilityState::LikelyCompatible
         } else {
             score = 18;
-            reasons.push("Connected device Device DB entry conflicts with the package metadata.".to_string());
+            reasons.push(
+                "Connected device Device DB entry conflicts with the package metadata.".to_string(),
+            );
             CompatibilityState::Incompatible
         }
-    } else if package_codenames.iter().any(|hint| Some(hint) == connected_codename.as_ref())
-        || package_products.iter().any(|hint| !hint.is_empty() && connected_model.contains(hint))
+    } else if package_codenames
+        .iter()
+        .any(|hint| Some(hint) == connected_codename.as_ref())
+        || package_products
+            .iter()
+            .any(|hint| !hint.is_empty() && connected_model.contains(hint))
     {
         score = 78;
         reasons.push("Connected device model hints align with the package metadata.".to_string());
         CompatibilityState::LikelyCompatible
-    } else if package_brand.as_ref().is_some() && package_brand.as_ref() == connected_brand.as_ref() {
+    } else if package_brand.as_ref().is_some() && package_brand.as_ref() == connected_brand.as_ref()
+    {
         score = 62;
         reasons.push("Connected device brand aligns with the detected package brand.".to_string());
         CompatibilityState::LikelyCompatible
-    } else if package_brand.is_some() && connected_brand.is_some() && package_brand != connected_brand {
+    } else if package_brand.is_some()
+        && connected_brand.is_some()
+        && package_brand != connected_brand
+    {
         score = 20;
         reasons.push("Connected device brand does not match the package brand.".to_string());
         CompatibilityState::Incompatible
@@ -2007,7 +2085,8 @@ async fn analyze_rom(app: &AppHandle, file_path: &Path) -> Result<RomAnalysis, R
     let rom_type = detect_rom_type(&indicators);
     let preliminary_match = find_best_database_entry(&hints, None);
     let detected_brand = detect_brand(&rom_type, &context, &hints, preliminary_match.as_ref());
-    let matched_entry = preliminary_match.or_else(|| find_best_database_entry(&hints, detected_brand.as_deref()));
+    let matched_entry =
+        preliminary_match.or_else(|| find_best_database_entry(&hints, detected_brand.as_deref()));
     let detected_platform = detect_platform(
         &rom_type,
         &indicators,
@@ -2042,7 +2121,10 @@ async fn analyze_rom(app: &AppHandle, file_path: &Path) -> Result<RomAnalysis, R
         blockers.push("No flashable entries were derived from the archive contents.".to_string());
     }
     if hints.product.is_empty() && hints.codename.is_empty() {
-        warnings.push("No explicit product or codename hints were extracted from package metadata.".to_string());
+        warnings.push(
+            "No explicit product or codename hints were extracted from package metadata."
+                .to_string(),
+        );
     }
     if context.checksum_files.is_empty() {
         warnings.push("No checksum manifest was detected inside the archive.".to_string());
@@ -2068,8 +2150,11 @@ async fn analyze_rom(app: &AppHandle, file_path: &Path) -> Result<RomAnalysis, R
         warnings.push("Package contents imply a userdata or factory-reset style wipe.".to_string());
     }
 
-    if compatibility.state == CompatibilityState::Incompatible && compatibility.connected_device.is_some() {
-        blockers.push("Connected device metadata conflicts with the imported ROM package.".to_string());
+    if compatibility.state == CompatibilityState::Incompatible
+        && compatibility.connected_device.is_some()
+    {
+        blockers
+            .push("Connected device metadata conflicts with the imported ROM package.".to_string());
     }
 
     if let Some(message) = unsupported_execution_blocker(&flash_mode) {
@@ -2080,7 +2165,8 @@ async fn analyze_rom(app: &AppHandle, file_path: &Path) -> Result<RomAnalysis, R
         || flash_entries
             .iter()
             .any(|entry| matches!(entry.risk_level, RiskLevel::High | RiskLevel::Critical));
-    let validation_status = derive_validation_status(&blockers, &flash_entries, execution_supported(&flash_mode));
+    let validation_status =
+        derive_validation_status(&blockers, &flash_entries, execution_supported(&flash_mode));
     let summary = build_summary(
         file_path,
         &context,
@@ -2249,7 +2335,10 @@ pub async fn rom_add_to_queue(app: AppHandle, file_path: String) -> Result<Queue
     refresh_queue_item_status(&mut item);
 
     let mut queue = queue_lock().map_err(|error| error.to_string())?;
-    if let Some(index) = queue.iter().position(|entry| entry.file_path == item.file_path) {
+    if let Some(index) = queue
+        .iter()
+        .position(|entry| entry.file_path == item.file_path)
+    {
         queue[index] = item.clone();
     } else {
         queue.push(item.clone());

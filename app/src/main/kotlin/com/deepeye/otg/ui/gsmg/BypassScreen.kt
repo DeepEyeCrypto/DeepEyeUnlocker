@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -37,7 +39,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +50,9 @@ import com.deepeye.otg.data.gsmg.BypassFeature
 import com.deepeye.otg.data.gsmg.DeviceState
 import com.deepeye.otg.data.gsmg.ExecutionPlan
 import com.deepeye.otg.data.gsmg.UnifiedBypassRegistry
+import com.deepeye.otg.ui.components.LiquidGlassButton
+import com.deepeye.otg.ui.components.SignalBadge
+import com.deepeye.otg.ui.components.shimmerBorder
 
 private val screenBg = Color(0xFF050505)
 private val panelBg = Color(0xFF121212)
@@ -62,6 +69,7 @@ private val textMuted = Color(0xFF707070)
 fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
     // High-assurance: lifecycle-aware state collection
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val gridColumns = if (LocalConfiguration.current.screenWidthDp >= 520) 4 else 3
     
     val activePlan = uiState.activePlan
     val errorMessage = uiState.errorMessage
@@ -83,13 +91,18 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
             .fillMaxSize()
             .background(screenBg)
     ) {
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(gridColumns),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item(key = "summary") {
+            item(
+                key = "summary",
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
                 SummaryCard(
                     uiState = uiState,
                     onSelectPlatform = viewModel::onSelectPlatform,
@@ -98,7 +111,10 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
 
             val connectedDevice = uiState.device
             if (connectedDevice != null) {
-                item(key = "device_${connectedDevice.sessionId}") {
+                item(
+                    key = "device_${connectedDevice.sessionId}",
+                    span = { GridItemSpan(maxLineSpan) },
+                ) {
                     DeviceCard(device = connectedDevice)
                 }
             }
@@ -106,7 +122,10 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
             val recommendation = uiState.recommendation
             val bestRecommendation = recommendation?.best
             if (recommendation != null && bestRecommendation != null) {
-                item(key = "recommendation_${bestRecommendation.id}") {
+                item(
+                    key = "recommendation_${bestRecommendation.id}",
+                    span = { GridItemSpan(maxLineSpan) },
+                ) {
                     RecommendationCard(
                         feature = bestRecommendation,
                         reasoning = recommendation.reasoning,
@@ -139,7 +158,10 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 }
             }
 
-            item(key = "filter") {
+            item(
+                key = "filter",
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
                 FilterCard(
                     uiState = uiState,
                     onSearch = viewModel::onSearch,
@@ -153,7 +175,10 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 )
             }
 
-            item(key = "count_header") {
+            item(
+                key = "count_header",
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
                 Text(
                     text = featureCountText,
                     color = textMuted,
@@ -161,9 +186,21 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 )
             }
 
+            item(
+                key = "compact_stats",
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                CompactOverviewStrip(
+                    freeCount = uiState.freeCount,
+                    signalCount = uiState.signalCount,
+                    untetheredCount = UnifiedBypassRegistry.isUntetheredCount,
+                    displayedCount = displayedCount,
+                )
+            }
+
             items(
                 items = uiState.displayedFeatures,
-                key = { feature -> feature.id }
+                key = { feature -> feature.id },
             ) { feature ->
                 FeatureCard(
                     feature = feature,
@@ -172,7 +209,7 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                 )
             }
 
-            item {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Spacer(modifier = Modifier.height(120.dp))
             }
         }
@@ -227,6 +264,76 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
             ) {
                 Text(successMessage, fontSize = 11.sp)
             }
+        }
+    }
+}
+
+@Composable
+private fun CompactOverviewStrip(
+    freeCount: Int,
+    signalCount: Int,
+    untetheredCount: Int,
+    displayedCount: Int,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        CompactOverviewChip(
+            modifier = Modifier.weight(1f),
+            label = "FREE",
+            value = freeCount,
+            color = success,
+        )
+        CompactOverviewChip(
+            modifier = Modifier.weight(1f),
+            label = "SIGNAL",
+            value = signalCount,
+            color = accent,
+        )
+        CompactOverviewChip(
+            modifier = Modifier.weight(1f),
+            label = "UNTETH",
+            value = untetheredCount,
+            color = warning,
+        )
+        CompactOverviewChip(
+            modifier = Modifier.weight(1f),
+            label = "LIVE",
+            value = displayedCount,
+            color = textPrimary,
+        )
+    }
+}
+
+@Composable
+private fun CompactOverviewChip(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: Int,
+    color: Color,
+) {
+    Box(
+        modifier = modifier
+            .background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+            .border(1.dp, color.copy(alpha = 0.18f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = label,
+                color = color.copy(alpha = 0.75f),
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+            )
+            Text(
+                text = value.toString(),
+                color = color,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
         }
     }
 }
@@ -462,46 +569,156 @@ private fun FeatureCard(
     isActive: Boolean,
     onExecute: () -> Unit,
 ) {
-    val currentBorder = if (isActive) success else outline
+    val currentBorder = if (isActive) accent.copy(alpha = 0.85f) else outline.copy(alpha = 0.72f)
+    val frameColors = when {
+        feature.signalAfter -> listOf(success, accent, Color(0xFF26C6DA))
+        feature.dataLoss -> listOf(danger, warning, accent)
+        else -> listOf(Color(0xFF7C4DFF), accent, success)
+    }
+    val headerLabel = feature.supportedBrands.firstOrNull()?.uppercase() ?: feature.chipRange.displayName.uppercase()
+    val actionLabel = when {
+        isActive -> "RUNNING"
+        feature.isFree -> "RUN"
+        else -> "RUN ${feature.costCredits}¢"
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, currentBorder, RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = panelBg),
+            .height(168.dp)
+            .shimmerBorder(
+                colors = frameColors,
+                borderWidth = if (isActive) 1.6.dp else 1.dp,
+                cornerRadius = 18.dp,
+            )
+            .border(1.dp, currentBorder, RoundedCornerShape(18.dp)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = panelBg.copy(alpha = 0.96f)),
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            text = headerLabel,
+                            color = textMuted,
+                            fontSize = 8.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = feature.displayName,
+                            color = textPrimary,
+                            fontSize = 11.sp,
+                            lineHeight = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    val price = if (feature.isFree) "FREE" else "${feature.costCredits}¢"
+                    Text(
+                        text = price,
+                        color = warning,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
                 Text(
-                    text = feature.displayName,
-                    color = textPrimary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f),
+                    text = feature.description,
+                    color = textSecondary,
+                    fontSize = 9.sp,
+                    lineHeight = 11.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                val price = if (feature.isFree) "FREE" else "${feature.costCredits}¢"
-                Text(price, color = warning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    CompactStatBadge(
+                        text = feature.connectionMode,
+                        color = connectionColor(feature.connectionMode),
+                    )
+                    SignalBadge(hasSignal = feature.signalAfter)
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    CompactStatBadge(
+                        text = if (feature.isUntethered) "UNTH" else feature.chipRange.displayName,
+                        color = if (feature.isUntethered) warning else textMuted,
+                    )
+                    CompactStatBadge(
+                        text = if (feature.dataLoss) "WIPE" else "SAFE",
+                        color = if (feature.dataLoss) danger else success,
+                    )
+                }
             }
 
-            Text(feature.description, color = textSecondary, fontSize = 10.sp)
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    if (isActive) {
+                        Box(
+                            modifier = Modifier
+                                .background(success, RoundedCornerShape(999.dp))
+                                .height(6.dp)
+                                .width(6.dp),
+                        )
+                    }
+                    Text(
+                        text = feature.mechanism.displayName,
+                        color = if (isActive) success else textMuted,
+                        fontSize = 8.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Badge(text = feature.connectionMode, color = connectionColor(feature.connectionMode))
-                Badge(text = feature.chipRange.displayName, color = textMuted)
-                if (feature.signalAfter) Badge(text = "SIGNAL", color = success)
-                if (feature.isUntethered) Badge(text = "UNTETHERED", color = warning)
-                if (feature.dataLoss) Badge(text = "DATA LOSS", color = danger)
-            }
-
-            Button(
-                onClick = onExecute,
-                colors = ButtonDefaults.buttonColors(containerColor = accent),
-            ) {
-                Text("RUN", fontWeight = FontWeight.Bold)
+                LiquidGlassButton(
+                    onClick = onExecute,
+                    enabled = !isActive,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp),
+                ) {
+                    Text(
+                        text = actionLabel,
+                        color = if (isActive) success else textPrimary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun CompactStatBadge(text: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
+            .border(1.dp, color.copy(alpha = 0.24f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+    ) {
+        Text(
+            text = text,
+            color = color,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

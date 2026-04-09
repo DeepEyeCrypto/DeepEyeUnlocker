@@ -980,8 +980,9 @@ select.field-input option {
 }
 
 .frp-method-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+  align-items: stretch;
 }
 
 .frp-selector,
@@ -1395,9 +1396,9 @@ select.field-input option {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* FRP method cards: single column */
+  /* FRP method cards: compact 2-column mobile grid */
   .frp-method-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* Console: fixed height range for mobile */
@@ -1558,7 +1559,7 @@ select.field-input option {
   }
 
   .frp-method-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .device-grid {
@@ -1589,7 +1590,7 @@ select.field-input option {
   }
 
   .frp-method-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .device-grid {

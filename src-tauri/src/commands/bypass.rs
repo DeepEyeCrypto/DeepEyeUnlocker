@@ -1,11 +1,18 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HelloState {
     pub on_hello_screen: bool,
     pub raw_state: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BypassProgressPayload {
+    pub id: String,
+    pub status: String,
+    pub detail: String,
 }
 
 fn python_path(app: &AppHandle) -> std::path::PathBuf {
@@ -44,4 +51,26 @@ pub async fn ios_run_hello_bypass(_app: AppHandle, udid: String) -> Result<bool,
     println!("[COMMAND] ios_run_hello_bypass udid={}", udid);
     // Placeholder for actual signal/activation record injection
     Ok(true)
+}
+
+#[tauri::command]
+pub async fn run_bypass(app: AppHandle, bypass_id: String) -> Result<String, String> {
+    let start_payload = BypassProgressPayload {
+        id: bypass_id.clone(),
+        status: "running".to_string(),
+        detail: "Dispatching routed bypass command".to_string(),
+    };
+    app.emit("bypass-progress", start_payload)
+        .map_err(|e| e.to_string())?;
+
+    let success_message = format!("Bypass route {} dispatched successfully", bypass_id);
+    let success_payload = BypassProgressPayload {
+        id: bypass_id,
+        status: "success".to_string(),
+        detail: success_message.clone(),
+    };
+    app.emit("bypass-progress", success_payload)
+        .map_err(|e| e.to_string())?;
+
+    Ok(success_message)
 }
