@@ -1,6 +1,6 @@
 package com.deepeye.otg.ui.components
 
-import androidx.compose.animation.animateIntAsState
+import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -162,7 +162,8 @@ fun NeonDivider(color: Color = DeepEyeColors.WHITE_LOW, modifier: Modifier = Mod
 // ── AnimatedCounter ───────────────────────────────────────────
 @Composable
 fun AnimatedCounter(count: Int, color: Color, label: String, size: TextUnit = 9.sp) {
-    val animated by animateIntAsState(count, tween(400, easing = FastOutSlowInEasing), label = "c")
+    val animatedFloat by animateFloatAsState(count.toFloat(), tween(400, easing = FastOutSlowInEasing), label = "c")
+    val animated = animatedFloat.toInt()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         PulsingDot(color = color, size = 5.dp, active = count > 0)
         Text("$animated", color = color, fontSize = size, fontWeight = FontWeight.Black, fontFeatureSettings = "tnum")
