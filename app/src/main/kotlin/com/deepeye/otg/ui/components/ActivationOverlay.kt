@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.data.HWIDEngine
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,8 +39,8 @@ fun ActivationOverlay(
             modifier = Modifier
                 .widthIn(max = 400.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(GlassTokens.GlassSurface)
-                .border(1.dp, GlassTokens.cardBorderColor, RoundedCornerShape(24.dp))
+                .background(DeepEyeColors.BG_SURFACE.copy(0.6f))
+                .border(1.dp, DeepEyeColors.WHITE_LOW.copy(0.4f), RoundedCornerShape(24.dp))
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

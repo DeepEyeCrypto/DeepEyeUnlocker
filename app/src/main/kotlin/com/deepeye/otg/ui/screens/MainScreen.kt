@@ -612,9 +612,9 @@ private fun FeatureActionCard(
 private fun StatusChip(icon: ImageVector, label: String, color: Color) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(StitchTokens.RadiusFull))
+            .clip(RoundedCornerShape(28.dp))
             .background(Color.White.copy(alpha = 0.05f))
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(StitchTokens.RadiusFull))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(28.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

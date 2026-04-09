@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.otg.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
 import org.json.JSONObject
 

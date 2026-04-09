@@ -34,12 +34,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.protocol.apple.iphone15.Iphone15Session
 import com.deepeye.otg.protocol.apple.iphone15.IphoneChip
 import com.deepeye.otg.protocol.apple.iphone15.ResearchChainStatus
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.DeepEyeColors
-import com.deepeye.otg.ui.theme.DeepEyeType
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 @Composable

@@ -12,17 +12,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.deepeye.otg.ui.components.UsbTypeCIcon
-import com.deepeye.otg.ui.theme.GlassTokens
+import com.deepeye.otg.ui.theme.DeepEyeColors
 
 @Composable
 fun LoadingScreen(status: String = "Initializing engine...") {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(GlassTokens.backgroundBrush)
+            .background(Brush.verticalGradient(listOf(DeepEyeColors.BG_SURFACE, DeepEyeColors.BG_VOID)))
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

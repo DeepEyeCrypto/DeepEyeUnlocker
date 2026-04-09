@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.otg.domain.models.PartitionItem
 import com.deepeye.otg.ui.components.GlassButton
 import com.deepeye.otg.ui.components.GlassCard
-import com.deepeye.otg.ui.theme.GlassTokens
 import com.deepeye.otg.viewmodel.UsbViewModel
 import dev.chrisbanes.haze.HazeState
 
