@@ -141,7 +141,7 @@ fun ImeiRepairScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .clip(RoundedCornerShape(StitchTokens.RadiusDefault))
+                        .clip(RoundedCornerShape(12.dp))
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.LockOpen, null, modifier = Modifier.size(18.dp))

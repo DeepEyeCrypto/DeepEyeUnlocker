@@ -24,7 +24,9 @@ import com.deepeye.otg.ui.theme.DeepEyeColors
 import com.deepeye.otg.ui.theme.DeepEyeType
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.toRadians
+
+// Helper function for angle conversion
+private fun Double.toRadians(): Double = this * kotlin.math.PI / 180.0
 
 // ── NeonBadge ─────────────────────────────────────────────────
 @Composable
@@ -107,9 +109,9 @@ fun GlassCard(
                 // Animated rotating border
                 val sweepCenter = Offset(
                     size.width / 2f + size.width / 2f * 
-                        cos(toRadians(sweepAngle.toDouble())).toFloat(),
+                        cos(sweepAngle.toDouble().toRadians()).toFloat(),
                     size.height / 2f + size.height / 2f * 
-                        sin(toRadians(sweepAngle.toDouble())).toFloat()
+                        sin(sweepAngle.toDouble().toRadians()).toFloat()
                 )
                 val path = Path().apply {
                     addRoundRect(RoundRect(sw/2, sw/2, size.width-sw/2, size.height-sw/2, r, r))

@@ -81,7 +81,7 @@ fun FileExplorerScreen(viewModel: UsbViewModel) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(StitchTokens.RadiusDefault))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(DeepEyeColors.BG_SURFACE.copy(0.6f))
             ) {
                 items(files) { file ->
