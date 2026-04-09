@@ -165,6 +165,6 @@ fun AnimatedCounter(count: Int, color: Color, label: String, size: TextUnit = 9.
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         PulsingDot(color = color, size = 5.dp, active = count > 0)
         Text("$animated", color = color, fontSize = size, fontWeight = FontWeight.Black, fontFeatureSettings = "tnum")
-        Text(label, color = color.copy(0.5f), fontSize = (size.value - 1).sp)
+        Text(label, color = color.copy(0.5f), fontSize = size * 0.8f)
     }
 }

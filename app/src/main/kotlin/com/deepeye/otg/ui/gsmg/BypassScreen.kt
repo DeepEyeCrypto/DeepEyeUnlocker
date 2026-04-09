@@ -377,7 +377,7 @@ private fun CompactOverviewChip(
                 color = color.copy(alpha = 0.75f),
                 fontSize = 8.sp,
                 fontWeight = FontWeight.Medium,
-                maxLines = 1,
+                maxLines = 1
             )
             Text(
                 text = animatedValue.toString(),
@@ -385,7 +385,7 @@ private fun CompactOverviewChip(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 fontFeatureSettings = "tnum",
-                maxLines = 1,
+                maxLines = 1
             )
         }
     }
@@ -1068,7 +1068,7 @@ private fun PriorityBadge(score: Int) {
             fontSize = 6.sp,
             fontWeight = FontWeight.Black,
             fontFeatureSettings = "tnum",
-            maxLines = 1,
+            maxLines = 1
         )
     }
 }
