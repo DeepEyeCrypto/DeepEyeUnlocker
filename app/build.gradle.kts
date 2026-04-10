@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
     id("dagger.hilt.android.plugin")
     id("io.gitlab.arturbosch.detekt")
@@ -14,8 +15,8 @@ android {
         applicationId = "com.deepeye.otg"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2027170
-        versionName = "2027.17.0"
+        versionCode = 2027180
+        versionName = "2027.18.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -33,16 +34,15 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(
-                System.getenv("KEYSTORE_PATH")
-                    ?: keystoreProps.getProperty("STORE_FILE", "keystore/deepeye-release.jks")
-            )
-            storePassword = System.getenv("STORE_PASSWORD")
-                ?: keystoreProps.getProperty("STORE_PASSWORD", "")
-            keyAlias = System.getenv("KEY_ALIAS")
-                ?: keystoreProps.getProperty("KEY_ALIAS", "")
-            keyPassword = System.getenv("KEY_PASSWORD")
-                ?: keystoreProps.getProperty("KEY_PASSWORD", "")
+            val propsFile = rootProject.file("local.properties")
+            val props = java.util.Properties().apply {
+                if (propsFile.exists()) load(propsFile.inputStream())
+            }
+            // Read from local.properties (DO NOT commit keystore to git)
+            storeFile = if (props.containsKey("KEYSTORE_PATH")) file(props["KEYSTORE_PATH"] as String) else null
+            storePassword = props.getProperty("KEYSTORE_PASS", "")
+            keyAlias = props.getProperty("KEY_ALIAS", "")
+            keyPassword = props.getProperty("KEY_PASS", "")
         }
     }
 
@@ -126,8 +126,21 @@ dependencies {
     implementation("app.tauri:android-sdk:1.0.0-beta.10")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // USB Serial (for BROM serial fallback)
+    implementation("com.github.mik3y:usb-serial-for-android:3.7.0")
+
+    // Lifecycle ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // ADB Lib (pure Kotlin ADB client — no daemon needed)
+    implementation("com.github.tananaev:adblib:0.6")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

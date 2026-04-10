@@ -19,14 +19,28 @@
     <!-- 0x0E8D, 0x0023 -->
     <usb-device vendor-id="3725" product-id="23" />
     <!-- 0x0E8D, 0x0017 -->
+    <usb-device vendor-id="3725" product-id="6" />
+    <!-- 0x0E8D, 0x0006 PreLoader -->
+    <usb-device vendor-id="3725" product-id="3073" />
+    <!-- 0x0E8D, 0x0C01 MTK Fastboot -->
 
     <!-- Google / AOSP ADB + Fastboot -->
     <usb-device vendor-id="6353" product-id="20199" />
     <!-- 0x18D1, 0x4EE7 -->
     <usb-device vendor-id="6353" product-id="20192" />
     <!-- 0x18D1, 0x4EE0 -->
+    <usb-device vendor-id="6353" product-id="20194" />
+    <!-- 0x18D1, 0x4EE2 ADB -->
+    <usb-device vendor-id="6353" product-id="20193" />
+    <!-- 0x18D1, 0x4EE1 ADB -->
+    <usb-device vendor-id="6353" product-id="53261" />
+    <!-- 0x18D1, 0xD00D Google Fastboot -->
     <usb-device vendor-id="6353" product-id="3330" />
     <!-- 0x18D1, 0x0D02 -->
+
+    <!-- Huawei -->
+    <usb-device vendor-id="4817" />
+    <!-- 0x12D1 -->
 
     <!-- Xiaomi -->
     <usb-device vendor-id="10007" />

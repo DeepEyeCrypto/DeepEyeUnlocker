@@ -179,6 +179,7 @@ enum class SpotlightNavDestination(
     val label: String
 ) {
     DASHBOARD(Icons.Filled.Home,        "Dashboard"),
+    DEVICE   (Icons.Filled.Smartphone,  "Device"),
     LAB      (Icons.Filled.Science,     "Lab"),
     BYPASS   (Icons.Filled.FlashOn,     "Bypass"),
     TOOL     (Icons.Filled.Build,       "Tool"),

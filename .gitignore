@@ -23,6 +23,8 @@ local.properties
 *.class
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+*.log
 
 # Purge desktop leftovers
 node_modules/
@@ -34,3 +36,4 @@ src-tauri/target/
 
 # vendored python tools — strip their git history
 src-tauri/python/**/.git
+local.properties

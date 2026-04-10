@@ -4,6 +4,7 @@ mod commands;
 mod crash_logs;
 mod cve;
 mod developer;
+mod device;
 mod diagnostics;
 mod error;
 mod frida;
@@ -42,6 +43,11 @@ use commands::checkm8::run_checkm8;
 use commands::cloud_sync::cloud_sync_db;
 use commands::connected_devices::get_connected_devices;
 use commands::connected_devices::get_supported_brands;
+use commands::device::{
+    device_auto_connect, device_check_mode, device_get_protocol_name, device_scan_all,
+    fastboot_detect, fastboot_flash_partition, fastboot_get_info, fastboot_lock_bootloader,
+    fastboot_reboot, fastboot_reboot_bootloader, fastboot_reboot_recovery,
+};
 use commands::device_db::{
     db_auto_route, db_list_all, db_lookup_model, db_lookup_vid_pid, db_search_devices,
     frp_execute_protocol,
@@ -456,7 +462,21 @@ pub fn run() {
             rom_clear_queue,
             rom_move_queue_item,
             rom_toggle_queue_partition,
-            cloud_sync_db
+            cloud_sync_db,
+            // Device Protocol Integration
+            device_scan_all,
+            device_auto_connect,
+            device_check_mode,
+            device_get_protocol_name,
+            fastboot_detect,
+            fastboot_get_info,
+            fastboot_flash_partition,
+            fastboot_erase_partition,
+            fastboot_reboot,
+            fastboot_reboot_bootloader,
+            fastboot_reboot_recovery,
+            fastboot_unlock_bootloader,
+            fastboot_lock_bootloader,
         ])
         .run(tauri::generate_context!());
 

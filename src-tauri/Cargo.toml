@@ -1,6 +1,6 @@
 [package]
 name = "deep-eye-unlocker-desktop"
-version = "2027.17.0"
+version = "2027.18.0"
 description = "DeepEye Unlocker — iOS Backup Research Tool"
 authors = ["DeepEye Research"]
 edition = "2021"
@@ -27,6 +27,12 @@ quick-xml = "0.37"
 zip = "2.1"
 sha2 = "0.10"
 hex = "0.4"
+bytes = "1"
+futures = "0.3"
+serialport = "4.5"
+tokio-serial = "5.4"
+log = "0.4"
+env_logger = "0.11"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

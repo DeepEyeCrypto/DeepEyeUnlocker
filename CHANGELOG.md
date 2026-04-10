@@ -1,3 +1,18 @@
+## [2027.18.0] — 2026-04-10
+
+### 🚀 Release Highlights
+- Added Android protocol engine delivery, Tauri UI polish, and synchronized release metadata for the v2027.18.0 rollout.
+- Updated the release workflow so Android and desktop artifacts are built together and published from the same tagged release.
+
+### ✨ Platform Updates
+- Added BROM, EDL, ADB, and Fastboot protocol coverage with the new device routing and executor surfaces.
+- Added bypass history storage/export flows, dashboard/terminal overlays, and the compact glass UI refinements across Android and Tauri.
+
+### ✅ Validation
+- `cargo check --manifest-path src-tauri/Cargo.toml`
+
+---
+
 ## [2027.17.0] — 2026-04-09
 
 ### 🚀 Release

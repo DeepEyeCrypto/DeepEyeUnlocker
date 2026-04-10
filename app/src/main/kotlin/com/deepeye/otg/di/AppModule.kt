@@ -350,6 +350,12 @@ object AppModule {
     fun provideFuzzDao(db: AppDatabase): FuzzDao {
         return db.fuzzDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideDeepEyeDatabase(@ApplicationContext context: Context): com.deepeye.otg.data.DeepEyeDatabase {
+        return com.deepeye.otg.data.DeepEyeDatabase.get(context)
+    }
 }
 
 /**

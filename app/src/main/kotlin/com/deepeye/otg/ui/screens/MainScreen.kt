@@ -54,10 +54,11 @@ import com.deepeye.otg.viewmodel.UsbViewModel
 // Mapping from SpotlightNavDestination to NavTarget
 private fun spotlightToNavTarget(dest: com.deepeye.otg.ui.components.SpotlightNavDestination): NavTarget = when (dest) {
     com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD -> NavTarget.DASHBOARD
+    com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE -> NavTarget.DEVICES
     com.deepeye.otg.ui.components.SpotlightNavDestination.LAB -> NavTarget.LAB_HOME
     com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS -> NavTarget.MISSION_HUB
     com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL -> NavTarget.LAB_HOME
-    com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE -> NavTarget.SETTINGS
+    com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE -> NavTarget.BYPASS_HISTORY
     com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS -> NavTarget.SETTINGS
     com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE -> NavTarget.REMOTE_SHARE
     com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE -> NavTarget.SETTINGS
@@ -81,6 +82,7 @@ fun MainScreen(
         mutableStateOf(
             when (currentNav) {
                 NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+                NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
                 NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
                 NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
                 NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
@@ -94,9 +96,10 @@ fun MainScreen(
     LaunchedEffect(currentNav) {
         spotlightDestination = when (currentNav) {
             NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+            NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
             NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE, NavTarget.FILE_EXPLORER -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
             NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
-            NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
+            NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN, NavTarget.BYPASS_HISTORY -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
             NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE
             else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
         }
@@ -151,6 +154,7 @@ fun MainScreen(
                     SpotlightBottomBar(
                         destinations = listOf(
                             com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD,
+                            com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE,
                             com.deepeye.otg.ui.components.SpotlightNavDestination.LAB,
                             com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS,
                             com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL,
@@ -196,6 +200,20 @@ fun MainScreen(
                 }
             }
         }
+
+        // Global overlay — shown on top of EVERYTHING
+        val deviceViewModel: com.deepeye.otg.viewmodel.DeviceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+        val flashPct by deviceViewModel.flashProgress.collectAsState()
+        val flashStep by deviceViewModel.flashStep.collectAsState()
+        
+        androidx.compose.animation.AnimatedVisibility(
+            visible = (flashPct?.percent ?: 0) in 1..99,
+            enter = fadeIn() + scaleIn(initialScale = 0.9f),
+            exit  = fadeOut() + scaleOut(targetScale = 0.9f),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            com.deepeye.otg.ui.components.FlashProgressOverlay(percent = flashPct?.percent ?: 0, step = flashStep)
+        }
     }
 }
 
@@ -225,8 +243,7 @@ private fun MissionNavContent(
                 TargetDashboardScreen(viewModel, hazeState)
             }
             NavTarget.DEVICES -> {
-                // TODO: Implement Devices screen
-                DisconnectedView(hazeState)
+                com.deepeye.otg.ui.device.DeviceDashboardScreen()
             }
             NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
             NavTarget.EDL_CONSOLE -> EdlConsole(
@@ -269,6 +286,9 @@ private fun MissionNavContent(
                 mainViewModel = viewModel,
                 onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
             )
+            NavTarget.BYPASS_HISTORY -> {
+                com.deepeye.otg.ui.history.HistoryScreen()
+            }
             NavTarget.IMEI_REPAIR -> {
                 val aiAnalysis by viewModel.aiAnalysis.collectAsStateWithLifecycle()
                 val aiIsProcessing by viewModel.aiIsProcessing.collectAsStateWithLifecycle()

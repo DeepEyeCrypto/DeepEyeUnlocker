@@ -45,5 +45,6 @@ enum class NavTarget(val hub: MissionHub) {
     SETTINGS(MissionHub.ARCHIVE),
     TERMINAL(MissionHub.ARCHIVE),
     VAULT(MissionHub.ARCHIVE),
-    LOG_SCREEN(MissionHub.ARCHIVE)
+    LOG_SCREEN(MissionHub.ARCHIVE),
+    BYPASS_HISTORY(MissionHub.ARCHIVE)
 }
