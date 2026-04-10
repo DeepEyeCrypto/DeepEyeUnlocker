@@ -4,13 +4,16 @@ import android.hardware.usb.UsbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.otg.data.BypassItem
+import com.deepeye.otg.data.BypassHistoryEntry
 import com.deepeye.otg.data.BypassRepository
+import com.deepeye.otg.data.DeepEyeDatabase
 import com.deepeye.otg.bypass.BypassExecutor
 import com.deepeye.otg.usb.UsbSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,11 +21,6 @@ sealed class BypassResult {
     data class Success(val id: String) : BypassResult()
     data class Failed(val id: String, val message: String) : BypassResult()
 }
-
-import com.deepeye.otg.data.DeepEyeDatabase
-import com.deepeye.otg.data.BypassHistoryEntry
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class BypassViewModel @Inject constructor(

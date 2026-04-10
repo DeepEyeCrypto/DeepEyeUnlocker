@@ -1,3 +1,18 @@
+## [2027.18.1] — 2026-04-10
+
+### 🔧 CI Stability Release
+- Replaced legacy Tauri global invocation access with typed Tauri v2 command calls in the desktop device layer.
+- Removed frontend CI blockers by cleaning unused TypeScript symbols and switching Fastboot image selection to the Tauri dialog path flow.
+- Fixed Android Gradle/Kotlin build blockers by enabling the Kotlin Compose plugin, modernizing Groovy assignment syntax, and correcting Kotlin/Room source issues.
+
+### ✅ Validation
+- `npm exec tsc -- --noEmit`
+- `npm run build`
+- `./gradlew :app:compileDebugKotlin --warning-mode=all`
+- `cargo check --manifest-path ./src-tauri/Cargo.toml`
+
+---
+
 ## [2027.18.0] — 2026-04-10
 
 ### 🚀 Release Highlights

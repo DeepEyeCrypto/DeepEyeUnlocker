@@ -1,6 +1,6 @@
 [package]
 name = "deep-eye-unlocker-desktop"
-version = "2027.18.0"
+version = "2027.18.1"
 description = "DeepEye Unlocker — iOS Backup Research Tool"
 authors = ["DeepEye Research"]
 edition = "2021"

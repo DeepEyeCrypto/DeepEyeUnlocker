@@ -22,18 +22,18 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace 'com.deepeye.otg'
-    compileSdk 35
-    buildToolsVersion "35.0.0"
-    ndkVersion "25.1.8937393"
+    namespace = 'com.deepeye.otg'
+    compileSdk = 35
+    buildToolsVersion = "35.0.0"
+    ndkVersion = "25.1.8937393"
 
     defaultConfig {
-        applicationId "com.deepeye.otg"
-        minSdk 26
-        targetSdk 35
-        versionCode 2027102
-        versionName "2027.1.2"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "com.deepeye.otg"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 2027181
+        versionName = "2027.18.1"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
             abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
@@ -50,8 +50,8 @@ android {
 
     externalNativeBuild {
         cmake {
-            path "src/main/jni/CMakeLists.txt"
-            version "3.22.1"
+            path = file("src/main/jni/CMakeLists.txt")
+            version = "3.22.1"
         }
     }
 
@@ -91,20 +91,20 @@ android {
 
     buildTypes {
         debug {
-            debuggable true
-            minifyEnabled false
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-DEBUG"
+            debuggable = true
+            minifyEnabled = false
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
         }
         release {
-            debuggable false
-            minifyEnabled true
+            debuggable = false
+            minifyEnabled = true
             // Resource shrink is currently stalling release packaging after R8.
             // Keep code shrinking enabled, but skip resource shrinking so
             // assembleRelease can complete deterministically.
-            shrinkResources false
+            shrinkResources = false
             def releaseSigning = signingConfigs.release
-            signingConfig releaseSigning.storeFile != null && releaseSigning.storeFile.exists()
+            signingConfig = releaseSigning.storeFile != null && releaseSigning.storeFile.exists()
                 ? releaseSigning
                 : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -112,13 +112,13 @@ android {
     }
 
     buildFeatures {
-        compose true
-        buildConfig true
+        compose = true
+        buildConfig = true
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
@@ -135,8 +135,8 @@ android {
     }
 
     lint {
-        checkReleaseBuilds false
-        abortOnError false
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 
     testOptions {

@@ -31,7 +31,7 @@ interface BypassHistoryDao {
     suspend fun clearAll()
 }
 
-@Database(entities = [BypassHistoryEntry::class], version = 1)
+@Database(entities = [BypassHistoryEntry::class], version = 1, exportSchema = false)
 abstract class DeepEyeDatabase : RoomDatabase() {
     abstract fun historyDao(): BypassHistoryDao
 

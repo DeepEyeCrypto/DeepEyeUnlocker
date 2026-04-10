@@ -9,7 +9,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   scanDevices, 
   autoConnectDevice, 
-  checkDeviceMode,
   DeviceScanResult,
   DeviceConnectionStatus,
   getDeviceModeName,
@@ -64,7 +63,7 @@ export const DeviceDetector: React.FC<DeviceDetectorProps> = ({
       const interval = setInterval(handleScan, scanInterval);
       return () => clearInterval(interval);
     }
-  }, [autoScan, scanInterval]);
+  }, [autoScan, handleScan, scanInterval]);
 
   return (
     <div className="device-detector">
@@ -114,7 +113,7 @@ interface DeviceCardProps {
 }
 
 const DeviceCard: React.FC<DeviceCardProps> = ({ device, compact = false }) => {
-  const { device: deviceInfo, protocol, message } = device;
+  const { device: deviceInfo, protocol } = device;
   
   if (!deviceInfo) return null;
 

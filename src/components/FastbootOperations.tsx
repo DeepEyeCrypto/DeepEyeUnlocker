@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
 import {
   fastbootDetect,
   fastbootGetInfo,
@@ -34,6 +35,31 @@ export const FastbootOperations: React.FC<FastbootOperationsProps> = ({ onProgre
   const log = (message: string) => {
     console.log('[Fastboot]', message);
     onProgress?.(message);
+  };
+
+  const handleSelectFlashFile = async () => {
+    setError(null);
+
+    try {
+      const selection = await open({
+        directory: false,
+        multiple: false,
+        filters: [
+          {
+            name: 'Firmware Images',
+            extensions: ['img', 'bin', 'zip']
+          }
+        ]
+      });
+
+      if (typeof selection === 'string') {
+        setSelectedFile(selection);
+        log(`Selected flash file: ${selection}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'File selection failed');
+      log('❌ File selection error: ' + err);
+    }
   };
 
   const handleDetect = async () => {
@@ -232,15 +258,19 @@ export const FastbootOperations: React.FC<FastbootOperationsProps> = ({ onProgre
           </div>
           <div className="form-group">
             <label>Image File:</label>
-            <input 
-              type="file"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setSelectedFile(file.path);
-              }}
-              disabled={isLoading}
-              accept=".img,.bin"
-            />
+            <div className="file-picker-row">
+              <button
+                type="button"
+                onClick={handleSelectFlashFile}
+                disabled={isLoading}
+                className="detect-button"
+              >
+                {selectedFile ? 'Change File' : 'Select File'}
+              </button>
+              <span className="selected-file-path" title={selectedFile ?? 'No file selected'}>
+                {selectedFile ?? 'No file selected'}
+              </span>
+            </div>
           </div>
           <button 
             onClick={handleFlash}

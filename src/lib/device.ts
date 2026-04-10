@@ -5,6 +5,8 @@
  * for MTK BROM, Qualcomm EDL, Fastboot, Samsung Odin, and more.
  */
 
+import { invoke } from '@tauri-apps/api/core';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Enums
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,32 +87,36 @@ export interface FlashProgress {
 // Device Detection API
 // ─────────────────────────────────────────────────────────────────────────────
 
+async function invokeCommand<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  return await invoke<T>(command, args);
+}
+
 /**
  * Scan all USB devices and return detected devices
  */
 export async function scanDevices(): Promise<DeviceScanResult> {
-  return await window.__TAURI__.invoke('device_scan_all');
+  return await invokeCommand<DeviceScanResult>('device_scan_all');
 }
 
 /**
  * Auto-detect and connect to the best available device
  */
 export async function autoConnectDevice(): Promise<DeviceConnectionStatus> {
-  return await window.__TAURI__.invoke('device_auto_connect');
+  return await invokeCommand<DeviceConnectionStatus>('device_auto_connect');
 }
 
 /**
  * Check if specific device mode is available
  */
 export async function checkDeviceMode(mode: string): Promise<boolean> {
-  return await window.__TAURI__.invoke('device_check_mode', { mode });
+  return await invokeCommand<boolean>('device_check_mode', { mode });
 }
 
 /**
  * Get protocol type name for display
  */
 export async function getProtocolName(protocol: string): Promise<string> {
-  return await window.__TAURI__.invoke('device_get_protocol_name', { protocol });
+  return await invokeCommand<string>('device_get_protocol_name', { protocol });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,14 +127,14 @@ export async function getProtocolName(protocol: string): Promise<string> {
  * Detect if fastboot device is connected
  */
 export async function fastbootDetect(): Promise<boolean> {
-  return await window.__TAURI__.invoke('fastboot_detect');
+  return await invokeCommand<boolean>('fastboot_detect');
 }
 
 /**
  * Get fastboot device information
  */
 export async function fastbootGetInfo(): Promise<FastbootDeviceInfo> {
-  return await window.__TAURI__.invoke('fastboot_get_info');
+  return await invokeCommand<FastbootDeviceInfo>('fastboot_get_info');
 }
 
 /**
@@ -138,7 +144,7 @@ export async function fastbootFlashPartition(
   partition: string,
   filePath: string
 ): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_flash_partition', {
+  return await invokeCommand<void>('fastboot_flash_partition', {
     partition,
     filePath
   });
@@ -148,42 +154,42 @@ export async function fastbootFlashPartition(
  * Erase partition
  */
 export async function fastbootErasePartition(partition: string): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_erase_partition', { partition });
+  return await invokeCommand<void>('fastboot_erase_partition', { partition });
 }
 
 /**
  * Reboot device
  */
 export async function fastbootReboot(): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_reboot');
+  return await invokeCommand<void>('fastboot_reboot');
 }
 
 /**
  * Reboot to bootloader
  */
 export async function fastbootRebootBootloader(): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_reboot_bootloader');
+  return await invokeCommand<void>('fastboot_reboot_bootloader');
 }
 
 /**
  * Reboot to recovery
  */
 export async function fastbootRebootRecovery(): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_reboot_recovery');
+  return await invokeCommand<void>('fastboot_reboot_recovery');
 }
 
 /**
  * Unlock bootloader
  */
 export async function fastbootUnlockBootloader(): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_unlock_bootloader');
+  return await invokeCommand<void>('fastboot_unlock_bootloader');
 }
 
 /**
  * Lock bootloader
  */
 export async function fastbootLockBootloader(): Promise<void> {
-  return await window.__TAURI__.invoke('fastboot_lock_bootloader');
+  return await invokeCommand<void>('fastboot_lock_bootloader');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

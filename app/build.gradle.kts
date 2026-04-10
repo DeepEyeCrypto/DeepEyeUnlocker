@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
     id("dagger.hilt.android.plugin")
@@ -15,8 +16,8 @@ android {
         applicationId = "com.deepeye.otg"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2027180
-        versionName = "2027.18.0"
+        versionCode = 2027181
+        versionName = "2027.18.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -70,9 +71,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
