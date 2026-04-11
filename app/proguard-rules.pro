@@ -27,9 +27,34 @@
 -keep class com.tananaev.adblib.** { *; }
 
 
-# 4. Hilt/Dagger
+# 4. Hilt/Dagger - COMPLETE OFFICIAL RULES
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep class * extends dagger.hilt.android.internal.lifecycle.HiltViewModelGenerator { *; }
+
+# Keep all Hilt generated classes
+-keep class **HiltComponents.java { *; }
+-keep class **HiltModules.java { *; }
+-keep class **HiltModules$BindsModule { *; }
+-keep class **HiltModules$KeyModule { *; }
+-keep class **_HiltComponents { *; }
+-keep class **_HiltModules { *; }
+
+# Keep ViewModel constructors with @Inject
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    @javax.inject.Inject <init>(...);
+}
+
+# Keep Hilt internal lifecycle classes
+-keep class dagger.hilt.android.internal.lifecycle.** { *; }
+-keep class dagger.hilt.android.internal.managers.** { *; }
+-keep class dagger.hilt.internal.** { *; }
+
+# Keep generated factories and component implementations
 -keep class * implements dagger.hilt.internal.GeneratedComponent { *; }
+-keep class * implements dagger.hilt.internal.GeneratedComponentManager { *; }
 -keep class * implements dagger.hilt.internal.ComponentEntryPoint { *; }
+-keep class * implements dagger.hilt.internal.TestComponentEntryPoint { *; }
 
 # 5. USB/Hardware
 -keep class android.hardware.usb.** { *; }

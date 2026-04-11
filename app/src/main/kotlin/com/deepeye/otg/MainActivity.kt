@@ -20,9 +20,11 @@ import com.deepeye.otg.ui.DeepEyeApp
 import com.deepeye.otg.viewmodel.DeviceViewModel
 import com.deepeye.otg.viewmodel.UsbViewModel
 import com.deepeye.otg.viewmodel.UiEvent
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val usbManager by lazy { getSystemService(USB_SERVICE) as UsbManager }

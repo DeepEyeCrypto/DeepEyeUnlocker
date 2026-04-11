@@ -98,10 +98,7 @@ android {
         }
         release {
             debuggable = false
-            minifyEnabled = true
-            // Resource shrink is currently stalling release packaging after R8.
-            // Keep code shrinking enabled, but skip resource shrinking so
-            // assembleRelease can complete deterministically.
+            minifyEnabled = false  // Temporarily disabled to fix Hilt DI crash
             shrinkResources = false
             def releaseSigning = signingConfigs.release
             signingConfig = releaseSigning.storeFile != null && releaseSigning.storeFile.exists()
