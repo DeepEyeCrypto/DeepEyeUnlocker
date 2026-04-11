@@ -10,12 +10,14 @@ import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.deepeye.otg.BuildConfig
 import com.deepeye.otg.ui.DeepEyeApp
 import com.deepeye.otg.viewmodel.DeviceViewModel
 import com.deepeye.otg.viewmodel.UsbViewModel
@@ -89,6 +91,22 @@ class MainActivity : ComponentActivity() {
     companion object { const val ACTION_USB_PERMISSION = "com.deepeye.otg.USB_PERMISSION" }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Enable StrictMode in debug builds to catch UI thread violations
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+        }
+        
         super.onCreate(savedInstanceState)
         
         // Register USB receiver
