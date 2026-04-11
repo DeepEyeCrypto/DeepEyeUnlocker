@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.deepeye.otg.ui.screens.*
 import com.deepeye.otg.usb.SessionState
@@ -21,21 +22,29 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import com.deepeye.otg.RemoteShareActivity
 import com.deepeye.otg.viewmodel.UsbViewModel
+import com.deepeye.otg.ui.theme.DeepEyeTheme
+import com.deepeye.otg.ui.theme.ThemeMode
+import com.deepeye.otg.ui.settings.ThemePreferences
 
 @Composable
 fun DeepEyeApp(viewModel: UsbViewModel) {
     val state by viewModel.queueState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    
+    // Read theme preference
+    val themeMode by ThemePreferences.getThemeModeFlow(context).collectAsState(initial = ThemeMode.SYSTEM)
 
-    // Base layer: Main UI is ALWAYS visible
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-    ) {
-        MainScreen(
-            viewModel = viewModel
-        )
+    // Wrap everything in DeepEyeTheme with dynamic theme mode
+    DeepEyeTheme(themeMode = themeMode) {
+        // Base layer: Main UI is ALWAYS visible
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+        ) {
+            MainScreen(
+                viewModel = viewModel
+            )
 
         // Overlay Layer for Active Operations/States
         AnimatedContent(
@@ -111,4 +120,5 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
             }
         }
     }
+    } // End DeepEyeTheme
 }
