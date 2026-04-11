@@ -31,8 +31,9 @@ fun DeepEyeApp(viewModel: UsbViewModel) {
     val state by viewModel.queueState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     
-    // Read theme preference
-    val themeMode by ThemePreferences.getThemeModeFlow(context).collectAsState(initial = ThemeMode.SYSTEM)
+    // TEMPORARY: Force LIGHT mode for testing - change back to ThemeMode.SYSTEM after testing
+    // TODO: Revert to: val themeMode by ThemePreferences.getThemeModeFlow(context).collectAsState(initial = ThemeMode.SYSTEM)
+    val themeMode = ThemeMode.LIGHT // ← Testing Light Mode
 
     // Wrap everything in DeepEyeTheme with dynamic theme mode
     DeepEyeTheme(themeMode = themeMode) {

@@ -59,7 +59,6 @@ private fun spotlightToNavTarget(dest: com.deepeye.otg.ui.components.SpotlightNa
     com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS -> NavTarget.MISSION_HUB
     com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL -> NavTarget.LAB_HOME
     com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE -> NavTarget.BYPASS_HISTORY
-    com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS -> NavTarget.SETTINGS
     com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE -> NavTarget.REMOTE_SHARE
     com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE -> NavTarget.SETTINGS
 }
@@ -85,7 +84,7 @@ fun MainScreen(
                 NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
                 NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
                 NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
-                NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
+                NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE
                 NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE
                 else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
             }
@@ -99,7 +98,7 @@ fun MainScreen(
             NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
             NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE, NavTarget.FILE_EXPLORER -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
             NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
-            NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN, NavTarget.BYPASS_HISTORY -> com.deepeye.otg.ui.components.SpotlightNavDestination.SETTINGS
+            NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN, NavTarget.BYPASS_HISTORY -> com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE
             NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE
             else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
         }
@@ -803,5 +802,5 @@ private fun defaultTargetForHub(hub: MissionHub): NavTarget = when (hub) {
     MissionHub.LAB -> NavTarget.LAB_HOME
     MissionHub.BYPASS -> NavTarget.MISSION_HUB
     MissionHub.INTEL -> NavTarget.CVE_INTELLIGENCE
-    MissionHub.ARCHIVE -> NavTarget.SETTINGS
+    MissionHub.ARCHIVE -> NavTarget.SETTINGS // Settings/Profile
 }
