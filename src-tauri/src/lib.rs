@@ -17,6 +17,7 @@ mod shsh;
 mod sideloader;
 mod ssh_tunnel;
 mod toolbox;
+mod usb;
 mod vault;
 
 use commands::activation::{
@@ -34,7 +35,7 @@ use commands::apple::{
 };
 use commands::apple_id::{ios_apple_id_state, ios_fmi_state, ios_remove_apple_id};
 use commands::bruteforce::run_pin_bruteforce;
-use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass, run_bypass};
+use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass, run_bypass, run_otg_bypass};
 use commands::bypass_advanced::{
     ios_activation_persistence_check, ios_activation_type_check, ios_temp_activation,
     ios_untethered_bypass,
@@ -242,6 +243,7 @@ pub fn run() {
             ios_check_hello_state,
             ios_run_hello_bypass,
             run_bypass,
+            run_otg_bypass,
             ios_create_deepvault,
             ios_check_pwn_state,
             ios_run_gaster_pwn,

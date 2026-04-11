@@ -43,3 +43,14 @@
 -dontwarn org.checkerframework.**
 -dontwarn afu.org.checkerframework.**
 -dontwarn com.google.crypto.tink.**
+
+# Hilt complete rules
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keep class kotlinx.coroutines.** { *; }
+-keepattributes *Annotation*
+-dontwarn kotlinx.**
+-dontwarn dagger.**

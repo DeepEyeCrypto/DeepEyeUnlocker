@@ -74,3 +74,40 @@ pub async fn run_bypass(app: AppHandle, bypass_id: String) -> Result<String, Str
 
     Ok(success_message)
 }
+
+#[tauri::command]
+pub async fn run_otg_bypass(carrier: String) -> Result<bool, String> {
+    println!("[OTG] Running bypass for: {}", carrier);
+
+    match crate::usb::device::list_usb_devices() {
+        Ok(devices) if !devices.is_empty() => {
+            let dev = &devices[0];
+            println!(
+                "[OTG] Found: {} VID:{:04x} PID:{:04x}",
+                dev.name, dev.vendor_id, dev.product_id
+            );
+
+            match crate::usb::device::send_bypass_command(dev.vendor_id, dev.product_id) {
+                Ok(true) => {
+                    println!("[OTG] ✓ Bypass command sent successfully");
+                    Ok(true)
+                }
+                Ok(false) => {
+                    Err("[OTG] ✗ Bypass command failed".to_string())
+                }
+                Err(e) => {
+                    eprintln!("[OTG] ✗ Error: {}", e);
+                    Err(format!("[OTG] ✗ Error: {}", e))
+                }
+            }
+        }
+        Ok(_) => {
+            println!("[OTG] ✗ No USB device found");
+            Err("[OTG] ✗ No USB device found".to_string())
+        }
+        Err(e) => {
+            eprintln!("[OTG] ✗ USB scan failed: {}", e);
+            Err(format!("[OTG] ✗ USB scan failed: {}", e))
+        }
+    }
+}

@@ -3,6 +3,22 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
+/// Auto-detect ADB binary path across platforms
+fn find_adb() -> String {
+    let paths = vec![
+        "/usr/local/bin/adb",                      // macOS Homebrew (Intel)
+        "/opt/homebrew/bin/adb",                   // macOS Homebrew (Apple Silicon)
+        "/Users/enayat/Library/Android/sdk/platform-tools/adb", // User's SDK
+        "/usr/bin/adb",                            // System PATH
+        "adb",                                     // Fallback to PATH
+    ];
+    paths
+        .into_iter()
+        .find(|p| std::path::Path::new(p).exists())
+        .unwrap_or("adb")
+        .to_string()
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct AdbDevice {
     pub serial: String,
@@ -44,9 +60,10 @@ pub enum AdbError {
 }
 
 async fn run_adb(app: &AppHandle, args: &[&str]) -> Result<String, AdbError> {
+    let adb_path = find_adb();
     let output = app
         .shell()
-        .command("adb")
+        .command(&adb_path)
         .args(args)
         .output()
         .await
@@ -401,9 +418,10 @@ pub async fn stream_adb_logs(
         args.insert(1, &serial_str);
     }
 
+    let adb_path = find_adb();
     let (mut rx, _child) = app
         .shell()
-        .command("adb")
+        .command(&adb_path)
         .args(args)
         .spawn()
         .map_err(|e| e.to_string())?;

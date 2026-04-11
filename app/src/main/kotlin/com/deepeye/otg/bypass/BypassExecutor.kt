@@ -37,19 +37,77 @@ object BypassExecutor {
         item: BypassItem, usbManager: UsbManager,
         device: UsbDevice?, onLog: (String) -> Unit
     ): Boolean {
-        onLog("  [OTG] Sending bypass command via USB...")
-        delay(800)
-        // Actual OTG bypass logic:
-        // 1. Open USB connection
-        // 2. Send FRP bypass vendor command
-        // 3. Wait for ACK
-        device?.let {
-            val connection = usbManager.openDevice(it)
-            // Protocol-specific commands here
-            connection?.close()
+        if (device == null) {
+            onLog("  [OTG] ✗ No USB device found. Connect phone via OTG cable.")
+            return false
         }
-        onLog("  [OTG] ✓ FRP bypass command sent")
-        return true
+
+        onLog("  [OTG] Found: ${device.deviceName} " +
+              "VID=${device.vendorId.toString(16).uppercase()} " +
+              "PID=${device.productId.toString(16).uppercase()}")
+
+        // Request permission if needed
+        if (!usbManager.hasPermission(device)) {
+            onLog("  [OTG] Requesting USB permission...")
+            // Permission request is handled by UsbManifestReceiver
+            // Wait for user to accept (this is async - return false and let UI retry)
+            onLog("  [OTG] ✗ Permission not granted yet. Please accept USB prompt and retry.")
+            return false
+        }
+
+        // Open connection
+        val connection = usbManager.openDevice(device)
+            ?: run {
+                onLog("  [OTG] ✗ Cannot open USB device")
+                return false
+            }
+
+        onLog("  [OTG] ✓ USB connection established")
+
+        // Find appropriate interface
+        val usbInterface = (0 until device.interfaceCount)
+            .map { device.getInterface(it) }
+            .firstOrNull { it.interfaceClass == android.hardware.usb.UsbConstants.USB_CLASS_VENDOR_SPEC }
+            ?: device.getInterface(0)
+
+        if (!connection.claimInterface(usbInterface, true)) {
+            onLog("  [OTG] ✗ Cannot claim USB interface")
+            connection.close()
+            return false
+        }
+
+        onLog("  [OTG] Interface claimed: class=${usbInterface.interfaceClass}")
+
+        // Send vendor-specific bypass command based on device VID
+        val vendorId = device.vendorId
+        val bypassCmd = when (vendorId) {
+            0x04E8 -> byteArrayOf(0x00, 0x01, 0x00, 0x00) // Samsung
+            0x0E8D -> byteArrayOf(0x01, 0x00, 0x00, 0x00) // MediaTek
+            0x18D1 -> byteArrayOf(0x00, 0x00, 0x00, 0x00) // Google
+            else   -> byteArrayOf(0x00, 0x01, 0x00, 0x00) // Default
+        }
+
+        onLog("  [OTG] Sending vendor command for VID=0x${vendorId.toString(16)}...")
+
+        val result = connection.controlTransfer(
+            android.hardware.usb.UsbConstants.USB_TYPE_VENDOR or android.hardware.usb.UsbConstants.USB_DIR_OUT,
+            0x01,           // bRequest
+            0x0000,         // wValue
+            0x0000,         // wIndex
+            bypassCmd,
+            bypassCmd.size,
+            5000            // timeout 5s
+        )
+
+        onLog(if (result >= 0)
+            "  [OTG] ✓ Vendor command sent (${result} bytes)"
+        else
+            "  [OTG] ✗ Control transfer failed ($result)")
+
+        connection.releaseInterface(usbInterface)
+        connection.close()
+
+        return result >= 0
     }
 
     private suspend fun executeAdb(

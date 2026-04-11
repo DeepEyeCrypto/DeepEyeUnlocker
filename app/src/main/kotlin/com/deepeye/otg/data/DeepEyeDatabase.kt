@@ -41,6 +41,7 @@ abstract class DeepEyeDatabase : RoomDatabase() {
         fun get(context: Context): DeepEyeDatabase =
             INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(context.applicationContext, DeepEyeDatabase::class.java, "deepeye-db")
+                    .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }
     }
