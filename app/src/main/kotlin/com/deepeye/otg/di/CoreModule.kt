@@ -5,14 +5,20 @@ import android.hardware.usb.UsbManager
 import androidx.room.Room
 import com.deepeye.otg.data.DeepEyeDatabase
 import com.deepeye.otg.data.db.AppDatabase
+import com.deepeye.otg.data.db.dao.ForensicDao
+import com.deepeye.otg.data.db.dao.FuzzDao
+import com.deepeye.otg.data.tauri.TauriBridge
 import com.deepeye.otg.engine.RamdiskForensicEngine
+import com.deepeye.otg.engine.TokenManager
 import com.deepeye.otg.exploit.ExploitExecutor
 import com.deepeye.otg.intelligence.vulndb.CveDao
 import com.deepeye.otg.intelligence.vulndb.CveDatabase
 import com.deepeye.otg.intelligence.vulndb.CveImporter
 import com.deepeye.otg.usb.AdbExecutor
 import com.deepeye.otg.usb.AdbManager
+import com.deepeye.otg.usb.AdbSession
 import com.deepeye.otg.usb.HardwareManager
+import com.deepeye.otg.usb.MtkAuthHandler
 import com.deepeye.otg.usb.SessionCoordinator
 import com.deepeye.otg.usb.UsbLifecycleManager
 import dagger.Module
@@ -33,6 +39,13 @@ object CoreModule {
     @Singleton
     fun provideApplicationCoroutineScope(): CoroutineScope {
         return CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    }
+
+    // Provide plain Context (Hilt needs this explicitly for classes not using @ApplicationContext)
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
     }
 
     @Provides
@@ -96,6 +109,45 @@ object CoreModule {
 
     @Provides
     @Singleton
+    fun provideTokenManager(): TokenManager {
+        return TokenManager()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMtkAuthHandler(): MtkAuthHandler {
+        return MtkAuthHandler()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdbSession(): AdbSession {
+        return AdbSession() // Transport will be set via initialize() when device connects
+    }
+
+    // Note: TauriBridge is an interface - provide a no-op implementation for Android
+    @Provides
+    @Singleton
+    fun provideTauriBridge(): TauriBridge {
+        return object : TauriBridge {
+            override suspend fun appleDeviceInfo(): String = "{}"
+            override suspend fun appleIrecoveryCmd(cmd: String): String = ""
+            override suspend fun appleExitRecovery(): String = ""
+            override suspend fun appleEnterDfu(): String = ""
+            override fun getDetectedAppleMode() = null
+            override suspend fun runPalera1n(flags: List<String>): String = ""
+            override suspend fun verifyPwnedDfu(): Boolean = false
+            override suspend fun bypassIcloudActivation(method: String): String = ""
+            override suspend fun appleCheckActivation(): String = ""
+            override suspend fun appleDnsActivation(serverHost: String): String = ""
+            override suspend fun appleMdmBypass(profilePath: String): String = ""
+            override suspend fun appleRestoreActivationRecord(recordPath: String): String = ""
+            override suspend fun runCommand(command: String, args: Map<String, Any>): String = ""
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideCveDatabase(@ApplicationContext context: Context): CveDatabase {
         return CveDatabase.getInstance(context)
     }
@@ -134,5 +186,17 @@ object CoreModule {
         )
             .fallbackToDestructiveMigration()
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFuzzDao(database: AppDatabase): FuzzDao {
+        return database.fuzzDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideForensicDao(database: AppDatabase): ForensicDao {
+        return database.forensicDao()
     }
 }

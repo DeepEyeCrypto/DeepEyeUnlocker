@@ -14,7 +14,7 @@ import java.nio.ByteOrder
  * Hardened for Pro cycle (v2026.27): concurrent safety and window management stubs.
  */
 class AdbSession(
-    private val transport: UsbTransport
+    private var transport: UsbTransport? = null
 ) {
     companion object {
         private const val TAG = "DeepEye-ADB"
@@ -33,6 +33,18 @@ class AdbSession(
     private val activeStreams = mutableMapOf<Int, Int>() // localId -> remoteId
 
     /**
+     * Initialize the session with a USB transport (called when device connects).
+     */
+    fun initialize(newTransport: UsbTransport) {
+        this.transport = newTransport
+    }
+
+    /**
+     * Check if the session has a transport initialized.
+     */
+    fun isTransportReady(): Boolean = transport != null
+
+    /**
      * Perform the ADB connection handshake.
      */
     suspend fun connect(systemIdentity: String = "host::DeepEyeOTG"): Boolean = sessionMutex.withLock {
@@ -47,7 +59,7 @@ class AdbSession(
             systemIdentity.toByteArray()
         )
 
-        val writeRes = transport.write(connectMsg.serialize())
+        val writeRes = transport!!.write(connectMsg.serialize())
         if (!writeRes.isSuccess) {
             SafeLog.e(TAG, "Failed to write CNXN packet")
             return false
@@ -120,7 +132,7 @@ class AdbSession(
         val output = ByteArrayOutputStream(expectedSize)
         while (output.size() < expectedSize) {
             val remaining = expectedSize - output.size()
-            when (val result = transport.read(remaining)) {
+            when (val result = transport!!.read(remaining)) {
                 is TransferResult.Success -> {
                     val chunk = result.data
                     if (chunk == null || chunk.isEmpty()) {
@@ -150,7 +162,7 @@ class AdbSession(
             signature
         )
 
-        if (!transport.write(authMsg.serialize()).isSuccess) {
+        if (!transport!!.write(authMsg.serialize()).isSuccess) {
             SafeLog.e(TAG, "Failed to send ADB AUTH signature")
             return false
         }
@@ -170,7 +182,7 @@ class AdbSession(
                 0,
                 pubKey + byteArrayOf(0)
             )
-            if (!transport.write(pubKeyMsg.serialize()).isSuccess) {
+            if (!transport!!.write(pubKeyMsg.serialize()).isSuccess) {
                 SafeLog.e(TAG, "Failed to send ADB AUTH public key")
                 return false
             }
@@ -196,7 +208,7 @@ class AdbSession(
             (destination + "\u0000").toByteArray()
         )
 
-        if (!transport.write(openMsg.serialize()).isSuccess) {
+        if (!transport!!.write(openMsg.serialize()).isSuccess) {
             SafeLog.e(TAG, "Failed to open ADB destination=$destination")
             return null
         }
@@ -222,7 +234,7 @@ class AdbSession(
             AdbProtocol.A_WRTE -> {
                 // Acknowledge WRITE (OKAY)
                 val okay = AdbMessage(AdbProtocol.A_OKAY, localId, rId, null)
-                if (!transport.write(okay.serialize()).isSuccess) {
+                if (!transport!!.write(okay.serialize()).isSuccess) {
                     SafeLog.e(TAG, "Failed to acknowledge ADB WRTE localId=$localId")
                     return null
                 }
@@ -239,13 +251,13 @@ class AdbSession(
     suspend fun write(localId: Int, data: ByteArray): Boolean {
         val rId = activeStreams[localId] ?: return false
         val msg = AdbMessage(AdbProtocol.A_WRTE, localId, rId, data)
-        return transport.write(msg.serialize()).isSuccess
+        return transport!!.write(msg.serialize()).isSuccess
     }
 
     suspend fun close(localId: Int) {
         val rId = activeStreams[localId] ?: return
         val msg = AdbMessage(AdbProtocol.A_CLSE, localId, rId, null)
-        transport.write(msg.serialize())
+        transport!!.write(msg.serialize())
         activeStreams.remove(localId)
     }
 
