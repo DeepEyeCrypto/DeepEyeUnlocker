@@ -1,5 +1,6 @@
 package com.deepeye.otg.engine
 
+import android.content.Context
 import android.util.Log
 import com.deepeye.otg.protocol.apple.AppleDfuProtocol
 import com.deepeye.otg.usb.UsbLifecycleManager
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @Singleton
 class PurpleEngine @Inject constructor(
+    private val context: Context,
     private val usbLifecycleManager: UsbLifecycleManager
 ) {
     private val TAG = "PurpleEngine"
@@ -32,7 +34,7 @@ class PurpleEngine @Inject constructor(
 
             // 2. Send Serial Spoofing payload
             _status.value = "Sending Serial Spoofing payload..."
-            val purplePayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPurpleModePayload()
+            val purplePayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPurpleModePayload(context)
             if (!AppleDfuProtocol.sendPayload(transport, purplePayload) { _status.value = "Purple: $it%" }) {
                 _status.value = "Payload delivery failed"
                 return false

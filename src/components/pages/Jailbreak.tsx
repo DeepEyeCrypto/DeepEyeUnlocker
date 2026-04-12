@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Terminal from "../Terminal";
+import { SpotlightFeatureCard } from "../ui/spotlight-feature-card";
+import { Zap, Shield, Link, Bomb, Radio, Package } from "lucide-react";
 
 export default function JailbreakPage() {
   const [output, setOutput] = useState("");
@@ -25,32 +27,69 @@ export default function JailbreakPage() {
         Gaster PWN · Checkra1n · Palera1n · Bootloader Exploits
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-        <div className="glass" style={{ padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#f87171" }}>PwnDFU State</div>
-          <button className="btn danger" style={{ width: "100%", marginBottom: 10 }}
-            onClick={() => run("ios_run_gaster_pwn")}>🔥 Run Gaster PWN</button>
-          <button className="btn" style={{ width: "100%" }}
-            onClick={() => run("ios_check_pwn_state")}>🔍 Check Pwned State</button>
-        </div>
-
-        <div className="glass" style={{ padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "#a78bfa" }}>Integrated Exploits</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn" style={{ flex: 1 }} onClick={() => run("ios_run_checkra1n")}>⚡ checkra1n</button>
-            <button className="btn" style={{ flex: 1 }} onClick={() => run("ios_run_palera1n")}>⛓️ palera1n</button>
-          </div>
-          <p style={{ fontSize: 10, color: "#64748b", marginTop: 10 }}>Supports A7-A11 chips (iPhone 5s through X).</p>
-        </div>
+      {/* PwnDFU State - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <SpotlightFeatureCard
+          icon={<Bomb className="w-6 h-6 text-red-400" />}
+          title="Run Gaster PWN"
+          description="Exploit device to enter PwnDFU mode"
+          glowColor="red"
+          onClick={() => run("ios_run_gaster_pwn")}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Shield className="w-6 h-6 text-cyan-400" />}
+          title="Check Pwned State"
+          description="Verify if device is in PwnDFU mode"
+          glowColor="blue"
+          onClick={() => run("ios_check_pwn_state")}
+        />
       </div>
 
-      <div className="glass" style={{ padding: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Advanced Primitives</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <button className="btn" style={{ fontSize: 11 }} onClick={() => run("ios_inject_surgical_patch")}>💉 Surgical Patch</button>
-          <button className="btn" style={{ fontSize: 11 }} onClick={() => run("ios_poll_orchestrator")}>📡 Poll Orchestrator</button>
-          <button className="btn" style={{ fontSize: 11 }} onClick={() => run("ios_boot_ramdisk")}>📦 Boot Ramdisk</button>
-        </div>
+      {/* Integrated Exploits - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <SpotlightFeatureCard
+          icon={<Zap className="w-6 h-6 text-orange-400" />}
+          title="checkra1n"
+          description="Jailbreak for A5-A11 devices"
+          glowColor="orange"
+          onClick={() => run("ios_run_checkra1n")}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Link className="w-6 h-6 text-purple-400" />}
+          title="palera1n"
+          description="Rootful/rootless jailbreak for A8-A11"
+          glowColor="purple"
+          onClick={() => run("ios_run_palera1n")}
+        />
+      </div>
+
+      {/* Advanced Primitives - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <SpotlightFeatureCard
+          icon={<Zap className="w-5 h-5 text-green-400" />}
+          title="Surgical Patch"
+          description="Inject targeted memory patches"
+          glowColor="green"
+          onClick={() => run("ios_inject_surgical_patch")}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Radio className="w-5 h-5 text-cyan-400" />}
+          title="Poll Orchestrator"
+          description="Check exploit orchestrator status"
+          glowColor="blue"
+          onClick={() => run("ios_poll_orchestrator")}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Package className="w-5 h-5 text-orange-400" />}
+          title="Boot Ramdisk"
+          description="Load custom ramdisk environment"
+          glowColor="orange"
+          onClick={() => run("ios_boot_ramdisk")}
+        />
       </div>
 
       <Terminal output={output} status={status} />

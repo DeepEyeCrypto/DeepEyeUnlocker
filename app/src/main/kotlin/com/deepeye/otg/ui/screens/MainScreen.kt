@@ -49,6 +49,10 @@ import com.deepeye.otg.ui.screens.HidResearchScreen
 import com.deepeye.otg.ui.screens.Iphone15ResearchScreen
 import com.deepeye.otg.ui.screens.LogScreen
 import com.deepeye.otg.ui.screens.UnlockScreen
+import com.deepeye.otg.ui.screens.XiaomiFlashScreen
+import com.deepeye.otg.ui.screens.MtkUnlockScreen
+import com.deepeye.otg.ui.screens.MtkExploitScreen
+import com.deepeye.otg.ui.screens.XiaomiExploitScreen
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 // Mapping from SpotlightNavDestination to NavTarget
@@ -61,6 +65,27 @@ private fun spotlightToNavTarget(dest: com.deepeye.otg.ui.components.SpotlightNa
     com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE -> NavTarget.BYPASS_HISTORY
     com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE -> NavTarget.REMOTE_SHARE
     com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE -> NavTarget.SETTINGS
+}
+
+// Route mapping for GradientBottomBar
+private fun spotlightToRoute(dest: com.deepeye.otg.ui.components.SpotlightNavDestination): String = when (dest) {
+    com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD -> "home"
+    com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE -> "devices"
+    com.deepeye.otg.ui.components.SpotlightNavDestination.LAB -> "network"
+    com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS -> "bypass"
+    com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL -> "logs"
+    com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE -> "settings"
+    else -> "home" // Fallback for removed items (ARCHIVE, SHARE)
+}
+
+private fun routeToSpotlight(route: String): com.deepeye.otg.ui.components.SpotlightNavDestination = when (route) {
+    "home" -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
+    "devices" -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
+    "bypass" -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
+    "network" -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
+    "logs" -> com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL
+    "settings" -> com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE
+    else -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
 }
 
 @Composable
@@ -81,7 +106,7 @@ fun MainScreen(
         mutableStateOf(
             when (currentNav) {
                 NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
-                NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
+                NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE, NavTarget.XIAOMI_FLASH, NavTarget.MTK_UNLOCK, NavTarget.MTK_EXPLOIT, NavTarget.XIAOMI_EXPLOIT -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
                 NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
                 NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
                 NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE
@@ -95,7 +120,7 @@ fun MainScreen(
     LaunchedEffect(currentNav) {
         spotlightDestination = when (currentNav) {
             NavTarget.DASHBOARD -> com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD
-            NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
+            NavTarget.DEVICES, NavTarget.DEVICE_SUPPORT, NavTarget.EDL_CONSOLE, NavTarget.XIAOMI_FLASH, NavTarget.MTK_UNLOCK, NavTarget.MTK_EXPLOIT, NavTarget.XIAOMI_EXPLOIT -> com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE
             NavTarget.LAB_HOME, NavTarget.IMEI_REPAIR, NavTarget.STORAGE, NavTarget.FILE_EXPLORER -> com.deepeye.otg.ui.components.SpotlightNavDestination.LAB
             NavTarget.MISSION_HUB, NavTarget.UNLOCK_SCREEN -> com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS
             NavTarget.SETTINGS, NavTarget.TERMINAL, NavTarget.VAULT, NavTarget.LOG_SCREEN, NavTarget.BYPASS_HISTORY -> com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE
@@ -142,32 +167,14 @@ fun MainScreen(
                     hidViewModel = hidViewModel
                 )
 
-                // Spotlight Bottom Navigation Bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF06060F))
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    SpotlightBottomBar(
-                        destinations = listOf(
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.DASHBOARD,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.DEVICE,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.LAB,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.BYPASS,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.TOOL,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.ARCHIVE,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.SHARE,
-                            com.deepeye.otg.ui.components.SpotlightNavDestination.PROFILE,
-                        ),
-                        activeDestination = spotlightDestination,
-                        onDestinationSelected = { dest ->
-                            spotlightDestination = dest
-                            viewModel.setNav(spotlightToNavTarget(dest))
-                        }
-                    )
-                }
+                // Gradient Bottom Navigation Bar
+                com.deepeye.otg.ui.components.GradientBottomBar(
+                    currentRoute = spotlightToRoute(spotlightDestination),
+                    onNavigate = { route ->
+                        spotlightDestination = routeToSpotlight(route)
+                        viewModel.setNav(spotlightToNavTarget(routeToSpotlight(route)))
+                    }
+                )
             }
         } else {
             Row(modifier = Modifier.fillMaxSize()) {
@@ -242,13 +249,20 @@ private fun MissionNavContent(
                 TargetDashboardScreen(viewModel, hazeState)
             }
             NavTarget.DEVICES -> {
-                com.deepeye.otg.ui.device.DeviceDashboardScreen()
+                com.deepeye.otg.ui.device.DeviceDashboardScreen(
+                    onNavigateToXiaomiFlash = { viewModel.setNav(NavTarget.XIAOMI_FLASH) },
+                    onNavigateToMtkUnlock = { viewModel.setNav(NavTarget.MTK_UNLOCK) }
+                )
             }
             NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
             NavTarget.EDL_CONSOLE -> EdlConsole(
                 mainViewModel = viewModel,
                 onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
             )
+            NavTarget.XIAOMI_FLASH -> XiaomiFlashScreen()
+            NavTarget.MTK_UNLOCK -> MtkUnlockScreen()
+            NavTarget.MTK_EXPLOIT -> MtkExploitScreen()
+            NavTarget.XIAOMI_EXPLOIT -> XiaomiExploitScreen()
             NavTarget.LAB_HOME -> ForensicLabScreen(viewModel, hazeState, perfMode)
             NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
             NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
@@ -267,15 +281,34 @@ private fun MissionNavContent(
                 onNavigateBack = { viewModel.setNav(NavTarget.LAB_HOME) }
             )
             NavTarget.STORAGE -> StorageScreen()
-            NavTarget.REMOTE_SHARE -> com.deepeye.otg.ui.RemoteShareScreen(
-                status = "Ready",
-                subStatus = "Tap START RELAY to share your USB connection",
-                sessionCode = null,
-                isDeviceDetected = false,
-                onStartSharing = { /* TODO: wire relay */ },
-                onConnectRemote = { /* TODO: wire operator */ },
-                onBack = { viewModel.setNav(NavTarget.DASHBOARD) }
-            )
+            NavTarget.REMOTE_SHARE -> {
+                val tunnelStatus by viewModel.tunnelStatus.collectAsStateWithLifecycle()
+                val sessionCode by viewModel.tunnelCode.collectAsStateWithLifecycle()
+                
+                com.deepeye.otg.ui.RemoteShareScreen(
+                    status = when (tunnelStatus) {
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.ACTIVE -> "ACTIVE"
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.CONNECTING -> "CONNECTING"
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED -> "FAILED"
+                        else -> "Ready"
+                    },
+                    subStatus = when (tunnelStatus) {
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.ACTIVE -> "Relay active - sharing USB connection"
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.CONNECTING -> "Establishing secure tunnel..."
+                        com.deepeye.otg.service.TunnelManager.TunnelStatus.FAILED -> "Connection failed - retrying..."
+                        else -> "Tap START RELAY to share your USB connection"
+                    },
+                    sessionCode = sessionCode,
+                    isDeviceDetected = viewModel.connectionState.value is com.deepeye.otg.domain.models.ConnectionState.Open ||
+                                       viewModel.connectionState.value is com.deepeye.otg.domain.models.ConnectionState.Ready,
+                    onStartSharing = { viewModel.startFleetSharing() },
+                    onConnectRemote = { code -> viewModel.joinRemoteSession(code) },
+                    onBack = { 
+                        viewModel.stopSharing()
+                        viewModel.setNav(NavTarget.DASHBOARD) 
+                    }
+                )
+            }
             NavTarget.SETTINGS -> SettingsScreen(viewModel)
             NavTarget.LOG_SCREEN -> LogScreen(
                 mainViewModel = viewModel,

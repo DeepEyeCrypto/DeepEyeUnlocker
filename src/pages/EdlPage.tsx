@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEdl } from '../hooks/useEdl';
 import { DeviceSelector } from '../components/DeviceSelector';
-import { LiquidMetalButton } from '../components/ui/liquid-metal-button';
+import { SpotlightFeatureCard } from '../components/ui/spotlight-feature-card';
+import { Zap, Upload, HardDrive } from 'lucide-react';
 import type { DeviceEntry } from '../lib/devices';
 import '../styles/edl.css';
 
@@ -121,41 +122,34 @@ export default function EdlPage() {
         </div>
       </div>
 
-      <div className="pipeline">
-        <div className={`pipeline-step ${isStep1Done ? 'done' : (edlStatus === 'detecting' ? 'active' : '')}`}>
-          <span className="step-number">Step 1</span>
-          <span className="step-action">Detect Device</span>
-          <LiquidMetalButton
-            label="Detect Device"
-            onClick={detect}
-            disabled={edlStatus === 'detecting'}
-          />
-        </div>
+      {/* EDL Pipeline - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Zap className="w-6 h-6 text-cyan-400" />}
+          title="Step 1: Detect Device"
+          description="Detect Qualcomm EDL device and read USB info"
+          glowColor="blue"
+          onClick={detect}
+          badge={edlStatus === 'detecting' ? 'Scanning' : isStep1Done ? '✓ Done' : undefined}
+        />
 
-        <div className={`pipeline-step ${isStep2Done ? 'done' : (edlStatus === 'sahara_handshake' ? 'active' : '')}`}>
-          <span className="step-number">Step 2</span>
-          <span className="step-action">Sahara Protocol</span>
-          <button 
-            className="edl-detect-btn"
-            disabled={!isStep2Done}
-            onClick={() => void saharaHandshake()}
-          >
-            Handshake
-          </button>
-        </div>
+        <SpotlightFeatureCard
+          icon={<Upload className="w-6 h-6 text-purple-400" />}
+          title="Step 2: Sahara Protocol"
+          description="Initialize Sahara handshake with device"
+          glowColor="purple"
+          onClick={() => void saharaHandshake()}
+          badge={edlStatus === 'sahara_handshake' ? 'Working' : isStep2Done ? '✓ Done' : undefined}
+        />
 
-        <div className={`pipeline-step ${isStep3Done ? 'done' : (edlStatus === 'uploading_programmer' ? 'active' : '')}`}>
-          <span className="step-number">Step 3</span>
-          <span className="step-action">Firehose Deploy</span>
-          <button 
-            className="btn btn-primary btn-sm" 
-            disabled={!isStep2Done}
-            style={{ marginTop: 'auto' }}
-            onClick={() => void handlePickProgrammer()}
-          >
-            {programmerName ? programmerName : 'Select .elf / .mbn'}
-          </button>
-        </div>
+        <SpotlightFeatureCard
+          icon={<HardDrive className="w-6 h-6 text-green-400" />}
+          title="Step 3: Firehose Deploy"
+          description={programmerName ? `Loaded: ${programmerName}` : 'Upload .elf/.mbn programmer'}
+          glowColor="green"
+          onClick={() => void handlePickProgrammer()}
+          badge={edlStatus === 'uploading_programmer' ? 'Uploading' : isStep3Done ? '✓ Ready' : undefined}
+        />
       </div>
 
       <div className="edl-grid">

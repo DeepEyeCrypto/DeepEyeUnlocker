@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
+import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { Smartphone, Handshake, FileText, Upload, Eraser, RotateCcw } from "lucide-react";
 import { useSamsung } from "../hooks/useSamsung";
 import "../styles/samsung.css";
 
@@ -56,29 +57,34 @@ export default function SamsungPage() {
         </span>
       </div>
 
-      {/* Workflow Steps */}
-      <div className="samsung-steps">
-        <LiquidMetalButton
-          label="Detect Device"
+      {/* Samsung Workflow - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Smartphone className="w-6 h-6 text-cyan-400" />}
+          title="Step 1: Detect Device"
+          description="Find Samsung device in Download Mode"
+          glowColor="blue"
           onClick={detectDevice}
-          disabled={isActive}
+          badge={isActive ? "Working" : device ? "✓ Found" : undefined}
         />
-        <span className="samsung-step-arrow">→</span>
-        <button
-          className={`samsung-step-btn ${odinInfo ? "done" : ""}`}
+        
+        <SpotlightFeatureCard
+          icon={<Handshake className="w-6 h-6 text-purple-400" />}
+          title="Step 2: Odin Handshake"
+          description="Initialize Odin protocol communication"
+          glowColor="purple"
           onClick={doHandshake}
-          disabled={!device || isActive}
-        >
-          2. Handshake
-        </button>
-        <span className="samsung-step-arrow">→</span>
-        <button
-          className={`samsung-step-btn ${pitEntries.length > 0 ? "done" : ""}`}
+          badge={isActive ? "Working" : odinInfo ? "✓ Connected" : undefined}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<FileText className="w-6 h-6 text-green-400" />}
+          title="Step 3: Read PIT"
+          description="Read partition table from device"
+          glowColor="green"
           onClick={readPit}
-          disabled={!odinInfo || isActive}
-        >
-          3. Read PIT
-        </button>
+          badge={isActive ? "Working" : pitEntries.length > 0 ? `✓ ${pitEntries.length} parts` : undefined}
+        />
       </div>
 
       {error && <div className="samsung-error">⚠ {error}</div>}
@@ -107,26 +113,46 @@ export default function SamsungPage() {
         {/* Operations */}
         <div className="samsung-card">
           <h2>Operations</h2>
-          <div className="samsung-ops">
-            <button className="samsung-btn" onClick={readPit} disabled={!odinInfo || isActive}>
-              Read PIT
-            </button>
-            <button
-              className="samsung-btn samsung-btn--danger"
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <SpotlightFeatureCard
+              icon={<Upload className="w-5 h-5 text-orange-400" />}
+              title="Flash Partition"
+              description="Flash firmware to selected partition"
+              glowColor="orange"
+              onClick={handleFlash}
+            />
+            
+            <SpotlightFeatureCard
+              icon={<Eraser className="w-5 h-5 text-red-400" />}
+              title="Erase FRP"
+              description="Remove Google account lock"
+              glowColor="red"
               onClick={eraseFrp}
-              disabled={!odinInfo || isActive}
-            >
-              Erase FRP ⚠
-            </button>
-            <button className="samsung-btn" onClick={() => reboot(0)} disabled={!device || isActive}>
-              Reboot Normal
-            </button>
-            <button className="samsung-btn" onClick={() => reboot(1)} disabled={!device || isActive}>
-              Reboot Download
-            </button>
-            <button className="samsung-btn" onClick={() => reboot(3)} disabled={!device || isActive}>
-              Reboot Recovery
-            </button>
+            />
+            
+            <SpotlightFeatureCard
+              icon={<RotateCcw className="w-5 h-5 text-green-400" />}
+              title="Reboot Normal"
+              description="Boot to system"
+              glowColor="green"
+              onClick={() => reboot(0)}
+            />
+            
+            <SpotlightFeatureCard
+              icon={<RotateCcw className="w-5 h-5 text-blue-400" />}
+              title="Reboot Download"
+              description="Boot to Odin mode"
+              glowColor="blue"
+              onClick={() => reboot(1)}
+            />
+            
+            <SpotlightFeatureCard
+              icon={<RotateCcw className="w-5 h-5 text-purple-400" />}
+              title="Reboot Recovery"
+              description="Boot to recovery mode"
+              glowColor="purple"
+              onClick={() => reboot(3)}
+            />
           </div>
         </div>
       </div>

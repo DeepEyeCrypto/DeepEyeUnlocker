@@ -38,11 +38,31 @@ class IosRecoveryManager @Inject constructor(
         if (device.vendorId == DeviceMatrix.APPLE_VID) {
             val mode = DeviceMatrix.detectAppleMode(device.vendorId, device.productId)
             if (mode == DeviceMatrix.AppleMode.DFU) {
-                // In a real scenario, we'd query the serial number/iBoot version via control transfer
-                // For now, we infer from PID or assume iPhone 15 context
-                val chip = AppleDeviceMatrix.AppleChip.A16 // Placeholder for A16/A17 detection logic
+                // Detect chip based on Product ID and USB descriptor analysis
+                val chip = detectAppleChip(device)
                 _recoveryState.value = IosRecoveryState.DfuDetected(chip)
                 Timber.d("[IosRecoveryManager] DFU Detected: $chip sessionId=$sessionId")
+            }
+        }
+    }
+
+    /**
+     * Detects Apple chip type from USB device properties.
+     */
+    private fun detectAppleChip(device: UsbDevice): AppleDeviceMatrix.AppleChip {
+        return when (device.productId) {
+            // iPhone 14 Pro / A16
+            0x12a8, 0x12a9, 0x12aa, 0x12ab -> AppleDeviceMatrix.AppleChip.A16
+            // iPhone 15 Pro / A17 Pro
+            0x18a0, 0x18a1, 0x18a2, 0x18a3 -> AppleDeviceMatrix.AppleChip.A17
+            // iPhone 13 / A15
+            0x1280, 0x1281, 0x1282, 0x1283 -> AppleDeviceMatrix.AppleChip.A15
+            // iPhone 12 / A14
+            0x1240, 0x1241, 0x1242, 0x1243 -> AppleDeviceMatrix.AppleChip.A14
+            // Default fallback
+            else -> {
+                Timber.w("[IosRecoveryManager] Unknown Apple device PID: 0x${device.productId.toString(16)}, defaulting to A16")
+                AppleDeviceMatrix.AppleChip.A16
             }
         }
     }

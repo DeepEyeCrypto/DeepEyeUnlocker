@@ -21,6 +21,10 @@ enum class NavTarget(val hub: MissionHub) {
     DEVICES(MissionHub.COMMAND),
     DEVICE_SUPPORT(MissionHub.COMMAND),
     EDL_CONSOLE(MissionHub.COMMAND),
+    XIAOMI_FLASH(MissionHub.COMMAND),
+    MTK_UNLOCK(MissionHub.COMMAND),
+    MTK_EXPLOIT(MissionHub.COMMAND),
+    XIAOMI_EXPLOIT(MissionHub.COMMAND),
     
     // LAB Hub
     LAB_HOME(MissionHub.LAB),

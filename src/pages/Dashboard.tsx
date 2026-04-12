@@ -4,6 +4,8 @@ import { WaitingQueuePanel } from "../components/WaitingQueuePanel";
 import { useWaitQueue } from "../hooks/useWaitQueue";
 import { TerminalLog } from "../components/ui/TerminalLog";
 import { ProgressStep, type ProgressItem } from "../components/ui/ProgressStep";
+import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { Shield, Smartphone, Settings, Zap } from "lucide-react";
 import {
   DASHBOARD_COMMANDS,
   type PlatformTab,
@@ -61,7 +63,7 @@ export default function DashboardPage({
   const [tab, setTab] = useState<PlatformTab>(platform === "android" ? "android" : "apple");
   const [logLines, setLogLines] = useState<string[]>(["[info] Dashboard initialized"]);
   const [logCollapsed, setLogCollapsed] = useState(true);
-  const [activeOperation, setActiveOperation] = useState<string | null>(null);
+  const [_activeOperation, setActiveOperation] = useState<string | null>(null);
 
   const steps = useMemo<ProgressItem[]>(() => {
     return [
@@ -205,51 +207,43 @@ export default function DashboardPage({
         onCancel={cancelQueuedOperation}
       />
 
-      <div className="quick-grid">
-        <button
-          className="action-btn"
-          disabled={activeOperation !== null}
-          title="Check FMI state"
-          onClick={() =>
-            void queueDashboardAction("Check FMI", DASHBOARD_COMMANDS.CHECK_FMI)
-          }
-        >
-          <span className="action-title">Check FMI</span>
-        </button>
-        <button
-          className="action-btn"
-          disabled={activeOperation !== null}
-          title="Check SHSH signed versions"
-          onClick={() =>
-            void queueDashboardAction("Check SHSH", DASHBOARD_COMMANDS.CHECK_SHSH, {
-              model: device?.model ?? "",
-            })
-          }
-        >
-          <span className="action-title">Check SHSH</span>
-        </button>
-        <button
-          className="action-btn"
-          disabled={activeOperation !== null}
-          title="Check activation state"
-          onClick={() =>
-            void queueDashboardAction("Activation", DASHBOARD_COMMANDS.CHECK_ACTIVATION, {
-              udid: device?.id ?? "",
-            })
-          }
-        >
-          <span className="action-title">Activation</span>
-        </button>
-        <button
-          className="action-btn"
-          disabled={activeOperation !== null}
-          title="Run restore latest"
-          onClick={() =>
-            void queueDashboardAction("Restore", DASHBOARD_COMMANDS.RESTORE_LATEST)
-          }
-        >
-          <span className="action-title">Restore</span>
-        </button>
+      {/* Spotlight Feature Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Shield className="w-6 h-6 text-cyan-400" />}
+          title="Check FMI"
+          description="Check Find My iPhone status and activation state"
+          glowColor="blue"
+          onClick={() => queueDashboardAction("Check FMI", DASHBOARD_COMMANDS.CHECK_FMI)}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Smartphone className="w-6 h-6 text-purple-400" />}
+          title="Check SHSH"
+          description="Verify signed iOS versions for your device"
+          glowColor="purple"
+          onClick={() => queueDashboardAction("Check SHSH", DASHBOARD_COMMANDS.CHECK_SHSH, {
+            model: device?.model ?? "",
+          })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Settings className="w-6 h-6 text-green-400" />}
+          title="Activation"
+          description="Check device activation state and FMI status"
+          glowColor="green"
+          onClick={() => queueDashboardAction("Activation", DASHBOARD_COMMANDS.CHECK_ACTIVATION, {
+            udid: device?.id ?? "",
+          })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Zap className="w-6 h-6 text-orange-400" />}
+          title="Restore"
+          description="Restore device from latest backup"
+          glowColor="orange"
+          onClick={() => queueDashboardAction("Restore", DASHBOARD_COMMANDS.RESTORE_LATEST)}
+        />
       </div>
 
       <div className="panel">

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Terminal from "../Terminal";
+import { SpotlightFeatureCard } from "../ui/spotlight-feature-card";
+import { Shield, Trash, FileText, Database } from "lucide-react";
 
 export default function ToolboxPage() {
   const [output, setOutput] = useState("");
@@ -19,63 +21,42 @@ export default function ToolboxPage() {
         OTA Block · Factory Reset · System Logs · Deep Backups
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginBottom: 20 }}>
-        <ActionCard
+      {/* Toolbox Operations - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Shield className="w-6 h-6 text-cyan-400" />}
           title="OTA Blocker"
-          desc="Prevent Apple from auto-updating your device"
-          icon="🚫"
-          btnText="Block Updates"
+          description="Prevent Apple from auto-updating your device"
+          glowColor="blue"
           onClick={() => run("toolbox_block_ota")}
-          disabled={status === "running"}
         />
-        <ActionCard
+        
+        <SpotlightFeatureCard
+          icon={<Trash className="w-6 h-6 text-red-400" />}
           title="Factory Reset"
-          desc="Complete wipe of all user data and settings"
-          icon="🧹"
-          btnText="Erase Device"
-          danger
+          description="Complete wipe of all user data and settings"
+          glowColor="red"
           onClick={() => run("toolbox_factory_reset")}
-          disabled={status === "running"}
         />
-        <ActionCard
+        
+        <SpotlightFeatureCard
+          icon={<FileText className="w-6 h-6 text-green-400" />}
           title="System Logs"
-          desc="Stream live device logs (idevicesyslog)"
-          icon="📝"
-          btnText="Fetch Logs"
+          description="Stream live device logs (idevicesyslog)"
+          glowColor="green"
           onClick={() => run("toolbox_get_logs")}
-          disabled={status === "running"}
         />
-        <ActionCard
+        
+        <SpotlightFeatureCard
+          icon={<Database className="w-6 h-6 text-purple-400" />}
           title="Deep Backup"
-          desc="Full local backup via idevicebackup2"
-          icon="📂"
-          btnText="Run Backup"
+          description="Full local backup via idevicebackup2"
+          glowColor="purple"
           onClick={() => run("toolbox_backup_device", { path: "~/DeepEyeUnlocker/Backups" })}
-          disabled={status === "running"}
         />
       </div>
 
       <Terminal output={output} status={status} />
-    </div>
-  );
-}
-
-function ActionCard({ title, desc, icon, btnText, onClick, disabled, danger }: any) {
-  return (
-    <div className="glass" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>{title}</span>
-      </div>
-      <p style={{ fontSize: 11, color: "#64748b", flex: 1 }}>{desc}</p>
-      <button
-        className={`btn ${danger ? 'danger' : ''}`}
-        style={{ width: "100%", fontSize: 11 }}
-        onClick={onClick}
-        disabled={disabled}
-      >
-        {btnText}
-      </button>
     </div>
   );
 }

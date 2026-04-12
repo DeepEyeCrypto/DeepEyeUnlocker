@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { WaitingQueuePanel } from "../WaitingQueuePanel";
 import Terminal from "../Terminal";
 import { useWaitQueue } from "../../hooks/useWaitQueue";
+import { SpotlightFeatureCard } from "../ui/spotlight-feature-card";
+import { Smartphone, Shield, Lock, Key, Unlock } from "lucide-react";
 
 type ActivationStateResponse = {
   locked: boolean;
@@ -104,78 +106,54 @@ export default function ActivationPage() {
         onCancel={cancelQueuedOperation}
       />
 
-      <div className="panel row-between">
-        <div>
-          <div className="action-title">Detection Engine ({deviceState})</div>
-          <div className="meta-text">Identify lock type before running exploit</div>
-        </div>
-        <button
-          className="action-btn"
+      {/* Detection Engine - Spotlight Card */}
+      <div className="mb-6">
+        <SpotlightFeatureCard
+          icon={<Smartphone className="w-6 h-6 text-cyan-400" />}
+          title="Detection Engine"
+          description={`Identify lock type before running exploit (${deviceState})`}
+          glowColor="blue"
           onClick={() => void queueActivationCommand("Check Device State", "ios_check_activation_state")}
-          disabled={status === "running"}
-        >
-          <span>S</span> <span>Check Device State</span>
-        </button>
+          badge={deviceState !== "unknown" ? deviceState : undefined}
+        />
       </div>
 
-      <div className="grid-auto">
-        <ActionCard
+      {/* Activation Methods - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <SpotlightFeatureCard
+          icon={<Shield className="w-6 h-6 text-green-400" />}
           title="Hello Bypass"
-          desc="Full untethered bypass for Hello screen (iOS 12-16)"
-          icon="HB"
-          btnText="Run Bypass"
+          description="Full untethered bypass for Hello screen (iOS 12-16)"
+          glowColor="green"
           onClick={() => void queueActivationCommand("Hello Bypass", "ios_run_hello_bypass")}
-          disabled={status === "running"}
         />
-        <ActionCard
+        
+        <SpotlightFeatureCard
+          icon={<Lock className="w-6 h-6 text-purple-400" />}
           title="MDM Bypass"
-          desc="Remove Mobile Device Management profiles instantly"
-          icon="MDM"
-          btnText="Remove MDM"
+          description="Remove Mobile Device Management profiles instantly"
+          glowColor="purple"
           onClick={() => void queueActivationCommand("MDM Bypass", "ios_remove_mdm")}
-          disabled={status === "running"}
         />
-        <ActionCard
+        
+        <SpotlightFeatureCard
+          icon={<Key className="w-6 h-6 text-orange-400" />}
           title="Passcode / Disabled"
-          desc="Extract tickets and activate without data loss"
-          icon="PC"
-          btnText="Fix Passcode"
+          description="Extract tickets and activate without data loss"
+          glowColor="orange"
           onClick={() => void queueActivationCommand("Passcode Fix", "ios_patch_activation_record")}
-          disabled={status === "running"}
         />
-        <ActionCard
-          title="Checkra1n Jails"
-          desc="Run integrated jailbreak for A11 and below"
-          icon="A11"
-          btnText="Launch Checkra1n"
+        
+        <SpotlightFeatureCard
+          icon={<Unlock className="w-6 h-6 text-red-400" />}
+          title="Checkra1n Jailbreak"
+          description="Run integrated jailbreak for A11 and below"
+          glowColor="red"
           onClick={() => void queueActivationCommand("Checkra1n", "ios_run_checkra1n")}
-          disabled={status === "running"}
         />
       </div>
 
       <Terminal output={output} status={status} />
-    </div>
-  );
-}
-
-function ActionCard({ title, desc, icon, btnText, onClick, disabled }: {
-  title: string;
-  desc: string;
-  icon: string;
-  btnText: string;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="action-card">
-      <div className="action-row">
-        <span className="action-icon-chip">{icon}</span>
-        <span className="action-title">{title}</span>
-      </div>
-      <p className="action-desc">{desc}</p>
-      <button className="action-btn" onClick={onClick} disabled={disabled}>
-        {btnText}
-      </button>
     </div>
   );
 }

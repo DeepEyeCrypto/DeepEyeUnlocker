@@ -2,6 +2,8 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import Terminal from "../Terminal";
+import { SpotlightFeatureCard } from "../ui/spotlight-feature-card";
+import { Download, Save, Settings, Upload, FileCheck } from "lucide-react";
 
 export default function SHSHPage() {
   const [output, setOutput] = useState("");
@@ -9,7 +11,7 @@ export default function SHSHPage() {
   const [model, setModel] = useState("");
   const [ecid, setEcid] = useState("");
   const [ios, setIos] = useState("");
-  const [generator, setGenerator] = useState("0x1111111111111111");
+  const [generator] = useState("0x1111111111111111");
   const [ipsw, setIpsw] = useState("");
   const [shsh, setShsh] = useState("");
 
@@ -63,68 +65,64 @@ export default function SHSHPage() {
         </div>
       </div>
 
-      <div className="grid-two">
-        <div className="action-card">
-          <div className="action-title">Save All Signed</div>
-          <div className="action-desc">Save blobs for all Apple-signed firmwares now.</div>
-          <button
-            className="btn btn-success btn-sm btn-block"
-            onClick={() => run("save_shsh_all_signed", { model, ecid })}
-            disabled={!model || !ecid || status === "running"}
-          >
-            Save All Signed
-          </button>
-        </div>
+      {/* SHSH Operations - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Save className="w-6 h-6 text-green-400" />}
+          title="Save All Signed"
+          description="Save blobs for all Apple-signed firmwares now"
+          glowColor="green"
+          onClick={() => run("save_shsh_all_signed", { model, ecid })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Download className="w-6 h-6 text-cyan-400" />}
+          title="Save Specific Version"
+          description="Save blob for one iOS version"
+          glowColor="blue"
+          onClick={() => run("save_shsh_specific", { model, ecid, ios })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Settings className="w-6 h-6 text-purple-400" />}
+          title="Save with Generator"
+          description="Nonce collision blob for downgrade workflow"
+          glowColor="purple"
+          onClick={() => run("save_shsh_with_generator", { model, ecid, ios, generator })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<FileCheck className="w-6 h-6 text-orange-400" />}
+          title="Check Signed Versions"
+          description="Show versions currently signed by Apple"
+          glowColor="orange"
+          onClick={() => run("check_signed_versions", { model })}
+        />
+        
+        <SpotlightFeatureCard
+          icon={<Save className="w-6 h-6 text-blue-400" />}
+          title="List Saved Blobs"
+          description="Show all .shsh2 files in DeepEyeUnlocker/shsh"
+          glowColor="blue"
+          onClick={() => run("list_saved_shsh")}
+        />
+      </div>
 
-        <div className="action-card">
-          <div className="action-title">Save Specific Version</div>
-          <div className="action-desc">Save blob for one iOS version.</div>
+      {/* FutureRestore - Spotlight Card */}
+      <div className="mb-6">
+        <SpotlightFeatureCard
+          icon={<Upload className="w-6 h-6 text-red-400" />}
+          title="futurerestore"
+          description={!ipsw ? "Select IPSW and SHSH2 files to downgrade" : `IPSW: ...${ipsw.slice(-30)}`}
+          glowColor="red"
+          onClick={() => run("futurerestore_no_baseband", { ipsw_path: ipsw, shsh_path: shsh })}
+          badge={!ipsw || !shsh ? "Select files" : "Ready"}
+        />
+        
+        {/* File Selection Buttons */}
+        <div className="grid grid-cols-2 gap-3 mt-3">
           <button
-            className="btn btn-secondary btn-sm btn-block"
-            onClick={() => run("save_shsh_specific", { model, ecid, ios })}
-            disabled={!model || !ecid || !ios || status === "running"}
-          >
-            Save Specific
-          </button>
-        </div>
-
-        <div className="action-card">
-          <div className="action-title">Save with Generator</div>
-          <div className="action-desc">Nonce collision blob for downgrade workflow.</div>
-          <input className="field-input" value={generator} onChange={(e) => setGenerator(e.target.value)} />
-          <button
-            className="btn btn-secondary btn-sm btn-block"
-            onClick={() => run("save_shsh_with_generator", { model, ecid, ios, generator })}
-            disabled={!model || !ecid || !ios || status === "running"}
-          >
-            Save with Generator
-          </button>
-        </div>
-
-        <div className="action-card">
-          <div className="action-title">Check Signed Versions</div>
-          <div className="action-desc">Show versions currently signed by Apple.</div>
-          <button
-            className="btn btn-secondary btn-sm btn-block"
-            onClick={() => run("check_signed_versions", { model })}
-            disabled={!model || status === "running"}
-          >
-            Check Signed
-          </button>
-        </div>
-
-        <div className="action-card">
-          <div className="action-title">List Saved Blobs</div>
-          <div className="action-desc">Show all .shsh2 files in DeepEyeUnlocker/shsh.</div>
-          <button className="btn btn-secondary btn-sm btn-block" onClick={() => run("list_saved_shsh")} disabled={status === "running"}>
-            List Blobs
-          </button>
-        </div>
-
-        <div className="action-card">
-          <div className="action-title">futurerestore</div>
-          <button
-            className="btn btn-primary btn-sm btn-block"
+            className="btn btn-primary btn-sm"
             onClick={async () => {
               const selected = await open({ filters: [{ name: "IPSW", extensions: ["ipsw"] }] });
               if (selected) setIpsw(String(selected));
@@ -133,22 +131,13 @@ export default function SHSHPage() {
             Pick IPSW
           </button>
           <button
-            className="btn btn-secondary btn-sm btn-block"
+            className="btn btn-secondary btn-sm"
             onClick={async () => {
               const selected = await open({ filters: [{ name: "SHSH2", extensions: ["shsh2"] }] });
               if (selected) setShsh(String(selected));
             }}
           >
             Pick SHSH2
-          </button>
-          <div className="meta-text">{ipsw ? `IPSW: ...${ipsw.slice(-30)}` : "No IPSW selected"}</div>
-          <div className="meta-text">{shsh ? `SHSH: ...${shsh.slice(-30)}` : "No SHSH selected"}</div>
-          <button
-            className="btn btn-danger btn-sm btn-block"
-            onClick={() => run("futurerestore_no_baseband", { ipsw_path: ipsw, shsh_path: shsh })}
-            disabled={!ipsw || !shsh || status === "running"}
-          >
-            futurerestore
           </button>
         </div>
       </div>

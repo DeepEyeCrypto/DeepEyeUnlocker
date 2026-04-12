@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { type as osType } from "@tauri-apps/plugin-os";
 import { useEffect, useState, type ReactNode } from "react";
-import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
+import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { Settings, TestTube, Download, RefreshCw } from "lucide-react";
 import type { AppSettings, DetectInterval } from "../lib/settings";
 import type { UpdateInfo, UpdateStatus } from "../lib/updater";
 import "../styles/settings.css";
@@ -79,10 +80,13 @@ export default function SettingsPage({
             <h2 className="settings-section__title">DeepEyeUnlocker</h2>
           </div>
 
-          <LiquidMetalButton
-            label={updateStatus === "checking" ? "Checking..." : "Check for Updates"}
+          <SpotlightFeatureCard
+            icon={<Download className="w-5 h-5 text-cyan-400" />}
+            title="Check for Updates"
+            description={updateStatus === "checking" ? "Checking..." : "Update available"}
+            glowColor="blue"
             onClick={onCheckForUpdates}
-            disabled={updateStatus === "checking" || updateStatus === "installing"}
+            badge={updateInfo ? `v${updateInfo.version}` : undefined}
           />
         </div>
 
@@ -129,6 +133,35 @@ export default function SettingsPage({
             >
               {adbTesting ? "Testing..." : "Test ADB"}
             </button>
+          </div>
+
+          {/* Quick Settings Actions - Spotlight Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <SpotlightFeatureCard
+              icon={<TestTube className="w-5 h-5 text-cyan-400" />}
+              title="Test ADB Connection"
+              description="Verify ADB binary and connectivity"
+              glowColor="blue"
+              onClick={() => void testAdb()}
+              badge={adbTesting ? "Testing" : undefined}
+            />
+            
+            <SpotlightFeatureCard
+              icon={<RefreshCw className="w-5 h-5 text-purple-400" />}
+              title="Reset Settings"
+              description="Restore default configuration"
+              glowColor="purple"
+              onClick={() => onSettingsChange({})}
+            />
+            
+            <SpotlightFeatureCard
+              icon={<Settings className="w-5 h-5 text-green-400" />}
+              title="Advanced Config"
+              description="Toggle expert mode settings"
+              glowColor="green"
+              onClick={() => onSettingsChange({ adbOverTcp: !settings.adbOverTcp })}
+              badge={settings.adbOverTcp ? "TCP On" : "USB"}
+            />
           </div>
 
           <label className="settings-toggle">

@@ -37,7 +37,11 @@ import com.deepeye.otg.viewmodel.ProtocolLog
 // ═══════════════════════════════════════════════════════════════
 
 @Composable
-fun DeviceDashboardScreen(deviceViewModel: DeviceViewModel = viewModel()) {
+fun DeviceDashboardScreen(
+    deviceViewModel: DeviceViewModel = viewModel(),
+    onNavigateToXiaomiFlash: (() -> Unit)? = null,
+    onNavigateToMtkUnlock: (() -> Unit)? = null
+) {
     val devices    by deviceViewModel.devices.collectAsStateWithLifecycle()
     val active     by deviceViewModel.activeDevice.collectAsStateWithLifecycle()
     val deviceInfo by deviceViewModel.deviceInfo.collectAsStateWithLifecycle()
@@ -108,7 +112,9 @@ fun DeviceDashboardScreen(deviceViewModel: DeviceViewModel = viewModel()) {
                 deviceInfo = deviceInfo,
                 chipInfo = chipInfo,
                 progress = progress,
-                vm = deviceViewModel
+                vm = deviceViewModel,
+                onNavigateToXiaomiFlash = onNavigateToXiaomiFlash,
+                onNavigateToMtkUnlock = onNavigateToMtkUnlock
             )
             1 -> ProtocolTerminalTab(
                 logs = logs,
@@ -236,7 +242,9 @@ private fun DeviceInfoTab(
     deviceInfo: AdbDeviceInfo?,
     chipInfo: MtkChipInfo?,
     progress: FlashProgress?,
-    vm: DeviceViewModel
+    vm: DeviceViewModel,
+    onNavigateToXiaomiFlash: (() -> Unit)? = null,
+    onNavigateToMtkUnlock: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
@@ -245,7 +253,12 @@ private fun DeviceInfoTab(
     ) {
         // Quick Actions
         item(key = "actions") {
-            QuickActionsSection(device = device, vm = vm)
+            QuickActionsSection(
+                device = device,
+                vm = vm,
+                onNavigateToXiaomiFlash = onNavigateToXiaomiFlash,
+                onNavigateToMtkUnlock = onNavigateToMtkUnlock
+            )
         }
 
         // ADB Device Info Grid
@@ -279,7 +292,12 @@ private fun DeviceInfoTab(
 }
 
 @Composable
-private fun QuickActionsSection(device: DetectedDevice?, vm: DeviceViewModel) {
+private fun QuickActionsSection(
+    device: DetectedDevice?,
+    vm: DeviceViewModel,
+    onNavigateToXiaomiFlash: (() -> Unit)? = null,
+    onNavigateToMtkUnlock: (() -> Unit)? = null
+) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             "QUICK ACTIONS",
@@ -319,6 +337,20 @@ private fun QuickActionsSection(device: DetectedDevice?, vm: DeviceViewModel) {
             if (device?.mode == DeviceMode.FASTBOOT) {
                 ActionChip("↺ Reboot", Color(0xFF39FF14)) {
                     device.serial?.let { vm.fastbootFlash(it, "", "") } // reboot only
+                }
+            }
+            
+            // Xiaomi Flash Tool - Always visible
+            if (onNavigateToXiaomiFlash != null) {
+                ActionChip("🔥 Xiaomi Flash", Color(0xFFFF6B35)) {
+                    onNavigateToXiaomiFlash()
+                }
+            }
+            
+            // MTK Unlock Tool - Always visible
+            if (onNavigateToMtkUnlock != null) {
+                ActionChip("🔧 MTK Unlock", Color(0xFF00BCD4)) {
+                    onNavigateToMtkUnlock()
                 }
             }
         }

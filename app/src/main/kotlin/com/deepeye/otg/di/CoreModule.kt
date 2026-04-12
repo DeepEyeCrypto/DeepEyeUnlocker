@@ -7,9 +7,13 @@ import com.deepeye.otg.data.DeepEyeDatabase
 import com.deepeye.otg.data.db.AppDatabase
 import com.deepeye.otg.data.db.dao.ForensicDao
 import com.deepeye.otg.data.db.dao.FuzzDao
+import com.deepeye.otg.data.tauri.RealTauriBridge
 import com.deepeye.otg.data.tauri.TauriBridge
+import com.deepeye.otg.engine.CloudVaultManager
 import com.deepeye.otg.engine.RamdiskForensicEngine
 import com.deepeye.otg.engine.TokenManager
+import com.deepeye.otg.engine.mtk.MtkExploitEngine
+import com.deepeye.otg.engine.xiaomi.XiaomiExploitEngine
 import com.deepeye.otg.exploit.ExploitExecutor
 import com.deepeye.otg.intelligence.vulndb.CveDao
 import com.deepeye.otg.intelligence.vulndb.CveDatabase
@@ -125,25 +129,14 @@ object CoreModule {
         return AdbSession() // Transport will be set via initialize() when device connects
     }
 
-    // Note: TauriBridge is an interface - provide a no-op implementation for Android
+    // Provide real TauriBridge implementation for Apple device operations
     @Provides
     @Singleton
-    fun provideTauriBridge(): TauriBridge {
-        return object : TauriBridge {
-            override suspend fun appleDeviceInfo(): String = "{}"
-            override suspend fun appleIrecoveryCmd(cmd: String): String = ""
-            override suspend fun appleExitRecovery(): String = ""
-            override suspend fun appleEnterDfu(): String = ""
-            override fun getDetectedAppleMode() = null
-            override suspend fun runPalera1n(flags: List<String>): String = ""
-            override suspend fun verifyPwnedDfu(): Boolean = false
-            override suspend fun bypassIcloudActivation(method: String): String = ""
-            override suspend fun appleCheckActivation(): String = ""
-            override suspend fun appleDnsActivation(serverHost: String): String = ""
-            override suspend fun appleMdmBypass(profilePath: String): String = ""
-            override suspend fun appleRestoreActivationRecord(recordPath: String): String = ""
-            override suspend fun runCommand(command: String, args: Map<String, Any>): String = ""
-        }
+    fun provideTauriBridge(
+        @ApplicationContext context: Context,
+        lifecycleManager: UsbLifecycleManager
+    ): TauriBridge {
+        return RealTauriBridge(context, lifecycleManager)
     }
 
     @Provides
@@ -199,4 +192,20 @@ object CoreModule {
     fun provideForensicDao(database: AppDatabase): ForensicDao {
         return database.forensicDao()
     }
+
+    // ══════════════════════════════════════════
+    // EXPLOIT ENGINES (MTK + Xiaomi)
+    // ══════════════════════════════════════════
+
+    @Provides
+    @Singleton
+    fun provideMtkExploitEngine(
+        @ApplicationContext context: Context
+    ): MtkExploitEngine = MtkExploitEngine(context)
+
+    @Provides
+    @Singleton
+    fun provideXiaomiExploitEngine(
+        @ApplicationContext context: Context
+    ): XiaomiExploitEngine = XiaomiExploitEngine(context)
 }

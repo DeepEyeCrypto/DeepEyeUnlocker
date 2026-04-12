@@ -51,6 +51,22 @@ class UsbViewModel @javax.inject.Inject constructor(
     val tunnelStatus = tunnelManager.status
     val tunnelCode = tunnelManager.sessionCode
 
+    // Tunnel/Relay control methods
+    fun startFleetSharing() {
+        tunnelManager.startFleetSharing()
+        Timber.i("[UsbViewModel] Fleet sharing started")
+    }
+
+    fun joinRemoteSession(code: String) {
+        tunnelManager.joinSession(code)
+        Timber.i("[UsbViewModel] Joining remote session: $code")
+    }
+
+    fun stopSharing() {
+        tunnelManager.stopSharing()
+        Timber.i("[UsbViewModel] Sharing stopped")
+    }
+
     init {
         startHeartbeatLoop()
     }

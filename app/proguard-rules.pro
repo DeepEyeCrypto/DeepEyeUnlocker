@@ -15,6 +15,23 @@
 -keep class com.deepeye.otg.viewmodel.**   { *; }
 -keep enum  com.deepeye.otg.device.**      { *; }
 
+# Xiaomi Flash Tool - Complete protection
+-keep class com.deepeye.otg.engine.Xiaomi** { *; }
+-keep class com.deepeye.otg.viewmodel.Xiaomi** { *; }
+-keep class com.deepeye.otg.ui.screens.Xiaomi** { *; }
+-keep class com.deepeye.otg.data.model.Xiaomi** { *; }
+-keep class com.deepeye.otg.data.model.FlashStatus { *; }
+-keep class com.deepeye.otg.data.device.Xiaomi** { *; }
+
+# MTK Unlock Tool - Complete protection
+-keep class com.deepeye.otg.engine.MtkUnlock** { *; }
+-keep class com.deepeye.otg.viewmodel.MtkUnlock** { *; }
+-keep class com.deepeye.otg.ui.screens.MtkUnlock** { *; }
+-keep class com.deepeye.otg.data.model.Mtk** { *; }
+-keep class com.deepeye.otg.domain.models.Mtk** { *; }
+-keep class com.deepeye.otg.engine.MtkEngine { *; }
+-keep class com.deepeye.otg.domain.engine.mtk.** { *; }
+
 # USB Serial library
 -keep class com.hoho.android.usbserial.** { *; }
 

@@ -1,19 +1,5 @@
 package com.deepeye.otg.ui.gsmg
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,17 +44,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
@@ -359,12 +340,6 @@ private fun CompactOverviewChip(
     value: Int,
     color: Color,
 ) {
-    val animatedValue by animateIntAsState(
-        targetValue = value,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
-        label = "overview_count_$label",
-    )
-
     Box(
         modifier = modifier
             .background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
@@ -380,7 +355,7 @@ private fun CompactOverviewChip(
                 maxLines = 1
             )
             Text(
-                text = animatedValue.toString(),
+                text = value.toString(),
                 color = color,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -432,6 +407,14 @@ private fun SummaryCard(
                     fontWeight = FontWeight.Bold,
                 )
             }
+            
+            // Simple divider
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(outline)
+            )
 
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Badge(text = "${uiState.freeCount} FREE", color = success)
@@ -623,6 +606,7 @@ private fun FeatureCard(
     onExecute: () -> Unit,
 ) {
     var expanded by remember(feature.id) { mutableStateOf(false) }
+    
     val isRunning = status == FeatureRunStatus.RUNNING
     val connectionTint = connectionColor(feature.connectionMode)
     val framePrimary = when {
@@ -632,108 +616,28 @@ private fun FeatureCard(
         feature.dataLoss -> danger
         else -> Color(0xFF7C4DFF)
     }
-    val frameSecondary = when {
-        status == FeatureRunStatus.SUCCESS -> Color(0xFF86EFAC)
-        status == FeatureRunStatus.ERROR -> Color(0xFFFF6B9A)
-        feature.dataLoss -> warning
-        else -> connectionTint
-    }
     val headerLabel = feature.supportedBrands.firstOrNull()?.uppercase() ?: feature.chipRange.displayName.uppercase()
     val priceLabel = if (feature.isFree) "FREE" else "${feature.costCredits}¢"
     val priceColor = if (feature.isFree) success else warning
     val targetLabel = if (feature.isUntethered) "UNTH" else feature.chipRange.displayName
     val priorityScore = featurePriorityScore(feature)
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (expanded) 0f else 180f,
-        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing),
-        label = "feature_expand_${feature.id}",
-    )
-    val borderTransition = rememberInfiniteTransition(label = "feature-border-${feature.id}")
-    val borderAngle by borderTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3600, easing = LinearEasing),
-        ),
-        label = "feature-border-angle-${feature.id}",
-    )
     val shape = RoundedCornerShape(18.dp)
-    val strokeWidth = if (isRunning) 1.6.dp else 1.1.dp
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 168.dp)
+            .clip(shape)
+            .background(Color(0xFF080810))
+            .border(
+                width = if (isRunning) 1.6.dp else 1.1.dp,
+                color = if (isRunning) framePrimary.copy(alpha = 0.74f) else outline.copy(alpha = 0.82f),
+                shape = shape
+            )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
             ) { expanded = !expanded }
-            .clip(shape)
-            .drawWithCache {
-                val strokePx = strokeWidth.toPx()
-                val inset = strokePx / 2f
-                val cornerPx = 18.dp.toPx()
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val glowCenter = Offset(x = size.width * 0.18f, y = size.height * 0.14f)
-                val borderBrush = Brush.sweepGradient(
-                    colors = listOf(
-                        framePrimary.copy(alpha = 0.04f),
-                        framePrimary.copy(alpha = if (isRunning) 0.92f else 0.74f),
-                        frameSecondary.copy(alpha = 0.52f),
-                        framePrimary.copy(alpha = 0.04f),
-                        Color.Transparent,
-                    ),
-                    center = center,
-                )
-
-                onDrawWithContent {
-                    drawRoundRect(
-                        color = Color(0xFF080810),
-                        size = size,
-                        cornerRadius = CornerRadius(cornerPx, cornerPx),
-                    )
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(framePrimary.copy(alpha = 0.07f), Color.Transparent),
-                            center = glowCenter,
-                            radius = size.width * 0.7f,
-                        ),
-                        center = glowCenter,
-                        radius = size.width * 0.7f,
-                    )
-                    drawRoundRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.White.copy(alpha = 0.04f), Color.Transparent),
-                            startY = 0f,
-                            endY = size.height * 0.3f,
-                        ),
-                        size = size,
-                        cornerRadius = CornerRadius(cornerPx, cornerPx),
-                    )
-                    drawContent()
-
-                    rotate(degrees = borderAngle, pivot = center) {
-                        drawRoundRect(
-                            brush = borderBrush,
-                            topLeft = Offset(inset, inset),
-                            size = Size(size.width - strokePx, size.height - strokePx),
-                            cornerRadius = CornerRadius(cornerPx, cornerPx),
-                            style = Stroke(
-                                width = strokePx,
-                                pathEffect = PathEffect.cornerPathEffect(cornerPx),
-                            ),
-                        )
-                    }
-
-                    drawRoundRect(
-                        color = if (isRunning) framePrimary.copy(alpha = 0.16f) else outline.copy(alpha = 0.82f),
-                        topLeft = Offset(inset, inset),
-                        size = Size(size.width - strokePx, size.height - strokePx),
-                        cornerRadius = CornerRadius(cornerPx, cornerPx),
-                        style = Stroke(width = 0.8.dp.toPx()),
-                    )
-                }
-            }
     ) {
         Column(
             modifier = Modifier
@@ -784,7 +688,7 @@ private fun FeatureCard(
                             color = Color.White.copy(alpha = 0.45f),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
+                            modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 0f else 180f },
                         )
                     }
                 }
@@ -833,11 +737,7 @@ private fun FeatureCard(
                 )
             }
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(150)),
-                exit = shrinkVertically(animationSpec = tween(180)) + fadeOut(animationSpec = tween(120)),
-            ) {
+            if (expanded) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -928,34 +828,13 @@ private fun SignalStatusChip(hasSignal: Boolean) {
 
 @Composable
 private fun PulsingDot(color: Color, isActive: Boolean) {
-    if (!isActive) {
-        Box(
-            modifier = Modifier
-                .size(4.dp)
-                .background(color.copy(alpha = 0.5f), RoundedCornerShape(999.dp)),
-        )
-        return
-    }
-
-    val dotTransition = rememberInfiniteTransition(label = "signal_dot")
-    val scale by dotTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "signal_dot_scale",
-    )
-
     Box(
         modifier = Modifier
             .size(4.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .background(color, RoundedCornerShape(999.dp)),
+            .background(
+                color = if (isActive) color else color.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(999.dp)
+            ),
     )
 }
 
@@ -969,15 +848,15 @@ private fun CompactFeatureBadge(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(50))
             .background(background)
-            .border(0.6.dp, borderColor, RoundedCornerShape(4.dp))
-            .padding(horizontal = 5.dp, vertical = 2.dp),
+            .border(0.6.dp, borderColor, RoundedCornerShape(50))
+            .padding(horizontal = 4.dp, vertical = 2.dp),
     ) {
         Text(
             text = text,
             color = color,
-            fontSize = 6.sp,
+            fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -1013,51 +892,15 @@ private fun InfoRow(label: String, value: String, color: Color) {
 
 @Composable
 private fun PriorityBadge(score: Int) {
-    val glowAlpha = if (score >= 90) {
-        val glowTransition = rememberInfiniteTransition(label = "priority_glow_$score")
-        val animatedAlpha by glowTransition.animateFloat(
-            initialValue = 0.3f,
-            targetValue = 0.8f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 1200),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "priority_glow_alpha_$score",
-        )
-        animatedAlpha
-    } else {
-        0f
-    }
-    val (pillBg, pillBorder, pillText) = when {
-        score >= 90 -> Triple(
-            Color(0xFFEAB308).copy(alpha = 0.18f),
-            Color(0xFFEAB308).copy(alpha = 0.55f),
-            Color(0xFFFEF08A),
-        )
-        score >= 75 -> Triple(
-            Color(0xFF22C55E).copy(alpha = 0.18f),
-            Color(0xFF22C55E).copy(alpha = 0.45f),
-            Color(0xFF86EFAC),
-        )
-        else -> Triple(
-            Color.White.copy(alpha = 0.06f),
-            Color.White.copy(alpha = 0.12f),
-            Color.White.copy(alpha = 0.4f),
-        )
-    }
+    // Cyan glow for all badges
+    val cyanGlowColor = Color(0xFF00E5FF)
+    val pillBg = cyanGlowColor.copy(alpha = 0.15f)
+    val pillBorder = cyanGlowColor.copy(alpha = 0.4f)
+    val pillText = Color.White
 
     Box(
         modifier = Modifier
             .size(18.dp)
-            .drawBehind {
-                if (score >= 90) {
-                    drawCircle(
-                        color = Color(0xFFEAB308).copy(alpha = glowAlpha * 0.4f),
-                        radius = size.width * 0.8f,
-                        blendMode = BlendMode.Screen,
-                    )
-                }
-            }
             .background(pillBg, RoundedCornerShape(999.dp))
             .border(0.6.dp, pillBorder, RoundedCornerShape(999.dp)),
         contentAlignment = Alignment.Center,
@@ -1080,44 +923,37 @@ private fun EnhancedRunButton(
 ) {
     val style = when (status) {
         FeatureRunStatus.IDLE -> RunButtonStyle(
-            background = Color(0xFF7C3AED).copy(alpha = 0.12f),
+            background = Brush.linearGradient(
+                colors = listOf(Color(0xFF7C3AED), Color(0xFFa955ff))
+            ),
             border = Color(0xFF7C3AED).copy(alpha = 0.34f),
-            text = Color(0xFFC4B5FD),
-            label = "▶ RUN",
+            text = Color.White,
+            label = "⚡ RUN",
         )
         FeatureRunStatus.RUNNING -> RunButtonStyle(
-            background = Color(0xFF00FFFF).copy(alpha = 0.08f),
+            background = Brush.linearGradient(
+                colors = listOf(Color(0xFF00FFFF), Color(0xFF00E5FF))
+            ),
             border = Color(0xFF00FFFF).copy(alpha = 0.44f),
-            text = Color(0xFF00FFFF),
+            text = Color.White,
             label = "● RUNNING",
         )
         FeatureRunStatus.SUCCESS -> RunButtonStyle(
-            background = Color(0xFF39FF14).copy(alpha = 0.12f),
+            background = Brush.linearGradient(
+                colors = listOf(Color(0xFF39FF14), Color(0xFF80FF72))
+            ),
             border = Color(0xFF39FF14).copy(alpha = 0.46f),
-            text = Color(0xFF39FF14),
+            text = Color.White,
             label = "✓ DONE",
         )
         FeatureRunStatus.ERROR -> RunButtonStyle(
-            background = Color(0xFFFF007F).copy(alpha = 0.12f),
+            background = Brush.linearGradient(
+                colors = listOf(Color(0xFFFF007F), Color(0xFFFF6B9A))
+            ),
             border = Color(0xFFFF007F).copy(alpha = 0.46f),
-            text = Color(0xFFFF007F),
+            text = Color.White,
             label = "✗ FAILED",
         )
-    }
-    val scale = if (status == FeatureRunStatus.RUNNING) {
-        val pulseTransition = rememberInfiniteTransition(label = "feature-run-pulse")
-        val animatedScale by pulseTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.03f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 650),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "feature-run-scale",
-        )
-        animatedScale
-    } else {
-        1f
     }
     val shape = RoundedCornerShape(8.dp)
 
@@ -1125,10 +961,6 @@ private fun EnhancedRunButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(28.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .clip(shape)
             .background(style.background)
             .border(0.5.dp, style.border, shape)
@@ -1140,30 +972,6 @@ private fun EnhancedRunButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        if (status == FeatureRunStatus.SUCCESS) {
-            val rippleTransition = rememberInfiniteTransition(label = "feature-success-ripple")
-            val rippleScale by rippleTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 800),
-                    repeatMode = RepeatMode.Restart,
-                ),
-                label = "feature-success-ripple-scale",
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        drawCircle(
-                            color = Color(0xFF39FF14).copy(alpha = (1f - rippleScale) * 0.3f),
-                            radius = size.width * rippleScale * 0.5f,
-                        )
-                    },
-            )
-        }
-
         Text(
             text = style.label,
             color = style.text,
@@ -1198,7 +1006,7 @@ private fun resolveFeatureRunStatus(
 }
 
 private data class RunButtonStyle(
-    val background: Color,
+    val background: Brush,
     val border: Color,
     val text: Color,
     val label: String,
@@ -1213,17 +1021,6 @@ private enum class FeatureRunStatus {
 
 @Composable
 private fun EmptyState(query: String) {
-    val floatTransition = rememberInfiniteTransition(label = "empty_state_float")
-    val floatAnim by floatTransition.animateFloat(
-        initialValue = -4f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "empty_state_y",
-    )
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1235,7 +1032,6 @@ private fun EmptyState(query: String) {
             text = "◎",
             fontSize = 28.sp,
             color = Color.White.copy(alpha = 0.15f),
-            modifier = Modifier.graphicsLayer { translationY = floatAnim },
         )
         Text(
             text = if (query.isBlank()) "No bypasses loaded" else "No match for \"$query\"",

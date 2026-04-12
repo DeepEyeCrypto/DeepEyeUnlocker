@@ -4,6 +4,8 @@ import { useMtkBrom, type BromStatus } from "../hooks/useMtkBrom";
 import { DeviceSelector } from "../components/DeviceSelector";
 import type { DeviceEntry } from "../lib/devices";
 import { Card } from "../components/ui/Card";
+import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { Cpu, Shield, Download, RotateCcw } from "lucide-react";
 import "../styles/mtk-brom.css";
 
 function formatSize(bytes: number): string {
@@ -249,50 +251,48 @@ export default function MtkBromPage() {
         </div>
       )}
 
-      {/* Connect button */}
-      <Card title="Connection">
-        <div className="action-row">
-          <button
-            className="btn btn-primary btn-sm"
-            disabled={working || !selectedDevice || selectedDevice.brom_support === 'none'}
-            onClick={handleConnect}
-          >
-            {working && bromStatus === "detecting" ? (
-              <><span className="mtk-spinner" /> Scanning...</>
-            ) : "Connect & Identify"}
-          </button>
+      {/* Connection & Operations - Spotlight Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <SpotlightFeatureCard
+          icon={<Cpu className="w-6 h-6 text-cyan-400" />}
+          title="Connect & Identify"
+          description="Detect MediaTek BROM device and read chip info"
+          glowColor="blue"
+          onClick={handleConnect}
+          badge={working ? "Working" : undefined}
+        />
 
-          {chipInfo && (
-            <button
-              className="btn btn-sm"
-              disabled={working}
-              onClick={handleBypassAndUpload}
-            >
-              {working ? <><span className="mtk-spinner" /> Working...</> : "SLA → Upload DA → Jump"}
-            </button>
-          )}
+        {chipInfo && (
+          <SpotlightFeatureCard
+            icon={<Shield className="w-6 h-6 text-purple-400" />}
+            title="SLA Bypass + DA Upload"
+            description="Bypass SLA authentication and upload DA"
+            glowColor="purple"
+            onClick={handleBypassAndUpload}
+            badge={working ? "Working" : undefined}
+          />
+        )}
 
-          {chipInfo && (
-            <button
-              className="btn btn-sm"
-              disabled={working}
-              onClick={handlePickAndUploadDa}
-            >
-              Upload DA
-            </button>
-          )}
+        {chipInfo && (
+          <SpotlightFeatureCard
+            icon={<Download className="w-6 h-6 text-green-400" />}
+            title="Upload DA"
+            description="Manually select and upload DA binary file"
+            glowColor="green"
+            onClick={handlePickAndUploadDa}
+          />
+        )}
 
-          {daUploadResult && !daJumpInfo && (
-            <button
-              className="btn btn-sm success"
-              disabled={working}
-              onClick={() => jumpToDa().catch(() => {})}
-            >
-              Jump to DA
-            </button>
-          )}
-        </div>
-      </Card>
+        {daUploadResult && !daJumpInfo && (
+          <SpotlightFeatureCard
+            icon={<RotateCcw className="w-6 h-6 text-orange-400" />}
+            title="Jump to DA"
+            description="Execute loaded DA and enter download mode"
+            glowColor="orange"
+            onClick={() => jumpToDa().catch(() => {})}
+          />
+        )}
+      </div>
 
       {/* Two-column: Device Info + Operations */}
       <div className="mtk-columns">

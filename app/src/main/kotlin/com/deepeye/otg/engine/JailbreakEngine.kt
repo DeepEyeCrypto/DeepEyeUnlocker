@@ -1,5 +1,6 @@
 package com.deepeye.otg.engine
 
+import android.content.Context
 import android.util.Log
 import com.deepeye.otg.protocol.apple.AppleDfuProtocol
 import com.deepeye.otg.usb.UsbLifecycleManager
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @Singleton
 class JailbreakEngine @Inject constructor(
+    private val context: Context,
     private val usbLifecycleManager: UsbLifecycleManager
 ) {
     private val TAG = "JailbreakEngine"
@@ -34,7 +36,7 @@ class JailbreakEngine @Inject constructor(
 
             // 2. Deliver checkm8 exploit (Stage 1)
             _status.value = "Sending checkm8 payload (Stage 1)..."
-            val exploitPayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getCheckm8Stage1("t8010")
+            val exploitPayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getCheckm8Stage1(context, "t8010")
             if (!AppleDfuProtocol.download(transport, 0, exploitPayload)) {
                 _status.value = "Exploit delivery failed"
                 return false
@@ -45,7 +47,7 @@ class JailbreakEngine @Inject constructor(
 
             // 4. Deliver PongoOS (Stage 2)
             _status.value = "Uploading PongoOS..."
-            val pongoPayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPongoOsPayload()
+            val pongoPayload = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPongoOsPayload(context)
             if (!AppleDfuProtocol.sendPayload(transport, pongoPayload) { _status.value = "PongoOS: $it%" }) {
                 _status.value = "PongoOS delivery failed"
                 return false
@@ -69,7 +71,7 @@ class JailbreakEngine @Inject constructor(
             if (!runCheckra1n()) return false
 
             _status.value = "Injecting Palera1n rootless bootstrap..."
-            val bootstrap = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPalera1nBootstrap()
+            val bootstrap = com.deepeye.otg.exploit.payloads.ApplePayloadProvider.getPalera1nBootstrap(context)
             if (!AppleDfuProtocol.sendPayload(transport, bootstrap) { _status.value = "Bootstrap: $it%" }) {
                 _status.value = "Bootstrap delivery failed"
                 return false

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { LiquidMetalButton } from "../components/ui/liquid-metal-button";
+import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { Terminal, Smartphone, Download, Upload, RotateCcw, Trash } from "lucide-react";
 import { useAdb } from "../hooks/useAdb";
 import "../styles/adb.css";
 
@@ -81,12 +82,57 @@ export default function AdbPage() {
         </span>
       </div>
 
-      <div className="adb-scan-row">
-        <LiquidMetalButton label="Scan Devices" onClick={scanDevices} />
+      {/* ADB Actions - Spotlight Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        <SpotlightFeatureCard
+          icon={<Smartphone className="w-5 h-5 text-cyan-400" />}
+          title="Scan Devices"
+          description="Detect connected Android devices"
+          glowColor="blue"
+          onClick={scanDevices}
+        />
+        
         {selectedSerial && (
-          <button className="adb-btn adb-btn--secondary" onClick={getDeviceInfo}>
-            Get Full Info
-          </button>
+          <SpotlightFeatureCard
+            icon={<Terminal className="w-5 h-5 text-purple-400" />}
+            title="Get Full Info"
+            description="Read complete device information"
+            glowColor="purple"
+            onClick={getDeviceInfo}
+          />
+        )}
+        
+        {selectedSerial && (
+          <>
+            <SpotlightFeatureCard
+              icon={<RotateCcw className="w-5 h-5 text-green-400" />}
+              title="Reboot"
+              description="Reboot to system"
+              glowColor="green"
+              onClick={() => rebootDevice("system")}
+            />
+            <SpotlightFeatureCard
+              icon={<Download className="w-5 h-5 text-orange-400" />}
+              title="Install APK"
+              description="Install APK file to device"
+              glowColor="orange"
+              onClick={handleInstall}
+            />
+            <SpotlightFeatureCard
+              icon={<Upload className="w-5 h-5 text-red-400" />}
+              title="Push File"
+              description="Push file to device storage"
+              glowColor="red"
+              onClick={handlePush}
+            />
+            <SpotlightFeatureCard
+              icon={<Trash className="w-5 h-5 text-red-400" />}
+              title="Erase FRP"
+              description="Remove FRP lock via ADB"
+              glowColor="red"
+              onClick={eraseFrp}
+            />
+          </>
         )}
       </div>
 
