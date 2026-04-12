@@ -23,6 +23,7 @@ fun FrpBypassScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val permissionGranted by viewModel.permissionGranted.collectAsStateWithLifecycle()
     var androidVersion by remember { mutableStateOf("10") }
 
     Scaffold(
@@ -47,6 +48,7 @@ fun FrpBypassScreen(
             if (device == null) {
                 Text("No device connected", color = Color.Red)
             } else {
+                // Device Info Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -57,6 +59,53 @@ fun FrpBypassScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Permission Status Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when {
+                            permissionGranted -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            uiState.error?.contains("denied") == true -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (permissionGranted) "✓ USB Permission Granted" else "✗ USB Permission Required",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = if (permissionGranted) MaterialTheme.colorScheme.primary
+                                       else MaterialTheme.colorScheme.error
+                            )
+                            if (!permissionGranted) {
+                                Text(
+                                    text = "Tap button to request access",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (!permissionGranted) {
+                            Button(
+                                onClick = { viewModel.requestUsbPermission(device) },
+                                enabled = !uiState.isRunning
+                            ) {
+                                Text("Request")
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
@@ -64,7 +113,7 @@ fun FrpBypassScreen(
                     onValueChange = { if (it.all { char -> char.isDigit() }) androidVersion = it },
                     label = { Text("Android Version") },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isRunning
+                    enabled = !uiState.isRunning && permissionGranted
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -72,9 +121,15 @@ fun FrpBypassScreen(
                 Button(
                     onClick = { viewModel.startBypass(device, androidVersion.toIntOrNull() ?: 10) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isRunning
+                    enabled = !uiState.isRunning && permissionGranted
                 ) {
-                    Text(if (uiState.isRunning) "Bypassing..." else "Start FRP Bypass")
+                    Text(
+                        when {
+                            uiState.isRunning -> "Bypassing..."
+                            !permissionGranted -> "Permission Required"
+                            else -> "Start FRP Bypass"
+                        }
+                    )
                 }
             }
 
