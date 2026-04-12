@@ -93,7 +93,7 @@ echo -e "${YELLOW}2.1 BROM Voltage Glitch (CVE-2022-20223)${NC}"
 echo ""
 
 check_real "USB Manager access" \
-    "grep -q 'context.getSystemService.*USB_SERVICE' $MTK_ENGINE" \
+    "grep -q 'Context.USB_SERVICE' $MTK_ENGINE" \
     "$MTK_ENGINE"
 
 check_real "USB device opening" \
@@ -109,7 +109,7 @@ check_real "Bulk endpoint detection" \
     "$MTK_ENGINE"
 
 check_real "BROM handshake bytes (A0 0A 50 05)" \
-    "grep -q '0xA0.*0x0A.*0x50.*0x05' $MTK_ENGINE" \
+    "grep -q '0xA0.toByte(), 0x0A, 0x50, 0x05' $MTK_ENGINE" \
     "$MTK_ENGINE"
 
 check_real "Bulk transfer (actual USB I/O)" \
@@ -117,7 +117,7 @@ check_real "Bulk transfer (actual USB I/O)" \
     "$MTK_ENGINE"
 
 check_real "Real timing attack (5ms timeout)" \
-    "grep -q 'bulkTransfer.*5)' $MTK_ENGINE" \
+    "grep -q 'bulkTransfer.*epOut.*hwCmd.*1.*5)' $MTK_ENGINE" \
     "$MTK_ENGINE"
 
 check_real "Payload loading from assets" \
@@ -145,7 +145,7 @@ check_real "DA checksum calculation" \
     "$MTK_ENGINE"
 
 check_real "DA ACK validation (5A A5)" \
-    "grep -q '0x5A.*0xA5' $MTK_ENGINE" \
+    "grep -q 'ack\[0\] == 0x5A.toByte()' $MTK_ENGINE" \
     "$MTK_ENGINE"
 
 echo ""
