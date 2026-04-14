@@ -1,0 +1,147 @@
+{
+  "suite": "DeepEye Bypass Screen Tests",
+  "version": "v2026.32.0",
+  "app_package": "com.deepeye.otg",
+  "tests": [
+
+    {
+      "id": "TC001",
+      "name": "App Launch — No Crash",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "wait", "ms": 2000 },
+        { "action": "assert_visible", "text": "DeepEye Unlocker" },
+        { "action": "assert_no_crash" }
+      ]
+    },
+
+    {
+      "id": "TC002",
+      "name": "IMEI Input — Valid IMEI shows green + manufacturer",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "tap", "text": "Server Method (IMEI)" },
+        { "action": "type_text",
+          "field": "IMEI (15 digits)",
+          "value": "490154203237518" },
+        { "action": "wait", "ms": 1500 },
+        { "action": "assert_visible", "text": "✅" },
+        { "action": "assert_text_color",
+          "field": "IMEI (15 digits)",
+          "color": "#00FF88" },
+        { "action": "assert_visible",
+          "text": "Apple" }
+      ]
+    },
+
+    {
+      "id": "TC003",
+      "name": "IMEI Input — Invalid IMEI shows red error",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "tap", "text": "Server Method (IMEI)" },
+        { "action": "type_text",
+          "field": "IMEI (15 digits)",
+          "value": "123456789012345" },
+        { "action": "wait", "ms": 1500 },
+        { "action": "assert_visible", "text": "❌ Invalid IMEI" },
+        { "action": "assert_text_color",
+          "field": "IMEI (15 digits)",
+          "color": "#FF4444" }
+      ]
+    },
+
+    {
+      "id": "TC004",
+      "name": "IMEI Input — 14 digits shows counter",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "type_text",
+          "field": "IMEI (15 digits)",
+          "value": "12345678901234" },
+        { "action": "assert_visible", "text": "1 more digits" }
+      ]
+    },
+
+    {
+      "id": "TC005",
+      "name": "MTK Platform — Navigate + No Crash",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "navigate_to", "tab": "Devices" },
+        { "action": "tap", "text": "MTK" },
+        { "action": "wait", "ms": 1000 },
+        { "action": "assert_visible", "text": "MediaTek" },
+        { "action": "assert_no_crash" }
+      ]
+    },
+
+    {
+      "id": "TC006",
+      "name": "Apple ProTools — All tabs accessible",
+      "steps": [
+        { "action": "launch_app", "package": "com.deepeye.otg" },
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "assert_visible", "text": "iCloud" },
+        { "action": "tap", "text": "Hello Screen" },
+        { "action": "assert_no_crash" },
+        { "action": "tap", "text": "PIN" },
+        { "action": "assert_no_crash" },
+        { "action": "tap", "text": "Apple ID" },
+        { "action": "assert_no_crash" },
+        { "action": "tap", "text": "MDM" },
+        { "action": "assert_no_crash" }
+      ]
+    },
+
+    {
+      "id": "TC007",
+      "name": "Log Screen — Filter chips work",
+      "steps": [
+        { "action": "navigate_to", "tab": "Logs" },
+        { "action": "tap", "text": "ERROR" },
+        { "action": "assert_visible", "text": "ERROR" },
+        { "action": "tap", "text": "SUCCESS" },
+        { "action": "assert_visible", "text": "SUCCESS" },
+        { "action": "tap", "text": "ALL" },
+        { "action": "assert_no_crash" }
+      ]
+    },
+
+    {
+      "id": "TC008",
+      "name": "Python Bridge — IMEI validation performance",
+      "steps": [
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "type_text",
+          "field": "IMEI (15 digits)",
+          "value": "490154203237518" },
+        { "action": "assert_response_time",
+          "max_ms": 500,
+          "description": "Python luhn_check must run in <500ms" }
+      ]
+    },
+
+    {
+      "id": "TC009",
+      "name": "Settings Screen — Opens without crash",
+      "steps": [
+        { "action": "navigate_to", "tab": "Settings" },
+        { "action": "wait", "ms": 500 },
+        { "action": "assert_no_crash" }
+      ]
+    },
+
+    {
+      "id": "TC010",
+      "name": "Run Bypass button — Disabled without IMEI",
+      "steps": [
+        { "action": "navigate_to", "tab": "Apple" },
+        { "action": "assert_disabled", "text": "RUN BYPASS" }
+      ]
+    }
+  ]
+}
