@@ -14,25 +14,68 @@ data class MtkChipInfo(
 class MtkBromSession(context: Context, device: UsbDevice)
     : UsbSession(context, device, epInAddr = 0x81, epOutAddr = 0x01, timeoutMs = 10_000)
 {
+    companion object {
+        private const val HANDSHAKE_TIMEOUT_MS = 3_000
+        private const val COMMAND_TIMEOUT_MS = 3_000
+        private const val READ_TIMEOUT_MS = 5_000
+        private const val STATUS_TIMEOUT_MS = 2_000
+        private const val HANDSHAKE_ATTEMPTS = 3
+        private const val RETRY_SETTLE_MS = 300L
+    }
+
+    private data class BromWordRead(
+        val payload: ByteArray,
+        val statusOk: Boolean,
+    )
+
     // BROM Handshake — 4-byte sync sequence
     fun handshake(): Result<String> = runCatching {
         val sync     = byteArrayOf(0xA0.toByte(), 0x0A, 0x50, 0x05)
         val expected = byteArrayOf(0x5F.toByte(), 0xF5.toByte(), 0xAF.toByte(), 0xFA.toByte())
-        for ((s, e) in sync.zip(expected)) {
-            write(byteArrayOf(s))
-            val resp = read(1)
-            check(resp.isNotEmpty() && resp[0] == e) {
-                "Handshake failed: got ${resp.getOrNull(0)?.toHex()}, expected ${e.toHex()}"
+
+        var lastReason = "No response from BROM"
+        for (attempt in 0 until HANDSHAKE_ATTEMPTS) {
+            val written = write(sync, HANDSHAKE_TIMEOUT_MS)
+            if (written == sync.size) {
+                val resp = readExact(4, HANDSHAKE_TIMEOUT_MS)
+                if (resp.size == expected.size && resp.contentEquals(expected)) {
+                    return@runCatching "BROM handshake OK ✓"
+                }
+                if (resp.isNotEmpty()) {
+                    return@runCatching "BROM handshake replied: ${resp.toHexString()}"
+                }
+            } else {
+                lastReason = "Handshake write failed (wrote $written/${sync.size} bytes)"
             }
+
+            if (attempt + 1 < HANDSHAKE_ATTEMPTS) {
+                Thread.sleep(RETRY_SETTLE_MS)
+            }
+            lastReason = "Handshake failed on attempt ${attempt + 1}/$HANDSHAKE_ATTEMPTS"
         }
-        "BROM handshake OK ✓"
+
+        error(buildFailureMessage("❌ Handshake failed after 3 attempts", lastReason))
     }
 
     // Get hardware code → chip info
     fun getHwCode(): Result<MtkChipInfo> = runCatching {
-        write(byteArrayOf(0xFD.toByte()))
-        val resp = readExact(2)
-        val code = ((resp[0].toInt() and 0xFF) shl 8) or (resp[1].toInt() and 0xFF)
+        val written = write(byteArrayOf(0xFD.toByte()), COMMAND_TIMEOUT_MS)
+        check(written > 0) {
+            buildFailureMessage(
+                "❌ Device Identification failed on BROM",
+                "CMD_GET_HW_CODE (0xFD) could not be transmitted"
+            )
+        }
+
+        val result = readStatusAwareWord()
+        check(result.payload.size >= 2) {
+            buildFailureMessage(
+                "❌ Device Identification failed on BROM",
+                "HW code read failed: got ${result.payload.size} byte(s)"
+            )
+        }
+
+        val code = ((result.payload[0].toInt() and 0xFF) shl 8) or (result.payload[1].toInt() and 0xFF)
         MtkChipInfo(
             hwCode   = code,
             chipName = chipNameFromCode(code),
@@ -40,10 +83,49 @@ class MtkBromSession(context: Context, device: UsbDevice)
         )
     }
 
+    private fun readStatusAwareWord(): BromWordRead {
+        var statusOk = false
+        var payload = ByteArray(0)
+
+        val statusProbe = read(1, STATUS_TIMEOUT_MS)
+        if (statusProbe.isNotEmpty()) {
+            if (statusProbe[0] == 0x00.toByte()) {
+                statusOk = true
+            } else {
+                payload += statusProbe
+            }
+        }
+
+        if (payload.size < 2) {
+            payload += readExact(2 - payload.size, READ_TIMEOUT_MS)
+        }
+
+        if (payload.size < 2) {
+            payload += readExact(4 - payload.size, COMMAND_TIMEOUT_MS)
+        }
+
+        return BromWordRead(payload = payload, statusOk = statusOk)
+    }
+
+    private fun buildFailureMessage(title: String, reason: String): String = buildString {
+        appendLine(title)
+        appendLine(reason)
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+        appendLine("🔧 Common fixes:")
+        appendLine("  1. Use original/high-quality USB cable")
+        appendLine("  2. Connect directly to PC USB 2.0 port")
+        appendLine("  3. Hold Vol- button while connecting USB")
+        appendLine("  4. Try different USB port on phone")
+        appendLine("  5. Device must be POWERED OFF before connecting")
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+    }.trim()
+
+    private fun ByteArray.toHexString(): String = joinToString(" ") { it.toHex() }
+
     // Disable MTK watchdog
     fun disableWatchdog(): Result<Unit> = runCatching {
         val cmd = byteArrayOf(0xD1.toByte(), 0x00, 0xD4.toByte(), 0x00, 0x00, 0x00, 0x01, 0x00)
-        write(cmd)
+        write(cmd, COMMAND_TIMEOUT_MS)
     }
 
     // Send Download Agent binary
@@ -62,16 +144,16 @@ class MtkBromSession(context: Context, device: UsbDevice)
             it[8]  = (len           and 0xFF).toByte()
             it[9]  = 0x00; it[10] = 0x00; it[11] = 0x00; it[12] = 0x00  // sig len
         }
-        write(cmd)
-        val ack = read(2)
+        write(cmd, COMMAND_TIMEOUT_MS)
+        val ack = read(2, READ_TIMEOUT_MS)
         check(ack.isNotEmpty() && ack[0] == 0x00.toByte()) {
             "DA send rejected: ${ack.getOrNull(0)?.toHex()}"
         }
         // Transfer DA in 512-byte chunks with progress
         for (chunk in daBytes.toList().chunked(512)) {
-            write(chunk.toByteArray())
+            write(chunk.toByteArray(), READ_TIMEOUT_MS)
         }
-        val done = read(2)
+        val done = read(2, READ_TIMEOUT_MS)
         check(done.isNotEmpty() && done[0] == 0x00.toByte()) {
             "DA transfer failed: ${done.getOrNull(0)?.toHex()}"
         }
@@ -86,7 +168,7 @@ class MtkBromSession(context: Context, device: UsbDevice)
             it[3] = ((daAddr shr 8)  and 0xFF).toByte()
             it[4] = (daAddr           and 0xFF).toByte()
         }
-        write(cmd)
+        write(cmd, COMMAND_TIMEOUT_MS)
     }
 
     // ── Chip DB ───────────────────────────────────────────────

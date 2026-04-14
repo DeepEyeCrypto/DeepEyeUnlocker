@@ -96,3 +96,8 @@
 -keepattributes *Annotation*
 -dontwarn kotlinx.**
 -dontwarn dagger.**
+-keep class com.chaquo.python.** { *; }
+-keep class com.deepeye.otg.python.** { *; }
+-keepclassmembers class * {
+    @com.chaquo.python.PyObject *;
+}

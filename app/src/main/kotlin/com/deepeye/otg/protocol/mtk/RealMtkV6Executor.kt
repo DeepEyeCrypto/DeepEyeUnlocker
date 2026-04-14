@@ -42,6 +42,7 @@ import android.content.Context
 class RealMtkV6Executor(
     private val usbManager: UsbManager,
     private val context:    Context,
+    private val pythonBridge: com.deepeye.otg.python.PythonBridge,
 ) {
     companion object {
         // IF#0 CDC-ACM control transfers
@@ -133,6 +134,17 @@ class RealMtkV6Executor(
             uploadDa(conn, epOut, epIn, daBytes, sessionId) { pct ->
                 onProgress(45 + (pct * 20 / 100), "DA upload $pct%")
             }.onFailure { return@withContext it as ProtocolResult }
+
+            // Phase 5.5: Validate DA (Chaquopy)
+            onProgress(65, "Validating DA signature via Python")
+            val pyResult = pythonBridge.validateDa(daBytes, sessionId)
+            if (pyResult is com.deepeye.otg.python.DaValidationResult.Invalid) {
+                Timber.e("[MTK_V6] DA Python validation failed: ${pyResult.error} sessionId=$sessionId")
+                return@withContext ProtocolResult.UsbTransportError(
+                    reason = "DA validation failed: ${pyResult.error}",
+                    sessionId = sessionId
+                )
+            }
 
             // Phase 6: JUMP_DA
             onProgress(70, "Jumping to DA")

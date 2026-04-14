@@ -1,7 +1,12 @@
 package com.deepeye.otg.ui.components
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +15,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -27,36 +35,37 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
-/**
- * @deprecated Use GlassCard from Atoms.kt instead which provides better performance with pure drawBehind implementation
- */
-@Deprecated("Use GlassCard from Atoms.kt instead", ReplaceWith("GlassCard", "com.deepeye.otg.ui.components.AtomsKt"))
 @Composable
 fun GlassCard(
     hazeState: HazeState?,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 20.dp,
+    cornerRadius: Dp = 16.dp,
     performanceMode: Boolean = false,
-    accentColor: Color = Color.Transparent, // Added for mode accents
+    accentColor: Color = Color.Transparent,
     onClick: (() -> Unit)? = null,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
-        label = "cardScale"
+        targetValue = if (isPressed && onClick != null) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 520f),
+        label = "glassCardScale",
     )
-
-    // ── CRITICAL: backgroundColor MUST be specified ──────────
+    val highlighted = accentColor != Color.Transparent
+    val borderColor by animateColorAsState(
+        targetValue = if (highlighted) accentColor.copy(alpha = 0.42f) else DeepEyeColors.GlassBorder,
+        label = "glassCardBorder",
+    )
     val hazeStyle = remember(accentColor) {
         HazeStyle(
-            backgroundColor = DeepEyeColors.BG_VOID,
-            tint = HazeTint(if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f)),
-            blurRadius = 20.dp,
-            noiseFactor = 0.02f
+            backgroundColor = DeepEyeColors.Surface,
+            tint = HazeTint(
+                if (highlighted) accentColor.copy(alpha = 0.10f) else DeepEyeColors.GlassWhite,
+            ),
+            blurRadius = 22.dp,
+            noiseFactor = 0.015f,
         )
     }
 
@@ -65,46 +74,84 @@ fun GlassCard(
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                compositingStrategy = CompositingStrategy.Offscreen
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !performanceMode) {
+                    renderEffect = RenderEffect
+                        .createBlurEffect(10f, 10f, Shader.TileMode.DECAL)
+                        .asComposeRenderEffect()
+                }
             }
+            .shadow(
+                elevation = 24.dp,
+                shape = shape,
+                ambientColor = DeepEyeColors.Shadow,
+                spotColor = if (highlighted) accentColor.copy(alpha = 0.24f) else DeepEyeColors.Shadow,
+            )
+            .clip(shape)
             .then(
                 if (hazeState != null && !performanceMode) {
                     Modifier.hazeEffect(state = hazeState, style = hazeStyle)
                 } else {
-                    Modifier.background(DeepEyeColors.BG_SURFACE.copy(alpha = 0.8f))
+                    Modifier.background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                DeepEyeColors.Surface.copy(alpha = 0.92f),
+                                DeepEyeColors.Surface2.copy(alpha = 0.84f),
+                            ),
+                        ),
+                    )
                 }
             )
-            .border(
-                width = 1.dp,
-                color = if (accentColor != Color.Transparent) accentColor.copy(alpha = 0.3f) else DeepEyeColors.WHITE_LOW.copy(0.3f),
-                shape = shape
-            )
-            .clip(shape)
-            .then(
-                if (onClick != null) Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                ) else Modifier
-            )
-    ) {
-        // Accent glow at top edge
-        if (accentColor != Color.Transparent) {
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier
-                    .matchParentSize()
-            ) {
-                // Subtle top edge glow
-                drawRect(
-                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(accentColor.copy(alpha = 0.3f), Color.Transparent),
-                        startY = 0f,
-                        endY = 20f
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        DeepEyeColors.GlassHighlight,
+                        DeepEyeColors.GlassWhite.copy(alpha = 0.55f),
+                        Color.Transparent,
                     ),
-                    size = androidx.compose.ui.geometry.Size(size.width, 20f)
+                ),
+            )
+            .border(1.dp, borderColor, shape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = ripple(
+                            color = if (highlighted) accentColor else DeepEyeColors.PrimaryCyan,
+                        ),
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        DeepEyeColors.GlassHighlight,
+                        Color.Transparent,
+                    ),
+                    endY = size.height * 0.35f,
+                ),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius.toPx()),
+            )
+
+            if (highlighted) {
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.18f),
+                            Color.Transparent,
+                        ),
+                        radius = size.maxDimension * 0.85f,
+                    ),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius.toPx()),
                 )
             }
         }
-        
+
         content()
     }
 }

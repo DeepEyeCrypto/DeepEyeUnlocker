@@ -180,17 +180,32 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
             val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
                 ?: run { logError("No BROM device found"); _isConnecting.emit(false); return@launch }
             val session = MtkBromSession(context, usbDevice)
-            session.open().onFailure { logError(it.message); _isConnecting.emit(false); return@launch }
-            session.handshake()
-                .onSuccess { log("BROM handshake OK ✓", "SUCCESS") }
-                .onFailure { logError(it.message); _isConnecting.emit(false); return@launch }
-            session.getHwCode()
-                .onSuccess {
-                    _chipInfo.emit(it)
-                    log("Chip: ${it.chipName} (${it.arch}) HW=0x${it.hwCode.toString(16).uppercase()}", "SUCCESS")
+            try {
+                session.open().onFailure {
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    return@launch
                 }
-                .onFailure { logError(it.message) }
-            _isConnecting.emit(false)
+                session.handshake()
+                    .onSuccess { log(it, "SUCCESS") }
+                    .onFailure {
+                        logError(it.message)
+                        logBromRecoveryHints()
+                        return@launch
+                    }
+                session.getHwCode()
+                    .onSuccess {
+                        _chipInfo.emit(it)
+                        log("Chip: ${it.chipName} (${it.arch}) HW=0x${it.hwCode.toString(16).uppercase()}", "SUCCESS")
+                    }
+                    .onFailure {
+                        logError(it.message)
+                        logBromRecoveryHints()
+                    }
+            } finally {
+                session.close()
+                _isConnecting.emit(false)
+            }
         }
     }
 
@@ -202,17 +217,33 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
             val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
                 ?: run { logError("No BROM device"); _isConnecting.emit(false); return@launch }
             val session = MtkBromSession(context, usbDevice)
-            session.open().onFailure { logError(it.message); _isConnecting.emit(false); return@launch }
-            session.handshake().onFailure { logError(it.message); _isConnecting.emit(false); return@launch }
-            session.disableWatchdog()
-            log("Sending DA (${daBytes.size / 1024}KB)...")
-            session.sendDa(daBytes, daAddr)
-                .onSuccess { log("DA sent ✓", "SUCCESS") }
-                .onFailure { logError(it.message); _isConnecting.emit(false); return@launch }
-            session.jumpDa(daAddr)
-                .onSuccess { log("Jumped to DA — waiting for DA protocol...", "SUCCESS") }
-                .onFailure { logError(it.message) }
-            _isConnecting.emit(false)
+            try {
+                session.open().onFailure {
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    return@launch
+                }
+                session.handshake().onFailure {
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    return@launch
+                }
+                session.disableWatchdog()
+                log("Sending DA (${daBytes.size / 1024}KB)...")
+                session.sendDa(daBytes, daAddr)
+                    .onSuccess { log("DA sent ✓", "SUCCESS") }
+                    .onFailure {
+                        logError(it.message)
+                        logBromRecoveryHints()
+                        return@launch
+                    }
+                session.jumpDa(daAddr)
+                    .onSuccess { log("Jumped to DA — waiting for DA protocol...", "SUCCESS") }
+                    .onFailure { logError(it.message) }
+            } finally {
+                session.close()
+                _isConnecting.emit(false)
+            }
         }
     }
 
@@ -346,4 +377,11 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     private fun logError(msg: String?) { log(msg ?: "Unknown error", "ERROR"); _error.value = msg }
+
+    private fun logBromRecoveryHints() {
+        log("Use original/high-quality USB cable", "WARN")
+        log("Connect directly to PC USB 2.0 port", "WARN")
+        log("Hold Vol- while connecting USB", "WARN")
+        log("Power device OFF before BROM connect", "WARN")
+    }
 }

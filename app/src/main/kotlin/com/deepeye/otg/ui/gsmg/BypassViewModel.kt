@@ -36,6 +36,18 @@ data class BypassUiState(
     val signalCount:        Int                   = 0,
     val totalAvailable:     Int                   = 0,
     val recommendation:     RecommendationResult? = null,
+
+    // Python-powered IMEI validation
+    val imei: String = "",
+    val imeiValid: Boolean = false,
+    val imeiManufacturer: String = "",
+    val imeiTac: String = "",
+
+    // DA validation status
+    val daStatus: String = "",
+
+    // iOS activation payload
+    val iosActivationPayload: String = "",
 )
 
 @HiltViewModel
@@ -43,6 +55,7 @@ class BypassViewModel @Inject constructor(
     private val bypassEngine:   UniversalBypassEngine,
     private val usbSessionMgr:  UsbSessionManager,
     private val usbLifecycleManager: UsbLifecycleManager,
+    private val pythonBridge: com.deepeye.otg.python.PythonBridge,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BypassUiState())
@@ -344,5 +357,50 @@ class BypassViewModel @Inject constructor(
     fun onBrandFilter(brand: String) {
         _state.update { it.copy(filters = it.filters.copy(brandFilter = brand)) }
         refreshFeatures()
+    }
+
+    // ── Python-Powered UI Helpers ─────────────────────────────
+
+    fun onImeiChanged(imei: String) {
+        _state.update { it.copy(imei = imei) }
+        if (imei.length == 15) {
+            viewModelScope.launch {
+                val sessionId = java.util.UUID.randomUUID().toString()
+                val result = pythonBridge.validateImei(imei, sessionId)
+                _state.update { state ->
+                    state.copy(
+                        imeiValid = result.isValid,
+                        imeiManufacturer = if (result.isValid) result.manufacturer else "❌ Invalid IMEI",
+                        imeiTac = result.tac
+                    )
+                }
+            }
+        } else {
+            _state.update { it.copy(imeiValid = false, imeiManufacturer = "", imeiTac = "") }
+        }
+    }
+
+    suspend fun validateDaBeforeFlash(daBytes: ByteArray, sessionId: String): Boolean {
+        return when (val r = pythonBridge.validateDa(daBytes, sessionId)) {
+            is com.deepeye.otg.python.DaValidationResult.Valid -> {
+                Timber.d("[VM] DA valid sha=${r.sha256} sid=$sessionId")
+                _state.update { it.copy(daStatus = "✅ DA Valid: ${r.sha256.take(16)}...") }
+                true
+            }
+            is com.deepeye.otg.python.DaValidationResult.Invalid -> {
+                Timber.e("[VM] DA INVALID: ${r.error} sid=$sessionId")
+                _state.update { it.copy(daStatus = "❌ DA Invalid: ${r.error}") }
+                false
+            }
+        }
+    }
+
+    fun onBuildIosPayload(udid: String, imei: String, serial: String, model: String, iosVersion: String) {
+        viewModelScope.launch {
+            val sessionId = java.util.UUID.randomUUID().toString()
+            val payload = pythonBridge.buildIosActivationRequest(udid, imei, serial, model, iosVersion, sessionId)
+            _state.update { it.copy(iosActivationPayload = payload) }
+            Timber.d("[VM] iOS payload built sid=$sessionId")
+        }
     }
 }

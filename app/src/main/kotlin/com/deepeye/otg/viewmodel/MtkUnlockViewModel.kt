@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,23 +42,15 @@ class MtkUnlockViewModel @Inject constructor(
 
     fun detectDevice(usbDevice: UsbDevice) {
         viewModelScope.launch {
-            _state.update { it.copy(isDetecting = true, errorMessage = null) }
+            _state.update { it.copy(isDetecting = true, errorMessage = null, successMessage = null) }
             try {
                 val info = mtkEngine.detectDevice(usbDevice)
-                _state.update { it.copy(deviceInfo = info, isDetecting = false) }
-                addLog("✅ Device detected: ${info.chip.chipName}")
-                addLog("📱 Mode: ${info.connectMode.name}")
-                if (info.brand.isNotEmpty()) {
-                    addLog("📱 Brand: ${info.brand} ${info.model}")
-                    addLog("🤖 Android: ${info.androidVer}")
-                }
-                if (info.daAuthRequired) {
-                    addLog("⚠️ DA Auth Required: Yes")
-                }
+                applyDeviceDetectionResult(info)
             } catch (e: Exception) {
                 _state.update { 
                     it.copy(
                         isDetecting = false, 
+                        successMessage = null,
                         errorMessage = "Detection failed: ${e.message}"
                     ) 
                 }
@@ -78,6 +71,41 @@ class MtkUnlockViewModel @Inject constructor(
                         errorMessage = "Detection failed: ${e.message}"
                     ) 
                 }
+            }
+        }
+    }
+
+    fun retryBromIdentification() {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    deviceInfo = null,
+                    isDetecting = false,
+                    isExecuting = false,
+                    currentOperation = null,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+            addLog("♻️ Resetting USB state before BROM re-scan...")
+            delay(1000)
+            _state.update { it.copy(isDetecting = true) }
+
+            try {
+                val info = mtkEngine.retryBromIdentification()
+                applyDeviceDetectionResult(
+                    info = info,
+                    successMessage = "✅ BROM identification retry completed"
+                )
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isDetecting = false,
+                        successMessage = null,
+                        errorMessage = "Retry failed: ${e.message}"
+                    )
+                }
+                addLog("❌ Retry failed: ${e.message}")
             }
         }
     }
@@ -260,6 +288,54 @@ class MtkUnlockViewModel @Inject constructor(
         _state.update { 
             it.copy(logs = it.logs + "[${System.currentTimeMillis()}] $msg") 
         }
+    }
+
+    private fun applyDeviceDetectionResult(
+        info: MtkDeviceInfo,
+        successMessage: String? = null
+    ) {
+        if (isBromIdentificationFailure(info)) {
+            val failureMessage = info.securityConfig.ifBlank {
+                "❌ Device Identification failed on BROM"
+            }
+
+            _state.update {
+                it.copy(
+                    deviceInfo = null,
+                    isDetecting = false,
+                    successMessage = null,
+                    errorMessage = failureMessage
+                )
+            }
+
+            failureMessage.lineSequence()
+                .filter { line -> line.isNotBlank() }
+                .forEach { line -> addLog(line) }
+            return
+        }
+
+        _state.update {
+            it.copy(
+                deviceInfo = info,
+                isDetecting = false,
+                errorMessage = null,
+                successMessage = successMessage
+            )
+        }
+
+        addLog("✅ Device detected: ${info.chip.chipName}")
+        addLog("📱 Mode: ${info.connectMode.name}")
+        if (info.brand.isNotEmpty()) {
+            addLog("📱 Brand: ${info.brand} ${info.model}")
+            addLog("🤖 Android: ${info.androidVer}")
+        }
+        if (info.daAuthRequired) {
+            addLog("⚠️ DA Auth Required: Yes")
+        }
+    }
+
+    private fun isBromIdentificationFailure(info: MtkDeviceInfo): Boolean {
+        return info.connectMode == MtkConnectionMode.BROM && info.hwCode.isBlank()
     }
     
     private fun updateOperationStatus(id: String, status: MtkTaskStatus) {

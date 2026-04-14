@@ -2,6 +2,7 @@ package com.deepeye.otg.protocol.mtk
 
 import com.deepeye.otg.logging.SafeLog
 import com.deepeye.otg.usb.UsbTransport
+import kotlinx.coroutines.delay
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -11,7 +12,11 @@ import java.nio.ByteOrder
  */
 object MtkBromProtocol {
     private const val TAG = "MtkBromProtocol"
-    private const val HANDSHAKE_TIMEOUT_MS = 2_000
+    private const val HANDSHAKE_TIMEOUT_MS = 3_000
+    private const val COMMAND_TIMEOUT_MS = 3_000
+    private const val READ_TIMEOUT_MS = 5_000
+    private const val STATUS_TIMEOUT_MS = 2_000
+    private const val HANDSHAKE_RETRIES = 3
     private const val SEND_DA_TIMEOUT_MS = 15_000
     private const val CMD_WRITE32 = 0xD4.toByte()
     private const val CMD_SEND_DA = 0xD7.toByte()
@@ -27,43 +32,114 @@ object MtkBromProtocol {
             MtkError("$operation failed: $details")
     }
 
+    private data class StatusAwarePayload(
+        val statusOk: Boolean,
+        val data: ByteArray
+    )
+
     /**
      * Handshake logic: Echo Cmd ^ 0xFF.
      */
     suspend fun handshake(transport: UsbTransport): Boolean {
         SafeLog.i(TAG, "Executing initial handshake sequence...")
-        for (byte in HANDSHAKE_SEQ) {
-            val sendRes = transport.send(byteArrayOf(byte), timeoutMs = HANDSHAKE_TIMEOUT_MS)
-            if (sendRes.isFailure) return false
+        repeat(HANDSHAKE_RETRIES) { attempt ->
+            var handshakeOk = true
 
-            val recvRes = transport.receive(1, timeoutMs = HANDSHAKE_TIMEOUT_MS)
-            if (recvRes.isFailure) return false
+            for (byte in HANDSHAKE_SEQ) {
+                val sendRes = transport.send(byteArrayOf(byte), timeoutMs = HANDSHAKE_TIMEOUT_MS)
+                if (sendRes.isFailure) {
+                    handshakeOk = false
+                    break
+                }
 
-            val actual = recvRes.getOrNull()?.get(0)
-            val expected = (byte.toInt() xor 0xFF).toByte()
-            if (actual != expected) {
-                SafeLog.e(TAG, "Mirror mismatch: expected 0x%02X, got 0x%02X".format(expected, actual))
-                return false
+                val recvRes = transport.receive(1, timeoutMs = HANDSHAKE_TIMEOUT_MS)
+                if (recvRes.isFailure) {
+                    handshakeOk = false
+                    break
+                }
+
+                val actual = recvRes.getOrNull()?.getOrNull(0)
+                val expected = (byte.toInt() xor 0xFF).toByte()
+                if (actual != expected) {
+                    SafeLog.e(TAG, "Mirror mismatch: expected 0x%02X, got 0x%02X".format(expected, actual))
+                    handshakeOk = false
+                    break
+                }
+            }
+
+            if (handshakeOk) {
+                return true
+            }
+
+            if (attempt + 1 < HANDSHAKE_RETRIES) {
+                SafeLog.w(TAG, "[MTK_BROM] handshake retry ${attempt + 1}/$HANDSHAKE_RETRIES")
+                delay(300)
             }
         }
-        return true
+
+        SafeLog.e(TAG, "[MTK_BROM] handshake failed after $HANDSHAKE_RETRIES attempts")
+        return false
     }
 
     /**
      * Reads the Hardware Code (0xFD).
      */
     suspend fun readHwCode(transport: UsbTransport): Int? {
-        val sendRes = transport.send(byteArrayOf(0xFD.toByte()))
+        val sendRes = transport.send(byteArrayOf(0xFD.toByte()), timeoutMs = COMMAND_TIMEOUT_MS)
         if (sendRes.isFailure) return null
-        
-        val recvRes = transport.receive(4)
-        val data = recvRes.getOrNull()
-        if (data != null && data.size >= 2) {
+
+        val payload = readStatusAwarePayload(transport, expectedBytes = 2)
+        if (!payload.statusOk) {
+            SafeLog.w(TAG, "[MTK_BROM] HW_CODE status byte mismatch — continuing with payload parsing")
+        }
+
+        if (payload.data.size >= 2) {
+            val data = payload.data
             val hwCode = ((data[0].toInt() and 0xFF) shl 8) or (data[1].toInt() and 0xFF)
             SafeLog.i(TAG, "Chipset HW_CODE: 0x%04X".format(hwCode))
             return hwCode
         }
+
+        SafeLog.e(TAG, "[MTK_BROM] HW_CODE read failed: got ${payload.data.size} byte(s)")
         return null
+    }
+
+    private suspend fun readStatusAwarePayload(
+        transport: UsbTransport,
+        expectedBytes: Int
+    ): StatusAwarePayload {
+        var statusOk = false
+        var collected = ByteArray(0)
+
+        val statusProbe = transport.receive(1, timeoutMs = STATUS_TIMEOUT_MS).getOrNull()
+        val statusByte = statusProbe?.getOrNull(0)
+        if (statusByte != null) {
+            if (statusByte == 0x00.toByte()) {
+                statusOk = true
+            } else {
+                collected = byteArrayOf(statusByte)
+            }
+        }
+
+        val remainingPrimary = (expectedBytes - collected.size).coerceAtLeast(0)
+        if (remainingPrimary > 0) {
+            val primary = transport.receive(remainingPrimary, timeoutMs = READ_TIMEOUT_MS).getOrNull()
+            if (primary != null) {
+                collected += primary
+            }
+        }
+
+        if (collected.size < expectedBytes) {
+            val fallbackRemaining = (4 - collected.size).coerceAtLeast(0)
+            if (fallbackRemaining > 0) {
+                val fallback = transport.receive(fallbackRemaining, timeoutMs = COMMAND_TIMEOUT_MS).getOrNull()
+                if (fallback != null) {
+                    collected += fallback
+                }
+            }
+        }
+
+        return StatusAwarePayload(statusOk = statusOk, data = collected)
     }
 
     /**

@@ -33,6 +33,15 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.input.KeyboardType
 import com.deepeye.otg.data.gsmg.DevicePlatform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -185,6 +194,13 @@ fun BypassScreen(viewModel: BypassViewModel = hiltViewModel()) {
                     onToggleNoJailbreak = viewModel::onToggleNoJailbreak,
                     onToggleOfflineOnly = viewModel::onToggleOfflineOnly,
                 )
+            }
+
+            item(
+                key = "imei_validator",
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                ImeiInputCard(uiState = uiState, viewModel = viewModel)
             }
 
             item(
@@ -594,6 +610,69 @@ private fun FilterCard(
                 ToggleBadge(text = "No Data Loss", active = uiState.filters.noDataLoss, onClick = onToggleNoDataLoss)
                 ToggleBadge(text = "No Jailbreak", active = uiState.filters.noJailbreak, onClick = onToggleNoJailbreak)
                 ToggleBadge(text = "Offline", active = uiState.filters.offlineOnly, onClick = onToggleOfflineOnly)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImeiInputCard(uiState: BypassUiState, viewModel: BypassViewModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = panelBg),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedTextField(
+                value = uiState.imei,
+                onValueChange = { viewModel.onImeiChanged(it) },
+                label = { Text("IMEI (15 digits)", color = textMuted, fontSize = 11.sp) },
+                placeholder = { Text("358429XXXXXXXXX", color = Color.White.copy(alpha = 0.2f)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                textStyle = TextStyle(color = textPrimary, fontSize = 13.sp, letterSpacing = 2.sp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = when {
+                        uiState.imei.length < 15 -> outline
+                        uiState.imeiValid       -> Color(0xFF00FF88)
+                        else                    -> Color(0xFFFF4444)
+                    },
+                    unfocusedBorderColor = when {
+                        uiState.imei.length == 15 && uiState.imeiValid -> Color(0xFF00FF88)
+                        uiState.imei.length == 15 && !uiState.imeiValid -> Color(0xFFFF4444)
+                        else -> outline
+                    }
+                ),
+                supportingText = {
+                    when {
+                        uiState.imei.isEmpty() -> Text("Dial *#06# to get IMEI", color = textMuted)
+                        uiState.imei.length < 15 -> Text("${15 - uiState.imei.length} more digits...", color = textMuted)
+                        uiState.imeiValid -> Text("✅ ${uiState.imeiManufacturer}", color = Color(0xFF00FF88))
+                        else -> Text("❌ Invalid IMEI (Luhn failed via Python)", color = Color(0xFFFF4444))
+                    }
+                },
+                trailingIcon = {
+                    when {
+                        uiState.imei.length == 15 && uiState.imeiValid -> Icon(Icons.Default.CheckCircle, "Valid", tint = Color(0xFF00FF88))
+                        uiState.imei.length == 15 && !uiState.imeiValid -> Icon(Icons.Default.Error, "Invalid", tint = Color(0xFFFF4444))
+                        else -> {}
+                    }
+                }
+            )
+
+            if (uiState.imeiValid && uiState.imeiManufacturer.isNotEmpty()) {
+                AssistChip(
+                    onClick = {},
+                    label = { Text(uiState.imeiManufacturer, fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.PhoneAndroid, null, Modifier.size(16.dp)) },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color(0xFF00FF88).copy(alpha = 0.20f),
+                        labelColor = Color(0xFF00FF88)
+                    )
+                )
             }
         }
     }

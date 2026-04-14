@@ -36,6 +36,9 @@ class DeepEyeApplication : Application() {
     @javax.inject.Inject
     lateinit var licenseManager: com.deepeye.otg.service.LicenseManager
 
+    @javax.inject.Inject
+    lateinit var pythonBridge: com.deepeye.otg.python.PythonBridge
+
     companion object {
         private const val TAG = "DeepEye"
     }
@@ -47,6 +50,10 @@ class DeepEyeApplication : Application() {
         if (BuildConfig.DEBUG) {
             timber.log.Timber.plant(timber.log.Timber.DebugTree())
         }
+
+        // Init Chaquopy Python runtime (offline)
+        pythonBridge.initialize()
+        timber.log.Timber.d("[App] Chaquopy Python initialized — offline ready")
 
         // ── Load native lib on IO thread — NEVER on main ────────
         appScope.launch(Dispatchers.IO) {

@@ -72,6 +72,7 @@ fun MtkUnlockScreen(
 
         // Error Banner
         state.errorMessage?.let { error ->
+            val showBromRetry = error.contains("BROM", ignoreCase = true)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,7 +81,7 @@ fun MtkUnlockScreen(
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Icon(
                         Icons.Default.Error,
@@ -89,11 +90,29 @@ fun MtkUnlockScreen(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = error,
-                        color = Color.Red,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                        )
+                        if (showBromRetry) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedButton(
+                                onClick = { viewModel.retryBromIdentification() },
+                                enabled = !state.isDetecting && !state.isExecuting
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    if (state.isDetecting) {
+                                        "Retrying BROM..."
+                                    } else {
+                                        "Retry BROM Identification"
+                                    }
+                                )
+                            }
+                        }
+                    }
                     IconButton(onClick = { viewModel.clearError() }) {
                         Icon(Icons.Default.Close, contentDescription = "Dismiss")
                     }

@@ -51,6 +51,7 @@ class UniversalBypassEngine @Inject constructor(
     private val usbManager: UsbManager,
     private val adbSession: AdbSession,
     private val firmwareAssets: FirmwareAssetManager,
+    private val pythonBridge: com.deepeye.otg.python.PythonBridge,
 ) {
     companion object {
         private const val MAX_RETRIES  = 3
@@ -60,12 +61,12 @@ class UniversalBypassEngine @Inject constructor(
 
     // ── Executor pool ────────────────────────────────────────────────────
 
-    private val mtkV6     by lazy { RealMtkV6Executor(usbManager, context) }
+    private val mtkV6     by lazy { RealMtkV6Executor(usbManager, context, pythonBridge) }
     private val mtkBrom   by lazy { RealMtkBromExecutor(usbManager, context) }
     private val qcEdl     by lazy { RealQcEdlExecutor(usbManager, context) }
     private val samsungOdin by lazy { RealSamsungOdinExecutor(usbManager) }
     private val adbExec   by lazy { RealAdbExecutor(adbSession) }
-    private val serverExec by lazy { RealServerBypassExecutor() }
+    private val serverExec by lazy { RealServerBypassExecutor(pythonBridge) }
 
     // ── Main entry point ──────────────────────────────────────────────────
 

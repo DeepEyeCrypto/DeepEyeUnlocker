@@ -746,6 +746,10 @@ class UsbViewModel @javax.inject.Inject constructor(
     val logLines: StateFlow<List<LogEntry>> = _logLines.asStateFlow()
     val logs: StateFlow<List<LogEntry>> = _logLines.asStateFlow()
 
+    fun clearLogs() {
+        _logLines.value = emptyList()
+    }
+
     private val _progress = MutableStateFlow(0)
     val progress: StateFlow<Int> = _progress.asStateFlow()
 

@@ -7,6 +7,8 @@ import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.deepeye.otg.util.bulkIn
+import com.deepeye.otg.util.bulkOut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -39,7 +41,22 @@ class MtkUnlockEngine @Inject constructor(
         const val CMD_READ_PARTITION = 0xB0.toByte()
         const val CMD_SEND_PAYLOAD = 0xD8.toByte()
         const val CMD_WRITE_FLASH = 0xD1.toByte()
+        const val BROM_HANDSHAKE_TIMEOUT_MS = 3000
+        const val BROM_COMMAND_TIMEOUT_MS = 3000
+        const val BROM_READ_TIMEOUT_MS = 5000
+        const val BROM_STATUS_TIMEOUT_MS = 2000
+        const val BROM_RETRY_ATTEMPTS = 3
+        const val BROM_RETRY_DELAY_MS = 300L
     }
+
+    private data class BromWordRead(
+        val bytesRead: Int,
+        val data: ByteArray,
+        val statusOk: Boolean
+    )
+
+    private var activeBromConnection: UsbDeviceConnection? = null
+    private var activeBromInterface: UsbInterface? = null
 
     // Step 1: Detect MTK device via USB
     suspend fun detectDevice(
@@ -66,12 +83,26 @@ class MtkUnlockEngine @Inject constructor(
         // Open USB connection to BROM
         val usbManager = context.getSystemService(Context.USB_SERVICE) 
             as UsbManager
-        val connection = usbManager.openDevice(usbDevice) 
-            ?: return@withContext MtkDeviceInfo()
+        closeTrackedBromConnection()
+        val connection = usbManager.openDevice(usbDevice)
+            ?: return@withContext buildBromFailureInfo(
+                "❌ UsbDeviceConnection returned null silently — verify USB permission and reconnect the powered-off device."
+            )
 
         try {
+            if (usbDevice.interfaceCount == 0) {
+                return@withContext buildBromFailureInfo(
+                    "❌ No USB interfaces were exposed by the BROM device."
+                )
+            }
+
             val iface = usbDevice.getInterface(0)
-            connection.claimInterface(iface, true)
+            if (!connection.claimInterface(iface, true)) {
+                return@withContext buildBromFailureInfo(
+                    "❌ Failed to claim the BROM USB interface."
+                )
+            }
+            trackBromConnection(connection, iface)
 
             // Find bulk endpoints
             var epIn: android.hardware.usb.UsbEndpoint? = null
@@ -84,53 +115,260 @@ class MtkUnlockEngine @Inject constructor(
                 }
             }
             
-            if (epIn == null || epOut == null) return@withContext MtkDeviceInfo()
+            val bulkInEndpoint = epIn ?: return@withContext buildBromFailureInfo(
+                "❌ Missing BROM bulk IN endpoint."
+            )
+            val bulkOutEndpoint = epOut ?: return@withContext buildBromFailureInfo(
+                "❌ Missing BROM bulk OUT endpoint."
+            )
 
-            // Send BROM handshake (0xA0 0x0A 0x50 0x05)
-            val handshake = byteArrayOf(0xA0.toByte(), 0x0A, 0x50, 0x05)
-            connection.bulkTransfer(epOut, handshake, handshake.size, 3000)
-            
-            // Read handshake response (0x5F 0xF5 0xAF 0xFA)
-            val hsResp = ByteArray(4)
-            connection.bulkTransfer(epIn, hsResp, 4, 3000)
-            
-            // Get HW Code
-            connection.bulkTransfer(epOut, byteArrayOf(CMD_GET_HW_CODE), 1, 3000)
-            val hwCodeBuf = ByteArray(4)
-            connection.bulkTransfer(epIn, hwCodeBuf, 4, 3000)
-            val hwCode = String.format("0x%02X%02X", hwCodeBuf[0], hwCodeBuf[1])
-            
-            // Get HW Dict (sub version)
-            connection.bulkTransfer(epOut, byteArrayOf(CMD_GET_HW_DICT), 1, 3000)
-            val hwDictBuf = ByteArray(4)
-            connection.bulkTransfer(epIn, hwDictBuf, 4, 3000)
-            
-            val chip = MtkChip.entries.find { 
-                hwCode.contains(it.chipId, ignoreCase = true) 
-            } ?: MtkChip.UNKNOWN
+            val handshakeOk = performBromHandshake(connection, bulkOutEndpoint, bulkInEndpoint)
+            if (!handshakeOk) {
+                return@withContext buildBromFailureInfo(
+                    "❌ Handshake failed after 3 attempts."
+                )
+            }
+
+            val hwCodeRead = readBromWord(
+                connection = connection,
+                epOut = bulkOutEndpoint,
+                epIn = bulkInEndpoint,
+                command = CMD_GET_HW_CODE
+            )
+            if (hwCodeRead.bytesRead <= 0) {
+                return@withContext buildBromFailureInfo(
+                    "❌ Device Identification failed on BROM — CMD_GET_HW_CODE (0xFD) returned no readable data."
+                )
+            }
+            if (hwCodeRead.bytesRead < 2) {
+                return@withContext buildBromFailureInfo(
+                    "❌ HW code read failed: got ${hwCodeRead.bytesRead} byte(s) from BROM."
+                )
+            }
+
+            val hwCode = formatBromWord(hwCodeRead.data)
+
+            val hwDictRead = readBromWord(
+                connection = connection,
+                epOut = bulkOutEndpoint,
+                epIn = bulkInEndpoint,
+                command = CMD_GET_HW_DICT
+            )
+            val hwSubCode = if (hwDictRead.bytesRead >= 2) {
+                formatBromWord(hwDictRead.data)
+            } else {
+                "0x0000"
+            }
+
+            val chip = resolveMtkChip(hwCode)
 
             // Check DA auth requirement (newer Dimensity chips require it)
             val daRequired = chip.chipName.contains("Dimensity") || 
                 listOf(MtkChip.MT6877, MtkChip.MT6879, MtkChip.MT6883, 
                        MtkChip.MT6889, MtkChip.MT6891, MtkChip.MT6893, MtkChip.MT6983)
                     .any { it.chipId == chip.chipId }
-
-            connection.releaseInterface(iface)
             
             MtkDeviceInfo(
                 chipId = hwCode,
                 chip = chip,
                 hwCode = hwCode,
-                hwSubCode = String.format("0x%02X%02X", hwDictBuf[0], hwDictBuf[1]),
+                hwSubCode = hwSubCode,
                 connectMode = MtkConnectionMode.BROM,
                 daAuthRequired = daRequired
             )
         } catch (e: Exception) {
-            MtkDeviceInfo(connectMode = MtkConnectionMode.BROM)
+            buildBromFailureInfo(
+                "❌ ${e.message ?: "Unexpected USB exception during BROM identification."}"
+            )
         } finally {
-            connection.close()
+            closeTrackedBromConnection()
         }
     }
+
+    suspend fun retryBromIdentification(): MtkDeviceInfo = withContext(Dispatchers.IO) {
+        closeTrackedBromConnection()
+        val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+        val bromDevice = usbManager.deviceList.values.firstOrNull {
+            it.vendorId == MTK_VID && it.productId == BROM_PID
+        } ?: return@withContext buildBromFailureInfo(
+            "❌ No MTK BROM device detected during USB re-scan."
+        )
+
+        readBromInfo(bromDevice)
+    }
+
+    private suspend fun performBromHandshake(
+        connection: UsbDeviceConnection,
+        epOut: UsbEndpoint,
+        epIn: UsbEndpoint
+    ): Boolean {
+        val handshake = byteArrayOf(0xA0.toByte(), 0x0A, 0x50, 0x05)
+        val expected = byteArrayOf(0x5F, 0xF5.toByte(), 0xAF.toByte(), 0xFA.toByte())
+
+        repeat(BROM_RETRY_ATTEMPTS) { attempt ->
+            val sent = connection.bulkOut(
+                ep = epOut,
+                data = handshake,
+                len = handshake.size,
+                timeoutMs = BROM_HANDSHAKE_TIMEOUT_MS,
+                tag = "MTK_BROM"
+            )
+            if (sent == handshake.size) {
+                val response = ByteArray(4)
+                val read = connection.bulkIn(
+                    ep = epIn,
+                    buf = response,
+                    len = response.size,
+                    timeoutMs = BROM_HANDSHAKE_TIMEOUT_MS,
+                    tag = "MTK_BROM"
+                )
+
+                if (read == expected.size && response.contentEquals(expected)) {
+                    return true
+                }
+
+                if (read > 0) {
+                    return true
+                }
+            }
+
+            if (attempt + 1 < BROM_RETRY_ATTEMPTS) {
+                delay(BROM_RETRY_DELAY_MS)
+            }
+        }
+
+        return false
+    }
+
+    private fun readBromWord(
+        connection: UsbDeviceConnection,
+        epOut: UsbEndpoint,
+        epIn: UsbEndpoint,
+        command: Byte
+    ): BromWordRead {
+        val sent = connection.bulkOut(
+            ep = epOut,
+            data = byteArrayOf(command),
+            len = 1,
+            timeoutMs = BROM_COMMAND_TIMEOUT_MS,
+            tag = "MTK_BROM"
+        )
+        if (sent <= 0) {
+            return BromWordRead(0, ByteArray(0), false)
+        }
+
+        var statusOk = false
+        var collected = ByteArray(0)
+        val statusBuffer = ByteArray(1)
+        val statusRead = connection.bulkIn(
+            ep = epIn,
+            buf = statusBuffer,
+            len = 1,
+            timeoutMs = BROM_STATUS_TIMEOUT_MS,
+            tag = "MTK_BROM"
+        )
+
+        if (statusRead > 0) {
+            if (statusBuffer[0] == 0x00.toByte()) {
+                statusOk = true
+            } else {
+                collected = byteArrayOf(statusBuffer[0])
+            }
+        }
+
+        val primaryRemaining = (2 - collected.size).coerceAtLeast(0)
+        if (primaryRemaining > 0) {
+            val primaryBuffer = ByteArray(primaryRemaining)
+            val primaryRead = connection.bulkIn(
+                ep = epIn,
+                buf = primaryBuffer,
+                len = primaryBuffer.size,
+                timeoutMs = BROM_READ_TIMEOUT_MS,
+                tag = "MTK_BROM"
+            )
+            if (primaryRead > 0) {
+                collected += primaryBuffer.copyOf(primaryRead)
+            }
+        }
+
+        if (collected.size < 2) {
+            val fallbackRemaining = (4 - collected.size).coerceAtLeast(0)
+            if (fallbackRemaining > 0) {
+                val fallbackBuffer = ByteArray(fallbackRemaining)
+                val fallbackRead = connection.bulkIn(
+                    ep = epIn,
+                    buf = fallbackBuffer,
+                    len = fallbackBuffer.size,
+                    timeoutMs = BROM_COMMAND_TIMEOUT_MS,
+                    tag = "MTK_BROM"
+                )
+                if (fallbackRead > 0) {
+                    collected += fallbackBuffer.copyOf(fallbackRead)
+                }
+            }
+        }
+
+        return BromWordRead(collected.size, collected, statusOk)
+    }
+
+    private fun trackBromConnection(connection: UsbDeviceConnection, iface: UsbInterface) {
+        activeBromConnection = connection
+        activeBromInterface = iface
+    }
+
+    private fun closeTrackedBromConnection() {
+        runCatching {
+            activeBromInterface?.let { iface ->
+                activeBromConnection?.releaseInterface(iface)
+            }
+        }
+        runCatching {
+            activeBromConnection?.close()
+        }
+        activeBromInterface = null
+        activeBromConnection = null
+    }
+
+    private fun resolveMtkChip(hwCode: String): MtkChip {
+        val normalizedHwCode = hwCode.removePrefix("0x")
+        return MtkChip.entries.firstOrNull { chip ->
+            chip != MtkChip.UNKNOWN && (
+                chip.chipId.removePrefix("0x").equals(normalizedHwCode, ignoreCase = true) ||
+                    chip.name.contains(normalizedHwCode, ignoreCase = true)
+                )
+        } ?: MtkChip.UNKNOWN
+    }
+
+    private fun formatBromWord(data: ByteArray): String {
+        if (data.size < 2) {
+            return "0x0000"
+        }
+
+        return "0x%02X%02X".format(
+            data[0].toInt() and 0xFF,
+            data[1].toInt() and 0xFF
+        )
+    }
+
+    private fun buildBromFailureInfo(reason: String): MtkDeviceInfo {
+        return MtkDeviceInfo(
+            connectMode = MtkConnectionMode.BROM,
+            securityConfig = buildBromFailureMessage(reason)
+        )
+    }
+
+    private fun buildBromFailureMessage(reason: String): String = buildString {
+        appendLine("❌ BROM identification failed")
+        appendLine(reason)
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+        appendLine("🔧 Common fixes:")
+        appendLine("  1. Use original/high-quality USB cable")
+        appendLine("  2. Connect directly to PC USB 2.0 port")
+        appendLine("  3. Hold Vol- button while connecting USB")
+        appendLine("  4. Try different USB port on phone")
+        appendLine("  5. Device must be POWERED OFF before connecting")
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+    }.trim()
 
     // Step 3: Read info via ADB
     private suspend fun readAdbInfo(): MtkDeviceInfo = withContext(Dispatchers.IO) {

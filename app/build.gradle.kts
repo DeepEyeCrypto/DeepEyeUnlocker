@@ -6,6 +6,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("dagger.hilt.android.plugin")
     id("io.gitlab.arturbosch.detekt")
+    id("com.chaquo.python")
 }
 
 android {
@@ -22,6 +23,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+
+        ndk {
+            abiFilters += listOf("arm64-v8a")
         }
     }
 
@@ -63,6 +68,15 @@ android {
             )
         }
     }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -76,6 +90,25 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.11"
+        buildPython("/usr/local/bin/python3")
+        pip {
+            install("pyusb==1.2.1")
+            install("construct==2.10.68")
+            install("six==1.16.0")
+            install("pycryptodome==3.20.0")
+            install("ecdsa==0.19.0")
+            install("protobuf==4.25.3")
+            install("requests==2.31.0")
+            install("urllib3==2.0.7")
+            install("pymobiledevice3==4.14.16")
         }
     }
 }
@@ -103,6 +136,10 @@ dependencies {
     
     // Coil for image loading
     implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+
+    // QR / barcode scanning for Apple ProTools IMEI import
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
     
     implementation("androidx.test.ext:junit:1.1.5")
     implementation("androidx.test.espresso:espresso-core:3.5.1")

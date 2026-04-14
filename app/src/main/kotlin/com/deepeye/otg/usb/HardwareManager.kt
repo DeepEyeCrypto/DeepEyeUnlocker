@@ -37,24 +37,37 @@ class HardwareManager(
             _status.value = "MTK_HANDSHAKE"
 
             try {
-                val transport = lifecycleManager.getTransport(deviceKey) ?: return@launch
+                val transport = lifecycleManager.getTransport(deviceKey) ?: run {
+                    _status.value = "MTK_FAILED"
+                    onCompleted(buildBromIdentificationFailure(
+                        "No active USB transport available for BROM identification."
+                    ))
+                    return@launch
+                }
                 val session = MtkSession(transport)
                 
                 if (session.connect()) {
                     val hwCode = session.getHwCode()
                     val result = if (hwCode != null) {
+                        _status.value = "MTK_SUCCESS"
                         "MTK Device Identified: 0x%04X".format(hwCode)
                     } else {
-                        "MTK Connected, but failed to read HW_CODE"
+                        _status.value = "MTK_FAILED"
+                        buildBromIdentificationFailure(
+                            "CMD_GET_HW_CODE (0xFD) returned empty or unexpected data."
+                        )
                     }
-                    _status.value = "MTK_SUCCESS"
                     onCompleted(result)
                 } else {
                     _status.value = "MTK_FAILED"
+                    onCompleted(buildBromIdentificationFailure(
+                        "BROM handshake response did not match the expected byte sequence."
+                    ))
                 }
             } catch (e: Exception) {
                 Log.e("HardwareManager", "MTK Handshake Error", e)
                 _status.value = "ERROR: ${e.message}"
+                onCompleted(buildBromIdentificationFailure(e.message ?: "Unexpected MTK handshake error"))
             } finally {
                 _isBusy.value = false
             }
@@ -71,11 +84,19 @@ class HardwareManager(
             _status.value = "MTK_DA_INJECTION"
             
             try {
-                val transport = lifecycleManager.getTransport(deviceKey) ?: return@launch
+                val transport = lifecycleManager.getTransport(deviceKey) ?: run {
+                    _status.value = "MTK_BROM_FAILED"
+                    onResult(false, buildBromIdentificationFailure("No active USB transport available for DA upload."))
+                    return@launch
+                }
                 val session = MtkSession(transport)
                 
                 if (session.connect()) {
-                    val hwCode = session.getHwCode() ?: return@launch
+                    val hwCode = session.getHwCode() ?: run {
+                        _status.value = "MTK_BROM_FAILED"
+                        onResult(false, buildBromIdentificationFailure("Cannot upload DA because HW_CODE could not be read."))
+                        return@launch
+                    }
                     val daBytes = com.deepeye.otg.protocol.mtk.MtkDaManager.getDaPayload(appContext, hwCode)
                     
                     if (daBytes == null) {
@@ -102,6 +123,19 @@ class HardwareManager(
             }
         }
     }
+
+    private fun buildBromIdentificationFailure(reason: String): String = buildString {
+        appendLine("❌ Device Identification failed on BROM")
+        appendLine(reason)
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+        appendLine("🔧 Common fixes:")
+        appendLine("  1. Use original/high-quality USB cable")
+        appendLine("  2. Connect directly to PC USB 2.0 port")
+        appendLine("  3. Hold Vol- button while connecting USB")
+        appendLine("  4. Try different USB port on phone")
+        appendLine("  5. Device must be POWERED OFF before connecting")
+        appendLine("━━━━━━━━━━━━━━━━━━━━━")
+    }.trim()
 
     /**
      * Executes a Qualcomm Sahara handshake.

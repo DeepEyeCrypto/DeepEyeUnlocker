@@ -1,42 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Rust UI glass palette -->
-    <color name="bg_primary">#080A12</color>
-    <color name="bg_card">#111827</color>
-    <color name="bg_card_2">#1E293B</color>
-    <color name="border">#1F2937</color>
+    <!-- Deep Eye redesign palette -->
+    <color name="bg_primary">#0A0B0F</color>
+    <color name="bg_card">#111318</color>
+    <color name="bg_card_2">#181B22</color>
+    <color name="border">#1AFFFFFF</color>
+
+    <color name="glass_white">#12FFFFFF</color>
+    <color name="glass_border">#1AFFFFFF</color>
+    <color name="glass_highlight">#14FFFFFF</color>
+
+    <color name="accent_primary">#00E5FF</color>
+    <color name="accent_primary_dim">#00B8CC</color>
+    <color name="accent_success">#00FF88</color>
+    <color name="accent_warning">#FFB800</color>
+    <color name="accent_error">#FF4444</color>
+    <color name="accent_apple">#7C4DFF</color>
 
     <!-- Protocol accents -->
-    <color name="accent_mtk">#22C55E</color>
-    <color name="accent_edl">#A855F7</color>
-    <color name="accent_adb">#3B82F6</color>
-    <color name="accent_samsung">#22D3EE</color>
-    <color name="accent_fastboot">#F59E0B</color>
-    <color name="accent_db">#F59E0B</color>
+    <color name="accent_mtk">#00FF88</color>
+    <color name="accent_edl">#FFB800</color>
+    <color name="accent_adb">#00E5FF</color>
+    <color name="accent_samsung">#00B8CC</color>
+    <color name="accent_fastboot">#FFB800</color>
+    <color name="accent_db">#7C4DFF</color>
 
     <!-- Text -->
-    <color name="text_primary">#E2E8F0</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="text_muted">#4B5563</color>
+    <color name="text_primary">#EAEEF4</color>
+    <color name="text_secondary">#8B919E</color>
+    <color name="text_muted">#3D4452</color>
 
     <!-- Status -->
-    <color name="status_connected">#34D399</color>
-    <color name="status_error">#F87171</color>
-    <color name="status_idle">#6B7280</color>
+    <color name="status_connected">#00FF88</color>
+    <color name="status_error">#FF4444</color>
+    <color name="status_idle">#3D4452</color>
 
     <!-- Legacy aliases used by existing drawables/resources -->
-    <color name="deepeye_obsidian">#080A12</color>
-    <color name="deepeye_grey_deep">#111827</color>
-    <color name="deepeye_grey_medium">#1E293B</color>
-    <color name="deepeye_cyan">#22D3EE</color>
-    <color name="deepeye_cyan_dark">#3B82F6</color>
-    <color name="deepeye_orange">#F59E0B</color>
-    <color name="deepeye_orange_dark">#D97706</color>
-    <color name="deepeye_white">#E2E8F0</color>
-    <color name="deepeye_success">#34D399</color>
-    <color name="deepeye_warning">#F59E0B</color>
-    <color name="deepeye_error">#F87171</color>
+    <color name="deepeye_obsidian">#0A0B0F</color>
+    <color name="deepeye_grey_deep">#111318</color>
+    <color name="deepeye_grey_medium">#181B22</color>
+    <color name="deepeye_cyan">#00E5FF</color>
+    <color name="deepeye_cyan_dark">#00B8CC</color>
+    <color name="deepeye_orange">#FFB800</color>
+    <color name="deepeye_orange_dark">#CC9200</color>
+    <color name="deepeye_white">#EAEEF4</color>
+    <color name="deepeye_success">#00FF88</color>
+    <color name="deepeye_warning">#FFB800</color>
+    <color name="deepeye_error">#FF4444</color>
 
     <!-- Launcher Icon Colors -->
-    <color name="ic_launcher_foreground">#A855F7</color>
+    <color name="ic_launcher_foreground">#00E5FF</color>
 </resources>

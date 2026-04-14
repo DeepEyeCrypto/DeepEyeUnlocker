@@ -17,7 +17,9 @@ import java.util.concurrent.TimeUnit
 // Used for: A12+ iCloud bypass, IMEI registration, carrier unlock
 // =============================================================================
 
-class RealServerBypassExecutor {
+class RealServerBypassExecutor(
+    private val pythonBridge: com.deepeye.otg.python.PythonBridge
+) {
 
     companion object {
         private const val CONNECT_TIMEOUT_MS = 15_000
@@ -40,12 +42,22 @@ class RealServerBypassExecutor {
         Timber.d("[SERVER] requestBypassToken ecid=$ecid " +
                  "ios=$iosVersion sessionId=$sessionId")
 
+        val activationPayload = pythonBridge.buildIosActivationRequest(
+            udid = ecid,
+            imei = "",
+            serial = serial ?: "",
+            model = "Unknown",
+            iosVersion = iosVersion,
+            sessionId = sessionId
+        )
+
         val payload = JSONObject().apply {
             put("ecid",        ecid)
             put("serial",      serial ?: "")
             put("ios_version", iosVersion)
             put("bypass_type", "wifi_only")
             put("session_id",  sessionId)
+            put("apple_activation_request", activationPayload)
         }
 
         val response = httpPost(
@@ -92,9 +104,10 @@ class RealServerBypassExecutor {
                  "sessionId=$sessionId")
 
         // Luhn check before sending
-        if (!luhnCheck(imei)) {
+        val validation = pythonBridge.validateImei(imei, sessionId)
+        if (!validation.isValid) {
             return@withContext ProtocolResult.ServerError(
-                reason    = "IMEI failed Luhn validation: $imei",
+                reason    = "IMEI failed Luhn validation via Python: $imei",
                 sessionId = sessionId,
             )
         }
@@ -143,9 +156,10 @@ class RealServerBypassExecutor {
         Timber.d("[SERVER] carrierUnlock imei=${imei.take(8)}xxxx " +
                  "sessionId=$sessionId")
 
-        if (!luhnCheck(imei)) {
+        val validation = pythonBridge.validateImei(imei, sessionId)
+        if (!validation.isValid) {
             return@withContext ProtocolResult.ServerError(
-                reason    = "IMEI Luhn check failed",
+                reason    = "IMEI Luhn check failed via Python",
                 sessionId = sessionId,
             )
         }
@@ -212,19 +226,4 @@ class RealServerBypassExecutor {
         }
     }
 
-    // ── Luhn validation ───────────────────────────────────────────────────
-
-    private fun luhnCheck(imei: String): Boolean {
-        if (imei.length != 15 || !imei.all { it.isDigit() }) return false
-        var sum = 0
-        for (i in imei.indices) {
-            var d = imei[imei.length - 1 - i].digitToInt()
-            if (i % 2 == 1) {
-                d *= 2
-                if (d > 9) d -= 9
-            }
-            sum += d
-        }
-        return sum % 10 == 0
-    }
 }
