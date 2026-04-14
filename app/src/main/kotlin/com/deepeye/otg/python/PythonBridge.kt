@@ -236,6 +236,112 @@ class PythonBridge @Inject constructor(
         }
     }
 
+    // ── Flash Method ──────────────────────────────
+    suspend fun getRestoreStages(
+        sessionId: String
+    ): List<Map<String,Any>> = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] restoreStages sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.flash_method")
+            val pyList = module.callAttr("get_restore_stages")
+            pyList.asList().map { item ->
+                val dict = item.asMap().entries.associate { it.key.toString() to it.value.toString() }
+                mapOf<String, Any>(
+                    "id"     to (dict["id"] ?: ""),
+                    "name"   to (dict["name"] ?: ""),
+                    "weight" to (dict["weight"] ?: "")
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] restoreStages: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun buildTssRequest(
+        model: String, boardConfig: String,
+        chipId: Int, ecid: String,
+        iosVersion: String, buildId: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] TSS request model=$model sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.flash_method")
+            module.callAttr(
+                "build_tss_request",
+                model, boardConfig, chipId,
+                ecid, iosVersion, buildId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] TSS: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    // ── Firmware Download ──────────────────────────
+    suspend fun getFirmwareForModel(
+        model: String, sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] firmware model=$model sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.firmware_download")
+            module.callAttr("get_firmware_for_model", model).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] firmware: ${e.message}")
+            "[]"
+        }
+    }
+
+    suspend fun estimateDownloadTime(
+        sizeGb: Double, speedMbps: Double,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.firmware_download")
+            JSONObject(module.callAttr(
+                "estimate_download_time", sizeGb, speedMbps
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("display", "Unknown").put("error", e.message)
+        }
+    }
+
+    // ── MDM Removal ────────────────────────────────
+    suspend fun parseMdmPlist(
+        plistStr: String, sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] parseMDM plist=${plistStr.take(50)} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mdm_removal")
+            JSONObject(module.callAttr(
+                "parse_mdm_profile_plist", plistStr
+            ).toString()).also {
+                Timber.d("[PythonBridge] MDM org=${it.optString("org_name")} type=${it.optString("mdm_type")} sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] parseMDM: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun getMdmBypassReport(
+        model: String, chip: String,
+        mdmType: String, isSupervised: Boolean,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] MDM bypass model=$model chip=$chip sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mdm_removal")
+            module.callAttr(
+                "generate_bypass_report",
+                model, chip, mdmType, isSupervised, sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] MDM report: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
     suspend fun runScript(
         moduleName: String,
         functionName: String,
