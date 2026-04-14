@@ -37,6 +37,7 @@ class BypassOperationEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     private val usbManager:    UsbManager,
     private val adbSession:    AdbSession,
+    private val pythonBridge:  com.deepeye.otg.python.PythonBridge,
 ) {
     companion object {
         private const val MAX_RETRIES  = 3
@@ -46,9 +47,9 @@ class BypassOperationEngine @Inject constructor(
 
     // ── Executors (one per protocol layer) ────────────────────────────────
 
-    private val mtkV6Executor     by lazy { RealMtkV6Executor(usbManager, context) }
+    private val mtkV6Executor     by lazy { RealMtkV6Executor(usbManager, context, pythonBridge) }
     private val adbExecutor       by lazy { RealAdbExecutor(adbSession) }
-    private val serverExecutor    by lazy { RealServerBypassExecutor() }
+    private val serverExecutor    by lazy { RealServerBypassExecutor(pythonBridge) }
 
     // ── DA binary loader ──────────────────────────────────────────────────
 

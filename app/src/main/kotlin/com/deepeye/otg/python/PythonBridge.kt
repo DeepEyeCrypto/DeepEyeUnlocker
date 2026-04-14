@@ -155,6 +155,87 @@ class PythonBridge @Inject constructor(
         }
     }
 
+    // ── Hello Screen Bypass ────────────────────────────
+    suspend fun getBypassEligibility(
+        model: String,
+        iosVersion: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] bypassEligibility model=$model ios=$iosVersion sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.hello_screen")
+            val result = module.callAttr(
+                "get_ios_bypass_eligibility",
+                model, iosVersion, false
+            )
+            JSONObject(result.toString()).also {
+                Timber.d("[PythonBridge] eligible=${it.optBoolean("eligible")} method=${it.optString("best_method")} sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] bypassEligibility error: ${e.message} sid=$sessionId")
+            JSONObject().put("eligible", false).put("error", e.message)
+        }
+    }
+
+    // ── iRemoval Payload Builder ───────────────────────
+    suspend fun buildIremovalPayload(
+        udid: String,
+        model: String,
+        iosVersion: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] iRemoval payload model=$model sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.hello_screen")
+            module.callAttr(
+                "build_iremoval_payload",
+                udid, model, iosVersion, sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] iRemoval error: ${e.message} sid=$sessionId")
+            "{\"error\": \"${e.message}\"}"
+        }
+    }
+
+    // ── DFU Instructions ───────────────────────────────
+    suspend fun getDfuInstructions(
+        model: String,
+        sessionId: String
+    ): List<String> = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] dfuInstructions model=$model sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.ipsw_tools")
+            val result = module.callAttr("get_dfu_instructions", model)
+            // Convert Python list to Kotlin list
+            (0 until result.asList().size).map {
+                result.asList()[it].toString()
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] dfuInstructions: ${e.message} sid=$sessionId")
+            listOf("Error: ${e.message}")
+        }
+    }
+
+    // ── IPSW Signing Status ────────────────────────────
+    suspend fun checkIpswSigningStatus(
+        model: String,
+        iosVersion: String,
+        buildId: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] ipswSigning model=$model ios=$iosVersion sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.ipsw_tools")
+            JSONObject(module.callAttr(
+                "check_ipsw_signing_status",
+                model, iosVersion, buildId
+            ).toString())
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] ipswSigning: ${e.message} sid=$sessionId")
+            JSONObject().put("signed", false).put("error", e.message)
+        }
+    }
+
     suspend fun runScript(
         moduleName: String,
         functionName: String,

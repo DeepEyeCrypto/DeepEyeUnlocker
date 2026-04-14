@@ -203,7 +203,7 @@ fun LogConsole(
                                     }
                                     Text(
                                         text = entry.message,
-                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = com.deepeye.otg.ui.theme.JetBrainsMono),
+                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = com.deepeye.otg.ui.theme.JetBrainsMonoFamily),
                                         color = typeColor,
                                     )
                                 }
