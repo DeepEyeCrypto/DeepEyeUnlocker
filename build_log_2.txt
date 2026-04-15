@@ -1,0 +1,96 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/Users/enayat/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/native-platform-0.22-milestone-27.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+Warning: Python version 3.11 may have fewer packages available. If you experience problems, try switching to version 3.8.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeDevicesScreen.kt:69:34 Unresolved reference 'PhoneAndroid'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeDevicesScreen.kt:130:47 Unresolved reference 'onNavigateSamsung'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeMainScreen.kt:114:56 Unresolved reference 'EdlScreen'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeMainScreen.kt:159:21 No parameter with name 'onNavigateSamsung' found.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeMainScreen.kt:181:21 No parameter with name 'onNavigateApple' found.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/DeepEyeMainScreen.kt:182:21 No parameter with name 'onNavigateLogs' found.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/HomeScreen.kt:162:40 Unresolved reference 'onNavigateApple'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/HomeScreen.kt:175:27 Unresolved reference 'onNavigateApple'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/HomeScreen.kt:186:34 Unresolved reference 'onNavigateLogs'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/ForensicsDashboardScreen.kt:106:26 Unresolved reference 'tabIndicatorOffset'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/IntelDashboardScreen.kt:117:55 Unresolved reference 'SurfaceSubtle'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/MalwareScannerScreen.kt:105:55 Unresolved reference 'SurfaceSubtle'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/MalwareScannerScreen.kt:142:36 Argument type mismatch: actual type is 'androidx.compose.ui.unit.Dp', but 'kotlin.Float' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/MalwareScannerScreen.kt:147:20 Argument type mismatch: actual type is 'kotlin.Float', but 'kotlin.Float' was expected.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/forensics/MalwareScannerScreen.kt:147:30 Too many arguments for 'fun Modifier.rotate(degrees: Float): Modifier'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/qualcomm/EdlScreen.kt:94:30 Unresolved reference 'tabIndicatorOffset'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/qualcomm/EdlScreen.kt:185:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/qualcomm/EdlScreen.kt:276:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/qualcomm/EdlScreen.kt:413:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:93:30 Unresolved reference 'tabIndicatorOffset'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:195:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:324:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:410:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:474:17 Unresolved reference 'GoldCtaButton'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:502:5 None of the following candidates is applicable:
+fun GlassCard(modifier: Modifier = ..., glowColor: Color = ..., borderAnimated: Boolean = ..., cornerRadius: Dp = ..., content: @Composable() ComposableFunction1<BoxScope, Unit>): Unit
+fun GlassCard(hazeState: HazeState?, modifier: Modifier = ..., cornerRadius: Dp = ..., performanceMode: Boolean = ..., accentColor: Color = ..., onClick: (() -> Unit)? = ..., content: @Composable() ComposableFunction1<BoxScope, Unit>): Unit
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpScreen.kt:507:9 @Composable invocations can only happen from the context of a @Composable function
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpViewModel.kt:3:28 Unresolved reference 'Immutable'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungFrpViewModel.kt:15:2 Unresolved reference 'Immutable'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:33:58 Unresolved reference 'transport'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:86:79 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:86:83 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:87:78 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:87:82 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:88:81 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:88:85 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:171:55 Unresolved reference 'SurfaceSubtle'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/ui/screens/samsung/SamsungScreen.kt:206:48 Unresolved reference 'SurfaceSubtle'.
+e: file:///Users/enayat/Documents/DeepEyeUnlocker/app/src/main/kotlin/com/deepeye/otg/viewmodel/research/ForensicsViewModel.kt:176:76 Unresolved reference 'name'.
+
+> Task :app:compileDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///Users/enayat/Documents/DeepEyeUnlocker/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 4m 20s
+16 actionable tasks: 1 executed, 15 up-to-date

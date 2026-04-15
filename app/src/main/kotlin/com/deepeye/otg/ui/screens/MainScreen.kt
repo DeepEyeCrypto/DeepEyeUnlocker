@@ -209,8 +209,8 @@ fun MainScreen(
 
         // Global overlay — shown on top of EVERYTHING
         val deviceViewModel: com.deepeye.otg.viewmodel.DeviceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-        val flashPct by deviceViewModel.flashProgress.collectAsState()
-        val flashStep by deviceViewModel.flashStep.collectAsState()
+        val flashPct by deviceViewModel.flashProgress.collectAsStateWithLifecycle()
+        val flashStep by deviceViewModel.flashStep.collectAsStateWithLifecycle()
         
         androidx.compose.animation.AnimatedVisibility(
             visible = (flashPct?.percent ?: 0) in 1..99,

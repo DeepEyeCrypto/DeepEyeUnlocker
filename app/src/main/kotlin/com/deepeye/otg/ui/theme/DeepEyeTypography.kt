@@ -104,4 +104,6 @@ object DeepEyeType {
         lineHeight = 18.sp,
         letterSpacing = 0.sp,
     )
+    val PARA_BOLD = DeepEyeTypography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+    val PARA_MEDIUM = DeepEyeTypography.bodyLarge.copy(fontWeight = FontWeight.Medium)
 }

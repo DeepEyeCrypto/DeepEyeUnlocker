@@ -25,6 +25,7 @@ enum class NavTarget(val hub: MissionHub) {
     MTK_UNLOCK(MissionHub.COMMAND),
     MTK_EXPLOIT(MissionHub.COMMAND),
     XIAOMI_EXPLOIT(MissionHub.COMMAND),
+    SAMSUNG_ODIN(MissionHub.COMMAND),
     
     // LAB Hub
     LAB_HOME(MissionHub.LAB),

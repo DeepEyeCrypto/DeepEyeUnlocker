@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.ui.theme.DeepEyeColors
 import com.deepeye.otg.ui.theme.DeepEyeType
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.material3.Surface
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -63,10 +65,10 @@ fun NeonBadge(
     }
 }
 
-// ── GlassCard ─────────────────────────────────────────────────
-// Pure drawBehind glassmorphism — zero layout shift
+// ── SimpleGlassCard ───────────────────────────────────────────
+// Lightweight version for atoms
 @Composable
-fun GlassCard(
+fun SimpleGlassCard(
     modifier: Modifier = Modifier,
     glowColor: Color = DeepEyeColors.NEON_PURPLE,
     borderAnimated: Boolean = true,
@@ -172,5 +174,75 @@ fun AnimatedCounter(count: Int, color: Color, label: String, size: TextUnit = 9.
             style = TextStyle(fontFeatureSettings = "tnum")
         )
         Text(label, color = color.copy(0.5f), fontSize = size * 0.8f)
+    }
+}
+
+// ── GoldCtaButton ─────────────────────────────────────────────
+@Composable
+fun GoldCtaButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "press"
+    )
+
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .height(48.dp)
+            .clip(RoundedCornerShape(10.dp)),
+        color = if (enabled) DeepEyeColors.GoldAccent else DeepEyeColors.Surface3,
+        interactionSource = interactionSource
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    if (enabled) {
+                        Brush.verticalGradient(
+                            listOf(
+                                DeepEyeColors.GoldAccent,
+                                DeepEyeColors.GoldHover
+                            )
+                        )
+                    } else Brush.verticalGradient(
+                        listOf(
+                            DeepEyeColors.Surface2,
+                            DeepEyeColors.Surface3
+                        )
+                    )
+                )
+        ) {
+            // Glass sheen
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(0.15f), Color.Transparent)
+                        )
+                    )
+            )
+            
+            Text(
+                text = text.uppercase(),
+                color = if (enabled) Color.Black else DeepEyeColors.TextMuted,
+                style = DeepEyeType.PARA_BOLD,
+                letterSpacing = 1.sp
+            )
+        }
     }
 }

@@ -1,11 +1,13 @@
 package com.deepeye.otg.python
 
 import android.content.Context
+import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,6 +26,11 @@ class PythonBridge @Inject constructor(
     }
 
     private fun py() = Python.getInstance()
+
+    private fun pyJsonObject(result: PyObject): JSONObject {
+        val jsonString = py().getModule("json").callAttr("dumps", result).toString()
+        return JSONObject(jsonString)
+    }
 
     suspend fun identifyMtkChip(
         hwCode: Int,
@@ -356,6 +363,486 @@ class PythonBridge @Inject constructor(
         } catch (e: Exception) {
             Timber.e("[PythonBridge] $moduleName.$functionName: ${e.message} sid=$sessionId")
             Result.failure(e)
+        }
+    }
+
+    // ── iCloud Bypass ─────────────────────────────
+    suspend fun getBypassMethodsForDevice(
+        chip: String,
+        iosMajor: Int,
+        findMyEnabled: Boolean,
+        hasImei: Boolean,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] iCloudMethods chip=$chip ios=$iosMajor sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.icloud_bypass")
+            module.callAttr(
+                "get_bypass_methods_for_device",
+                chip, iosMajor, findMyEnabled, hasImei
+            ).toString().also {
+                Timber.d("[PythonBridge] methods=$it sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] bypassMethods: ${e.message} sid=$sessionId")
+            "[]"
+        }
+    }
+
+    suspend fun generateActivationPlist(
+        udid: String,
+        imei: String,
+        serial: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] genPlist udid=${udid.take(8)} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.icloud_bypass")
+            module.callAttr(
+                "generate_activation_plist",
+                udid, imei, serial, sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] genPlist: ${e.message} sid=$sessionId")
+            ""
+        }
+    }
+
+    suspend fun parseActivationPlist(
+        plistStr: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] parsePlist len=${plistStr.length} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.icloud_bypass")
+            JSONObject(module.callAttr(
+                "parse_activation_plist", plistStr
+            ).toString()).also {
+                val locked = it.optBoolean("is_locked")
+                Timber.d("[PythonBridge] locked=$locked sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] parsePlist: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun buildDnsBypassConfig(
+        ssid: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] dnsConfig ssid=$ssid sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.icloud_bypass")
+            JSONObject(module.callAttr(
+                "build_dns_bypass_config", ssid, sessionId
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun calculateBypassScore(
+        chip: String,
+        iosMajor: Int,
+        hasImei: Boolean,
+        findMyOn: Boolean,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] bypassScore chip=$chip sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.icloud_bypass")
+            JSONObject(module.callAttr(
+                "calculate_bypass_score",
+                chip, iosMajor, hasImei, findMyOn
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("score", -1).put("error", e.message)
+        }
+    }
+
+    // ── Apple ID Removal ───────────────────────────
+    suspend fun getAppleIdRemovalPlan(
+        chip: String,
+        hasReceipt: Boolean,
+        hasImei: Boolean,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] appleIdPlan chip=$chip sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.apple_id_tools")
+            module.callAttr(
+                "get_removal_plan", chip, hasReceipt, hasImei
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] appleIdPlan: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    suspend fun generateOwnershipToken(
+        imei: String,
+        serial: String,
+        purchaseDate: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] ownershipToken imei=${imei.take(6)}X sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.apple_id_tools")
+            JSONObject(module.callAttr(
+                "generate_ownership_token",
+                imei, serial, purchaseDate, sessionId
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    // ── EDL Protocol ─────────────────────────────────
+    suspend fun detectChipFromUsb(
+        vid: Int, pid: Int,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] detectChip vid=0x${vid.toString(16)} pid=0x${pid.toString(16)} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            JSONObject(module.callAttr(
+                "detect_chip_from_usb", vid, pid
+            ).toString()).also {
+                Timber.d("[PythonBridge] chip=${it.optString("mode")} edl=${it.optBoolean("is_edl_mode")} sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] detectChip: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun getProgrammerForChip(
+        chipName: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] programmer chip=$chipName sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            JSONObject(module.callAttr(
+                "get_programmer_for_chip", chipName
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun buildFlashSequence(
+        chip: String,
+        partitionsJson: String,
+        storage: String,
+        slot: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] flashSeq chip=$chip storage=$storage sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            module.callAttr(
+                "build_flash_sequence",
+                chip, partitionsJson, storage, slot, sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] flashSeq: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    suspend fun buildSaharaHelloResponse(
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            module.callAttr("build_sahara_hello_response").toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] sahara: ${e.message} sid=$sessionId")
+            ""
+        }
+    }
+
+    suspend fun buildFirehoseConfigureXml(
+        memoryName: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] fhConfigure mem=$memoryName sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            module.callAttr(
+                "build_firehose_configure_xml", memoryName
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] fhConfigure: ${e.message}")
+            ""
+        }
+    }
+
+    suspend fun generateEdlReport(
+        vid: Int, pid: Int,
+        chip: String, storage: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] edlReport chip=$chip sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.edl_protocol")
+            module.callAttr(
+                "generate_edl_report",
+                vid, pid, chip, storage, sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] edlReport: ${e.message}")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    // ── QFIL Tools ────────────────────────────────────
+    suspend fun parseRawprogramXml(
+        xmlStr: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] parseRawprogram len=${xmlStr.length} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.qfil_tools")
+            module.callAttr(
+                "parse_rawprogram_xml", xmlStr
+            ).toString().also {
+                Timber.d("[PythonBridge] rawprogram entries parsed sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] parseRawprogram: ${e.message} sid=$sessionId")
+            "[]"
+        }
+    }
+
+    suspend fun getFrpPartitionInfo(
+        storage: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] frpPartition storage=$storage sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.qfil_tools")
+            JSONObject(module.callAttr(
+                "get_frp_partition_info", storage
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    // ── Samsung Odin ──────────────────────────────────
+    suspend fun analyzeSamsungHandshake(
+        hexData: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.odin_engine")
+            module.callAttr("analyze_handshake", hexData).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] analyzeOdin: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    suspend fun parseSamsungPit(
+        hexData: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.odin_engine")
+            module.callAttr("parse_pit_to_json", hexData).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] parsePit: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    // ── Forensics & Intel ──────────────────────────────
+    suspend fun scanFileSetForThreats(
+        jsonFileSet: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.forensic_engine")
+            module.callAttr("scan_file_set", jsonFileSet).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] scanThreats: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    suspend fun getCveIntelligence(
+        modelName: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        try {
+            val module = py().getModule("deepeye.forensic_engine")
+            module.callAttr("get_cve_intel", modelName).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] getIntel: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    // ── MTK BROM (Read-Only) ─────────────────────────
+    suspend fun detectMtkFromUsb(
+        vid: Int,
+        pid: Int,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] mtkUsb vid=0x${vid.toString(16)} pid=0x${pid.toString(16)} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mtk_brom")
+            pyJsonObject(module.callAttr("detect_mtk_from_usb", vid, pid))
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] mtkUsb: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun identifyMtkChip(
+        chipIdHex: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] mtkChip id=$chipIdHex sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mtk_brom")
+            val chipId = chipIdHex.trim().removePrefix("0x").removePrefix("0X").toLong(16).toInt()
+            pyJsonObject(module.callAttr("identify_chip", chipId))
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] mtkChip: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message).put("found", false)
+        }
+    }
+
+    suspend fun parseScatterFile(
+        scatterText: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] scatter parse sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mtk_brom")
+            pyJsonObject(module.callAttr("parse_scatter_file", scatterText)).also {
+                Timber.d("[PythonBridge] partitions=${it.optInt("partition_count")} sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] scatter: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message).put("valid", false)
+        }
+    }
+
+    suspend fun validateSpFlashXml(
+        xmlStr: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] spFlashXml validate sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mtk_brom")
+            pyJsonObject(module.callAttr("validate_spflash_xml", xmlStr))
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] spFlashXml: ${e.message} sid=$sessionId")
+            JSONObject().put("error", e.message).put("valid", false)
+        }
+    }
+
+    suspend fun generateMtkReport(
+        vid: Int,
+        pid: Int,
+        chipIdHex: String,
+        scatterText: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] mtkReport chip=$chipIdHex sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.mtk_brom")
+            module.callAttr(
+                "generate_mtk_device_report",
+                vid,
+                pid,
+                chipIdHex,
+                scatterText,
+                sessionId
+            ).toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] mtkReport: ${e.message} sid=$sessionId")
+            "{\"error\":\"${e.message}\"}"
+        }
+    }
+
+    // ── Samsung Tools ─────────────────────────────────
+    suspend fun detectSamsungFromUsb(
+        vid: Int, pid: Int,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] samsungUsb vid=0x${vid.toString(16)} pid=0x${pid.toString(16)} sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.samsung_odin")
+            JSONObject(module.callAttr(
+                "detect_samsung_from_usb", vid, pid
+            ).toString())
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message)
+        }
+    }
+
+    suspend fun validateOdinTar(
+        fileListJson: String,
+        sessionId: String
+    ): JSONObject = withContext(Dispatchers.IO) {
+        Timber.d("[PythonBridge] odinValidate sid=$sessionId")
+        try {
+            val module = py().getModule("deepeye.samsung_odin")
+            JSONObject(module.callAttr(
+                "validate_odin_tar", fileListJson
+            ).toString()).also {
+                val valid = it.optBoolean("valid")
+                Timber.d("[PythonBridge] odinValid=$valid sid=$sessionId")
+            }
+        } catch (e: Exception) {
+            JSONObject().put("error", e.message).put("valid", false)
+        }
+    }
+
+    suspend fun generatePitTable(
+        storage: String,
+        model: String,
+        sessionId: String
+    ): String = withContext(Dispatchers.Default) {
+        Timber.d("[PythonBridge] pitTable model=$model storage=$storage sid=$sessionId")
+        try {
+            val normalizedStorage = storage.trim().lowercase().ifBlank { "ufs" }
+            val normalizedModel = model.trim().ifBlank { "SM-S928" }
+            val partitions = listOf(
+                mapOf("id" to 0, "name" to "BOTA0", "file" to "bota0.img", "type" to "raw", "size_mb" to 1.0),
+                mapOf("id" to 1, "name" to "BOTA1", "file" to "bota1.img", "type" to "raw", "size_mb" to 1.0),
+                mapOf("id" to 2, "name" to "EFS", "file" to "efs.img", "type" to "ext4", "size_mb" to 8.0),
+                mapOf("id" to 3, "name" to "PARAM", "file" to "param.img", "type" to "raw", "size_mb" to 2.0),
+                mapOf("id" to 4, "name" to "BOOT", "file" to "boot.img", "type" to "ext4", "size_mb" to 64.0),
+                mapOf("id" to 5, "name" to "RECOVERY", "file" to "recovery.img", "type" to "ext4", "size_mb" to 64.0),
+                mapOf("id" to 6, "name" to "DTBO", "file" to "dtbo.img", "type" to "raw", "size_mb" to 8.0),
+                mapOf("id" to 7, "name" to "VBMETA", "file" to "vbmeta.img", "type" to "raw", "size_mb" to 0.06),
+                mapOf("id" to 8, "name" to "SUPER", "file" to "super.img", "type" to "ext4", "size_mb" to 6144.0),
+                mapOf("id" to 9, "name" to "USERDATA", "file" to "userdata.img", "type" to "ext4", "size_mb" to 0.0),
+                mapOf("id" to 10, "name" to "METADATA", "file" to "metadata.img", "type" to "ext4", "size_mb" to 4.0),
+                mapOf("id" to 11, "name" to "PERSISTENT", "file" to "persistent.img", "type" to "ext4", "size_mb" to 32.0),
+            )
+
+            val jsonArray = JSONArray()
+            partitions.forEach { partition ->
+                val jsonObject = JSONObject()
+                partition.forEach { (key, value) ->
+                    jsonObject.put(key, value)
+                }
+                jsonObject.put("storage", normalizedStorage)
+                jsonObject.put("model", normalizedModel)
+                jsonArray.put(jsonObject)
+            }
+            jsonArray.toString()
+        } catch (e: Exception) {
+            Timber.e("[PythonBridge] pitTable: ${e.message} sid=$sessionId")
+            "[]"
         }
     }
 }

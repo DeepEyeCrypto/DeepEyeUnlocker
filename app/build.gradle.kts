@@ -17,8 +17,8 @@ android {
         applicationId = "com.deepeye.otg"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2027181
-        versionName = "2027.18.1"
+        versionCode = 320
+        versionName = "v2026.32.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -45,27 +45,35 @@ android {
                 if (propsFile.exists()) load(propsFile.inputStream())
             }
             // Read from local.properties (DO NOT commit keystore to git)
-            storeFile = if (props.containsKey("KEYSTORE_PATH")) file(props["KEYSTORE_PATH"] as String) else null
-            storePassword = props.getProperty("KEYSTORE_PASS", "")
+            storeFile = props.getProperty("KEYSTORE_PATH")
+                ?.takeIf { it.isNotBlank() }
+                ?.let(::file)
+            storePassword = props.getProperty(
+                "KEYSTORE_PASSWORD",
+                props.getProperty("KEYSTORE_PASS", "")
+            )
             keyAlias = props.getProperty("KEY_ALIAS", "")
-            keyPassword = props.getProperty("KEY_PASS", "")
+            keyPassword = props.getProperty(
+                "KEY_PASSWORD",
+                props.getProperty("KEY_PASS", "")
+            )
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            val releaseSigning = signingConfigs.getByName("release")
-            signingConfig = if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
-                releaseSigning
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
+            isDebuggable = true
         }
     }
 

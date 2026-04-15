@@ -66,7 +66,7 @@ class DeepEyeApplication : Application() {
         // ── Crash handler for diagnostics ───────────────────────
         setupCrashHandler()
 
-        Log.i(TAG, "DeepEye Unlocker v${BuildConfig.VERSION_NAME} initialized")
+        Log.i(TAG, "DeepEye Unlocker ${BuildConfig.VERSION_NAME} initialized")
     }
 
     /**

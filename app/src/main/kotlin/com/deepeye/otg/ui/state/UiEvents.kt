@@ -106,6 +106,8 @@ sealed class ForensicsAction {
     data class VerifyHash(val filePath: String, val expectedHash: String) : ForensicsAction()
     data class ExportReport(val format: String) : ForensicsAction()
     data class GenerateChainOfCustody(val caseId: String, val examinerName: String) : ForensicsAction()
+    object StartThreatScan : ForensicsAction()
+    data class FetchModelIntel(val modelName: String) : ForensicsAction()
     object ClearIndex : ForensicsAction()
 }
 

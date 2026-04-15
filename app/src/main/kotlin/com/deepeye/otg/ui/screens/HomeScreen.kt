@@ -80,11 +80,13 @@ fun HomeScreen(
     recentLogs: List<LogEntry>,
     connectedCount: Int,
     modifier: Modifier = Modifier,
+    onNavigateMtk: () -> Unit,
+    onNavigateEdl: () -> Unit,
+    onNavigateSamsung: () -> Unit,
+    onNavigateFrp: () -> Unit,
     onNavigateDevices: () -> Unit,
     onNavigateApple: () -> Unit,
     onNavigateLogs: () -> Unit,
-    onNavigateMtk: () -> Unit,
-    onNavigateFrp: () -> Unit,
 ) {
     val session = sessionPresentation(selectedSession)
 
@@ -170,6 +172,8 @@ fun HomeScreen(
 
             QuickToolsGrid(
                 onMtk = onNavigateMtk,
+                onEdl = onNavigateEdl,
+                onSamsung = onNavigateSamsung,
                 onApple = onNavigateApple,
                 onFrp = onNavigateFrp,
                 onDevices = onNavigateDevices,
@@ -360,14 +364,16 @@ private data class QuickTool(
 @Composable
 private fun QuickToolsGrid(
     onMtk: () -> Unit,
+    onEdl: () -> Unit,
+    onSamsung: () -> Unit,
     onApple: () -> Unit,
     onFrp: () -> Unit,
     onDevices: () -> Unit,
 ) {
     val tools = listOf(
         QuickTool("MTK\nFlash", Icons.Default.Memory, DeepEyeColors.TealSecondary, onMtk),
-        QuickTool("Qualcomm\nEDL", Icons.Default.FlashOn, DeepEyeColors.PurpleDim, onDevices),
-        QuickTool("Samsung\nFRP", Icons.Default.PhoneAndroid, DeepEyeColors.BlueAccent, onFrp),
+        QuickTool("Qualcomm\nEDL", Icons.Default.FlashOn, DeepEyeColors.PurpleDim, onEdl),
+        QuickTool("Samsung\nOdin", Icons.Default.PhoneAndroid, DeepEyeColors.BlueAccent, onSamsung),
         QuickTool("Apple\nChain", Icons.Default.PhoneIphone, DeepEyeColors.GoldAccent, onApple),
         QuickTool("IMEI\nRepair", Icons.Default.SimCard, DeepEyeColors.TealSecondary, onDevices),
         QuickTool("DA\nTools", Icons.Default.Build, DeepEyeColors.Warning, onDevices),

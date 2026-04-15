@@ -12,6 +12,8 @@ object DeepEyeColors {
     val Surface = Color(0xFF111318)
     val Surface2 = Color(0xFF181B22)
     val Surface3 = Color(0xFF1F2330)
+    val SurfaceSubtle = Color(0xFF1C1E26)
+    val SurfaceAccent = Color(0x1AFFFFFF)
     val TerminalBackground = Color(0xFF0D0F14)
 
     // ── Glass tokens ────────────────────────────────

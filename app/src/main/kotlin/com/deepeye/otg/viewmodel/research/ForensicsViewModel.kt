@@ -4,10 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.otg.feature.forensics.*
 import com.deepeye.otg.ui.state.*
+import com.deepeye.otg.python.PythonBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import timber.log.Timber
 import java.io.File
 
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +27,8 @@ class ForensicsViewModel @Inject constructor(
     private val indexer: ArtifactIndexer,
     private val timelineBuilder: TimelineBuilder,
     private val hashVerifier: HashVerifier,
-    private val exporter: ReportExporter
+    private val exporter: ReportExporter,
+    private val pythonBridge: PythonBridge
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ForensicsState())
@@ -151,6 +156,90 @@ chainOfCustody = ChainOfCustodyDisplay(
                         _uiState.value = _uiState.value.copy(
 isExporting = false, error = "Export Failed: ${e.message}"
 )
+                    }
+                }
+            }
+
+            is ForensicsAction.StartThreatScan -> {
+                val idx = rawIndexResult
+                if (idx == null) {
+                    viewModelScope.launch { _uiEvents.emit(UiEvent.ShowSnackbar("Index required before scanning", true)) }
+                    return
+                }
+
+                _uiState.value = _uiState.value.copy(isScanning = true)
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        // 1. Prepare file list for Python
+                        val filesArr = JSONArray()
+                        idx.artifacts.take(500).forEach { artifact ->
+                            filesArr.put(JSONObject().put("name", artifact.name))
+                        }
+
+                        // 2. Call Python Scanner
+                        val resultStr = pythonBridge.scanFileSetForThreats(filesArr.toString(), "forensics_session")
+                        val result = JSONObject(resultStr)
+
+                        // 3. Map to UI
+                        val findingsArr = result.getJSONArray("findings")
+                        val findingsList = mutableListOf<ThreatFindingDisplay>()
+                        for (i in 0 until findingsArr.length()) {
+                            val f = findingsArr.getJSONObject(i)
+                            findingsList.add(
+                                ThreatFindingDisplay(
+                                    type = f.getString("type"),
+                                    name = f.getString("name"),
+                                    severity = f.getString("severity"),
+                                    description = f.getString("desc")
+                                )
+                            )
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            isScanning = false,
+                            threatReport = ThreatReportDisplay(
+                                score = result.getInt("score"),
+                                threatCount = result.getInt("threat_count"),
+                                findings = findingsList
+                            )
+                        )
+                        _uiEvents.emit(UiEvent.ShowToast("Neural Scan Complete"))
+                    } catch (e: Exception) {
+                        Timber.e(e, "Threat scan failed")
+                        _uiState.value = _uiState.value.copy(isScanning = false, error = "Scan Failed: ${e.message}")
+                    }
+                }
+            }
+
+            is ForensicsAction.FetchModelIntel -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        val resultStr = pythonBridge.getCveIntelligence(action.modelName, "forensics_session")
+                        val result = JSONObject(resultStr)
+                        
+                        val vulnsArr = result.getJSONArray("vulnerabilities")
+                        val vulnsList = mutableListOf<CveIntelDisplay>()
+                        for (i in 0 until vulnsArr.length()) {
+                            val v = vulnsArr.getJSONObject(i)
+                            vulnsList.add(
+                                CveIntelDisplay(
+                                    id = v.getString("id"),
+                                    score = v.getDouble("score"),
+                                    description = v.getString("desc")
+                                )
+                            )
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            intelReport = IntelReportDisplay(
+                                model = result.getString("model"),
+                                cveCount = result.getInt("cve_count"),
+                                riskLevel = result.getString("risk_level"),
+                                vulnerabilities = vulnsList
+                            )
+                        )
+                    } catch (e: Exception) {
+                        Timber.e(e, "Model intel fetch failed")
                     }
                 }
             }

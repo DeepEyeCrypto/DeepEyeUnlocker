@@ -29,6 +29,7 @@ import com.deepeye.otg.data.model.FlashStatus
 import com.deepeye.otg.data.model.XiaomiPartition
 import com.deepeye.otg.viewmodel.XiaomiFlashViewModel
 import java.io.File
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +37,7 @@ import java.text.DecimalFormat
 fun XiaomiFlashScreen(
     viewModel: XiaomiFlashViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 

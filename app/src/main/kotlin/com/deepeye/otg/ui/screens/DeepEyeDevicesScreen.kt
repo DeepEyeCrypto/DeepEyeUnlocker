@@ -36,6 +36,7 @@ fun DeepEyeDevicesScreen(
     onNavigateMtk: () -> Unit,
     onNavigateEdl: () -> Unit,
     onNavigateFrp: () -> Unit,
+    onNavigateSamsung: () -> Unit,
     onNavigateDiagnostics: () -> Unit,
 ) {
     val session = sessionPresentation(selectedSession)
@@ -63,6 +64,14 @@ fun DeepEyeDevicesScreen(
             description = "Queue guided Android lock reset and account removal flows.",
             risk = ExploitRisk.MED,
             accentColor = DeepEyeColors.PrimaryCyan,
+        ),
+        ExploitMethodModel(
+            id = "samsung-odin",
+            icon = Icons.Default.PhoneAndroid,
+            name = "Samsung Odin",
+            description = "LOKE/Download mode maintenance, PIT dumping, and flashing.",
+            risk = ExploitRisk.HIGH,
+            accentColor = DeepEyeColors.BlueAccent,
         ),
         ExploitMethodModel(
             id = "diag",
@@ -119,6 +128,7 @@ fun DeepEyeDevicesScreen(
                         onClick = when (card.id) {
                             "mtk-tools" -> onNavigateMtk
                             "qcom-edl" -> onNavigateEdl
+                            "samsung-odin" -> onNavigateSamsung
                             "frp-stack" -> onNavigateFrp
                             else -> onNavigateDiagnostics
                         },

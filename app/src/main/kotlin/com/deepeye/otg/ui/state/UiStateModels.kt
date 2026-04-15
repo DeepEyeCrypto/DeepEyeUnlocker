@@ -355,6 +355,11 @@ data class ForensicsState(
     val lastExportPath: String? = null,
     val isExporting: Boolean = false,
 
+    /** Threat & Intel (Stage 14) */
+    val threatReport: ThreatReportDisplay? = null,
+    val intelReport: IntelReportDisplay? = null,
+    val isScanning: Boolean = false,
+
     /** Selected tab */
     val selectedTab: ForensicsTab = ForensicsTab.INDEX,
 
@@ -365,9 +370,37 @@ data class ForensicsState(
 enum class ForensicsTab {
     INDEX,
     TIMELINE,
+    THREAT_SCAN,
+    INTEL_HUB,
     VERIFICATION,
     REPORTS
 }
+
+data class ThreatReportDisplay(
+    val score: Int,
+    val threatCount: Int,
+    val findings: List<ThreatFindingDisplay>
+)
+
+data class ThreatFindingDisplay(
+    val type: String,
+    val name: String,
+    val severity: String,
+    val description: String
+)
+
+data class IntelReportDisplay(
+    val model: String,
+    val cveCount: Int,
+    val riskLevel: String,
+    val vulnerabilities: List<CveIntelDisplay>
+)
+
+data class CveIntelDisplay(
+    val id: String,
+    val score: Double,
+    val description: String
+)
 
 data class IndexResultDisplay(
     val totalFiles: Int,

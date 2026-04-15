@@ -48,6 +48,8 @@ import com.deepeye.otg.R
 import com.deepeye.otg.ui.apple.AppleProToolsScreen
 import com.deepeye.otg.ui.device.DeviceSupportScreen
 import com.deepeye.otg.ui.theme.DeepEyeColors
+import com.deepeye.otg.ui.screens.qualcomm.EdlScreen
+import com.deepeye.otg.ui.screens.samsung.SamsungToolsScreen
 import com.deepeye.otg.viewmodel.UsbViewModel
 
 private enum class DeepEyeRootTab(val label: String, val icon: ImageVector) {
@@ -111,13 +113,30 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
 
                 currentNav == NavTarget.MTK_EXPLOIT || currentNav == NavTarget.MTK_UNLOCK -> DeepEyeMtkScreen(mainViewModel = viewModel)
 
-                currentNav == NavTarget.EDL_CONSOLE -> EdlConsole(
-                    mainViewModel = viewModel,
+                currentNav == NavTarget.EDL_CONSOLE -> EdlScreen(
                     onBack = {
                         rootTab = DeepEyeRootTab.DEVICES
                         viewModel.setNav(NavTarget.DEVICES)
                     },
                 )
+
+                currentNav == NavTarget.SAMSUNG_ODIN -> SamsungToolsScreen(
+                    onBack = {
+                        rootTab = DeepEyeRootTab.DEVICES
+                        viewModel.setNav(NavTarget.DEVICES)
+                    },
+                )
+
+                currentNav == NavTarget.FORENSICS_LAB -> {
+                    val forensicsViewModel: com.deepeye.otg.viewmodel.research.ForensicsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                    com.deepeye.otg.ui.screens.forensics.ForensicsDashboardScreen(
+                        viewModel = forensicsViewModel,
+                        onBack = {
+                            rootTab = DeepEyeRootTab.DEVICES
+                            viewModel.setNav(NavTarget.DEVICES)
+                        }
+                    )
+                }
 
                 currentNav == NavTarget.MISSION_HUB -> com.deepeye.otg.ui.gsmg.BypassScreen()
 
@@ -137,6 +156,10 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                     onNavigateEdl = {
                         rootTab = DeepEyeRootTab.DEVICES
                         viewModel.setNav(NavTarget.EDL_CONSOLE)
+                    },
+                    onNavigateSamsung = {
+                        rootTab = DeepEyeRootTab.DEVICES
+                        viewModel.setNav(NavTarget.SAMSUNG_ODIN)
                     },
                     onNavigateFrp = {
                         rootTab = DeepEyeRootTab.DEVICES
@@ -164,6 +187,14 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                     onNavigateMtk = {
                         rootTab = DeepEyeRootTab.DEVICES
                         viewModel.setNav(NavTarget.MTK_EXPLOIT)
+                    },
+                    onNavigateEdl = {
+                        rootTab = DeepEyeRootTab.DEVICES
+                        viewModel.setNav(NavTarget.EDL_CONSOLE)
+                    },
+                    onNavigateSamsung = {
+                        rootTab = DeepEyeRootTab.DEVICES
+                        viewModel.setNav(NavTarget.SAMSUNG_ODIN)
                     },
                     onNavigateFrp = {
                         rootTab = DeepEyeRootTab.DEVICES

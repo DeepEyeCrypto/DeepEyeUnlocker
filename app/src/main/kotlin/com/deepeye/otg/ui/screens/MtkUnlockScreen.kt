@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.otg.data.model.*
 import com.deepeye.otg.viewmodel.MtkUnlockViewModel
 
@@ -34,7 +35,7 @@ fun MtkUnlockScreen(
     currentDevice: UsbDevice? = null,
     viewModel: MtkUnlockViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
