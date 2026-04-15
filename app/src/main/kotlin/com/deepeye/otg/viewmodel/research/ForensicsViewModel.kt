@@ -173,7 +173,7 @@ isExporting = false, error = "Export Failed: ${e.message}"
                         // 1. Prepare file list for Python
                         val filesArr = JSONArray()
                         idx.artifacts.take(500).forEach { artifact ->
-                            filesArr.put(JSONObject().put("name", artifact.name))
+                            filesArr.put(JSONObject().put("name", artifact.filename))
                         }
 
                         // 2. Call Python Scanner
