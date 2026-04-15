@@ -32,9 +32,15 @@ object UsbPermissionHelper {
         }
 
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-            PendingIntent.FLAG_MUTABLE else 0
-        val pi = PendingIntent.getBroadcast(context, 0,
-            Intent(ACTION_USB_PERMISSION), flags)
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        else
+            PendingIntent.FLAG_UPDATE_CURRENT
+        
+        // Make Intent explicit to avoid FLAG_MUTABLE crash on Android 14+
+        val permissionIntent = Intent(ACTION_USB_PERMISSION)
+            .setPackage(context.packageName)
+        
+        val pi = PendingIntent.getBroadcast(context, 0, permissionIntent, flags)
 
         context.registerReceiver(receiver, IntentFilter(ACTION_USB_PERMISSION))
         usbManager.requestPermission(device, pi)

@@ -24,9 +24,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -74,6 +73,7 @@ import com.deepeye.otg.usb.UsbLifecycleState
  * GSMG-inspired dark premium UI with gold accent CTA.
  * Signature unchanged — drop-in replacement.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
     selectedSession: UsbLifecycleState,
@@ -379,17 +379,19 @@ private fun QuickToolsGrid(
         QuickTool("DA\nTools", Icons.Default.Build, DeepEyeColors.Warning, onDevices),
     )
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+    @OptIn(ExperimentalLayoutApi::class)
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.height(220.dp),
-        userScrollEnabled = false,
+        maxItemsInEachRow = 3,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        items(tools) { tool ->
+        tools.forEach { tool ->
             GlassCard(
                 hazeState = null,
-                modifier = Modifier.aspectRatio(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f),
                 cornerRadius = 14.dp,
                 accentColor = tool.color.copy(alpha = 0.3f),
                 onClick = tool.onClick,

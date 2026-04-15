@@ -85,7 +85,9 @@ fun DeepEyeDevicesScreen(
     )
 
     Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(bottom = 80.dp),  // Prevent overlap with bottom nav
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         SectionHeader(title = "Device Tools", count = session.badge)

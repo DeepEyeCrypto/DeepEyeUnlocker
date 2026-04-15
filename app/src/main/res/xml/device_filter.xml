@@ -1,11 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- MTK BROM v1 -->
-    <usb-device vendor-id="3725" product-id="3" />
-    <!-- MTK BROM v2 -->
-    <usb-device vendor-id="3725" product-id="8192" />
-    <!-- Qualcomm EDL -->
-    <usb-device vendor-id="1478" product-id="36872" />
-    <!-- Qualcomm EDL alt -->
-    <usb-device vendor-id="1478" product-id="36878" />
+    <!-- Accept all USB devices for OTG support -->
+    <usb-device />
+    
+    <!-- MediaTek BROM mode (Standard) -->
+    <usb-device vendor-id="0x0e8d" />
+    
+    <!-- MediaTek Preloader/Download Agent -->
+    <usb-device vendor-id="0x0e8d" product-id="0x0003" />
+    <usb-device vendor-id="0x0e8d" product-id="0x2000" />
+    
+    <!-- Qualcomm EDL mode (9008) -->
+    <usb-device vendor-id="0x05c6" product-id="0x9008" />
+    <usb-device vendor-id="0x05c6" product-id="0x900e" />
+    <usb-device vendor-id="0x05c6" product-id="0xf007" />
+    
+    <!-- Samsung Download/Odin mode -->
+    <usb-device vendor-id="0x04e8" product-id="0x685d" />
+    <usb-device vendor-id="0x04e8" product-id="0x6860" />
+    <usb-device vendor-id="0x04e8" product-id="0x685f" />
+    
+    <!-- Spreadtrum/Unisoc (SPRD) -->
+    <usb-device vendor-id="0x1782" product-id="0x4d00" />
+    <usb-device vendor-id="0x1782" />
+    
+    <!-- Google/Nexus (some Samsung devices) -->
+    <usb-device vendor-id="0x18d1" />
+    
+    <!-- Huawei/Honor -->
+    <usb-device vendor-id="0x12d1" />
 </resources>

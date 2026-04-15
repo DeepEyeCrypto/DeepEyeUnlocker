@@ -4,7 +4,25 @@
  */
 export function PageSkeleton() {
   return (
-    <div className="page" style={{ opacity: 0.6 }}>
+    <div className="page" style={{ opacity: 0.8, minHeight: '100vh', padding: '1.5rem' }}>
+      {/* Loading indicator */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        marginBottom: '2rem',
+        color: '#60a5fa',
+        fontSize: '0.9rem',
+        fontFamily: 'monospace'
+      }}>
+        <span style={{ 
+          display: 'inline-block',
+          animation: 'spin 1s linear infinite',
+          marginRight: '0.5rem'
+        }}>⚙️</span>
+        Loading module...
+      </div>
+      
       {/* Title skeleton */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         <div

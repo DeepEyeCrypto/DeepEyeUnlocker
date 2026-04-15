@@ -16,14 +16,14 @@ object DeepEyeColors {
     val SurfaceAccent = Color(0x1AFFFFFF)
     val TerminalBackground = Color(0xFF0D0F14)
 
-    // ── Glass tokens ────────────────────────────────
-    val GlassWhite = Color(0x12FFFFFF)
-    val GlassBorder = Color(0x1AFFFFFF)
-    val GlassHighlight = Color(0x14FFFFFF)
-    val SurfaceGlass = Color(0x14FFFFFF)    // 8% white — frosted
-    val SurfaceGlass2 = Color(0x1FFFFFFF)   // 12% white — elevated
-    val BorderGlass = Color(0x1AFFFFFF)     // 10% white border
-    val Shadow = Color(0x66000000)
+    // ── Glass tokens (reduced opacity for clean look) ─
+    val GlassWhite = Color(0x0AFFFFFF)       // 4% white (was 7%)
+    val GlassBorder = Color(0x14FFFFFF)      // 8% white border (was 10%)
+    val GlassHighlight = Color(0x0FFFFFFF)   // 6% white highlight (was 8%)
+    val SurfaceGlass = Color(0x0AFFFFFF)     // 4% white — clean glass (was 8%)
+    val SurfaceGlass2 = Color(0x0CFFFFFF)    // 5% white — subtle elevation (was 12%)
+    val BorderGlass = Color(0x14FFFFFF)      // 8% white border (was 10%)
+    val Shadow = Color(0x44000000)           // Reduced shadow opacity
 
     // ── Gold accent (GSMG-inspired CTA) ─────────────
     val GoldAccent = Color(0xFFF5C518)

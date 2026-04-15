@@ -62,10 +62,10 @@ fun GlassCard(
         HazeStyle(
             backgroundColor = DeepEyeColors.Surface,
             tint = HazeTint(
-                if (highlighted) accentColor.copy(alpha = 0.10f) else DeepEyeColors.GlassWhite,
+                if (highlighted) accentColor.copy(alpha = 0.06f) else DeepEyeColors.GlassWhite,
             ),
-            blurRadius = 22.dp,
-            noiseFactor = 0.015f,
+            blurRadius = 0.dp,  // DISABLED: Android blur causes artifacts and performance issues
+            noiseFactor = 0.0f,  // DISABLED: No noise for clean look
         )
     }
 
@@ -75,11 +75,12 @@ fun GlassCard(
                 scaleX = scale
                 scaleY = scale
                 compositingStrategy = CompositingStrategy.Offscreen
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !performanceMode) {
-                    renderEffect = RenderEffect
-                        .createBlurEffect(10f, 10f, Shader.TileMode.DECAL)
-                        .asComposeRenderEffect()
-                }
+                // DISABLED: RenderEffect blur - causes triple blur issue
+                // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !performanceMode) {
+                //     renderEffect = RenderEffect
+                //         .createBlurEffect(10f, 10f, Shader.TileMode.DECAL)
+                //         .asComposeRenderEffect()
+                // }
             }
             .shadow(
                 elevation = 24.dp,
@@ -95,8 +96,8 @@ fun GlassCard(
                     Modifier.background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                DeepEyeColors.Surface.copy(alpha = 0.92f),
-                                DeepEyeColors.Surface2.copy(alpha = 0.84f),
+                                DeepEyeColors.Surface.copy(alpha = 0.06f),  // Reduced: 0.92f → 0.06f
+                                DeepEyeColors.Surface2.copy(alpha = 0.04f), // Reduced: 0.84f → 0.04f
                             ),
                         ),
                     )
@@ -105,8 +106,8 @@ fun GlassCard(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        DeepEyeColors.GlassHighlight,
-                        DeepEyeColors.GlassWhite.copy(alpha = 0.55f),
+                        DeepEyeColors.GlassHighlight.copy(alpha = 0.5f), // Reduced opacity
+                        DeepEyeColors.GlassWhite.copy(alpha = 0.03f),    // Reduced: 0.55f → 0.03f
                         Color.Transparent,
                     ),
                 ),

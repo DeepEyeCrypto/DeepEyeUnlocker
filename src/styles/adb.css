@@ -7,6 +7,8 @@
   min-height: 100vh;
   color: #e2e8f0;
   font-family: "JetBrains Mono", monospace;
+  position: relative;
+  z-index: 1;
 }
 
 .adb-header {
@@ -26,6 +28,8 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #60a5fa;
+  position: relative;
+  z-index: 100;
 }
 
 .adb-icon { font-size: 1.6rem; }
@@ -38,6 +42,10 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   background: #1e293b;
+  position: relative;
+  z-index: 100;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .adb-status--connected { background: #064e3b; color: #34d399; }
@@ -84,12 +92,18 @@
   border: 1px solid #1f2937;
   border-radius: 10px;
   padding: 1rem;
+  position: relative;
+  z-index: 5;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .adb-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
+  position: relative;
+  z-index: 5;
 }
 
 .adb-table th {
@@ -142,6 +156,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  position: relative;
+  z-index: 5;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .adb-info-grid span { font-size: 0.65rem; color: #4b5563; text-transform: uppercase; }
@@ -172,6 +190,10 @@
   font-family: "JetBrains Mono", monospace;
   font-size: 0.85rem;
   outline: none;
+  position: relative;
+  z-index: 10;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .adb-shell-input:focus { border-color: #3b82f6; }
@@ -185,7 +207,54 @@
   overflow-y: auto;
   font-size: 0.82rem;
   line-height: 1.6;
+  position: relative;
+  z-index: 10;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.adb-cmd-line { color: #60a5fa; }
-.adb-out-line { color: #94a3b8; }
+.adb-shell-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.adb-shell-output::-webkit-scrollbar-track {
+  background: #0a0e1a;
+  border-radius: 4px;
+}
+
+.adb-shell-output::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.adb-shell-output::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.adb-cmd-line { 
+  color: #60a5fa;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+.adb-cmd-line:first-child {
+  margin-top: 0;
+}
+.adb-out-line { 
+  color: #e2e8f0;
+  padding-left: 0.5rem;
+}
+
+/* Loading animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Ensure all interactive elements are clearly visible */
+.adb-btn {
+  position: relative;
+  z-index: 10;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

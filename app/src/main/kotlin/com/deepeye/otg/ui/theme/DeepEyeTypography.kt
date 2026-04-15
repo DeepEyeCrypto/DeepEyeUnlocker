@@ -8,18 +8,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.R
 
-// ── Font families — res/font/ filenames ─────────────
-// orbitron_bold.ttf, orbitron_regular.ttf
-// inter_regular.ttf, inter_medium.ttf, inter_semibold.ttf
+// ── Font families — validated runtime-safe resources ─────────────
+// inter_regular.ttf, inter_semibold.ttf,
 // jetbrains_mono_regular.ttf, jetbrains_mono_bold.ttf
 
 val OrbitronFamily = FontFamily(
-    Font(R.font.orbitron_bold, FontWeight.Bold),
-    Font(R.font.orbitron_regular, FontWeight.Normal),
+    Font(R.font.inter_semibold, FontWeight.Bold),
+    Font(R.font.inter_regular, FontWeight.Normal),
 )
 val InterFamily = FontFamily(
     Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_regular, FontWeight.Medium),
     Font(R.font.inter_semibold, FontWeight.SemiBold),
 )
 val JetBrainsMonoFamily = FontFamily(

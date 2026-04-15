@@ -27,9 +27,9 @@ export function SpotlightFeatureCard({
         customSize={true}
         className="h-full min-h-[180px]"
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3" style={{ position: 'relative', zIndex: 20 }}>
           {/* Icon */}
-          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center" style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
             {icon}
           </div>
 

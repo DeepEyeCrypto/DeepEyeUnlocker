@@ -2,6 +2,7 @@ package com.deepeye.otg.usb
 
 import android.content.Context
 import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
 import android.util.Log
 import com.deepeye.otg.data.ConnectionMode
@@ -16,6 +17,7 @@ import com.deepeye.otg.data.device.ProtocolRouter
 import com.deepeye.otg.data.device.DeviceProtocol
 import javax.inject.Inject
 import java.util.UUID
+import timber.log.Timber
 
 /**
  * Single source of truth for USB connection lifecycle.
@@ -215,12 +217,41 @@ class UsbLifecycleManager @Inject constructor(
         key: String,
         sessionId: String
     ) = withContext(Dispatchers.IO) {
-        val conn = OemCompatibilityLayer.openDeviceWithRetry(usbManager, device) ?: run {
-            val err = UsbLifecycleState.Error("Cannot open device", true)
+        // Retry logic for opening device (up to 3 attempts)
+        val maxRetries = 3
+        var conn: UsbDeviceConnection? = null
+        var lastOpenError: String = "Unknown error"
+        
+        repeat(maxRetries) { attempt ->
+            Timber.d("[USB] Open attempt ${attempt + 1}/$maxRetries for VID=0x${device.vendorId.toString(16)} PID=0x${device.productId.toString(16)}")
+            
+            conn = OemCompatibilityLayer.openDeviceWithRetry(usbManager, device)
+            if (conn != null) {
+                Timber.d("[USB] ✅ Device opened successfully")
+                return@repeat
+            }
+            
+            lastOpenError = when {
+                !usbManager.hasPermission(device) -> "Permission denied - reconnect OTG cable"
+                else -> "Cannot open device - device busy or not ready"
+            }
+            Timber.e("[USB] openDevice failed on attempt ${attempt + 1}: $lastOpenError")
+            
+            if (attempt < maxRetries - 1) {
+                Timber.d("[USB] Retrying in 500ms...")
+                delay(500)
+            }
+        }
+        
+        if (conn == null) {
+            val err = UsbLifecycleState.Error(lastOpenError, true)
             if (retryCountFor(key) < MAX_RETRY_COUNT) {
                 scheduleReconnect(device, key, "OPEN_FAIL")
             } else {
-                coordinator.transition(ConnectionState.Failed("OPEN_FAIL", "Cannot open connection"), "Failed to open $key after ${retryCountFor(key)} retries")
+                coordinator.transition(
+                    ConnectionState.Failed("OPEN_FAIL", "Cannot open connection: $lastOpenError"),
+                    "Failed to open $key after $maxRetries retries"
+                )
             }
             _state.value = err
             updateSessionState(key, err)
@@ -228,7 +259,7 @@ class UsbLifecycleManager @Inject constructor(
         }
 
         val endpoints = UsbEndpointResolver.resolve(device, mode) ?: run {
-            conn.close()
+            conn!!.close()
             val err = UsbLifecycleState.Error("Endpoints not resolved", false)
             coordinator.transition(ConnectionState.Failed("EP_FAIL", "Endpoints not resolved"), "No matching endpoints")
             _state.value = err
@@ -236,11 +267,36 @@ class UsbLifecycleManager @Inject constructor(
             return@withContext
         }
 
-        val claimed = try { conn.claimInterface(endpoints.usbInterface, true) } catch (e: Exception) { false }
+        // Try to claim interface with retry
+        val claimed = try {
+            val claimResult = conn!!.claimInterface(endpoints.usbInterface, true)
+            if (!claimResult) {
+                Timber.e("[USB] ❌ claimInterface returned false for interface ${endpoints.usbInterface.id}")
+                // Try forcing kernel driver detach
+                try {
+                    conn!!.releaseInterface(endpoints.usbInterface)
+                    delay(100)
+                    conn!!.claimInterface(endpoints.usbInterface, true)
+                } catch (e: Exception) {
+                    Timber.e("[USB] claimInterface retry failed: ${e.message}")
+                    false
+                }
+            } else {
+                Timber.d("[USB] ✅ Interface ${endpoints.usbInterface.id} claimed successfully")
+                true
+            }
+        } catch (e: Exception) {
+            Timber.e("[USB] ❌ claimInterface exception: ${e.message}")
+            false
+        }
+        
         if (!claimed) {
-            conn.close()
-            val err = UsbLifecycleState.Error("Interface claim failed", true)
-            coordinator.transition(ConnectionState.Failed("CLAIM_FAIL", "Interface claim failed"), "Failed to claim interface")
+            conn!!.close()
+            val err = UsbLifecycleState.Error("Interface busy - close other apps and retry", true)
+            coordinator.transition(
+                ConnectionState.Failed("CLAIM_FAIL", "Cannot claim USB interface"),
+                "Failed to claim interface - another app may be using it"
+            )
             _state.value = err
             updateSessionState(key, err)
             return@withContext

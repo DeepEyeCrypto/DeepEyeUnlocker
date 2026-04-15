@@ -39,6 +39,7 @@ export default function AdbPage() {
 
   const [shellInput, setShellInput] = useState("");
   const [shellOutput, setShellOutput] = useState<string[]>([]);
+  const [lastScanned, setLastScanned] = useState<Date | null>(null);
 
   const handleShell = async () => {
     if (!shellInput.trim()) return;
@@ -53,6 +54,11 @@ export default function AdbPage() {
       setShellOutput((prev) => [...prev, `$ ${shellInput}`, `ERROR: ${e}`]);
     }
     setShellInput("");
+  };
+
+  const handleScanDevices = async () => {
+    await scanDevices();
+    setLastScanned(new Date());
   };
 
   const handleInstall = async () => {
@@ -77,19 +83,26 @@ export default function AdbPage() {
           <span className="adb-icon">📱</span>
           <h1>ADB DEVICES</h1>
         </div>
-        <span className={`adb-status adb-status--${adbStatus}`}>
-          {STATUS_LABEL[adbStatus] ?? adbStatus}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {lastScanned && (
+            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+              Last scan: {lastScanned.toLocaleTimeString()}
+            </span>
+          )}
+          <span className={`adb-status adb-status--${adbStatus}`}>
+            {STATUS_LABEL[adbStatus] ?? adbStatus}
+          </span>
+        </div>
       </div>
 
       {/* ADB Actions - Spotlight Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6" style={{ position: 'relative', zIndex: 10 }}>
         <SpotlightFeatureCard
           icon={<Smartphone className="w-5 h-5 text-cyan-400" />}
           title="Scan Devices"
           description="Detect connected Android devices"
           glowColor="blue"
-          onClick={scanDevices}
+          onClick={handleScanDevices}
         />
         
         {selectedSerial && (
@@ -140,7 +153,8 @@ export default function AdbPage() {
 
       {/* Device List */}
       {devices.length > 0 && (
-        <div className="adb-card">
+        <div className="adb-card" style={{ marginTop: '1rem' }}>
+          <h2 style={{ fontSize: '0.9rem', color: '#60a5fa', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Connected Devices</h2>
           <table className="adb-table">
             <thead>
               <tr>
@@ -176,8 +190,8 @@ export default function AdbPage() {
 
       {/* Device Info */}
       {deviceInfo && (
-        <div className="adb-card adb-device-info">
-          <h2>Device Info</h2>
+        <div className="adb-card adb-device-info" style={{ marginTop: '1rem' }}>
+          <h2>Device Information</h2>
           <div className="adb-info-grid">
             <div><span>Brand</span><strong>{deviceInfo.brand}</strong></div>
             <div><span>Model</span><strong>{deviceInfo.model}</strong></div>
@@ -199,8 +213,8 @@ export default function AdbPage() {
 
       {/* Operations */}
       {selectedSerial && (
-        <div className="adb-card">
-          <h2>Operations</h2>
+        <div className="adb-card" style={{ marginTop: '1rem' }}>
+          <h2>Quick Operations</h2>
           <div className="adb-ops-grid">
             <button className="adb-btn" onClick={() => rebootDevice("system")}>
               Reboot System
@@ -235,8 +249,8 @@ export default function AdbPage() {
 
       {/* Shell */}
       {selectedSerial && (
-        <div className="adb-card adb-shell-card">
-          <h2>ADB Shell</h2>
+        <div className="adb-card adb-shell-card" style={{ marginTop: '1rem' }}>
+          <h2>ADB Shell Terminal</h2>
           <div className="adb-shell-input-row">
             <span className="adb-prompt">$</span>
             <input

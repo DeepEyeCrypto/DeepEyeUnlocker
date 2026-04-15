@@ -46,13 +46,20 @@ class MainActivity : ComponentActivity() {
                     device?.let { dev ->
                         val vm = ViewModelProvider(this@MainActivity)[DeviceViewModel::class.java]
                         if (!usbManager.hasPermission(dev)) {
-                            // Auto-request permission
-                            val flags = if (Build.VERSION.SDK_INT >= 31)
-                                PendingIntent.FLAG_MUTABLE else 0
+                            // Auto-request permission with explicit Intent to avoid FLAG_MUTABLE crash
+                            val permissionIntent = Intent(ACTION_USB_PERMISSION)
+                                .setPackage(this@MainActivity.packageName) // Make it explicit
+                            
+                            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                            } else {
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                            }
+                            
                             val pi = PendingIntent.getBroadcast(
                                 this@MainActivity,
                                 0,
-                                Intent(ACTION_USB_PERMISSION),
+                                permissionIntent,
                                 flags
                             )
                             usbManager.requestPermission(dev, pi)

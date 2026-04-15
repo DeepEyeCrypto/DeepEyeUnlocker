@@ -90,16 +90,24 @@ class UsbViewModel @javax.inject.Inject constructor(
     val statusMsg: StateFlow<String> = sessionCoordinator.state.map { state ->
         when (state) {
             is ConnectionState.Idle -> "Disconnected"
-            is ConnectionState.DeviceDetected -> "Device Detected"
-            is ConnectionState.PermissionPending -> "Permission Pending"
-            is ConnectionState.PermissionDenied -> "Permission Denied"
-            is ConnectionState.Opening -> "Opening..."
-            is ConnectionState.Open -> "Connected"
-            is ConnectionState.Ready -> "Ready"
-            is ConnectionState.Busy -> "Busy"
-            is ConnectionState.Recovering -> "Recovering..."
+            is ConnectionState.DeviceDetected -> "Device Detected ✓"
+            is ConnectionState.PermissionPending -> "Waiting for USB permission..."
+            is ConnectionState.PermissionDenied -> "Permission Denied - reconnect OTG cable"
+            is ConnectionState.Opening -> "Opening connection..."
+            is ConnectionState.Open -> "Connected ✓"
+            is ConnectionState.Ready -> "Ready to use ✓"
+            is ConnectionState.Busy -> "Device busy - please wait"
+            is ConnectionState.Recovering -> "Recovering connection..."
             is ConnectionState.Disconnected -> "Disconnected"
-            is ConnectionState.Failed -> "Error: ${state.errorCode}"
+            is ConnectionState.Failed -> {
+                // User-friendly error messages
+                when (state.errorCode) {
+                    "OPEN_FAIL" -> "Connection Failed - ${state.reason.take(60)}"
+                    "CLAIM_FAIL" -> "Interface Busy - close other apps & retry"
+                    "EP_FAIL" -> "Protocol not recognized - try different mode"
+                    else -> "Connection Error: ${state.reason.take(60)}"
+                }
+            }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "Disconnected")
 
