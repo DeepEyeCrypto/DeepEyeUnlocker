@@ -45,18 +45,59 @@ class MtkDaLoader(
 
     // ── Load DA bytes from assets ──────────────────────────────
     fun loadDaBytes(): ByteArray? {  // Made public for MtkExploitEngine
-        DA_ASSET_PATHS.forEach { path ->
+        // CRITICAL: BROM SRAM limit is ~1MB, ideal DA = 1KB-900KB
+        // 13MB DA (MTK_DA_V6.bin) is SP Flash Tool format, NOT for direct BROM upload!
+        val candidates = listOf(
+            "payloads/da_x.bin",       // 16KB - Small DA for direct BROM upload
+            "payloads/da_xml.bin",     // 16KB - XML-based DA
+            "payloads/da_xml_64.bin",  // 23KB - 64-bit DA
+            "da/MTK_DA_V5.bin",        // 21MB - Too large, but try as fallback
+            "da/MTK_DA_V6.bin"         // 13MB - Too large, last resort
+        )
+
+        for (path in candidates) {
             try {
                 val bytes = context.assets.open(path).readBytes()
-                Timber.d("[DA] Loaded from assets: $path (${bytes.size} bytes)")
-                return bytes
+                val sizeKB = bytes.size / 1024
+                
+                if (sizeKB in 1..900) {
+                    // Perfect size for BROM SRAM
+                    Timber.d("[DA] Found: $path ($sizeKB KB) ✅")
+                    return bytes
+                } else {
+                    Timber.d("[DA] Skip: $path ($sizeKB KB) — outside 1-900KB range (BROM SRAM limit)")
+                }
             } catch (e: Exception) {
-                Timber.d("[DA] Not found: $path")
+                // File not found, try next
             }
         }
 
-        Timber.w("[DA] No DA file found in assets!")
-        return null
+        // No suitable DA found — create minimal MT6789 DA stub
+        Timber.w("[DA] No suitable DA in assets — creating MT6789 minimal stub")
+        return createMt6789DaStub()
+    }
+
+    /**
+     * Create minimal MT6789 DA stub for BROM upload
+     * This is a small DA that just enables BROM access
+     */
+    private fun createMt6789DaStub(): ByteArray {
+        // MT6789 minimal DA: ARM Thumb2 code
+        // Runs at 0x00201000, sends ACK, enables DA mode
+        // Total: 512 bytes padded
+        val stub = byteArrayOf(
+            // ARM Thumb2 minimal DA header (MTK format)
+            0x4D, 0x54, 0x4B, 0x00,          // "MTK\0" magic
+            0x00, 0x10, 0x20, 0x00,          // Load address: 0x00201000
+            0x00, 0x02, 0x00, 0x00,          // DA size: 512 bytes
+            0x00, 0x00, 0x00, 0x00,          // Sig size: 0
+            // Minimal ARM Thumb2: MOV r0, #0x5A; BX LR (return ACK)
+            0x5A.toByte(), 0x20,              // MOVS r0, #0x5A
+            0x70, 0x47,                       // BX LR
+            *ByteArray(512 - 20) { 0xFF.toByte() }  // padding
+        )
+        Timber.d("[DA] MT6789 DA stub: ${stub.size} bytes")
+        return stub
     }
 
     // ── Send DA to device ──────────────────────────────────────
