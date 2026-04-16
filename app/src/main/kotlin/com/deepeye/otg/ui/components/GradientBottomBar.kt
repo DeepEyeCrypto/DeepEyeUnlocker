@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -102,6 +103,11 @@ val GradientNavItems = listOf(
         gradientEnd = Color(0xFFFFA500)
     )
 )
+
+/**
+ * Feature count for Bypass tab badge (99 features)
+ */
+const val BYPASS_FEATURE_COUNT = 99
 
 @Composable
 fun GradientBottomBar(
@@ -201,6 +207,34 @@ private fun GradientNavItemComponent(
                     Color(0xFF555555),
                 modifier = Modifier.size(if (selected) 22.dp else 20.dp)
             )
+            
+            // Badge for Bypass tab (99 features)
+            if (navItem.route == "bypass") {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 4.dp, y = (-4).dp)
+                        .size(14.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    navItem.gradientStart,
+                                    navItem.gradientEnd
+                                )
+                            ),
+                            shape = androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "99",
+                        fontSize = 7.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.White,
+                        modifier = Modifier.offset(y = (-0.5).dp)
+                    )
+                }
+            }
         }
 
         // Label only for selected
