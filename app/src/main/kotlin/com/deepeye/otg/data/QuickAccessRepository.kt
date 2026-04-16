@@ -30,9 +30,9 @@ object QuickAccessRepository {
             label = "FRP Bypass",
             icon = Icons.Default.Security,
             iconTint = Color(0xFF4CAF50),
-            navTarget = "MISSION_HUB",
+            navTarget = "ADB_FRP_BYPASS",
             category = QuickAccessCategory.BYPASS,
-            description = "Factory Reset Protection bypass"
+            description = "ADB-based FRP bypass for MTP devices"
         ),
         QuickAccessItem(
             id = "mi_account",

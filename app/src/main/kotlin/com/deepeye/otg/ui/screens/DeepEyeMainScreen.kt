@@ -140,6 +140,18 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
 
                 currentNav == NavTarget.MISSION_HUB -> com.deepeye.otg.ui.gsmg.BypassScreen()
 
+                currentNav == NavTarget.ADB_FRP_BYPASS -> {
+                    val adbFrpViewModel: com.deepeye.otg.viewmodel.AdbFrpBypassViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                    AdbFrpBypassScreen(
+                        viewModel = adbFrpViewModel,
+                        deviceModel = "RMX3845",
+                        onBack = {
+                            rootTab = DeepEyeRootTab.DEVICES
+                            viewModel.setNav(NavTarget.DEVICES)
+                        }
+                    )
+                }
+
                 currentNav == NavTarget.DEVICE_SUPPORT -> DeviceSupportScreen()
 
                 currentNav == NavTarget.LOG_SCREEN || rootTab == DeepEyeRootTab.LOGS -> DeepEyeLogScreen(mainViewModel = viewModel)
@@ -205,6 +217,10 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                             "UNLOCK_SCREEN" -> {
                                 rootTab = DeepEyeRootTab.DEVICES
                                 viewModel.setNav(NavTarget.UNLOCK_SCREEN)
+                            }
+                            "ADB_FRP_BYPASS" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.ADB_FRP_BYPASS)
                             }
                             "DEVICE_SUPPORT" -> {
                                 rootTab = DeepEyeRootTab.DEVICES

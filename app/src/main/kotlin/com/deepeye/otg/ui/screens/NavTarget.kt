@@ -39,6 +39,7 @@ enum class NavTarget(val hub: MissionHub) {
     // BYPASS Hub
     MISSION_HUB(MissionHub.BYPASS),
     UNLOCK_SCREEN(MissionHub.BYPASS),
+    ADB_FRP_BYPASS(MissionHub.BYPASS),
     
     // INTEL Hub
     CVE_INTELLIGENCE(MissionHub.INTEL),
