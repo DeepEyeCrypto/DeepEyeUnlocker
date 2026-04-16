@@ -2,17 +2,80 @@
 
 ## Problem
 ```
-Header ACK read: -1 bytes  ← USB read itself failed!
+[BROM] DISABLE_AUTH send failed: -1/1 bytes
+[BROM] GET_HW_CODE send failed: -1/1 bytes
+📤 Header sent: -1 bytes  ← SEND ITSELF FAILED!
 ```
 
-BROM not responding to `CMD_SEND_DA (0xD7)` after SLA bypass. Error `-1` means BROM state machine is not ready to accept 0xD7 command.
+**CRITICAL:** Every `bulkTransfer()` TX returns `-1`. USB endpoint is completely dead!
 
-## Root Cause
-After SLA bypass (0xC8), the BROM state machine needs specific preparation commands before it will accept `CMD_SEND_DA (0xD7)`. The sequence was missing critical delays and error handling.
+## Root Cause (DISCOVERED)
+
+The `preloaderAuthBypass()` function was **skipping BROM handshake** with comment:
+```kotlin
+// BUG 2 FIX: NO RE-HANDSHAKE! Use existing BROM connection
+onLog("🤝 Using existing BROM connection (no re-handshake)")
+```
+
+**BUT THIS WAS WRONG!** The function opens a **fresh** `UsbDeviceConnection` at line 230, but then skips the mandatory BROM handshake (0xA0 0x0A 0x50 0x05). Without handshake:
+
+1. BROM state machine is **NOT initialized**
+2. All commands return `-1` (TX fails immediately)
+3. USB endpoints appear "dead" but are just uninitialized
+
+**Same issue existed in `slaAuthBypass()`** — also skipping handshake!
 
 ## Solution Applied
 
-### 1. Enhanced `prepareBromForDa()` Function
+### 1. CRITICAL FIX: Add Mandatory BROM Handshake
+
+**Problem:** Both `preloaderAuthBypass()` and `slaAuthBypass()` were skipping handshake
+
+**Fix:** Added `performStableBromHandshake()` call after opening fresh connection
+
+**preloaderAuthBypass() changes:**
+```kotlin
+// ❌ BEFORE (broken):
+onLog("🤝 Using existing BROM connection (no re-handshake)")
+// → Skipped handshake → BROM not initialized → TX=-1
+
+// ✅ AFTER (fixed):
+onLog("🤝 Performing fresh BROM handshake (A0 0A 50 05)...")
+if (!performStableBromHandshake(conn, epOut, epIn, onLog)) {
+    onLog("❌ BROM handshake failed — device may not be in BROM mode")
+    return@withContext false
+}
+onLog("✅ BROM handshake complete — state machine initialized")
+```
+
+**slaAuthBypass() changes:**
+```kotlin
+// ✅ Added handshake (with soft failure — some BROMs accept SLA without it)
+onLog("🤝 Performing fresh BROM handshake (A0 0A 50 05)...")
+if (!performStableBromHandshake(conn, epOut, epIn, onLog)) {
+    onLog("⚠️ BROM handshake failed — trying SLA anyway")
+} else {
+    onLog("✅ BROM handshake complete")
+}
+```
+
+### 2. TX Sanity Check (preloaderAuthBypass only)
+
+**Added verification** that USB endpoints actually work before attempting DA upload:
+```kotlin
+onLog("🔍 Verifying USB TX/RX path...")
+val testCmd = byteArrayOf(0xFD.toByte())  // GET_HW_CODE
+val testSent = conn.bulkTransfer(epOut, testCmd, 1, 2000)
+if (testSent < 0) {
+    onLog("❌ USB TX sanity check FAILED (sent=$testSent) — endpoint dead!")
+    onLog("💡 Try: reconnect USB cable and retry")
+    return@withContext false
+}
+```
+
+This catches USB issues early with clear error message instead of failing mid-upload.
+
+### 3. Enhanced `prepareBromForDa()` Function
 
 **Changes:**
 - ✅ Added **50ms delays** between each prep command (critical for BROM state transitions)
@@ -30,7 +93,7 @@ Step 4: DISABLE_AUTH (0xC7)     + 50ms delay
 Step 5: GET_HW_CODE (0xFD)      + 100ms delay + HW code validation
 ```
 
-### 2. Improved CMD_SEND_DA ACK Handling
+### 4. Improved CMD_SEND_DA ACK Handling
 
 **Changes:**
 - ✅ Increased delay from **150ms → 200ms** after sending 0xD7 header
@@ -46,7 +109,7 @@ Step 5: GET_HW_CODE (0xFD)      + 100ms delay + HW code validation
 - Other → Log warning, still attempt upload
 ```
 
-### 3. Better Error Messages
+### 5. Better Error Messages
 
 Added helpful diagnostic messages:
 - "BROM may ACK after DA upload"
@@ -55,20 +118,32 @@ Added helpful diagnostic messages:
 
 ## Expected Behavior After Fix
 
-### Scenario 1: BROM Responds Normally
+### Scenario 1: Normal Flow (Handshake Success)
 ```
+🤝 Performing fresh BROM handshake (A0 0A 50 05)...
+  ↳ BROM response: 5F F5 AF FA
+✅ BROM handshake complete — state machine initialized
+🔍 Verifying USB TX/RX path...
+✅ USB TX/RX verified! HW code: 0x6789
+📦 DA loaded: 16KB ✅
+🔧 Preparing BROM state for DA upload...
 [BROM] Step 1/5: GET_VERSION (0xFE)
 [BROM] Version RX: 0x00 0x01 0x02 0x03
 ...
 [BROM] HW Code: 0x6789
-[BROM] ✅ HW code matches MT6789 — BROM state verified!
+[BROM] ✅ BROM prep sequence complete — ready for CMD_SEND_DA (0xD7)
 📤 Header sent: 13 bytes
 📥 Header ACK read: 1 bytes → 0x5A
 ✅ BROM ACK 0x5A — upload authorized!
 ```
 
-### Scenario 2: BROM Silent (Common for MT6789)
+### Scenario 2: BROM Silent but TX Works (Common for MT6789)
 ```
+🤝 Performing fresh BROM handshake (A0 0A 50 05)...
+  ↳ BROM response: 5F F5 AF FA
+✅ BROM handshake complete — state machine initialized
+🔍 Verifying USB TX/RX path...
+✅ USB TX/RX verified! HW code: 0x6789
 [BROM] Step 5/5: GET_HW_CODE (0xFD) — final state check
 [BROM] HW code check RX: (no response, -1 bytes)
 [BROM] ⚠️ No HW code response — BROM may still be ready, proceeding...
@@ -76,8 +151,8 @@ Added helpful diagnostic messages:
 📥 Header ACK read: -1 bytes → (no data)
 ⚠️ No BROM response to 0xD7 — BROM may ACK after DA upload
 🔧 Proceeding with DA upload anyway (common for MT6789)
-📤 Uploading 256KB DA in 4KB chunks...
-  📤 Upload progress: 100% (256KB/256KB)
+📤 Uploading 16KB DA in 4KB chunks...
+  📤 Upload progress: 100% (16KB/16KB)
 ✅ DA upload complete!
 ```
 
@@ -131,11 +206,17 @@ These are all normal behaviors, not errors!
 
 ## Troubleshooting
 
-### Still Getting -1 After Fix?
-1. Check prep sequence logs — did all 5 steps run?
-2. Look for HW code response — is it 0x6789?
-3. Verify DA binary is correct for MT6789
-4. Try different USB cable/port (BROM is timing-sensitive)
+### Still Getting TX=-1 After Fix?
+1. **Check handshake logs** — did `performStableBromHandshake()` succeed?
+2. **Look for TX sanity check** — did it pass or fail?
+3. If handshake fails → device not in BROM mode (reconnect with Vol-)
+4. If TX sanity fails → USB cable/port issue (try different cable)
+
+### Handshake Fails But Device in BROM Mode?
+- Try different USB cable (BROM is very timing-sensitive)
+- Use USB 2.0 port (not USB 3.0)
+- Disconnect/reconnect device while holding Vol-
+- Check dmesg for USB errors: `dmesg | tail -20`
 
 ### DA Upload Fails Midway?
 - DA binary may be corrupted or wrong chip
