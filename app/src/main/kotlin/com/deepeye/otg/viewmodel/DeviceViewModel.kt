@@ -50,6 +50,19 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
     private val _flashStep = MutableStateFlow("Flashing...")
     val flashStep: StateFlow<String> = _flashStep.asStateFlow()
 
+    // DA and FRP status
+    private val _daStatus = MutableStateFlow("Ready")
+    val daStatus: StateFlow<String> = _daStatus.asStateFlow()
+
+    private val _daJumpStatus = MutableStateFlow("Ready")
+    val daJumpStatus: StateFlow<String> = _daJumpStatus.asStateFlow()
+
+    private val _frpEraseStatus = MutableStateFlow("Ready")
+    val frpEraseStatus: StateFlow<String> = _frpEraseStatus.asStateFlow()
+
+    private val _isRunning = MutableStateFlow(false)
+    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+
     val uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
 
     private val _error = MutableStateFlow<String?>(null)
@@ -397,6 +410,233 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
 
     fun firehoseFlash(partition: String, imagePath: String) {
         log("Flashing $partition with $imagePath...")
+    }
+
+    // ── MTK DA Loading & FRP Erase (MT6789 / RMX3845) ─────────
+    fun loadDaFromAssets() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isRunning.value = true
+            _daStatus.value = "Loading DA from assets..."
+            log("Loading DA for MT6789...")
+
+            try {
+                // Find BROM device
+                val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
+                    ?: run {
+                        _daStatus.value = "❌ No BROM device found"
+                        logError("No BROM device found for DA loading")
+                        _isRunning.value = false
+                        return@launch
+                    }
+
+                val session = MtkBromSession(context, usbDevice)
+                session.open().onFailure {
+                    _daStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                // Perform handshake
+                session.handshake().onFailure {
+                    _daStatus.value = "❌ Handshake failed"
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                log("BROM handshake successful")
+
+                // Get HW code
+                session.getHwCode().onSuccess { chipInfo ->
+                    _chipInfo.value = chipInfo
+                    log("Chip: ${chipInfo.chipName}", "SUCCESS")
+
+                    if (chipInfo.hwCode == 0x6789) {
+                        log("✅ MT6789 (Helio G99) confirmed!", "SUCCESS")
+                    }
+                }
+
+                // Send DA from session
+                log("Sending DA (256KB)...")
+                _daStatus.value = "Sending DA..."
+
+                // Load DA from assets
+                val daBytes = try {
+                    context.assets.open("da/MTK_DA_V6.bin").readBytes()
+                } catch (e: Exception) {
+                    try {
+                        context.assets.open("da/MTK_DA_V5.bin").readBytes()
+                    } catch (e2: Exception) {
+                        _daStatus.value = "❌ DA file not found in assets"
+                        logError("DA file not found")
+                        _isRunning.value = false
+                        return@launch
+                    }
+                }
+
+                log("DA loaded: ${daBytes.size / 1024} KB")
+
+                session.sendDa(daBytes, 0x201000L).onSuccess {
+                    _daStatus.value = "✅ DA sent successfully"
+                    log("DA sent ✓", "SUCCESS")
+                }.onFailure {
+                    _daStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                    logBromRecoveryHints()
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                // Jump to DA
+                session.jumpDa(0x201000L).onSuccess {
+                    _daStatus.value = "✅ DA executing!"
+                    log("Jumped to DA at 0x201000", "SUCCESS")
+                }.onFailure {
+                    _daStatus.value = "❌ Jump failed: ${it.message}"
+                    logError(it.message)
+                }
+
+            } catch (e: Exception) {
+                _daStatus.value = "❌ Exception: ${e.message}"
+                logError(e.message)
+            } finally {
+                _isRunning.value = false
+            }
+        }
+    }
+
+    fun eraseFrpPartition() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isRunning.value = true
+            _frpEraseStatus.value = "Erasing FRP partition..."
+            log("Starting FRP partition erase...")
+
+            try {
+                val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
+                    ?: run {
+                        _frpEraseStatus.value = "❌ No BROM device"
+                        logError("No BROM device for FRP erase")
+                        _isRunning.value = false
+                        return@launch
+                    }
+
+                val daSession = MtkDaSession(context, usbDevice)
+                daSession.open().onFailure {
+                    _frpEraseStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                log("Erasing 'frp' partition...")
+                daSession.eraseFrp().onSuccess {
+                    _frpEraseStatus.value = "✅ FRP erased!"
+                    log("✅ FRP partition erased successfully!", "SUCCESS")
+                    log("Google FRP lock removed!", "SUCCESS")
+                }.onFailure {
+                    _frpEraseStatus.value = "❌ ${it.message}"
+                    logError("FRP erase failed: ${it.message}")
+                }
+
+            } catch (e: Exception) {
+                _frpEraseStatus.value = "❌ Exception: ${e.message}"
+                logError(e.message)
+            } finally {
+                _isRunning.value = false
+            }
+        }
+    }
+
+    fun runFullDaSequence() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isRunning.value = true
+            log("▶ Starting full DA sequence: Load → FRP Erase")
+
+            try {
+                // Step 1: Load DA
+                _daStatus.value = "Loading DA..."
+                log("Step 1: Loading DA from assets...")
+
+                val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
+                    ?: run {
+                        _daStatus.value = "❌ No BROM device"
+                        logError("No BROM device")
+                        _isRunning.value = false
+                        return@launch
+                    }
+
+                val bromSession = MtkBromSession(context, usbDevice)
+                bromSession.open().onFailure {
+                    _daStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                bromSession.handshake().onFailure {
+                    _daStatus.value = "❌ Handshake failed"
+                    logError(it.message)
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                // Load DA from assets
+                val daBytes = try {
+                    context.assets.open("da/MTK_DA_V6.bin").readBytes()
+                } catch (e: Exception) {
+                    context.assets.open("da/MTK_DA_V5.bin").readBytes()
+                }
+
+                bromSession.sendDa(daBytes, 0x201000L).onSuccess {
+                    _daStatus.value = "✅ DA sent"
+                    log("DA sent ✓", "SUCCESS")
+                }.onFailure {
+                    _daStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                bromSession.jumpDa(0x201000L).onSuccess {
+                    _daStatus.value = "✅ DA executing"
+                    log("DA jumped ✓", "SUCCESS")
+                }.onFailure {
+                    _daStatus.value = "❌ Jump failed"
+                    logError(it.message)
+                    _isRunning.value = false
+                    return@launch
+                }
+
+                delay(1000)
+
+                // Step 2: Erase FRP
+                _frpEraseStatus.value = "Erasing FRP..."
+                log("Step 2: Erasing FRP partition...")
+
+                val daSession = MtkDaSession(context, usbDevice)
+                daSession.open().onSuccess {
+                    daSession.eraseFrp().onSuccess {
+                        _frpEraseStatus.value = "✅ FRP erased!"
+                        log("✅ FRP partition erased!", "SUCCESS")
+                        log("🎉 Full DA sequence complete!", "SUCCESS")
+                    }.onFailure {
+                        _frpEraseStatus.value = "❌ ${it.message}"
+                        logError("FRP erase failed: ${it.message}")
+                    }
+                }.onFailure {
+                    _frpEraseStatus.value = "❌ ${it.message}"
+                    logError(it.message)
+                }
+
+            } catch (e: Exception) {
+                logError(e.message)
+            } finally {
+                _isRunning.value = false
+            }
+        }
     }
 
     // ── Testpoint ────────────────────────────────────────────
