@@ -44,7 +44,7 @@ class MtkDaLoader(
     }
 
     // ── Load DA bytes from assets ──────────────────────────────
-    private fun loadDaBytes(): ByteArray? {
+    fun loadDaBytes(): ByteArray? {  // Made public for MtkExploitEngine
         DA_ASSET_PATHS.forEach { path ->
             try {
                 val bytes = context.assets.open(path).readBytes()
