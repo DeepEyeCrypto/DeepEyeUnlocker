@@ -173,8 +173,10 @@ class MtkBromSession(context: Context, device: UsbDevice)
 
     // ── Chip DB ───────────────────────────────────────────────
     private fun chipNameFromCode(code: Int) = when (code) {
+        0x6789 -> "MT6789 Helio G99 — RMX3845 ✅"
         0x6765 -> "MT6765 Helio G35"
         0x6768 -> "MT6768 Helio G85"
+        0x6781 -> "MT6781 Helio G80"
         0x6785 -> "MT6785 Helio G90T"
         0x6833 -> "MT6833 Dimensity 700"
         0x6853 -> "MT6853 Dimensity 720"

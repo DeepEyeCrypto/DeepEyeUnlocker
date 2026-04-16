@@ -177,8 +177,37 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             _isConnecting.emit(true)
             log("Connecting to MTK BROM...")
-            val usbDevice = DeviceDetector.findUsbDevice(context, 0x0E8D, 0x0003)
-                ?: run { logError("No BROM device found"); _isConnecting.emit(false); return@launch }
+            
+            // Try multiple VID/PID combinations for RMX3845
+            val bromDevices = listOf(
+                0x0E8D to 0x0003,  // MT6789 BROM
+                0x0E8D to 0x2000,  // Preloader
+                0x0E8D to 0x0023,  // Generic BROM
+                0x0E8D to 0x2001,  // DA Download Agent
+                0x22D9 to 0x2764,  // Realme/OPPO MTK
+                0x22D9 to 0x276A,  // Realme/OPPO MTK
+            )
+            
+            var usbDevice: android.hardware.usb.UsbDevice? = null
+            for ((vid, pid) in bromDevices) {
+                usbDevice = com.deepeye.otg.device.DeviceDetector.findUsbDevice(context, vid, pid)
+                if (usbDevice != null) {
+                    log("Found MTK device: VID=0x${vid.toString(16).uppercase()} PID=0x${pid.toString(16).uppercase()}")
+                    break
+                }
+            }
+            
+            usbDevice ?: run { 
+                logError("No BROM device found")
+                log("Fixes:")
+                log("1. Phone POWER OFF")
+                log("2. Hold Vol↓ button")
+                log("3. Connect OTG cable")
+                log("4. Wait for BROM screen")
+                _isConnecting.emit(false)
+                return@launch 
+            }
+            
             val session = MtkBromSession(context, usbDevice)
             try {
                 session.open().onFailure {
@@ -186,6 +215,8 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
                     logBromRecoveryHints()
                     return@launch
                 }
+                
+                log("Performing BROM handshake...")
                 session.handshake()
                     .onSuccess { log(it, "SUCCESS") }
                     .onFailure {
@@ -193,10 +224,17 @@ class DeviceViewModel(app: Application) : AndroidViewModel(app) {
                         logBromRecoveryHints()
                         return@launch
                     }
+                    
+                log("Reading HW code...")
                 session.getHwCode()
                     .onSuccess {
                         _chipInfo.emit(it)
                         log("Chip: ${it.chipName} (${it.arch}) HW=0x${it.hwCode.toString(16).uppercase()}", "SUCCESS")
+                        
+                        // Check if it's MT6789 (RMX3845)
+                        if (it.hwCode == 0x6789) {
+                            log("✅ RMX3845 (Helio G99) detected!", "SUCCESS")
+                        }
                     }
                     .onFailure {
                         logError(it.message)
