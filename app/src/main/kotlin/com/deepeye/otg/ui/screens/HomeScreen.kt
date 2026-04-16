@@ -7,7 +7,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -28,8 +31,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
@@ -42,13 +48,17 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.Usb
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,12 +67,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.otg.data.QuickAccessRepository
@@ -352,7 +365,6 @@ private fun IphoneFirmwareCard(onTap: () -> Unit) {
 }
 
 // ── Quick Access Section — Category Tabs + Responsive Grid ─
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun QuickAccessSection(
     itemsByCategory: Map<QuickAccessCategory, List<QuickAccessItem>>,
@@ -360,12 +372,15 @@ private fun QuickAccessSection(
 ) {
     var selectedCategory by remember { mutableStateOf(QuickAccessCategory.BYPASS) }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
         // Section header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -384,12 +399,12 @@ private fun QuickAccessSection(
         }
 
         // Category tabs — horizontal scroll
-        TabRow(
+        ScrollableTabRow(
             selectedTabIndex = QuickAccessCategory.entries.indexOf(selectedCategory),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            edgePadding = 12.dp,
             containerColor = Color.Transparent,
+            contentColor = DeepEyeColors.GoldAccent,
             divider = {},
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
@@ -407,31 +422,70 @@ private fun QuickAccessSection(
                     text = {
                         Text(
                             text = "${category.displayName} ($count)",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             color = if (selectedCategory == category)
                                 DeepEyeColors.GoldAccent
                             else
-                                DeepEyeColors.TextMuted
+                                DeepEyeColors.TextMuted,
+                            maxLines = 1
                         )
                     }
                 )
             }
         }
 
+        HorizontalDivider(
+            color = DeepEyeColors.TextFaint,
+            thickness = 0.5.dp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Grid for selected category
         val items = itemsByCategory[selectedCategory] ?: emptyList()
+        QuickAccessGrid(
+            items = items,
+            onClick = onItemClick
+        )
 
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            items.forEach { item ->
-                QuickAccessCard(
-                    item = item,
-                    onClick = { onItemClick(item) },
-                    modifier = Modifier.weight(1f)
-                )
+        Spacer(modifier = Modifier.height(80.dp)) // bottom nav space
+    }
+}
+
+// ── Quick Access Grid — Chunked Rows ─────────────────────
+@Composable
+private fun QuickAccessGrid(
+    items: List<QuickAccessItem>,
+    onClick: (QuickAccessItem) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items.chunked(3).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowItems.forEach { item ->
+                    QuickAccessCard(
+                        item = item,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f),
+                        onClick = { onClick(item) }
+                    )
+                }
+                // Empty fillers for last row
+                repeat(3 - rowItems.size) {
+                    Spacer(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                    )
+                }
             }
         }
     }
@@ -441,50 +495,70 @@ private fun QuickAccessSection(
 @Composable
 private fun QuickAccessCard(
     item: QuickAccessItem,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        label = "cardScale"
+        targetValue = if (pressed) 0.93f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "scale"
     )
 
-    GlassCard(
-        hazeState = null,
+    Card(
         modifier = modifier
-            .aspectRatio(1f)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        tryAwaitRelease()
+                        pressed = false
+                    },
+                    onTap = { onClick() }
+                )
             },
-        cornerRadius = 14.dp,
-        accentColor = item.iconTint.copy(alpha = 0.3f),
-        onClick = onClick,
-        performanceMode = true,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = DeepEyeColors.Surface
+        ),
+        border = BorderStroke(
+            1.dp,
+            item.iconTint.copy(alpha = 0.3f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.Center,
+                .padding(6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                item.icon,
-                null,
-                tint = item.iconTint,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(item.iconTint.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.label,
+                    tint = item.iconTint,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                item.label,
+                text = item.label,
                 style = MaterialTheme.typography.labelSmall,
                 color = DeepEyeColors.TextPrimary,
                 textAlign = TextAlign.Center,
-                lineHeight = 14.sp,
-                fontWeight = FontWeight.Medium
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 9.sp,
+                lineHeight = 12.sp
             )
         }
     }
