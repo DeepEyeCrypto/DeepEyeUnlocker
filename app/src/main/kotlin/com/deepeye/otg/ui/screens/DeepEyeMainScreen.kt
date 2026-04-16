@@ -175,31 +175,104 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                     selectedSession = selectedSession,
                     recentLogs = logs,
                     connectedCount = sessions.size,
-                    onNavigateDevices = {
-                        rootTab = DeepEyeRootTab.DEVICES
-                        viewModel.setNav(NavTarget.DEVICES)
-                    },
-                    onNavigateApple = { rootTab = DeepEyeRootTab.APPLE },
-                    onNavigateLogs = {
-                        rootTab = DeepEyeRootTab.LOGS
-                        viewModel.setNav(NavTarget.LOG_SCREEN)
-                    },
-                    onNavigateMtk = {
-                        rootTab = DeepEyeRootTab.DEVICES
-                        viewModel.setNav(NavTarget.MTK_EXPLOIT)
-                    },
-                    onNavigateEdl = {
-                        rootTab = DeepEyeRootTab.DEVICES
-                        viewModel.setNav(NavTarget.EDL_CONSOLE)
-                    },
-                    onNavigateSamsung = {
-                        rootTab = DeepEyeRootTab.DEVICES
-                        viewModel.setNav(NavTarget.SAMSUNG_ODIN)
-                    },
-                    onNavigateFrp = {
-                        rootTab = DeepEyeRootTab.DEVICES
-                        viewModel.setNav(NavTarget.MISSION_HUB)
-                    },
+                    onNavigate = { navTarget ->
+                        when (navTarget) {
+                            "DEVICES" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.DEVICES)
+                            }
+                            "IPHONE_15_RESEARCH" -> rootTab = DeepEyeRootTab.APPLE
+                            "LOG_SCREEN" -> {
+                                rootTab = DeepEyeRootTab.LOGS
+                                viewModel.setNav(NavTarget.LOG_SCREEN)
+                            }
+                            "MTK_UNLOCK", "MTK_EXPLOIT" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.MTK_EXPLOIT)
+                            }
+                            "EDL_CONSOLE" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.EDL_CONSOLE)
+                            }
+                            "SAMSUNG_ODIN" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.SAMSUNG_ODIN)
+                            }
+                            "MISSION_HUB" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.MISSION_HUB)
+                            }
+                            "UNLOCK_SCREEN" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.UNLOCK_SCREEN)
+                            }
+                            "DEVICE_SUPPORT" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.DEVICE_SUPPORT)
+                            }
+                            "XIAOMI_FLASH" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.XIAOMI_FLASH)
+                            }
+                            "XIAOMI_EXPLOIT" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.XIAOMI_EXPLOIT)
+                            }
+                            "IMEI_REPAIR" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.IMEI_REPAIR)
+                            }
+                            "STORAGE" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.STORAGE)
+                            }
+                            "FILE_EXPLORER" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.FILE_EXPLORER)
+                            }
+                            "PARTITION_EXPLORER" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.PARTITION_EXPLORER)
+                            }
+                            "TERMINAL" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.TERMINAL)
+                            }
+                            "LAB_HOME" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.LAB_HOME)
+                            }
+                            "VAULT" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.VAULT)
+                            }
+                            "REMOTE_SHARE" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.REMOTE_SHARE)
+                            }
+                            "CVE_INTELLIGENCE" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.CVE_INTELLIGENCE)
+                            }
+                            "FUZZ_DASHBOARD" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.FUZZ_DASHBOARD)
+                            }
+                            "HID_RESEARCH" -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.HID_RESEARCH)
+                            }
+                            "SETTINGS" -> rootTab = DeepEyeRootTab.SETTINGS
+                            "BYPASS_HISTORY" -> {
+                                rootTab = DeepEyeRootTab.LOGS
+                                viewModel.setNav(NavTarget.BYPASS_HISTORY)
+                            }
+                            else -> {
+                                rootTab = DeepEyeRootTab.DEVICES
+                                viewModel.setNav(NavTarget.DASHBOARD)
+                            }
+                        }
+                    }
                 )
             }
         }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
@@ -44,9 +45,15 @@ import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -58,12 +65,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.deepeye.otg.data.QuickAccessRepository
 import com.deepeye.otg.ui.components.GlassCard
 import com.deepeye.otg.ui.components.LogConsole
 import com.deepeye.otg.ui.components.NeonButton
 import com.deepeye.otg.ui.components.NeonButtonStyle
 import com.deepeye.otg.ui.components.StatusIndicator
 import com.deepeye.otg.ui.components.toConsoleEntries
+import com.deepeye.otg.ui.model.QuickAccessCategory
+import com.deepeye.otg.ui.model.QuickAccessItem
 import com.deepeye.otg.ui.theme.DeepEyeColors
 import com.deepeye.otg.ui.viewmodel.LogEntry
 import com.deepeye.otg.usb.UsbLifecycleState
@@ -80,15 +90,11 @@ fun HomeScreen(
     recentLogs: List<LogEntry>,
     connectedCount: Int,
     modifier: Modifier = Modifier,
-    onNavigateMtk: () -> Unit,
-    onNavigateEdl: () -> Unit,
-    onNavigateSamsung: () -> Unit,
-    onNavigateFrp: () -> Unit,
-    onNavigateDevices: () -> Unit,
-    onNavigateApple: () -> Unit,
-    onNavigateLogs: () -> Unit,
+    onNavigate: (String) -> Unit,
 ) {
     val session = sessionPresentation(selectedSession)
+    val allItems = remember { QuickAccessRepository.getAllItems() }
+    val itemsByCategory = remember { allItems.groupBy { it.category } }
 
     // Animated ambient glow
     val infiniteTransition = rememberInfiniteTransition(label = "bg")
@@ -161,31 +167,23 @@ fun HomeScreen(
             HomeStatsRow()
 
             // ── Gold CTA — iPhone Firmware Card ─────
-            IphoneFirmwareCard(onTap = onNavigateApple)
+            IphoneFirmwareCard(onTap = { onNavigate("IPHONE_15_RESEARCH") })
 
-            // ── Quick Access Grid ───────────────────
-            Text(
-                "QUICK ACCESS",
-                style = MaterialTheme.typography.labelSmall,
-                color = DeepEyeColors.TextMuted,
-            )
-
-            QuickToolsGrid(
-                onMtk = onNavigateMtk,
-                onEdl = onNavigateEdl,
-                onSamsung = onNavigateSamsung,
-                onApple = onNavigateApple,
-                onFrp = onNavigateFrp,
-                onDevices = onNavigateDevices,
+            // ── Quick Access Grid — Responsive ────────────
+            QuickAccessSection(
+                itemsByCategory = itemsByCategory,
+                onItemClick = { item ->
+                    onNavigate(item.navTarget)
+                }
             )
 
             // ── Device Status Card ──────────────────
-            DeviceStatusCard(session = session, onTap = onNavigateDevices)
+            DeviceStatusCard(session = session, onTap = { onNavigate("DEVICES") })
 
             // ── Recent Activity ─────────────────────
             RecentActivitySection(
                 recentLogs = recentLogs,
-                onNavigateLogs = onNavigateLogs,
+                onNavigateLogs = { onNavigate("LOG_SCREEN") },
             )
 
             Spacer(Modifier.height(84.dp))
@@ -353,72 +351,141 @@ private fun IphoneFirmwareCard(onTap: () -> Unit) {
     }
 }
 
-// ── Quick Tools Grid ────────────────────────────────
-private data class QuickTool(
-    val label: String,
-    val icon: ImageVector,
-    val color: Color,
-    val onClick: () -> Unit,
-)
-
+// ── Quick Access Section — Category Tabs + Responsive Grid ─
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuickToolsGrid(
-    onMtk: () -> Unit,
-    onEdl: () -> Unit,
-    onSamsung: () -> Unit,
-    onApple: () -> Unit,
-    onFrp: () -> Unit,
-    onDevices: () -> Unit,
+private fun QuickAccessSection(
+    itemsByCategory: Map<QuickAccessCategory, List<QuickAccessItem>>,
+    onItemClick: (QuickAccessItem) -> Unit
 ) {
-    val tools = listOf(
-        QuickTool("MTK\nFlash", Icons.Default.Memory, DeepEyeColors.TealSecondary, onMtk),
-        QuickTool("Qualcomm\nEDL", Icons.Default.FlashOn, DeepEyeColors.PurpleDim, onEdl),
-        QuickTool("Samsung\nOdin", Icons.Default.PhoneAndroid, DeepEyeColors.BlueAccent, onSamsung),
-        QuickTool("Apple\nChain", Icons.Default.PhoneIphone, DeepEyeColors.GoldAccent, onApple),
-        QuickTool("IMEI\nRepair", Icons.Default.SimCard, DeepEyeColors.TealSecondary, onDevices),
-        QuickTool("DA\nTools", Icons.Default.Build, DeepEyeColors.Warning, onDevices),
+    var selectedCategory by remember { mutableStateOf(QuickAccessCategory.BYPASS) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Section header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "QUICK ACCESS",
+                style = MaterialTheme.typography.labelSmall,
+                color = DeepEyeColors.TextMuted,
+                letterSpacing = 1.5.sp
+            )
+            Text(
+                text = "${itemsByCategory.values.sumOf { it.size }} features",
+                style = MaterialTheme.typography.labelSmall,
+                color = DeepEyeColors.GoldAccent,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Category tabs — horizontal scroll
+        TabRow(
+            selectedTabIndex = QuickAccessCategory.entries.indexOf(selectedCategory),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            containerColor = Color.Transparent,
+            divider = {},
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier
+                        .tabIndicatorOffset(tabPositions[QuickAccessCategory.entries.indexOf(selectedCategory)]),
+                    color = DeepEyeColors.GoldAccent,
+                )
+            }
+        ) {
+            QuickAccessCategory.entries.forEach { category ->
+                val count = itemsByCategory[category]?.size ?: 0
+                Tab(
+                    selected = selectedCategory == category,
+                    onClick = { selectedCategory = category },
+                    text = {
+                        Text(
+                            text = "${category.displayName} ($count)",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (selectedCategory == category)
+                                DeepEyeColors.GoldAccent
+                            else
+                                DeepEyeColors.TextMuted
+                        )
+                    }
+                )
+            }
+        }
+
+        // Grid for selected category
+        val items = itemsByCategory[selectedCategory] ?: emptyList()
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items.forEach { item ->
+                QuickAccessCard(
+                    item = item,
+                    onClick = { onItemClick(item) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+// ── Quick Access Card ──────────────────────────────────
+@Composable
+private fun QuickAccessCard(
+    item: QuickAccessItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        label = "cardScale"
     )
 
-    @OptIn(ExperimentalLayoutApi::class)
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        maxItemsInEachRow = 3,
-        modifier = Modifier.fillMaxWidth(),
+    GlassCard(
+        hazeState = null,
+        modifier = modifier
+            .aspectRatio(1f)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        cornerRadius = 14.dp,
+        accentColor = item.iconTint.copy(alpha = 0.3f),
+        onClick = onClick,
+        performanceMode = true,
     ) {
-        tools.forEach { tool ->
-            GlassCard(
-                hazeState = null,
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f),
-                cornerRadius = 14.dp,
-                accentColor = tool.color.copy(alpha = 0.3f),
-                onClick = tool.onClick,
-                performanceMode = true,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        tool.icon, null,
-                        tint = tool.color,
-                        modifier = Modifier.size(24.dp),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        tool.label,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = DeepEyeColors.TextPrimary,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 14.sp,
-                    )
-                }
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                item.icon,
+                null,
+                tint = item.iconTint,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                item.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = DeepEyeColors.TextPrimary,
+                textAlign = TextAlign.Center,
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
