@@ -138,6 +138,7 @@ class BypassViewModel @Inject constructor(
 
     private fun refreshFeatures(protocol: ProtocolFamily? = null) {
         val all = UnifiedBypassRegistry.all
+        Timber.d("[BypassVM] Total features in registry: ${all.size}")
         
         // If protocol is known, filter out incompatible crap (e.g. hide QC on MTK)
         val filtered = if (protocol != null) {
@@ -145,6 +146,7 @@ class BypassViewModel @Inject constructor(
         } else {
             all
         }
+        Timber.d("[BypassVM] After filtering: ${filtered.size} features (protocol=$protocol)")
 
         _state.update { it.copy(
             displayedFeatures = applyFilters(filtered, it.filters, it.selectedPlatform),
