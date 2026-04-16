@@ -45,14 +45,21 @@ class MtkDaLoader(
 
     // ── Load DA bytes from assets ──────────────────────────────
     fun loadDaBytes(): ByteArray? {  // Made public for MtkExploitEngine
-        // CRITICAL: BROM SRAM limit is ~1MB, ideal DA = 1KB-900KB
-        // 13MB DA (MTK_DA_V6.bin) is SP Flash Tool format, NOT for direct BROM upload!
+        // CRITICAL: BROM SRAM limit is ~1MB, ideal DA = 64KB-900KB
+        // 13MB DA (MTK_DA_V6.bin) is SP Flash Tool format with multiple parts
+        // We need to extract Part0 (first stage bootloader) only!
+        
+        // First, try to parse real MTK DA and extract Part0
+        val parsedDa = loadDaFirstStage { Timber.d("[DA] $it") }
+        if (parsedDa != null) {
+            return parsedDa
+        }
+        
+        // Fallback: try small payloads (exploit code, not real DA)
         val candidates = listOf(
             "payloads/da_x.bin",       // 16KB - Small DA for direct BROM upload
             "payloads/da_xml.bin",     // 16KB - XML-based DA
             "payloads/da_xml_64.bin",  // 23KB - 64-bit DA
-            "da/MTK_DA_V5.bin",        // 21MB - Too large, but try as fallback
-            "da/MTK_DA_V6.bin"         // 13MB - Too large, last resort
         )
 
         for (path in candidates) {
@@ -61,11 +68,8 @@ class MtkDaLoader(
                 val sizeKB = bytes.size / 1024
                 
                 if (sizeKB in 1..900) {
-                    // Perfect size for BROM SRAM
-                    Timber.d("[DA] Found: $path ($sizeKB KB) ✅")
+                    Timber.d("[DA] Fallback: $path ($sizeKB KB) — exploit payload")
                     return bytes
-                } else {
-                    Timber.d("[DA] Skip: $path ($sizeKB KB) — outside 1-900KB range (BROM SRAM limit)")
                 }
             } catch (e: Exception) {
                 // File not found, try next
@@ -75,6 +79,98 @@ class MtkDaLoader(
         // No suitable DA found — create minimal MT6789 DA stub
         Timber.w("[DA] No suitable DA in assets — creating MT6789 minimal stub")
         return createMt6789DaStub()
+    }
+
+    /**
+     * Parse MTK DA V5/V6 binary and extract Part0 (first stage)
+     * MTK DA format:
+     * [0x00-0x3F] Header: "MTK_DOWNLOAD_AGENT\0" + metadata
+     * [0x40-...]  Parts: Each part has [load_addr:4][length:4][sig_len:4][data:length]
+     * 
+     * Part0 is the small bootloader (< 900KB) that runs in BROM SRAM
+     */
+    fun loadDaFirstStage(onLog: (String) -> Unit): ByteArray? {
+        val daFile = try {
+            context.assets.open("da/MTK_DA_V6.bin").readBytes()
+        } catch (e: Exception) {
+            onLog("❌ Cannot open MTK_DA_V6.bin: ${e.message}")
+            return null
+        }
+
+        onLog("📦 MTK DA V6 total size: ${daFile.size / 1024}KB (${daFile.size} bytes)")
+        onLog("📦 DA magic: ${daFile.take(20).toByteArray().decodeToString().takeWhile { it != '\u0000' }}")
+
+        // MTK DA V6 header structure (first 0x40 bytes):
+        // After header, parts start at offset 0x40 or later
+        // Each part: [load_addr:4][length:4][sig_len:4][data:length bytes]
+        
+        // Scan for Part0 by looking for SRAM load addresses
+        // MT6789 SRAM range: 0x00100000 - 0x00400000
+        val headerSize = 0x40
+        var offset = headerSize
+        
+        while (offset < daFile.size - 12) { // Need at least 12 bytes for part header
+            // Read part header (little-endian)
+            val loadAddr = daFile[offset].toInt().and(0xFF) or
+                          (daFile[offset + 1].toInt().and(0xFF) shl 8) or
+                          (daFile[offset + 2].toInt().and(0xFF) shl 16) or
+                          (daFile[offset + 3].toInt().and(0xFF) shl 24)
+            
+            val length = daFile[offset + 4].toInt().and(0xFF) or
+                        (daFile[offset + 5].toInt().and(0xFF) shl 8) or
+                        (daFile[offset + 6].toInt().and(0xFF) shl 16) or
+                        (daFile[offset + 7].toInt().and(0xFF) shl 24)
+            
+            val sigLen = daFile[offset + 8].toInt().and(0xFF) or
+                        (daFile[offset + 9].toInt().and(0xFF) shl 8) or
+                        (daFile[offset + 10].toInt().and(0xFF) shl 16) or
+                        (daFile[offset + 11].toInt().and(0xFF) shl 24)
+
+            // Check if this looks like a valid part
+            if (loadAddr in 0x00100000..0x00400000 && length in 65536..921600) {
+                // Valid SRAM address and reasonable size (64KB-900KB)
+                val dataOffset = offset + 12 // Skip header
+                val totalPartSize = 12 + length + sigLen
+                
+                if (dataOffset + length <= daFile.size) {
+                    onLog("📦 Found DA Part0:")
+                    onLog("   Load Addr: 0x${loadAddr.toString(16).padStart(8, '0')}")
+                    onLog("   Size: ${length / 1024}KB ($length bytes)")
+                    onLog("   Sig Len: ${sigLen / 1024}KB")
+                    onLog("   Offset: $offset (0x${offset.toString(16)})")
+                    
+                    // Extract just the data (without signature)
+                    val part0Data = daFile.copyOfRange(dataOffset, dataOffset + length)
+                    
+                    // Log first 32 bytes for verification
+                    val header = part0Data.take(32).joinToString(" ") {
+                        "0x${it.toInt().and(0xFF).toString(16).padStart(2, '0')}"
+                    }
+                    onLog("📦 Part0 first 32 bytes: $header")
+                    
+                    // ARM code should start with specific patterns
+                    val isArmCode = part0Data.size >= 4 && 
+                                   ((part0Data[0].toInt().and(0xFF) == 0x00 && part0Data[1].toInt().and(0xFF) == 0xF0) || // ARM
+                                    (part0Data[0].toInt().and(0xFF) == 0x01 && part0Data[3].toInt().and(0xFF) == 0xE2)) // Thumb2
+                    
+                    if (isArmCode) {
+                        onLog("✅ Part0 contains ARM code — valid DA! 🎉")
+                    } else {
+                        onLog("⚠️ Part0 may not be ARM code — use with caution")
+                    }
+                    
+                    return part0Data
+                } else {
+                    onLog("⚠️ Part0 extends beyond file — corrupted DA?")
+                }
+            }
+            
+            // Move to next potential part (scan by 4 bytes)
+            offset += 4
+        }
+
+        onLog("⚠️ Could not parse DA parts from V6 binary")
+        return null
     }
 
     /**
