@@ -1,4 +1,27 @@
-# DeepEye Unlocker — ProGuard Rules (v2026.32.0)
+# DeepEye Unlocker — ProGuard Rules (v1.0.0)
+
+# ══════════════════════════════════════════
+# STAGE 10: Production Release Rules
+# ══════════════════════════════════════════
+
+# MTK Engine (all stages 1-8)
+-keep class com.deepeye.otg.engine.mtk.** { *; }
+
+# EDL Engine (Stage 9 - Qualcomm)
+-keep class com.deepeye.edl.** { *; }
+
+# META Mode (Stage 7)
+-keep class com.deepeye.meta.** { *; }
+
+# Flash Manager (Stage 8)
+-keep class com.deepeye.flash.** { *; }
+
+# Suppress Kotlin reflection warnings
+-dontwarn kotlin.reflect.**
+
+# ══════════════════════════════════════════
+# EXISTING RULES
+# ══════════════════════════════════════════
 
 # 1. Compose Stability
 -keepclassmembers class * extends androidx.compose.runtime.Immutable { *; }
