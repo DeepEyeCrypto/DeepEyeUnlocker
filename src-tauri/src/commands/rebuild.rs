@@ -411,10 +411,7 @@ async fn run_binary(app: &AppHandle, bin: &str, args: &[&str]) -> Result<String,
 #[command]
 pub async fn get_ios_device_info(app: AppHandle) -> Result<String, String> {
     // Get connected UDID
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid.trim().lines().next()
-        .ok_or("No iOS device found. Connect and trust this Mac.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // Get all device properties
     let info = run_binary(&app, "ideviceinfo",
@@ -447,10 +444,7 @@ pub async fn get_ios_device_info(app: AppHandle) -> Result<String, String> {
 pub async fn check_activation_status(
     app: AppHandle
 ) -> Result<String, String> {
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid.trim().lines().next()
-        .ok_or("No iOS device connected.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // Check ActivationState via ideviceinfo
     let info = run_binary(&app, "ideviceinfo",
@@ -465,10 +459,7 @@ pub async fn run_activation_bypass(
     app: AppHandle
 ) -> Result<String, String> {
     // Step 1: Get UDID
-    let udid_raw = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid_raw.trim().lines().next()
-        .ok_or("No iOS device found.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // Step 2: Check current activation state
     let state = run_binary(&app, "ideviceinfo",
@@ -499,10 +490,7 @@ pub async fn run_activation_bypass(
 pub async fn run_mdm_bypass(
     app: AppHandle
 ) -> Result<String, String> {
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid.trim().lines().next()
-        .ok_or("No iOS device connected.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // List profiles first
     let profiles = run_binary(&app, "ideviceprovision",
@@ -529,11 +517,7 @@ pub async fn run_mdm_bypass(
 pub async fn run_force_dfu(
     app: AppHandle
 ) -> Result<String, String> {
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await
-        .unwrap_or_default();
-    let udid = udid.trim().lines().next()
-        .unwrap_or("")
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     if udid.is_empty() {
         return Err(
@@ -607,10 +591,7 @@ pub async fn run_passcode_remove(
 // ── SHSH2 Blob Saver ────────────────────────────────
 #[command]
 pub async fn run_shsh_save(app: AppHandle) -> Result<String, String> {
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid.trim().lines().next()
-        .ok_or("No iOS device connected.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // Get device info for blob request
     let ecid_raw = run_binary(&app, "ideviceinfo",
@@ -674,10 +655,7 @@ pub async fn run_ipsw_flash(
     }
 
     // Get UDID
-    let udid = run_binary(&app, "idevice_id", &["-l"]).await?;
-    let udid = udid.trim().lines().next()
-        .ok_or("No iOS device connected.")?
-        .to_string();
+    let udid = get_connected_udid(&app).await?;
 
     // Use idevicerestore for flashing
     let result = run_binary(&app, "idevicerestore",
@@ -708,6 +686,9 @@ pub async fn run_samsung_frp(
     app: AppHandle,
     serial: String
 ) -> Result<String, String> {
+    // Method 0: Auth Check
+    ensure_adb_authorized(&app, &serial).await?;
+
     // Method 1: Emergency dialer FRP bypass
     let _ = run_binary(&app, "adb",
         &["-s", &serial, "shell",
@@ -828,4 +809,138 @@ pub fn get_all_testpoints() -> Vec<TestpointInfo> {
             notes: notes.to_string(),
         })
         .collect()
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// EDGE CASES & HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+pub async fn get_connected_udid(app: &AppHandle) -> Result<String, String> {
+    let raw = run_binary(app, "idevice_id", &["-l"]).await
+        .map_err(|e| format!(
+            "❌ Cannot run idevice_id: {e}\n\
+             💡 Install: brew install libimobiledevice"
+        ))?;
+
+    let udid = raw.trim().lines()
+        .find(|l| !l.is_empty() && l.len() > 10)
+        .map(|l| l.trim().to_string())
+        .ok_or_else(|| {
+            "❌ No iOS device found.\n\
+             💡 Check:\n\
+             • Cable connected\n\
+             • Tap 'Trust This Computer' on iPhone\n\
+             • iPhone unlocked\n\
+             • Settings > Developer Mode ON (iOS 16+)".to_string()
+        })?;
+
+    Ok(udid)
+}
+
+pub async fn ensure_adb_authorized(
+    app: &AppHandle,
+    serial: &str
+) -> Result<(), String> {
+    let devices = run_binary(app, "adb", &["devices"]).await
+        .map_err(|e| format!(
+            "❌ ADB not found: {e}\n\
+             💡 Install: brew install android-platform-tools"
+        ))?;
+
+    if devices.contains(&format!("{serial}\tunauthorized")) {
+        return Err(format!(
+            "❌ Device {serial} is UNAUTHORIZED.\n\
+             💡 On your Android device:\n\
+             • Tap 'Allow USB Debugging' popup\n\
+             • Check 'Always allow from this computer'\n\
+             • Then retry"
+        ));
+    }
+
+    if devices.contains(&format!("{serial}\toffline")) {
+        return Err(format!(
+            "❌ Device {serial} is OFFLINE.\n\
+             💡 Try: adb kill-server && adb start-server"
+        ));
+    }
+
+    if !devices.contains(serial) {
+        return Err(format!(
+            "❌ Device {serial} not found.\n\
+             💡 Reconnect USB cable and retry"
+        ));
+    }
+
+    Ok(())
+}
+
+#[command]
+pub async fn check_usb_permissions(
+    app: AppHandle
+) -> Result<String, String> {
+    // On macOS check SIP and USB access
+    let sip = run_binary(&app, "csrutil", &["status"]).await
+        .unwrap_or_else(|_| "SIP status unknown".to_string());
+
+    // Check if libusb can see devices
+    let ctx = Context::new().map_err(|e| e.to_string())?;
+    let devices = ctx.devices().map_err(|e| e.to_string())?;
+    let usb_devices: Vec<_> = devices.iter().collect();
+
+    Ok(format!(
+        "System Integrity Protection: {}\n\
+         USB Devices Visible: {}\n\n\
+         If MTK/Qualcomm device not detected:\n\
+         • On macOS: SIP does NOT block rusb/libusb for USB access\n\
+         • Try different USB cable (data cable, not charge-only)\n\
+         • Try USB-A port (not USB-C hub)\n\
+         • For MTK BROM: device must be OFF when connecting\n\
+         • Hold Vol+ before connecting USB",
+        sip.trim(),
+        usb_devices.len()
+    ))
+}
+
+#[command]
+pub async fn restart_adb_server(
+    app: AppHandle
+) -> Result<String, String> {
+    let _ = run_binary(&app, "adb", &["kill-server"]).await;
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    let start = run_binary(&app, "adb", &["start-server"]).await?;
+    let devices = run_binary(&app, "adb", &["devices", "-l"]).await?;
+    Ok(format!("✅ ADB Server restarted!\n\n{start}\n\nDevices:\n{devices}"))
+}
+
+#[command]
+pub async fn check_samsung_download_mode(
+    app: AppHandle
+) -> Result<String, String> {
+    let result = run_binary(&app, "heimdall", &["detect"]).await;
+    match result {
+        Ok(out) if out.contains("Samsung") || out.contains("Device detected") => {
+            Ok(format!("✅ Samsung device in Download mode!\n{out}"))
+        }
+        Ok(_) => Err(
+            "❌ No Samsung device in Download mode.\n\
+             💡 Enter Download mode:\n\
+             • Galaxy S21+: Vol Down + USB (from powered off)\n\
+             • Older models: Vol Down + Bixby + USB\n\
+             • Then press Vol Up to confirm".to_string()
+        ),
+        Err(e) => Err(format!(
+            "❌ Heimdall not found: {e}\n\
+             💡 Install: brew install heimdall-flash"
+        )),
+    }
+}
+
+#[command]
+pub async fn run_tool_version_check(
+    app: AppHandle,
+    bin: String,
+    args: Vec<String>
+) -> Result<String, String> {
+    let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    run_binary(&app, &bin, &args_ref).await
 }

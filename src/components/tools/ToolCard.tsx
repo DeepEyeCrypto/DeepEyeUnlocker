@@ -59,7 +59,7 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
       // Wait, standard web <input type="file"/> only gives fake path.
       // A safer approach: we can use the element directly, assuming the parent component provided `tool.fn`.
       const file = e.target.files[0];
-      setSelectedFile(file.path || file.name); // .path is valid in Electron/Tauri
+      setSelectedFile((file as File & { path?: string }).path || file.name); // .path is valid in Electron/Tauri
     }
   };
 

@@ -129,6 +129,10 @@ use commands::rebuild::{
     
     // Database
     search_testpoints, get_all_testpoints,
+    
+    // Edge Cases & Diagnostics
+    check_usb_permissions, restart_adb_server, check_samsung_download_mode, 
+    run_tool_version_check,
 };
 
 // Server bypass URL (configure per deployment)
@@ -524,6 +528,12 @@ pub fn run() {
             // Database
             search_testpoints,
             get_all_testpoints,
+            
+            // Edge Cases & Diagnostics
+            check_usb_permissions,
+            restart_adb_server,
+            check_samsung_download_mode,
+            run_tool_version_check,
         ])
         .run(tauri::generate_context!());
 
