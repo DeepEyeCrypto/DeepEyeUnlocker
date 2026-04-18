@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEdl } from '../hooks/useEdl';
+import { EdlPipelineFlow } from '../components/android/edl/EdlPipelineFlow';
 import { DeviceSelector } from '../components/DeviceSelector';
 import { SpotlightFeatureCard } from '../components/ui/spotlight-feature-card';
 import { Zap, Upload, HardDrive } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function EdlPage() {
   const [sectorsInput, setSectorsInput] = useState('128');
   const [programmerName, setProgrammerName] = useState('');
   const [flashFile, setFlashFile] = useState('');
+  const [pipelineOpen, setPipelineOpen] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
 
   const addLog = (msg: string) => {
@@ -92,6 +94,14 @@ export default function EdlPage() {
   const isStep2Done = saharaInfo !== null;
   const isStep3Done = edlStatus === 'programmer_ready' || storageInfo !== null;
 
+  if (pipelineOpen) {
+    return (
+      <div className="page page-enter edl-page">
+        <EdlPipelineFlow onClose={() => setPipelineOpen(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className="page page-enter edl-page">
       <DeviceSelector 
@@ -117,8 +127,13 @@ export default function EdlPage() {
           </p>
         </div>
 
-        <div className={`status-badge status-${edlStatus}`}>
-          {edlStatus.replace('_', ' ')}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={() => setPipelineOpen(true)}>
+            Open 20-Stage Pipeline
+          </button>
+          <div className={`status-badge status-${edlStatus}`}>
+            {edlStatus.replace('_', ' ')}
+          </div>
         </div>
       </div>
 

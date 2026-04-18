@@ -14,6 +14,7 @@ pub mod device_history;
 pub mod dfu_restore;
 pub mod diagnostics;
 pub mod edl;
+pub mod edl_bypass;
 pub mod exploit;
 pub mod extraction;
 pub mod f3arrain;

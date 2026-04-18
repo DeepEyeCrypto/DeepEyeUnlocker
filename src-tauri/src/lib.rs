@@ -67,6 +67,26 @@ use commands::edl::{
     edl_configure, edl_erase_partition, edl_find_device, edl_get_storage_info, edl_read_partition,
     edl_reboot, edl_sahara_handshake, edl_upload_programmer, edl_write_partition,
 };
+use commands::edl_bypass::stage1::edl_stage1_detect;
+use commands::edl_bypass::stage2::edl_stage2_sahara;
+use commands::edl_bypass::stage3::edl_stage3_programmer;
+use commands::edl_bypass::stage4::edl_stage4_firehose_upload;
+use commands::edl_bypass::stage5::edl_stage5_firehose_config;
+use commands::edl_bypass::stage6::edl_stage6_storage_probe;
+use commands::edl_bypass::stage7::edl_stage7_gpt;
+use commands::edl_bypass::stage8::edl_stage8_partition_map;
+use commands::edl_bypass::stage9::edl_stage9_frp_plan;
+use commands::edl_bypass::stage10::edl_stage10_frp_erase;
+use commands::edl_bypass::stage11::edl_stage11_userdata_plan;
+use commands::edl_bypass::stage12::edl_stage12_userdata_format;
+use commands::edl_bypass::stage13::edl_stage13_persist_backup;
+use commands::edl_bypass::stage14::edl_stage14_modem_backup;
+use commands::edl_bypass::stage15::edl_stage15_partition_read;
+use commands::edl_bypass::stage16::edl_stage16_partition_write;
+use commands::edl_bypass::stage17::edl_stage17_xml_console;
+use commands::edl_bypass::stage18::edl_stage18_power_control;
+use commands::edl_bypass::stage19::edl_stage19_verify;
+use commands::edl_bypass::stage20::edl_stage20_complete;
 use commands::exploit::{bypass_icloud_activation, run_palera1n, verify_pwned_dfu};
 use commands::extraction::{ios_mass_extract, ios_mount_ramdisk};
 use commands::f3arrain::{f3arrain_run_bypass, f3arrain_send_iboot};
@@ -457,6 +477,26 @@ pub fn run() {
             edl_erase_partition,
             edl_get_storage_info,
             edl_reboot,
+            edl_stage1_detect,
+            edl_stage2_sahara,
+            edl_stage3_programmer,
+            edl_stage4_firehose_upload,
+            edl_stage5_firehose_config,
+            edl_stage6_storage_probe,
+            edl_stage7_gpt,
+            edl_stage8_partition_map,
+            edl_stage9_frp_plan,
+            edl_stage10_frp_erase,
+            edl_stage11_userdata_plan,
+            edl_stage12_userdata_format,
+            edl_stage13_persist_backup,
+            edl_stage14_modem_backup,
+            edl_stage15_partition_read,
+            edl_stage16_partition_write,
+            edl_stage17_xml_console,
+            edl_stage18_power_control,
+            edl_stage19_verify,
+            edl_stage20_complete,
             unisoc_detect_device,
             // Stage 27 — Custom ROM flasher
             rom_sideload_zip,
