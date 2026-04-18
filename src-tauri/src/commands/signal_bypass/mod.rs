@@ -6,4 +6,5 @@ pub mod stage5;
 pub mod stage6;
 pub mod stage7;
 pub mod stage8;
-// stages 9-10 will be added later
+pub mod stage9;
+// stage 10 will be added later
