@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
+import { DeviceInfoDashboard } from "../components/device/DeviceInfoDashboard";
 import { Terminal, Smartphone, Download, Upload, RotateCcw, Trash } from "lucide-react";
 import { useAdb } from "../hooks/useAdb";
 import "../styles/adb.css";
@@ -188,26 +189,10 @@ export default function AdbPage() {
         </div>
       )}
 
-      {/* Device Info */}
+      {/* Device Info - Enhanced Dashboard */}
       {deviceInfo && (
-        <div className="adb-card adb-device-info" style={{ marginTop: '1rem' }}>
-          <h2>Device Information</h2>
-          <div className="adb-info-grid">
-            <div><span>Brand</span><strong>{deviceInfo.brand}</strong></div>
-            <div><span>Model</span><strong>{deviceInfo.model}</strong></div>
-            <div><span>Android</span><strong>{deviceInfo.android_version}</strong></div>
-            <div><span>SDK</span><strong>{deviceInfo.sdk_int}</strong></div>
-            <div><span>Build</span><strong>{deviceInfo.build_id}</strong></div>
-            <div><span>Security Patch</span><strong>{deviceInfo.security_patch}</strong></div>
-            <div>
-              <span>Root</span>
-              <strong>{deviceInfo.root_status ? "✅ Rooted" : "❌ No Root"}</strong>
-            </div>
-            <div><span>Bootloader</span><strong>{deviceInfo.bootloader_status}</strong></div>
-            <div><span>FRP</span><strong>{deviceInfo.frp_status}</strong></div>
-            <div><span>Battery</span><strong>{deviceInfo.battery_level}</strong></div>
-            <div><span>IMEI</span><strong>{deviceInfo.imei ? "***" + deviceInfo.imei.slice(-4) : "N/A"}</strong></div>
-          </div>
+        <div className="adb-card adb-device-info" style={{ marginTop: '1rem', padding: '0' }}>
+          <DeviceInfoDashboard info={deviceInfo} />
         </div>
       )}
 

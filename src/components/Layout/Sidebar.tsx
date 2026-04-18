@@ -10,8 +10,11 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
   const platforms = [
     { id: 'android',  label: 'Android',  icon: '🤖', color: '#00FF44' },
     { id: 'qualcomm', label: 'Qualcomm', icon: '⚡', color: '#FF3D00' },
+    { id: 'unisoc',   label: 'Unisoc',   icon: '📀', color: '#E91E63' },
     { id: 'apple',    label: 'Apple iOS',icon: '🍎', color: '#FFD700' },
     { id: 'samsung',  label: 'Samsung',  icon: '💠', color: '#1428A0' },
+    { id: 'history',  label: 'History',  icon: '🕒', color: '#888888' },
+    { id: 'settings', label: 'Settings', icon: '⚙️', color: '#FFFFFF' },
   ];
 
   return (

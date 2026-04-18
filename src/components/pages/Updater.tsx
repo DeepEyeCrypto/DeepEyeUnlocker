@@ -4,6 +4,8 @@ import {
   type UpdateStatus,
 } from "../../lib/updater";
 import { Card } from "../ui/Card";
+import { getVersion } from "@tauri-apps/api/app";
+import { useEffect, useState } from "react";
 
 type UpdaterPageProps = {
   status: UpdateStatus;
@@ -20,6 +22,12 @@ export default function UpdaterPage({
   onCheck,
   onInstall,
 }: UpdaterPageProps) {
+  const [currentVersion, setCurrentVersion] = useState("unknown");
+  
+  useEffect(() => {
+    getVersion().then(setCurrentVersion).catch(() => setCurrentVersion("2027.18.1"));
+  }, []);
+  
   const summary = update ? summarizeChangelog(update.body, 4) : "";
 
   return (
@@ -55,7 +63,11 @@ export default function UpdaterPage({
             <div className="panel">
               <div className="device-grid">
                 <div className="device-field">
-                  <span className="device-field-label">New Version</span>
+                  <span className="device-field-label">Current Version</span>
+                  <span className="device-field-value">v{currentVersion}</span>
+                </div>
+                <div className="device-field">
+                  <span className="device-field-label">Latest Version</span>
                   <span className="device-field-value highlight">v{update.version}</span>
                 </div>
                 <div className="device-field">

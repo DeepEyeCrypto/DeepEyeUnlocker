@@ -10,14 +10,16 @@ interface Tool {
   chips?: string[];
   status: string;
   fn: string;
+  isPrimary?: boolean;
 }
 
 interface ToolCardProps {
   tool: Tool;
+  platform?: string;
   onRun?: (logs: string[]) => void;
 }
 
-export function ToolCard({ tool, onRun }: ToolCardProps) {
+export function ToolCard({ tool, platform, onRun }: ToolCardProps) {
   const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
@@ -37,6 +39,8 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
       let result;
       if (tool.id === 'ipsw_flash') {
         result = await invoke<string>(tool.fn || "run_ipsw_flash", { ipswPath: selectedFile });
+      } else if (tool.fn === 'run_full_bypass') {
+        result = await invoke<string>(tool.fn, { platform: platform || "MTK" });
       } else {
         result = await invoke<string>(tool.fn);
       }
@@ -64,7 +68,7 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
   };
 
   return (
-    <div className={`tool-card tool-card--${status} glass-card`}>
+    <div className={`tool-card tool-card--${status} glass-card ${tool.isPrimary ? 'tool-card--primary' : ''}`}>
       <div className="tool-card__header">
         <div className="tool-card__meta">
           <span className="protocol-badge">{tool.protocol}</span>

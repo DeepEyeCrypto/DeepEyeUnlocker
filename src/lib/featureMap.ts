@@ -70,6 +70,14 @@ export const FEATURE_MAP = {
         protocol: "ADB",
         status: "live",
         fn: "run_screen_bypass"
+      },
+      {
+        id: "wireless_adb",
+        name: "Wireless Debugging",
+        description: "Pair and connect via IP (Android 11+)",
+        protocol: "WIFI",
+        status: "live",
+        fn: "pair_wifi_adb"
       }
     ]
   },
@@ -205,13 +213,95 @@ export const FEATURE_MAP = {
         fn: "run_odin_flash"
       },
       {
-        id: "samsung_knox",
+        id: "knox_bypass",
         name: "Knox Bypass",
         description: "Knox security bypass (pre-Knox 3.x)",
         protocol: "ADB",
         status: "live",
         fn: "run_knox_bypass"
+      },
+      {
+        id: "samsung_full_bypass",
+        name: "ONE-CLICK BYPASS",
+        description: "Automated Samsung FRP + Lock removal sequence",
+        protocol: "MULTI",
+        status: "live",
+        fn: "run_full_bypass",
+        isPrimary: true
       }
     ]
+  },
+
+  // ── UNISOC / SPREADTRUM ───────────────────────────
+  unisoc: {
+    label: "Unisoc Tools",
+    icon: "database", 
+    color: "#E91E63",
+    tools: [
+      {
+        id: "unisoc_frp",
+        name: "Unisoc FRP Erase",
+        description: "Spreadtrum SC7731/SC9832/SC9863A protocol",
+        protocol: "EDL",
+        chips: ["SC9863A","SC9832E","SC7731E"],
+        status: "live",
+        fn: "run_unisoc_frp_bypass"
+      }
+    ]
+  },
+
+  // ── SYSTEM / UTILITY ───────────────────────────────
+  history: {
+    label: "Session History",
+    icon: "clock",
+    color: "#888888",
+    tools: []
+  },
+  settings: {
+    label: "Settings",
+    icon: "settings",
+    color: "#FFFFFF",
+    tools: []
   }
 }
+
+// Helper to add One-Click Bypass to other platforms
+(FEATURE_MAP.android.tools as any).push({
+  id: "mtk_full_bypass",
+  name: "ONE-CLICK BYPASS",
+  description: "Automated MTK BROM + SLA + FRP sequence",
+  protocol: "MULTI",
+  status: "live",
+  fn: "run_full_bypass",
+  isPrimary: true
+});
+
+(FEATURE_MAP.qualcomm.tools as any).push({
+  id: "qcom_full_bypass",
+  name: "ONE-CLICK BYPASS",
+  description: "Automated EDL + Sahara + Firehose sequence",
+  protocol: "MULTI",
+  status: "live",
+  fn: "run_full_bypass",
+  isPrimary: true
+});
+
+(FEATURE_MAP.apple.tools as any).push({
+  id: "apple_full_bypass",
+  name: "ONE-CLICK BYPASS",
+  description: "Automated iOS Info + Activation sequence",
+  protocol: "MULTI",
+  status: "live",
+  fn: "run_full_bypass",
+  isPrimary: true
+});
+
+(FEATURE_MAP.unisoc.tools as any).push({
+  id: "unisoc_one_click",
+  name: "ONE-CLICK BYPASS",
+  description: "Automated Unisoc FDL + FRP sequence",
+  protocol: "MULTI",
+  status: "live",
+  fn: "run_unisoc_frp_bypass",
+  isPrimary: true
+});

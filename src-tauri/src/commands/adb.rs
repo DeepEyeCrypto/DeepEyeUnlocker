@@ -42,6 +42,7 @@ pub struct DeviceFullInfo {
     pub frp_status: String,
     pub battery_level: String,
     pub imei: String,
+    pub storage: String,
 }
 
 #[allow(dead_code)]
@@ -264,6 +265,18 @@ pub async fn adb_get_device_info(
     .await
     .unwrap_or("Unavailable".to_string());
 
+    let storage_raw = adb_shell(
+        app,
+        serial,
+        "df /data | tail -1 | awk '{print $2,$3,$4}'",
+    )
+    .await
+    .unwrap_or_default();
+    let storage = format!("Total: {}, Used: {}, Free: {}", 
+        storage_raw.split_whitespace().next().unwrap_or("?"),
+        storage_raw.split_whitespace().nth(1).unwrap_or("?"),
+        storage_raw.split_whitespace().nth(2).unwrap_or("?"));
+
     Ok(DeviceFullInfo {
         serial: serial.to_string(),
         model,
@@ -277,6 +290,7 @@ pub async fn adb_get_device_info(
         frp_status,
         battery_level,
         imei,
+        storage,
     })
 }
 

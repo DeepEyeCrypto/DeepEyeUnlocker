@@ -139,3 +139,40 @@
 .log-success { color: var(--accent-green); }
 .log-error { color: var(--accent-red); }
 .log-warn { color: var(--accent-gold); }
+
+/* v1.1.0 Primary Tool Special Styling */
+.tool-card--primary {
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+  background: linear-gradient(135deg, rgba(20, 20, 25, 0.8) 0%, rgba(40, 35, 20, 0.8) 100%) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 16px rgba(255, 215, 0, 0.05);
+}
+
+.tool-card--primary .tool-card__name {
+  background: linear-gradient(to right, #fff, var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tool-card--primary .run-btn {
+  background: linear-gradient(to bottom, var(--accent-gold), #b8860b);
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.tool-card--primary::after {
+  content: "RECOMMENDED";
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  background: var(--accent-gold);
+  color: #000;
+  font-size: 0.55rem;
+  font-weight: 900;
+  padding: 2px 30px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

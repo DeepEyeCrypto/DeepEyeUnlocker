@@ -140,7 +140,23 @@ pub fn start_usb_watcher(app: AppHandle) {
                         }
                     }
 
-                    app.emit("usb-devices-changed", detected).ok();
+                    app.emit("usb-devices-changed", &detected).ok();
+                    
+                    // Feature 2: Auto-detect chipset/platform
+                    for dev in &detected {
+                        let platform = match dev.vid {
+                            0x0E8D => Some("MTK"),
+                            0x05AC => Some("APPLE"),
+                            0x04E8 => Some("SAMSUNG"),
+                            0x05C6 | 0x22B8 => Some("QUALCOMM"),
+                            _ => None,
+                        };
+
+                        if let Some(p) = platform {
+                            app.emit("device-profile-detected", p).ok();
+                        }
+                    }
+
                     last_devices = current_devices;
                 }
             }

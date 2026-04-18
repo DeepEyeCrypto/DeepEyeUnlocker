@@ -384,7 +384,7 @@ pub async fn run_sahara_handshake(app: AppHandle) -> Result<String, String> {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// Helper to run a system binary and capture output
-async fn run_binary(app: &AppHandle, bin: &str, args: &[&str]) -> Result<String, String> {
+pub(crate) async fn run_binary(app: &AppHandle, bin: &str, args: &[&str]) -> Result<String, String> {
     use tauri_plugin_shell::ShellExt;
     
     // macOS GUI apps don't inherit terminal PATH. Inject homebrew paths.
@@ -775,6 +775,25 @@ const TESTPOINT_DB: &[(&str, &str, &str, &str, &str, &str)] = &[
     ("iPhone X (A1901)", "A11 Bionic", "dfu", "checkm8 exploit — PP_CPU_VCORE", "Near CPU — requires microscope", "A11 supported by checkm8"),
     ("Nokia G21 (TA-1418)", "Unisoc T606", "brom_pin", "Short eMMC DAT0 to GND", "Above PMIC — small via", "Use 0.1mm wire"),
     ("Infinix Hot 12 (X6817)", "MT6761", "brom_pin", "Short BOOT pin near PMIC", "Marked TP on PCB silkscreen", "Remove back cover + midframe"),
+    ("Redmi Note 10 (Sunny)", "SDM678", "edl_pin", "Short 2 TP below eMMC", "Near shielding - top right", "Fastboot to EDL possible via cable"),
+    ("Xiaomi 11T (Amber)", "MT6893", "brom_pin", "Short CLK to GND", "Under CPU shield", "Requires heating to open back"),
+    ("Samsung S22 (SM-S901)", "Snapdragon 8 Gen 1", "edl_pin", "Short 2 golden pads near battery", "Right of charging flex", "Use EDL cable for better success"),
+    ("Oppo Reno 6 (CPH2251)", "MT6877", "brom_pin", "Short VCORE to GND", "Bottom PCB near flex", "Easy access without shield removal"),
+    ("Vivo Y20 (V2027)", "SDM460", "edl_pin", "Short 2 testpoints near SIM slot", "Under metal plate", "Force EDL via power button + TP"),
+    ("Realme GT Neo 2", "Snapdragon 870", "edl_pin", "Short pads near USB connector", "Exposed pads - no shielding", "Use 9008 driver"),
+    ("Redmi Note 11 (Spes)", "Snapdragon 680", "edl_pin", "Short pads above CPU", "Top PCB section", "Battery must be disconnected"),
+    ("Samsung A32 (SM-A325)", "MT6769", "brom_pin", "Short TP pads near LCD flex", "Left side of battery", "Use BROM handshake mode"),
+    ("Xiaomi Mi 11 Lite", "Snapdragon 732G", "edl_pin", "Short 2 pins near volume buttons", "Internal ribbon layer", "Remove screws and mid-frame"),
+    ("Oppo A54 (CPH2239)", "MT6765", "brom_pin", "Short TP pads near camera", "Top right corner", "Standard BROM bypass"),
+    ("Vivo V21 (V2050)", "MT6853", "brom_pin", "Short CLK pad near RAM", "Exposed via small hole", "Use 1.8V logic"),
+    ("Realme 8 (RMX3085)", "MT6785", "brom_pin", "Short CLK near eMMC", "Under main shield", "Requires shield cutting"),
+    ("Redmi 10 (Selene)", "MT6769", "brom_pin", "Short pads near speaker", "Bottom right", "Standard MediaTek protocol"),
+    ("Samsung A52 (SM-A525)", "Snapdragon 720G", "edl_pin", "Short 2 pins near NFC", "Center of motherboard", "Use EDL cable + key combo"),
+    ("Xiaomi Mi 10T", "Snapdragon 865", "edl_pin", "Short pins near 5G antenna", "Right side edge", "High-speed EDL protocol"),
+    ("Oppo F19 (CPH2219)", "Snapdragon 662", "edl_pin", "Short pins near fingerprint", "Internal back plate", "Disassembly required"),
+    ("Vivo Y12 (V1901)", "MT6762", "brom_pin", "Short TP pads near SD slot", "Inside SIM tray area", "No full disassembly needed"),
+    ("Realme Narzo 50", "MT6781", "brom_pin", "Short pads near PMIC", "Top PCB area", "Standard BROM tools"),
+    ("Redmi Note 8 (2021)", "MT6769", "brom_pin", "Short CLK to GND", "Near eMMC", "Check BROM protocol version"),
 ];
 
 /// Search testpoint database by device name or chipset
@@ -936,6 +955,48 @@ pub async fn check_samsung_download_mode(
 }
 
 #[command]
+pub async fn run_full_bypass(
+    app: AppHandle,
+    platform: String
+) -> Result<String, String> {
+    match platform.to_uppercase().as_str() {
+        "MTK" => {
+            println!("[Bypass] Starting Full MTK Sequence...");
+            // Step 1: Handshake & SLA
+            let _ = run_mtk_brom_bypass(app.clone()).await?;
+            // Step 2: FRP Erase
+            let result = run_frp_erase(app.clone()).await?;
+            Ok(format!("✅ MTK Full Bypass Complete!\n\n{result}"))
+        },
+        "QUALCOMM" => {
+            println!("[Bypass] Starting Full Qualcomm Sequence...");
+            // Step 1: Sahara Handshake
+            let _ = run_sahara_handshake(app.clone()).await?;
+            // Step 2: FRP Erase
+            let result = run_qcom_frp_erase(app.clone()).await?;
+            Ok(format!("✅ Qualcomm Full Bypass Complete!\n\n{result}"))
+        },
+        "SAMSUNG" => {
+            println!("[Bypass] Starting Full Samsung Sequence...");
+            // Get serial first
+            let serial = run_binary(&app, "adb", &["get-serialno"]).await.unwrap_or("".into());
+            let result = run_samsung_frp(app.clone(), serial.trim().to_string()).await?;
+            Ok(format!("✅ Samsung Full Bypass Complete!\n\n{result}"))
+        },
+        "APPLE" => {
+            println!("[Bypass] Starting Apple Activation Evaluation...");
+            let status = check_activation_status(app.clone()).await?;
+            if status.contains("Activated") {
+                return Ok("✅ Device is already activated.".to_string());
+            }
+            let result = run_activation_bypass(app.clone()).await?;
+            Ok(format!("✅ Apple Bypass Attempted!\n\n{result}"))
+        },
+        _ => Err(format!("❌ Platform '{}' not supported for one-click bypass", platform))
+    }
+}
+
+#[command]
 pub async fn run_tool_version_check(
     app: AppHandle,
     bin: String,
@@ -943,4 +1004,52 @@ pub async fn run_tool_version_check(
 ) -> Result<String, String> {
     let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
     run_binary(&app, &bin, &args_ref).await
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateInfo {
+    pub current_version: String,
+    pub latest_version: String,
+    pub update_available: bool,
+    pub release_notes: String,
+    pub download_url: String,
+}
+
+#[command]
+pub async fn check_for_updates(
+    _app: AppHandle
+) -> Result<UpdateInfo, String> {
+    println!("[Updater] Checking GitHub for new releases...");
+    let client = reqwest::Client::builder()
+        .user_agent("DeepEyeUnlocker/1.2.0")
+        .build()
+        .map_err(|e| format!("Client error: {e}"))?;
+
+    let resp = client
+        .get("https://api.github.com/repos/DeepEyeUnlocker/DeepEyeUnlocker/releases/latest")
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {e}"))?;
+
+    if !resp.status().is_success() {
+         return Err(format!("GitHub API error: Status {}", resp.status()));
+    }
+
+    let json: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Parse error: {e}"))?;
+
+    let latest = json["tag_name"].as_str()
+        .unwrap_or("unknown").trim_start_matches('v').to_string();
+    let current = env!("CARGO_PKG_VERSION").to_string();
+    let notes = json["body"].as_str()
+        .unwrap_or("No release notes provided.").to_string();
+
+    Ok(UpdateInfo {
+        current_version: current.clone(),
+        latest_version: latest.clone(),
+        update_available: latest != current,
+        release_notes: notes,
+        download_url: json["html_url"]
+            .as_str().unwrap_or("").to_string(),
+    })
 }

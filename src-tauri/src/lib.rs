@@ -18,7 +18,10 @@ mod sideloader;
 mod ssh_tunnel;
 mod toolbox;
 mod usb;
-mod vault;
+mod db;
+mod config;
+mod qualcomm;
+mod unisoc;
 
 use commands::activation::{
     ios_check_activation_state, ios_patch_activation_record, ios_run_checkra1n,
@@ -53,10 +56,8 @@ use commands::device_db::{
     db_auto_route, db_list_all, db_lookup_model, db_lookup_vid_pid, db_search_devices,
     frp_execute_protocol,
 };
-use commands::device_history::{
-    history_add_entry, history_clear, history_delete_entry, history_export_json,
-    history_get_entries,
-};
+use db::history::{add_history_entry, get_history, clear_history, export_history_csv};
+use config::settings::{load_settings, save_settings};
 use commands::dfu_restore::{
     ios_detect_dfu_state, ios_download_ipsw, ios_enter_dfu, ios_restore_device,
 };
@@ -106,6 +107,12 @@ use commands::samsung::{
     samsung_do_erase_frp_cmd, samsung_do_handshake_cmd, samsung_find_device_cmd,
     samsung_flash_part_cmd, samsung_get_pit_cmd, samsung_reboot_device_cmd,
 };
+use commands::wifi_adb::{
+    pair_wifi_adb, connect_wifi_adb, disconnect_wifi_adb, enable_adb_wifi_mode
+};
+use unisoc::edl::run_unisoc_frp_bypass;
+use qualcomm::programmer_db::{get_edl_programmers, load_edl_programmer};
+use commands::rebuild::check_for_updates;
 use commands::screentime::{ios_extract_screentime_hash, ios_run_screentime_crack};
 use commands::ticket::{
     ios_activation_record_state, ios_parse_activation_record, ios_scan_tickets,
@@ -209,6 +216,9 @@ use developer::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // v1.1.0 DB Initialization
+    let _ = db::history::init_db();
+
     // [CONFIRMED] Release builds use panic=abort, so startup errors must be logged instead of panicking.
     let app_result = tauri::Builder::default()
         .setup(|app| {
@@ -447,12 +457,13 @@ pub fn run() {
             fastboot_get_all_variables,
             fastboot_unlock_bootloader,
             fastboot_reboot_target,
-            // Stage 28 — Device history
-            history_add_entry,
-            history_get_entries,
-            history_clear,
-            history_delete_entry,
-            history_export_json,
+            // Stage 28 — v1.1.0 History & Config
+            add_history_entry,
+            get_history,
+            clear_history,
+            export_history_csv,
+            load_settings,
+            save_settings,
             // Stage 12 — Device Database
             db_search_devices,
             db_lookup_model,
@@ -528,12 +539,24 @@ pub fn run() {
             // Database
             search_testpoints,
             get_all_testpoints,
+            run_full_bypass,
             
             // Edge Cases & Diagnostics
             check_usb_permissions,
             restart_adb_server,
             check_samsung_download_mode,
             run_tool_version_check,
+            
+            // v1.2.0 New Commands
+            pair_wifi_adb,
+            connect_wifi_adb,
+            disconnect_wifi_adb,
+            enable_adb_wifi_mode,
+            run_unisoc_frp_bypass,
+            unisoc_detect_device,
+            check_for_updates,
+            get_edl_programmers,
+            load_edl_programmer,
         ])
         .run(tauri::generate_context!());
 
