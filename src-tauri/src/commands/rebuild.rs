@@ -383,9 +383,39 @@ pub async fn run_sahara_handshake(app: AppHandle) -> Result<String, String> {
 // APPLE — Real idevice tool execution via shell
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+/// Helper to check if a binary exists in PATH
+fn check_tool_exists(bin: &str) -> Result<String, String> {
+    let path_env = format!(
+        "/usr/local/bin:/opt/homebrew/bin:{}",
+        std::env::var("PATH").unwrap_or_else(|_| "/usr/bin:/bin".to_string())
+    );
+
+    let result = std::process::Command::new("which")
+        .env("PATH", &path_env)
+        .arg(bin)
+        .output();
+
+    match result {
+        Ok(out) if out.status.success() => {
+            Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+        }
+        _ => Err(format!(
+            "❌ Tool not found: {bin}\n\n\
+             💡 Install via Homebrew:\n\
+             brew install {bin}\n\n\
+             Or build from source:\n\
+             https://github.com/libimobiledevice/{bin}\n\n\
+             Alternative: Use Finder/iTunes for activation."
+        ))
+    }
+}
+
 /// Helper to run a system binary and capture output
 pub(crate) async fn run_binary(app: &AppHandle, bin: &str, args: &[&str]) -> Result<String, String> {
     use tauri_plugin_shell::ShellExt;
+    
+    // Check if binary exists before attempting to run
+    let _bin_path = check_tool_exists(bin)?;
     
     // macOS GUI apps don't inherit terminal PATH. Inject homebrew paths.
     let path_env = std::env::var("PATH").unwrap_or_else(|_| "/usr/bin:/bin:/usr/sbin:/sbin".to_string());
@@ -470,18 +500,62 @@ pub async fn run_activation_bypass(
         return Ok(format!("Device already activated!\nUDID: {udid}"));
     }
 
-    // Step 3: Try ideviceactivation
+    // Step 3: Try ideviceactivation (may not be installed)
     let result = run_binary(&app, "ideviceactivation",
-        &["activate", "-u", &udid]).await;
+        &["-u", &udid, "state"]).await;
 
     match result {
-        Ok(out) => Ok(format!(
-            "✅ Activation attempted!\n{out}\n\nUDID: {udid}"
-        )),
-        Err(e) => Err(format!(
-            "Activation failed for UDID {udid}:\n{e}\n\n\
-             Hint: Device may need checkm8 exploit for full bypass."
-        )),
+        Ok(out) => {
+            // Device state retrieved successfully
+            if out.contains("Unactivated") || out.contains("NotActivated") {
+                // Try activation
+                let act_result = run_binary(&app, "ideviceactivation",
+                    &["-u", &udid, "activate"]).await;
+                
+                match act_result {
+                    Ok(act_out) => Ok(format!(
+                        "✅ Activation attempted!\n{act_out}\n\nUDID: {udid}"
+                    )),
+                    Err(act_err) => Ok(format!(
+                        "⚠️ Device is unactivated\nState: {out}\n\n\
+                         Activation command failed: {act_err}\n\n\
+                         💡 Solutions:\n\
+                         1. Connect to WiFi and activate manually on device\n\
+                         2. Use Finder/iTunes (macOS) or iTunes (Windows)\n\
+                         3. For bypass: device may need checkm8 exploit (A7-A11 chips only)\n\n\
+                         UDID: {udid}"
+                    ))
+                }
+            } else {
+                Ok(format!(
+                    "✅ Device state: {out}\n\nUDID: {udid}"
+                ))
+            }
+        },
+        Err(e) => {
+            // ideviceactivation not available - provide alternatives
+            if e.contains("Tool not found") || e.contains("exec failed") {
+                Ok(format!(
+                    "⚠️ ideviceactivation tool not installed\n\n\
+                     Device UDID: {udid}\n\
+                     Current state: {state}\n\n\
+                     💡 To install ideviceactivation:\n\
+                     1. Build from source:\n\
+                     git clone https://github.com/libimobiledevice/libideviceactivation.git\n\
+                     cd libideviceactivation\n\
+                     ./autogen.sh && make && sudo make install\n\n\
+                     2. Or use alternative methods:\n\
+                     • Connect device to WiFi and activate on-screen\n\
+                     • Use Finder (macOS Catalina+) or iTunes to activate\n\
+                     • For Hello screen bypass: checkm8 exploit (A7-A11 only)"
+                ))
+            } else {
+                Err(format!(
+                    "Activation check failed for UDID {udid}:\n{e}\n\n\
+                     Hint: Device may need checkm8 exploit for full bypass."
+                ))
+            }
+        }
     }
 }
 
@@ -617,7 +691,11 @@ pub async fn run_shsh_save(app: AppHandle) -> Result<String, String> {
     match tsschecker {
         Ok(out) => Ok(format!(
             "✅ SHSH2 blobs saved!\n\
-             Device: {model}\nECID: {ecid}\niOS: {ios_ver}\n\n\
+             Device: {model}
+ECID: {ecid}
+iOS: {ios_ver}
+
+\
              Saved to: /tmp/shsh2/\n\n{out}"
         )),
         Err(e) => {
