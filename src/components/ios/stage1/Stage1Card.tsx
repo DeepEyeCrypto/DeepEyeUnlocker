@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
 import { useState, useEffect, useRef } from "react"
+import { SignalBypassFlow } from "../SignalBypassFlow"
 import "./Stage1Card.css"
 
 interface Stage1Result {
@@ -28,14 +29,17 @@ interface Stage1Result {
 
 export function Stage1Card({
   onPass,
+  onClose,
 }: {
   onPass: (r: Stage1Result) => void
+  onClose?: () => void
 }) {
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
   const [result, setResult] = useState<Stage1Result | null>(null)
   const [error, setError] = useState<string | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
+  const [flowOpen, setFlowOpen] = useState(false)
 
   useEffect(() => {
     const u = listen<string>("s1-log", (e) =>
@@ -175,9 +179,21 @@ export function Stage1Card({
       )}
 
       {/* RUN button */}
-      <button className="run-btn" onClick={run} disabled={loading}>
-        {loading ? "⏳ Scanning..." : "⚡ RUN"}
-      </button>
+      {!onClose ? (
+        flowOpen ? (
+          <SignalBypassFlow
+            onClose={() => setFlowOpen(false)}
+          />
+        ) : (
+          <button className="run-btn" onClick={() => setFlowOpen(true)}>
+            ⚡ RUN
+          </button>
+        )
+      ) : (
+        <button className="run-btn" onClick={run} disabled={loading}>
+          {loading ? "⏳ Scanning..." : "⚡ RUN"}
+        </button>
+      )}
 
       {/* Next stage button */}
       {result?.stage_passed && (
