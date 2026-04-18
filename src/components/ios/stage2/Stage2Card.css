@@ -17,3 +17,15 @@
 .log-warn {
   color: #fbbf24;
 }
+
+.warn-banner {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  color: #fb923c;
+  line-height: 1.5;
+}
