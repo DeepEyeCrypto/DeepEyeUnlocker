@@ -115,6 +115,14 @@ use commands::updater::{check_update, do_install_update};
 use commands::usb_detector::start_usb_watcher;
 use commands::usb_utils::usb_debug_list_devices;
 use commands::vault::ios_create_deepvault;
+use commands::rebuild::{
+    get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
+    run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
+    run_screen_bypass, run_qcom_edl, run_qcom_frp_erase, run_sahara_handshake,
+    run_activation_bypass, run_mdm_bypass, run_checkm8_new,
+    run_force_dfu, run_ipsw_flash, run_passcode_remove, run_ios_device_info,
+    run_shsh_save, run_samsung_frp, run_odin_flash, run_knox_bypass,
+};
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -479,6 +487,29 @@ pub fn run() {
             fastboot_reboot_recovery,
             fastboot_unlock_bootloader,
             fastboot_lock_bootloader,
+            get_connected_device,
+            run_mtk_brom_bypass,
+            run_da_bypass,
+            run_meta_bypass,
+            run_frp_erase,
+            run_adb_frp,
+            run_deepeye_agent,
+            run_pattern_bypass,
+            run_screen_bypass,
+            run_qcom_edl,
+            run_qcom_frp_erase,
+            run_sahara_handshake,
+            run_activation_bypass,
+            run_mdm_bypass,
+            run_checkm8_new,
+            run_force_dfu,
+            run_ipsw_flash,
+            run_passcode_remove,
+            run_ios_device_info,
+            run_shsh_save,
+            run_samsung_frp,
+            run_odin_flash,
+            run_knox_bypass,
         ])
         .run(tauri::generate_context!());
 

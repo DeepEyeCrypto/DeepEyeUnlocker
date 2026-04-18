@@ -45,7 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.otg.R
-import com.deepeye.otg.ui.apple.AppleProToolsScreen
+import com.deepeye.otg.ui.apple.AppleProToolsEnhancedScreen
 import com.deepeye.otg.ui.device.DeviceSupportScreen
 import com.deepeye.otg.ui.theme.DeepEyeColors
 import com.deepeye.otg.ui.screens.qualcomm.EdlScreen
@@ -92,7 +92,10 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                         DeepEyeRootTab.DEVICES -> viewModel.setNav(NavTarget.DEVICES)
                         DeepEyeRootTab.LOGS -> viewModel.setNav(NavTarget.LOG_SCREEN)
                         DeepEyeRootTab.SETTINGS -> viewModel.setNav(NavTarget.SETTINGS)
-                        DeepEyeRootTab.APPLE -> Unit
+                        DeepEyeRootTab.APPLE -> {
+                            rootTab = DeepEyeRootTab.APPLE
+                            viewModel.setNav(NavTarget.APPLE_PRO_TOOLS)
+                        }
                     }
                 },
             )
@@ -109,7 +112,9 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                 .padding(paddingValues),
         ) {
             when {
-                rootTab == DeepEyeRootTab.APPLE -> AppleProToolsScreen()
+                rootTab == DeepEyeRootTab.APPLE || currentNav == NavTarget.APPLE_PRO_TOOLS -> {
+                    AppleProToolsEnhancedScreen()
+                }
 
                 currentNav == NavTarget.MTK_EXPLOIT || currentNav == NavTarget.MTK_UNLOCK -> DeepEyeMtkScreen(mainViewModel = viewModel)
 
@@ -193,7 +198,14 @@ fun DeepEyeMainScreen(viewModel: UsbViewModel) {
                                 rootTab = DeepEyeRootTab.DEVICES
                                 viewModel.setNav(NavTarget.DEVICES)
                             }
-                            "IPHONE_15_RESEARCH" -> rootTab = DeepEyeRootTab.APPLE
+                            "IPHONE_15_RESEARCH" -> {
+                                rootTab = DeepEyeRootTab.APPLE
+                                viewModel.setNav(NavTarget.APPLE_PRO_TOOLS)
+                            }
+                            "APPLE_PRO_TOOLS" -> {
+                                rootTab = DeepEyeRootTab.APPLE
+                                viewModel.setNav(NavTarget.APPLE_PRO_TOOLS)
+                            }
                             "LOG_SCREEN" -> {
                                 rootTab = DeepEyeRootTab.LOGS
                                 viewModel.setNav(NavTarget.LOG_SCREEN)

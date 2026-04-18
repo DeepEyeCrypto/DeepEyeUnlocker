@@ -25,8 +25,8 @@ export function AppShell({ active, onNavigate, children }: AppShellProps) {
   }, [active, navItems, onNavigate]);
 
   return (
-    <div className="app-shell" data-layout={mobile ? "mobile" : "desktop"}>
-      {platform === "windows" && <TitleBar />}
+    <div className="app-shell" data-layout={mobile ? "mobile" : "desktop"} data-platform={platform}>
+      <TitleBar />
       <div className="app-body">
         {!mobile && <SideNav active={active} onNavigate={onNavigate} items={navItems} />}
         <MainContent>{children}</MainContent>

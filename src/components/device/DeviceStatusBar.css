@@ -1,0 +1,80 @@
+.device-status-bar {
+  height: 48px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+}
+
+.device-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.blink-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  position: relative;
+}
+
+.connected .blink-dot {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.device-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.device-badge {
+  background: var(--accent-blue);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.device-ids {
+  color: var(--text-faint);
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.disconnected .no-device {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.status-meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.system-time {
+  font-weight: 500;
+}

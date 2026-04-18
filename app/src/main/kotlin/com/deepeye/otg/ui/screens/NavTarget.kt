@@ -46,6 +46,7 @@ enum class NavTarget(val hub: MissionHub) {
     FUZZ_DASHBOARD(MissionHub.INTEL),
     HID_RESEARCH(MissionHub.INTEL),
     IPHONE_15_RESEARCH(MissionHub.INTEL),
+    APPLE_PRO_TOOLS(MissionHub.INTEL),  // Apple Pro Tools tab
     
     // ARCHIVE Hub
     SETTINGS(MissionHub.ARCHIVE),

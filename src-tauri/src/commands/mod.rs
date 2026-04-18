@@ -39,3 +39,4 @@ pub mod updater;
 pub mod usb_detector;
 pub mod usb_utils;
 pub mod vault;
+pub mod rebuild;

@@ -267,6 +267,7 @@ private fun MissionNavContent(
             NavTarget.VAULT -> VaultScreen(onBack = { viewModel.setNav(NavTarget.LAB_HOME) })
             NavTarget.FILE_EXPLORER -> FileExplorerScreen(viewModel)
             NavTarget.IPHONE_15_RESEARCH -> Iphone15ResearchScreen(viewModel)
+            NavTarget.APPLE_PRO_TOOLS -> com.deepeye.otg.ui.apple.AppleProToolsEnhancedScreen()
             NavTarget.TERMINAL -> TerminalScreen(viewModel)
             NavTarget.CVE_INTELLIGENCE -> CveDashboardScreen(
                 viewModel = cveViewModel,
