@@ -1,4 +1,24 @@
-export const FEATURE_MAP = {
+interface ToolConfig {
+  id: string;
+  name: string;
+  description: string;
+  protocol: string;
+  chips?: string[];
+  status: string;
+  fn: string;
+  isPrimary?: boolean;
+}
+
+interface PlatformConfig {
+  label: string;
+  icon: string;
+  color: string;
+  tools: ToolConfig[];
+}
+
+type FeatureMapType = Record<string, PlatformConfig>;
+
+export const FEATURE_MAP: FeatureMapType = {
   // ── ANDROID / MTK ─────────────────────────────────
   android: {
     label: "Android Tools",
@@ -78,6 +98,15 @@ export const FEATURE_MAP = {
         protocol: "WIFI",
         status: "live",
         fn: "pair_wifi_adb"
+      },
+      {
+        id: "mtk_full_bypass",
+        name: "ONE-CLICK BYPASS",
+        description: "Automated MTK BROM + SLA + FRP sequence",
+        protocol: "MULTI",
+        status: "live",
+        fn: "run_full_bypass",
+        isPrimary: true
       }
     ]
   },
@@ -112,6 +141,15 @@ export const FEATURE_MAP = {
         protocol: "Sahara",
         status: "live",
         fn: "run_sahara_handshake"
+      },
+      {
+        id: "qcom_full_bypass",
+        name: "ONE-CLICK BYPASS",
+        description: "Automated EDL + Sahara + Firehose sequence",
+        protocol: "MULTI",
+        status: "live",
+        fn: "run_full_bypass",
+        isPrimary: true
       }
     ]
   },
@@ -186,6 +224,15 @@ export const FEATURE_MAP = {
         protocol: "TSS",
         status: "live",
         fn: "run_shsh_save"
+      },
+      {
+        id: "apple_full_bypass",
+        name: "ONE-CLICK BYPASS",
+        description: "Automated iOS Info + Activation sequence",
+        protocol: "MULTI",
+        status: "live",
+        fn: "run_full_bypass",
+        isPrimary: true
       }
     ]
   },
@@ -196,30 +243,6 @@ export const FEATURE_MAP = {
     icon: "samsung",
     color: "#1428A0",
     tools: [
-      {
-        id: "samsung_frp",
-        name: "Samsung FRP Bypass",
-        description: "Google account bypass for Samsung",
-        protocol: "ADB",
-        status: "live",
-        fn: "run_samsung_frp"
-      },
-      {
-        id: "samsung_odin",
-        name: "Samsung Odin Flash",
-        description: "Flash firmware via Odin/Heimdall protocol",
-        protocol: "Odin",
-        status: "live",
-        fn: "run_odin_flash"
-      },
-      {
-        id: "knox_bypass",
-        name: "Knox Bypass",
-        description: "Knox security bypass (pre-Knox 3.x)",
-        protocol: "ADB",
-        status: "live",
-        fn: "run_knox_bypass"
-      },
       {
         id: "samsung_full_bypass",
         name: "ONE-CLICK BYPASS",
@@ -246,6 +269,15 @@ export const FEATURE_MAP = {
         chips: ["SC9863A","SC9832E","SC7731E"],
         status: "live",
         fn: "run_unisoc_frp_bypass"
+      },
+      {
+        id: "unisoc_one_click",
+        name: "ONE-CLICK BYPASS",
+        description: "Automated Unisoc FDL + FRP sequence",
+        protocol: "MULTI",
+        status: "live",
+        fn: "run_unisoc_frp_bypass",
+        isPrimary: true
       }
     ]
   },
@@ -264,44 +296,3 @@ export const FEATURE_MAP = {
     tools: []
   }
 }
-
-// Helper to add One-Click Bypass to other platforms
-(FEATURE_MAP.android.tools as any).push({
-  id: "mtk_full_bypass",
-  name: "ONE-CLICK BYPASS",
-  description: "Automated MTK BROM + SLA + FRP sequence",
-  protocol: "MULTI",
-  status: "live",
-  fn: "run_full_bypass",
-  isPrimary: true
-});
-
-(FEATURE_MAP.qualcomm.tools as any).push({
-  id: "qcom_full_bypass",
-  name: "ONE-CLICK BYPASS",
-  description: "Automated EDL + Sahara + Firehose sequence",
-  protocol: "MULTI",
-  status: "live",
-  fn: "run_full_bypass",
-  isPrimary: true
-});
-
-(FEATURE_MAP.apple.tools as any).push({
-  id: "apple_full_bypass",
-  name: "ONE-CLICK BYPASS",
-  description: "Automated iOS Info + Activation sequence",
-  protocol: "MULTI",
-  status: "live",
-  fn: "run_full_bypass",
-  isPrimary: true
-});
-
-(FEATURE_MAP.unisoc.tools as any).push({
-  id: "unisoc_one_click",
-  name: "ONE-CLICK BYPASS",
-  description: "Automated Unisoc FDL + FRP sequence",
-  protocol: "MULTI",
-  status: "live",
-  fn: "run_unisoc_frp_bypass",
-  isPrimary: true
-});

@@ -41,3 +41,4 @@ pub mod usb_utils;
 pub mod vault;
 pub mod rebuild;
 pub mod wifi_adb;
+pub mod signal_bypass;

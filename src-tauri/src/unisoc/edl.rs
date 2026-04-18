@@ -1,4 +1,4 @@
-use rusb::{DeviceHandle, GlobalContext, UsbContext};
+use rusb::{Context, DeviceHandle, UsbContext};
 use tauri::{AppHandle, Emitter, command};
 use std::sync::mpsc;
 use std::thread;
@@ -7,20 +7,22 @@ pub const UNISOC_VID: u16 = 0x1782;
 pub const UNISOC_PID: u16 = 0x4d00;
 
 pub struct UnisocConnection {
-    handle: DeviceHandle<GlobalContext>,
+    handle: DeviceHandle<Context>,
+    _ctx: Context,
     ep_out: u8,
     ep_in: u8,
 }
 
 impl UnisocConnection {
     pub fn open() -> Result<Self, String> {
-        let ctx = rusb::Context::new().map_err(|e| format!("Libusb init error: {}", e))?;
+        let ctx = Context::new().map_err(|e| format!("Libusb init error: {}", e))?;
         let handle = ctx.open_device_with_vid_pid(UNISOC_VID, UNISOC_PID)
             .ok_or("❌ Unisoc EDL device not found.\n💡 Hold Vol- while connecting USB.")?;
         
         // Simple endpoint detection (assume indices 1 and 2 for Research Download transport)
         Ok(Self {
             handle,
+            _ctx: ctx,
             ep_out: 0x01,
             ep_in: 0x81,
         })

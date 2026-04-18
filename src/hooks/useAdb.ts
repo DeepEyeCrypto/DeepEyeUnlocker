@@ -35,6 +35,7 @@ export interface DeviceFullInfo {
   frp_status: string;
   battery_level: string;
   imei: string;
+  storage: string;
 }
 
 export function useAdb() {

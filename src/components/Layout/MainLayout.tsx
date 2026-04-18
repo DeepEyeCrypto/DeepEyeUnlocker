@@ -200,7 +200,8 @@ export function MainLayout() {
                         if (tool.id.includes('info')) {
                              setSelectedTool(tool);
                              try {
-                                const serial = await invoke("run_binary", { bin: "adb", args: ["get-serialno"] });
+                                const serialResult = await invoke<string>("run_binary", { bin: "adb", args: ["get-serialno"] });
+                                const serial: string = serialResult;
                                 const info = await invoke("adb_get_full_info", { serial: serial.trim() });
                                 setDeviceInfo(info);
                              } catch (e) {
@@ -232,6 +233,8 @@ export function MainLayout() {
 
           {/* Execution Console */}
           <ExecutionConsole lines={consoleLines} />
+          </>
+          )}
         </main>
       </div>
     </div>

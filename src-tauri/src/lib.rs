@@ -22,6 +22,7 @@ mod db;
 mod config;
 mod qualcomm;
 mod unisoc;
+mod vault;
 
 use commands::activation::{
     ios_check_activation_state, ios_patch_activation_record, ios_run_checkra1n,
@@ -122,10 +123,16 @@ use commands::updater::{check_update, do_install_update};
 use commands::usb_detector::start_usb_watcher;
 use commands::usb_utils::usb_debug_list_devices;
 use commands::vault::ios_create_deepvault;
+use commands::signal_bypass::stage1::signal_stage1_detect;
+use commands::signal_bypass::stage2::signal_stage2_activation;
+use commands::signal_bypass::stage3::signal_stage3_baseband;
+use commands::signal_bypass::stage4::signal_stage4_icloud;
+use commands::signal_bypass::stage5::signal_stage5_mdm;
 use commands::rebuild::{
     get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
     run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
     run_screen_bypass, run_qcom_edl, run_qcom_frp_erase, run_sahara_handshake,
+    run_full_bypass,
     
     // Apple Tools
     get_ios_device_info, check_activation_status, run_activation_bypass, 
@@ -557,6 +564,12 @@ pub fn run() {
             check_for_updates,
             get_edl_programmers,
             load_edl_programmer,
+            // Signal Bypass Pipeline
+            signal_stage1_detect,
+            signal_stage2_activation,
+            signal_stage3_baseband,
+            signal_stage4_icloud,
+            signal_stage5_mdm,
         ])
         .run(tauri::generate_context!());
 
