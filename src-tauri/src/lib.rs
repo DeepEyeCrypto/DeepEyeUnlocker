@@ -129,6 +129,7 @@ use commands::signal_bypass::stage3::signal_stage3_baseband;
 use commands::signal_bypass::stage4::signal_stage4_icloud;
 use commands::signal_bypass::stage5::signal_stage5_mdm;
 use commands::signal_bypass::stage6::signal_stage6_carrier;
+use commands::signal_bypass::stage7::signal_stage7_imei;
 use commands::rebuild::{
     get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
     run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
@@ -572,6 +573,7 @@ pub fn run() {
             signal_stage4_icloud,
             signal_stage5_mdm,
             signal_stage6_carrier,
+            signal_stage7_imei,
         ])
         .run(tauri::generate_context!());
 
