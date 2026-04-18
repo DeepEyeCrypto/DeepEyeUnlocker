@@ -15,7 +15,7 @@ export function Sidebar({ active, onSelect }: SidebarProps) {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" data-tauri-drag-region>
       <div className="sidebar-logo">
         <span className="logo-text">DEEPEYE</span>
         <span className="logo-badge">v1.0</span>

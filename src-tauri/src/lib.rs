@@ -119,9 +119,16 @@ use commands::rebuild::{
     get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
     run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
     run_screen_bypass, run_qcom_edl, run_qcom_frp_erase, run_sahara_handshake,
-    run_activation_bypass, run_mdm_bypass, run_checkm8_new,
-    run_force_dfu, run_ipsw_flash, run_passcode_remove, run_ios_device_info,
-    run_shsh_save, run_samsung_frp, run_odin_flash, run_knox_bypass,
+    
+    // Apple Tools
+    get_ios_device_info, check_activation_status, run_activation_bypass, 
+    run_mdm_bypass, run_force_dfu, run_passcode_remove, run_shsh_save, run_ipsw_flash,
+    
+    // Samsung Tools
+    run_samsung_frp, run_samsung_odin_info,
+    
+    // Database
+    search_testpoints, get_all_testpoints,
 };
 
 // Server bypass URL (configure per deployment)
@@ -499,17 +506,24 @@ pub fn run() {
             run_qcom_edl,
             run_qcom_frp_erase,
             run_sahara_handshake,
+            
+            // Apple Tools
+            get_ios_device_info,
+            check_activation_status,
             run_activation_bypass,
             run_mdm_bypass,
-            run_checkm8_new,
             run_force_dfu,
-            run_ipsw_flash,
             run_passcode_remove,
-            run_ios_device_info,
             run_shsh_save,
+            run_ipsw_flash,
+            
+            // Samsung Tools
             run_samsung_frp,
-            run_odin_flash,
-            run_knox_bypass,
+            run_samsung_odin_info,
+            
+            // Database
+            search_testpoints,
+            get_all_testpoints,
         ])
         .run(tauri::generate_context!());
 

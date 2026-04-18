@@ -19,8 +19,9 @@
         "minWidth": 900,
         "minHeight": 600,
         "resizable": true,
-        "decorations": false,
+        "decorations": true,
         "transparent": true,
+        "titleBarStyle": "Transparent",
         "center": true
       }
     ],

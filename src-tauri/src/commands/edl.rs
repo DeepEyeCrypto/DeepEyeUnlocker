@@ -277,10 +277,32 @@ pub fn firehose_read_partition(
     );
     firehose_send(handle, &xml)?;
 
-    // Abstracting out the explicit bulk loop to a dummy file writer for skeleton sake
-    // In real implementation, read chunks of MaxPayloadSizeToTargetInBytes.
-    std::fs::write(out_path, b"DUMMY DATA").map_err(|e| EdlError::UsbError(e.to_string()))?;
-    Ok(num_sectors * 4096)
+    // Real bulk read loop — read chunks until total expected size is received
+    use std::io::Write;
+    let mut file = std::fs::File::create(out_path)
+        .map_err(|e| EdlError::UsbError(format!("Cannot create output file: {e}")))?;
+
+    let total_expected = num_sectors * 4096;
+    let mut total_read: u64 = 0;
+    let mut buf = vec![0u8; 1048576]; // 1MB read buffer
+
+    while total_read < total_expected {
+        let n = handle
+            .read_bulk(EP_IN, &mut buf, TIMEOUT)
+            .map_err(|e| EdlError::UsbError(format!("Bulk read failed at offset {total_read}: {e}")))?;
+        if n == 0 {
+            break;
+        }
+        file.write_all(&buf[..n])
+            .map_err(|e| EdlError::UsbError(format!("File write failed: {e}")))?;
+        total_read += n as u64;
+    }
+
+    // Read final ACK/response XML from Firehose
+    let mut resp_buf = [0u8; 4096];
+    let _ = handle.read_bulk(EP_IN, &mut resp_buf, TIMEOUT).ok();
+
+    Ok(total_read)
 }
 
 pub fn firehose_write_partition(
@@ -288,15 +310,33 @@ pub fn firehose_write_partition(
     partition_name: &str,
     data_path: &std::path::Path,
 ) -> Result<(), EdlError> {
-    let size = std::fs::metadata(data_path)
-        .map_err(|e| EdlError::UsbError(e.to_string()))?
-        .len();
+    let data = std::fs::read(data_path)
+        .map_err(|e| EdlError::UsbError(format!("Cannot read data file: {e}")))?;
+    let size = data.len() as u64;
     let num_sectors = size.div_ceil(4096);
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><program SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" num_partition_sectors=\"{}\" /></data>",
         partition_name, num_sectors
     );
     firehose_send(handle, &xml)?;
+
+    // Real bulk write loop — send data in chunks
+    let chunk_size: usize = 1048576; // 1MB write chunks
+    for chunk in data.chunks(chunk_size) {
+        handle
+            .write_bulk(EP_OUT, chunk, TIMEOUT)
+            .map_err(|e| EdlError::UsbError(format!("Bulk write failed: {e}")))?;
+    }
+
+    // Read final ACK
+    let mut resp_buf = [0u8; 4096];
+    let n = handle.read_bulk(EP_IN, &mut resp_buf, TIMEOUT)
+        .map_err(|e| EdlError::UsbError(format!("ACK read failed: {e}")))?;
+    let resp = String::from_utf8_lossy(&resp_buf[..n]).to_string();
+    if resp.contains("value=\"NAK\"") {
+        return Err(EdlError::FirehoseNak(resp));
+    }
+
     Ok(())
 }
 
@@ -307,17 +347,39 @@ pub fn firehose_get_storage_info(
         "<?xml version=\"1.0\" ?><data><getStorageInfo physical_partition_number=\"0\"/></data>";
     let resp = firehose_send(handle, xml)?;
 
-    // Naively scan XML string
-    let total_blocks = if let Some(_idx) = resp.find("num_physical_partitions=") {
-        1024 // Mock dummy parsing because quick-xml would be complex.
+    // Parse real XML response for storage parameters
+    let extract_attr = |attr: &str| -> u64 {
+        resp.find(attr)
+            .and_then(|i| {
+                let start = i + attr.len();
+                let rest = &resp[start..];
+                // Find quoted value: attr="value"
+                rest.find('"')
+                    .and_then(|q1| {
+                        let after = &rest[q1 + 1..];
+                        after.find('"').map(|q2| &after[..q2])
+                    })
+                    .and_then(|val| val.parse::<u64>().ok())
+            })
+            .unwrap_or(0)
+    };
+
+    let total_blocks = extract_attr("num_physical_partitions=");
+    let block_size_val = extract_attr("SECTOR_SIZE_IN_BYTES=");
+
+    // Determine storage type from response
+    let storage_type = if resp.contains("ufs") || resp.contains("UFS") {
+        "UFS"
+    } else if resp.contains("emmc") || resp.contains("eMMC") {
+        "eMMC"
     } else {
-        0
+        "Unknown"
     };
 
     Ok(StorageInfo {
         total_blocks,
-        block_size: 4096,
-        storage_type: "UFS".to_string(),
+        block_size: if block_size_val > 0 { block_size_val as u32 } else { 4096 },
+        storage_type: storage_type.to_string(),
     })
 }
 

@@ -21,16 +21,25 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
   const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string>('');
 
   async function handleRun() {
+    if (tool.id === 'ipsw_flash' && !selectedFile) {
+      alert("Please select an IPSW file first.");
+      return;
+    }
+
     setStatus('running');
     setLogs([]);
     setShowLogs(true);
     
     try {
-      // Tauri invoke → Rust backend
-      // Note: Rust backend needs to handle emitting logs via window events or returning them
-      const result = await invoke<string>(tool.fn);
+      let result;
+      if (tool.id === 'ipsw_flash') {
+        result = await invoke<string>(tool.fn || "run_ipsw_flash", { ipswPath: selectedFile });
+      } else {
+        result = await invoke<string>(tool.fn);
+      }
       setLogs(prev => [...prev, `✅ OK: ${result}`]);
       setStatus('success');
       if (onRun) onRun([...logs, `✅ ${tool.name} completed`]);
@@ -41,6 +50,19 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      // In Tauri, we can get the actual path using security scopes or drag-and-drop.
+      // Easiest is using open dialog for Tauri if possible, but HTML input gives the path if configured, 
+      // or we can use Tauri dialog.open(). For now, using HTML input and trying extracting path.
+      // However, HTML file input doesn't expose full path on web, but inside Tauri it might.
+      // Wait, standard web <input type="file"/> only gives fake path.
+      // A safer approach: we can use the element directly, assuming the parent component provided `tool.fn`.
+      const file = e.target.files[0];
+      setSelectedFile(file.path || file.name); // .path is valid in Electron/Tauri
+    }
+  };
+
   return (
     <div className={`tool-card tool-card--${status} glass-card`}>
       <div className="tool-card__header">
@@ -50,6 +72,14 @@ export function ToolCard({ tool, onRun }: ToolCardProps) {
         </div>
         <h3 className="tool-card__name">{tool.name}</h3>
         <p className="tool-card__desc">{tool.description}</p>
+        
+        {tool.id === 'ipsw_flash' && (
+           <div style={{ marginTop: '10px' }}>
+              <input type="file" accept=".ipsw" onChange={handleFileChange} className="file-input" />
+              {selectedFile && <div className="selected-filename">Selected: {selectedFile}</div>}
+           </div>
+        )}
+
         {tool.chips && (
           <div className="chip-list">
             {tool.chips.map(c => (

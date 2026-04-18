@@ -6,8 +6,13 @@ import './DeviceStatusBar.css';
 interface DetectedDevice {
   name: string;
   mode: string;
-  vendorId: number;
-  productId: number;
+  vendor_id: number;
+  product_id: number;
+  manufacturer: string | null;
+  serial: string | null;
+  bus: number;
+  address: number;
+  speed: string;
 }
 
 export function DeviceStatusBar() {
@@ -23,9 +28,10 @@ export function DeviceStatusBar() {
     const interval = setInterval(async () => {
       try {
         const d = await invoke<DetectedDevice | null>('get_connected_device');
-        setDevice(d);
+        setDevice(d ?? null);
       } catch (e) {
         console.error("Failed to poll device:", e);
+        setDevice(null);
       }
     }, 2000);
 
@@ -44,8 +50,11 @@ export function DeviceStatusBar() {
             <span className="device-name">{device.name}</span>
             <span className="device-badge">{device.mode}</span>
             <span className="device-ids">
-              0x{device.vendorId.toString(16).padStart(4, '0')}:0x{device.productId.toString(16).padStart(4, '0')}
+              0x{device.vendor_id.toString(16).padStart(4, '0')}:0x{device.product_id.toString(16).padStart(4, '0')}
             </span>
+            {device.speed && device.speed !== 'Unknown' && (
+              <span className="device-speed">{device.speed}</span>
+            )}
           </div>
         ) : (
           <span className="no-device">Searching for USB/OTG device...</span>
@@ -58,3 +67,4 @@ export function DeviceStatusBar() {
     </div>
   );
 }
+
