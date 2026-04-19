@@ -1,7 +1,8 @@
 .execution-console {
   display: flex;
   flex-direction: column;
-  height: 200px;
+  height: clamp(160px, 24vh, 220px);
+  flex: 0 0 auto;
   background: rgba(0, 0, 0, 0.4);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(10px);
@@ -39,6 +40,11 @@
   color: var(--text-primary);
 }
 
+.clear-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .console-body {
   flex: 1;
   padding: 12px 16px;
@@ -58,6 +64,7 @@
   color: var(--text-muted);
   white-space: pre-wrap;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -69,3 +76,15 @@
 .console-line.success { color: var(--accent-green); }
 .console-line.error { color: var(--accent-red); }
 .console-line.warn { color: var(--accent-gold); }
+
+@media (max-width: 720px) {
+  .console-header,
+  .console-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .console-line {
+    gap: 6px;
+  }
+}

@@ -33,6 +33,7 @@
     "active": true,
     "createUpdaterArtifacts": true,
     "targets": [
+      "app",
       "dmg",
       "nsis",
       "appimage",
@@ -61,7 +62,7 @@
       }
     },
     "macOS": {
-      "entitlements": "entitlements.plist",
+      "entitlements": "Entitlements.plist",
       "minimumSystemVersion": "10.13",
       "dmg": {
         "background": "assets/dmg-background.png",

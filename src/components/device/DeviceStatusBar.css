@@ -1,10 +1,12 @@
 .device-status-bar {
-  height: 48px;
+  min-height: 48px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 24px;
   position: relative;
   z-index: 100;
   border-bottom: 1px solid var(--border);
@@ -16,6 +18,8 @@
   gap: 12px;
   font-size: 0.85rem;
   font-weight: 500;
+  min-width: 0;
+  flex: 1 1 320px;
 }
 
 .blink-dot {
@@ -42,11 +46,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .device-name {
   color: var(--text-primary);
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .device-badge {
@@ -63,18 +71,42 @@
   color: var(--text-faint);
   font-family: monospace;
   font-size: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.device-speed {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .disconnected .no-device {
   color: var(--text-muted);
   font-style: italic;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .status-meta {
   color: var(--text-muted);
   font-size: 0.8rem;
+  margin-left: auto;
 }
 
 .system-time {
   font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .device-status-bar {
+    padding: 10px 16px;
+    align-items: flex-start;
+  }
+
+  .status-meta {
+    width: 100%;
+    margin-left: 22px;
+  }
 }

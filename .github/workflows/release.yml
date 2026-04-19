@@ -29,11 +29,11 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-            bundles: dmg
+            bundles: app,dmg
             artifact_name: release-aarch64-apple-darwin
           - os: macos-latest
             target: x86_64-apple-darwin
-            bundles: dmg
+            bundles: app,dmg
             artifact_name: release-x86_64-apple-darwin
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
@@ -150,6 +150,16 @@ jobs:
           fi
           pnpm tauri build --config src-tauri/tauri.release.conf.json --target "${{ matrix.target }}" --bundles "${{ matrix.bundles }}"
 
+      - name: Build macOS PKG installer
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ secrets.APPLE_INSTALLER_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          chmod +x src-tauri/resources/macos/pkg/postinstall
+          bash ./scripts/build_macos_pkg.sh --skip-build --config src-tauri/tauri.release.conf.json --target "${{ matrix.target }}"
+
       - name: Stage release artifacts
         shell: bash
         env:
@@ -172,19 +182,23 @@ jobs:
           files = []
           if target == "aarch64-apple-darwin":
               files.extend(bundle_dir.glob("dmg/*.dmg"))
+              files.extend(bundle_dir.glob("pkg/*.pkg"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
               rename = {
                   ".dmg": f"DeepEyeUnlocker_{version}_aarch64.dmg",
+                  ".pkg": f"DeepEyeUnlocker_{version}_aarch64.pkg",
                   ".app.tar.gz": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz",
                   ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz.sig",
               }
           elif target == "x86_64-apple-darwin":
               files.extend(bundle_dir.glob("dmg/*.dmg"))
+              files.extend(bundle_dir.glob("pkg/*.pkg"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
               rename = {
                   ".dmg": f"DeepEyeUnlocker_{version}_x86_64.dmg",
+                  ".pkg": f"DeepEyeUnlocker_{version}_x86_64.pkg",
                   ".app.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz",
                   ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz.sig",
               }

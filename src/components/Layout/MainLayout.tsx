@@ -1,71 +1,308 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Sidebar } from './Sidebar';
 import { DeviceStatusBar } from '../device/DeviceStatusBar';
-import { ToolCard } from '../tools/ToolCard';
 import { ExecutionConsole } from './ExecutionConsole';
-import { FEATURE_MAP } from '../../lib/featureMap';
 import { HistoryScreen } from '../history/HistoryScreen';
 import { WifiAdbScreen } from '../adb/WifiAdbScreen';
-import { DeviceInfoDashboard } from '../device/DeviceInfoDashboard';
-import { useEffect } from 'react';
+import { SignalBypassFlow } from '../ios/SignalBypassFlow';
 import { listen } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/core';
+import DashboardPage from '../../pages/Dashboard';
+import AdbPage from '../../pages/AdbPage';
+import EdlPage from '../../pages/EdlPage';
+import MtkBromPage from '../../pages/MtkBromPage';
+import SamsungPage from '../../pages/SamsungPage';
+import SettingsPage from '../../pages/SettingsPage';
+import RomManager from '../pages/RomManager';
+import { FeatureRemapStudio } from '../workspace/FeatureRemapStudio';
+import { useDevicePolling } from '../../hooks/useDevicePolling';
+import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '../../lib/settings';
+import { checkForUpdate, type UpdateInfo, type UpdateStatus } from '../../lib/updater';
+import { getPlatform, initPlatform, type Platform } from '../../lib/platform';
+import {
+  FEATURE_SUMMARY,
+  NAVIGATION_ITEMS,
+  WORKSPACE_META,
+  type NavigationItem,
+  type RemappedFeature,
+  type WorkspaceId,
+} from '../../lib/desktopWorkspace';
 import './MainLayout.css';
 
+type MetricCard = {
+  label: string;
+  value: string;
+  meta: string;
+};
+
+function humanizeConnectionState(value: string): string {
+  return value
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase())
+    .trim();
+}
+
+function humanizeUpdateStatus(status: UpdateStatus): string {
+  switch (status) {
+    case 'available':
+      return 'Available';
+    case 'checking':
+      return 'Checking';
+    case 'upToDate':
+      return 'Up to date';
+    case 'installing':
+      return 'Installing';
+    case 'error':
+      return 'Error';
+    default:
+      return 'Idle';
+  }
+}
+
 export function MainLayout() {
-  const [activePlatform, setActivePlatform] = useState('android');
-  const [activeProtocol, setActiveProtocol] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [consoleLines, setConsoleLines] = useState<string[]>([]);
-  const [selectedTool, setSelectedTool] = useState<any>(null);
-  const [updateInfo, setUpdateInfo] = useState<any>(null);
-  const [deviceInfo, setDeviceInfo] = useState<any>(null);
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('control-center');
+  const [platform, setPlatform] = useState<Platform | null>(getPlatform());
+  const [settings, setSettings] = useState<AppSettings>(() => loadAppSettings());
+  const [consoleLines, setConsoleLines] = useState<string[]>([
+    '[system] DeepEye integrated desktop workspace initialized',
+  ]);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [updateMessage, setUpdateMessage] = useState('Update channel idle.');
+  const deviceLogIndexRef = useRef(0);
+
+  const {
+    devices,
+    primaryDevice,
+    state: connectionState,
+    error,
+    logs,
+    refresh,
+  } = useDevicePolling(settings.usbDetectIntervalMs);
+
+  const appendConsole = useCallback((line: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const entry = `[${timestamp}] ${line}`;
+
+    setConsoleLines((previous) => {
+      if (previous[previous.length - 1] === entry) {
+        return previous;
+      }
+
+      return [...previous.slice(-299), entry];
+    });
+  }, []);
+
+  const clearConsole = useCallback(() => {
+    setConsoleLines([]);
+  }, []);
+
+  const handleSettingsChange = useCallback((next: Partial<AppSettings>) => {
+    setSettings((previous) => (Object.keys(next).length === 0 ? DEFAULT_APP_SETTINGS : { ...previous, ...next }));
+    appendConsole(
+      Object.keys(next).length === 0
+        ? '[settings] Desktop bridge settings restored to defaults.'
+        : '[settings] Desktop bridge settings updated.',
+    );
+  }, [appendConsole]);
+
+  const handleCheckForUpdates = useCallback(async () => {
+    setUpdateStatus('checking');
+    setUpdateMessage('Checking for desktop updates...');
+    appendConsole('[updater] Checking for desktop updates.');
+
+    try {
+      const nextUpdate = await checkForUpdate();
+      if (nextUpdate) {
+        setUpdateInfo(nextUpdate);
+        setUpdateStatus('available');
+        setUpdateMessage(`Update v${nextUpdate.version} available.`);
+        appendConsole(`[updater] Update v${nextUpdate.version} available.`);
+        return;
+      }
+
+      setUpdateInfo(null);
+      setUpdateStatus('upToDate');
+      setUpdateMessage('DeepEye is up to date.');
+      appendConsole('[updater] No newer release found.');
+    } catch (updateError: unknown) {
+      const message = String(updateError);
+      setUpdateStatus('error');
+      setUpdateMessage(message);
+      appendConsole(`[updater] ${message}`);
+    }
+  }, [appendConsole]);
 
   useEffect(() => {
-    // Feature 2: Auto-detect listener
-    const unlisten = listen('device-profile-detected', (event) => {
-      const platform = (event.payload as string).toLowerCase();
-      console.log(`[Auto-Detect] Switching to ${platform}`);
-      
-      // Auto-switch platform
-      if (platform === 'mtk') setActivePlatform('android');
-      else setActivePlatform(platform);
-      
-      setActiveProtocol('all');
-      setConsoleLines(prev => [...prev, `[System] Auto-switched to ${platform.toUpperCase()} platform`]);
+    void initPlatform()
+      .then((detectedPlatform) => setPlatform(detectedPlatform))
+      .catch(() => setPlatform(getPlatform()));
+  }, []);
+
+  useEffect(() => {
+    saveAppSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    if (logs.length <= deviceLogIndexRef.current) {
+      return;
+    }
+
+    const nextLogs = logs.slice(deviceLogIndexRef.current);
+    deviceLogIndexRef.current = logs.length;
+    nextLogs.forEach((line) => appendConsole(line));
+  }, [appendConsole, logs]);
+
+  useEffect(() => {
+    appendConsole(`[workspace] ${WORKSPACE_META[activeWorkspace].label} ready.`);
+  }, [activeWorkspace, appendConsole]);
+
+  useEffect(() => {
+    let disposed = false;
+    let stopBackendLog: (() => void) | undefined;
+    let stopProfileDetect: (() => void) | undefined;
+
+    void listen<string>('log', (event) => {
+      appendConsole(String(event.payload));
+    }).then((unlisten) => {
+      if (disposed) {
+        unlisten();
+        return;
+      }
+      stopBackendLog = unlisten;
+    });
+
+    void listen<string>('device-profile-detected', (event) => {
+      const payload = String(event.payload).toLowerCase();
+      const suggestedWorkspace: WorkspaceId = payload.includes('samsung')
+        ? 'samsung-odin'
+        : payload.includes('qualcomm') || payload.includes('edl')
+          ? 'qualcomm-edl'
+          : payload.includes('mtk')
+            ? 'mtk-brom'
+            : 'control-center';
+
+      appendConsole(
+        `[detect] ${payload.toUpperCase()} profile detected. Suggested lab: ${WORKSPACE_META[suggestedWorkspace].label}.`,
+      );
+    }).then((unlisten) => {
+      if (disposed) {
+        unlisten();
+        return;
+      }
+      stopProfileDetect = unlisten;
     });
 
     return () => {
-      unlisten.then(f => f());
+      disposed = true;
+      stopBackendLog?.();
+      stopProfileDetect?.();
     };
-  }, []);
+  }, [appendConsole]);
 
-  useEffect(() => {
-    // Feature 5: Update Checker
-    const checkUpdates = async () => {
-      try {
-        const info = await invoke('check_for_updates');
-        setUpdateInfo(info);
-      } catch (e) {
-        console.error("Update check failed", e);
-      }
+  const navigationItems = useMemo<NavigationItem[]>(() => {
+    const dynamicBadges: Partial<Record<WorkspaceId, string>> = {
+      'control-center': devices.length > 0 ? String(devices.length) : undefined,
+      'feature-remap': String(FEATURE_SUMMARY.totalFeatures),
+      'adb-bridge': String(FEATURE_SUMMARY.workspaceCounts['adb-bridge']),
+      'firmware-lab': String(FEATURE_SUMMARY.workspaceCounts['firmware-lab']),
+      'mtk-brom': String(FEATURE_SUMMARY.workspaceCounts['mtk-brom']),
+      'qualcomm-edl': String(FEATURE_SUMMARY.workspaceCounts['qualcomm-edl']),
+      'samsung-odin': String(FEATURE_SUMMARY.workspaceCounts['samsung-odin']),
+      'wireless-adb': 'ADB',
+      'signal-bypass': 'A12+',
+      settings: updateInfo ? `v${updateInfo.version}` : undefined,
     };
-    checkUpdates();
-  }, []);
 
-  const platformData = (FEATURE_MAP as any)[activePlatform];
-  
-  const filteredTools = platformData.tools.filter((tool: any) => {
-    const matchSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase())
-      || tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchProtocol = activeProtocol === 'all' || tool.protocol === activeProtocol;
-    return matchSearch && matchProtocol;
-  });
+    return NAVIGATION_ITEMS.map((item) => ({
+      ...item,
+      badge: dynamicBadges[item.id] ?? item.badge,
+    }));
+  }, [devices.length, updateInfo]);
 
-  const protocols = ['all', ...new Set(platformData.tools.map((t: any) => t.protocol)) as Set<string>];
+  const metricCards = useMemo<MetricCard[]>(() => {
+    const activeWorkspaceRemaps = FEATURE_SUMMARY.workspaceCounts[activeWorkspace] || FEATURE_SUMMARY.totalFeatures;
 
-  const handleRunLogs = (logs: string[]) => {
-    setConsoleLines(prev => [...prev, ...logs]);
+    return [
+      {
+        label: 'Live devices',
+        value: String(devices.length),
+        meta: primaryDevice ? primaryDevice.model : 'USB watcher active',
+      },
+      {
+        label: 'Connection state',
+        value: humanizeConnectionState(connectionState),
+        meta: error || primaryDevice?.mode || 'Waiting for link',
+      },
+      {
+        label: 'Mapped features',
+        value: String(activeWorkspaceRemaps),
+        meta:
+          activeWorkspace === 'feature-remap'
+            ? `${FEATURE_SUMMARY.totalBrands} imported brand catalogs`
+            : `${WORKSPACE_META[activeWorkspace].label} target set`,
+      },
+      {
+        label: 'Updates',
+        value: updateInfo ? `v${updateInfo.version}` : humanizeUpdateStatus(updateStatus),
+        meta: updateMessage,
+      },
+    ];
+  }, [activeWorkspace, connectionState, devices.length, error, primaryDevice, updateInfo, updateMessage, updateStatus]);
+
+  const handleOpenWorkspace = useCallback((workspaceId: WorkspaceId, feature: RemappedFeature) => {
+    appendConsole(
+      `[remap] ${feature.brand} • ${feature.label} → ${WORKSPACE_META[workspaceId].label}${feature.commandHint ? ` (${feature.commandHint})` : ''}`,
+    );
+    setActiveWorkspace(workspaceId);
+  }, [appendConsole]);
+
+  const workspaceMeta = WORKSPACE_META[activeWorkspace];
+
+  const renderWorkspace = () => {
+    switch (activeWorkspace) {
+      case 'control-center':
+        return (
+          <DashboardPage
+            platform={platform}
+            connectionState={connectionState}
+            error={error}
+            device={primaryDevice}
+            onRefresh={refresh}
+          />
+        );
+      case 'feature-remap':
+        return <FeatureRemapStudio onOpenWorkspace={handleOpenWorkspace} />;
+      case 'adb-bridge':
+        return <AdbPage />;
+      case 'wireless-adb':
+        return <WifiAdbScreen />;
+      case 'firmware-lab':
+        return <RomManager />;
+      case 'mtk-brom':
+        return <MtkBromPage />;
+      case 'qualcomm-edl':
+        return <EdlPage />;
+      case 'samsung-odin':
+        return <SamsungPage />;
+      case 'signal-bypass':
+        return <SignalBypassFlow onClose={() => setActiveWorkspace('control-center')} />;
+      case 'history':
+        return <HistoryScreen />;
+      case 'settings':
+        return (
+          <SettingsPage
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+            onCheckForUpdates={handleCheckForUpdates}
+            updateStatus={updateStatus}
+            updateInfo={updateInfo}
+            updateMessage={updateMessage}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -73,168 +310,56 @@ export function MainLayout() {
       <DeviceStatusBar />
       
       <div className="app-body">
-        <Sidebar active={activePlatform} onSelect={(id) => {
-          setActivePlatform(id);
-          setActiveProtocol('all');
-        }} />
+        <Sidebar
+          active={activeWorkspace}
+          items={navigationItems}
+          connectedCount={devices.length}
+          featureCount={FEATURE_SUMMARY.totalFeatures}
+          onSelect={setActiveWorkspace}
+        />
         
         <main className="main-content">
-          {activePlatform === 'history' ? (
-            <HistoryScreen />
-          ) : activePlatform === 'settings' ? (
-            <div className="p-8">
-              <h1 className="text-2xl font-bold mb-4">Settings</h1>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 glass-card rounded-3xl border border-white/10">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span className="p-2 bg-indigo-500/20 rounded-lg">✨</span> System Update
-                  </h3>
-                  {updateInfo ? (
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm text-gray-400">Current: {updateInfo.current_version}</span>
-                            <span className="text-sm text-gray-400">Latest: {updateInfo.latest_version}</span>
-                        </div>
-                        {updateInfo.update_available ? (
-                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                                <p className="text-green-400 text-sm font-bold">🚀 New version available!</p>
-                                <button 
-                                    onClick={() => window.open(updateInfo.download_url)}
-                                    className="mt-3 px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-xl transition-all"
-                                >
-                                    Download Now
-                                </button>
-                            </div>
-                        ) : (
-                            <p className="text-xs text-gray-500 italic">DeepEye is up to date.</p>
-                        )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 animate-pulse">Checking for updates...</p>
-                  )}
+          <div className="main-scroll-region">
+            <div className="workspace-shell">
+              <section className="workspace-header glass-card" style={{ '--workspace-accent': workspaceMeta.color } as CSSProperties}>
+                <div className="workspace-header__copy">
+                  <span className="workspace-eyebrow">{workspaceMeta.eyebrow}</span>
+                  <h1 className="workspace-title">
+                    <span className="workspace-title__icon" aria-hidden="true">{workspaceMeta.icon}</span>
+                    {workspaceMeta.label}
+                  </h1>
+                  <p className="workspace-description">{workspaceMeta.description}</p>
                 </div>
-                
-                <div className="p-6 glass-card rounded-3xl border border-white/10">
-                  <h3 className="text-lg font-bold mb-4">Data Management</h3>
-                  <p className="text-sm text-gray-400 mb-4">v1.1.0 Persistence Layer Active ✅</p>
-                  <p className="text-xs text-gray-500 italic">Path: ~/.deepeye/settings.json</p>
+
+                <div className="workspace-header__status">
+                  <div className={`workspace-status workspace-status--${connectionState}`}>
+                    {humanizeConnectionState(connectionState)}
+                  </div>
+                  <div className="workspace-status__meta">
+                    {primaryDevice
+                      ? `${primaryDevice.model} · ${primaryDevice.mode} · ${primaryDevice.source}`
+                      : error || 'No device linked'}
+                  </div>
                 </div>
-              </div>
+              </section>
+
+              <section className="workspace-metric-grid">
+                {metricCards.map((metric) => (
+                  <article key={metric.label} className="workspace-metric-card glass-card">
+                    <span className="workspace-metric-card__label">{metric.label}</span>
+                    <strong className="workspace-metric-card__value">{metric.value}</strong>
+                    <span className="workspace-metric-card__meta">{metric.meta}</span>
+                  </article>
+                ))}
+              </section>
+
+              <section className="workspace-content">
+                {renderWorkspace()}
+              </section>
             </div>
-          ) : (
-            <>
-              {selectedTool && selectedTool.id === 'wireless_adb' ? (
-                 <div className="p-2">
-                   <button 
-                     onClick={() => setSelectedTool(null)}
-                     className="mb-4 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white"
-                   >
-                     ← Back to Tools
-                   </button>
-                   <WifiAdbScreen />
-                 </div>
-              ) : selectedTool && selectedTool.id.includes('info') ? (
-                  <div className="p-2">
-                     <button 
-                       onClick={() => setSelectedTool(null)}
-                       className="mb-4 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white"
-                     >
-                       ← Back to Tools
-                     </button>
-                     {deviceInfo ? (
-                        <DeviceInfoDashboard info={deviceInfo} />
-                     ) : (
-                        <div className="p-12 text-center text-gray-500 animate-pulse">Fetching detailed device metrics...</div>
-                     )}
-                   </div>
-              ) : (
-                <>
-                  {/* Platform Header */}
-              <div className="platform-header"
-                style={{ borderColor: platformData.color }}>
-                <div className="header-info">
-                  <h1 className="platform-title">{platformData.label}</h1>
-                  <span className="tool-count">
-                    {platformData.tools.length} TOOLS AVAILABLE
-                  </span>
-                </div>
-                
-                <div className="search-wrapper">
-                  <input
-                    className="search-input"
-                    placeholder="Search tools..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                  />
-                  <span className="search-icon">🔍</span>
-                </div>
-              </div>
+          </div>
 
-              {/* Protocol Filters */}
-              <div className="filter-bar">
-                <div className="protocol-tabs">
-                  {protocols.map(p => (
-                    <button
-                      key={p}
-                      className={`proto-tab ${activeProtocol === p ? 'active' : ''}`}
-                      onClick={() => setActiveProtocol(p)}
-                    >
-                      {p.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tool Grid */}
-              <div className="tools-grid-container">
-                <div className="tools-grid">
-                  {filteredTools.map((tool: any) => (
-                    <ToolCard
-                      key={tool.id}
-                      tool={tool}
-                      platform={activePlatform}
-                      onRun={async (logs) => {
-                        handleRunLogs(logs);
-                        
-                        // v1.2.0 Branch: If info tool, fetch and show dashboard
-                        if (tool.id.includes('info')) {
-                             setSelectedTool(tool);
-                             try {
-                                const serialResult = await invoke<string>("run_binary", { bin: "adb", args: ["get-serialno"] });
-                                const serial: string = serialResult;
-                                const info = await invoke("adb_get_full_info", { serial: serial.trim() });
-                                setDeviceInfo(info);
-                             } catch (e) {
-                                handleRunLogs([`❌ Dashboard Error: ${e}`]);
-                             }
-                             return;
-                        }
-
-                        // v1.2.0 Branch: If Wireless ADB, switch view
-                        if (tool.id === 'wireless_adb') {
-                             setSelectedTool(tool);
-                             return;
-                        }
-
-                        // Record to History
-                        invoke("add_history_entry", {
-                          deviceName: "Connected Device",
-                          chipset: activePlatform.toUpperCase(),
-                          toolName: tool.name,
-                          result: logs.join('\n')
-                        }).catch(console.error);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Execution Console */}
-          <ExecutionConsole lines={consoleLines} />
-          </>
-          )}
+          <ExecutionConsole lines={consoleLines} onClear={clearConsole} title="DESKTOP OPERATIONS BUS" />
         </main>
       </div>
     </div>

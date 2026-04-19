@@ -3,18 +3,23 @@
   flex-direction: column;
   gap: 1.5rem;
   padding-bottom: 2rem;
+  min-width: 0;
 }
 
 .edl-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .edl-header-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+  flex: 1 1 320px;
 }
 
 .edl-title {
@@ -34,6 +39,15 @@
   color: var(--text-2);
   font-size: 0.875rem;
   margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.edl-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Status Badge */
@@ -148,8 +162,12 @@
 /* Grid Layouts */
 .edl-grid {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   gap: 1.5rem;
+}
+
+.edl-grid > * {
+  min-width: 0;
 }
 
 .info-table {
@@ -182,13 +200,40 @@
 }
 
 .partition-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) minmax(120px, 0.55fr) repeat(3, auto) minmax(200px, 1fr) auto auto;
   gap: 1rem;
-  align-items: flex-end;
+  align-items: end;
   background: var(--surface-2);
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
+}
+
+.partition-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.partition-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-2);
+}
+
+.partition-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.partition-field--short {
+  min-width: 120px;
+}
+
+.partition-field--file {
+  min-width: 180px;
 }
 
 .terminal-box {
@@ -196,7 +241,7 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem;
-  height: 250px;
+  height: clamp(220px, 30vh, 280px);
   overflow-y: auto;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -368,4 +413,61 @@
   background: #312e81;
   color: #c7d2fe;
   box-shadow: 0 0 8px rgba(99,102,241,0.4);
+}
+
+@media (max-width: 1200px) {
+  .edl-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .partition-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .partition-field--name,
+  .partition-field--file {
+    grid-column: span 2;
+  }
+
+  .partition-bar > button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .edl-page {
+    gap: 1rem;
+  }
+
+  .edl-header {
+    align-items: flex-start;
+  }
+
+  .edl-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .edl-title {
+    font-size: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .ops-grid,
+  .partition-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .partition-field--name,
+  .partition-field--file {
+    grid-column: span 1;
+  }
+
+  .partition-bar {
+    padding: 1rem;
+  }
+
+  .terminal-box {
+    height: 220px;
+  }
 }

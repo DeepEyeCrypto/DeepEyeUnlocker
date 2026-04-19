@@ -152,7 +152,7 @@ install_dependencies.bat   # Windows
 
 ### macOS Raw USB Access for MTK BROM / Qualcomm EDL
 
-- Desktop builds use `src-tauri/entitlements.plist` to request raw USB access.
+- Desktop builds use `src-tauri/Entitlements.plist` to request raw USB access.
 - If detection works only with elevated privileges during development, launch Tauri with:
 
 ```bash
@@ -160,6 +160,19 @@ sudo -E RUST_LOG=debug npm run tauri dev
 ```
 
 - If the locally built app bundle loses entitlements, re-sign it before raw USB testing.
+
+### macOS Release Installers (DMG + PKG)
+
+- Tauri v2 produces the `.app` and `.dmg` bundles directly.
+- DeepEyeUnlocker generates the `.pkg` installer from the built `.app` by running `pkgbuild` through `bash ./scripts/build_macos_pkg.sh`.
+- Local macOS installer build:
+
+```bash
+bash ./scripts/build_macos_pkg.sh
+```
+
+- GitHub release workflows now publish both architecture-specific `.dmg` and `.pkg` assets.
+- The PKG post-install hook creates `/Library/Application Support/DeepEyeUnlocker` and `/Library/Logs/DeepEyeUnlocker`, normalizes app bundle permissions, and reloads `com.deepeye.unlocker.usb-monitor.plist` automatically when that LaunchDaemon resource is shipped inside the app bundle.
 
 ### Windows WinUSB Driver Setup (Zadig)
 

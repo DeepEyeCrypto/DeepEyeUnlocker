@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: '--target universal-apple-darwin'
+            args: '--target universal-apple-darwin --bundles app,dmg'
           # - platform: ubuntu-22.04
           #   args: ''
 
@@ -26,7 +26,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -48,12 +48,21 @@ jobs:
       - name: Build Tauri app
         run: npx tauri build ${{ matrix.args }}
 
+      - name: Build macOS PKG installer
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ secrets.APPLE_INSTALLER_SIGNING_IDENTITY }}
+        run: |
+          chmod +x src-tauri/resources/macos/pkg/postinstall
+          bash ./scripts/build_macos_pkg.sh --skip-build --target universal-apple-darwin
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DeepEyeUnlocker-${{ matrix.platform }}
           path: |
             target/**/release/bundle/**/*.dmg
+            target/**/release/bundle/**/*.pkg
             target/**/release/bundle/**/*.deb
             target/**/release/bundle/**/*.AppImage
             target/**/release/bundle/**/*.exe

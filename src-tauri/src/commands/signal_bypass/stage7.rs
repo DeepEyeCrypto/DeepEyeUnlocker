@@ -125,6 +125,7 @@ fn luhn_check(imei: &str) -> (bool, u8) {
 }
 
 // ── TAC code → manufacturer/model hint ────────────
+#[allow(dead_code)]
 fn tac_to_manufacturer(tac: &str) -> (&'static str, &'static str) {
     // Returns (manufacturer, model_hint)
     // TAC first 2 digits = reporting body

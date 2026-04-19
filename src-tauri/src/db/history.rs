@@ -2,7 +2,6 @@ use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::AppHandle;
 use chrono::Local;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

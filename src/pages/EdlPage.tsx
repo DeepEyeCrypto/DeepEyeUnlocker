@@ -127,7 +127,7 @@ export default function EdlPage() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="edl-header-actions">
           <button className="btn btn-secondary" onClick={() => setPipelineOpen(true)}>
             Open 20-Stage Pipeline
           </button>
@@ -227,29 +227,27 @@ export default function EdlPage() {
       </div>
 
       <div className="partition-bar">
-        <div style={{ flex: 1 }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '0.5rem' }}>
+        <div className="partition-field partition-field--name">
+          <label className="partition-label">
             Partition Name
           </label>
           <input 
             type="text" 
-            className="input glass-input" 
+            className="input glass-input partition-input" 
             placeholder="e.g. boot"
             value={partitionInput}
             onChange={(e) => setPartitionInput(e.target.value)}
-            style={{ width: '100%' }}
           />
         </div>
-        <div style={{ width: '150px' }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '0.5rem' }}>
+        <div className="partition-field partition-field--short">
+          <label className="partition-label">
             Sectors
           </label>
           <input 
             type="number" 
-            className="input glass-input" 
+            className="input glass-input partition-input" 
             value={sectorsInput}
             onChange={(e) => setSectorsInput(e.target.value)}
-            style={{ width: '100%' }}
           />
         </div>
         <button 
@@ -273,17 +271,16 @@ export default function EdlPage() {
         >
           Erase ✕
         </button>
-        <div style={{ width: '200px' }}>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '0.5rem' }}>
+        <div className="partition-field partition-field--file">
+          <label className="partition-label">
             Flash File
           </label>
           <input 
             type="text" 
-            className="input glass-input" 
+            className="input glass-input partition-input" 
             placeholder="Select file..."
             value={flashFile.split(/[\\/]/).pop() || ''}
             readOnly
-            style={{ width: '100%' }}
           />
         </div>
         <button 

@@ -26,6 +26,12 @@ export function ToolCard({ tool, platform, onRun }: ToolCardProps) {
   const [selectedFile, setSelectedFile] = useState<string>('');
 
   async function handleRun() {
+    // Signal Bypass Pipeline uses multi-stage flow, not direct invocation
+    if (tool.id === 'signal_bypass_pipeline') {
+      if (onRun) onRun([`⚡ ${tool.name} - Opening 10-stage pipeline...`]);
+      return;
+    }
+
     if (tool.id === 'ipsw_flash' && !selectedFile) {
       alert("Please select an IPSW file first.");
       return;

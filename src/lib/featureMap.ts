@@ -233,6 +233,16 @@ export const FEATURE_MAP: FeatureMapType = {
         status: "live",
         fn: "run_full_bypass",
         isPrimary: true
+      },
+      {
+        id: "signal_bypass_pipeline",
+        name: "Signal Bypass (A12+)",
+        description: "10-stage pipeline for A12+ signal restoration",
+        protocol: "USB",
+        chips: ["A12","A13","A14","A15","A16","A17","A18"],
+        status: "live",
+        fn: "signal_stage1_detect",
+        isPrimary: true
       }
     ]
   },

@@ -10,6 +10,7 @@ pub struct UnisocConnection {
     handle: DeviceHandle<Context>,
     _ctx: Context,
     ep_out: u8,
+    #[allow(dead_code)]
     ep_in: u8,
 }
 

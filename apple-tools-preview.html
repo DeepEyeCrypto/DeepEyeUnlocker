@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepEyeUnlocker - Apple Tools Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(17, 24, 39, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            color: #fff;
+            font-size: 1.875rem;
+            font-weight: 700;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #9ca3af;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: #3b82f6;
+            color: #fff;
+        }
+        
+        .device-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .device-icon {
+            font-size: 2rem;
+        }
+        
+        .device-text h3 {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .device-text p {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .feature-card.primary {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .feature-card.primary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-card p {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge.live {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+        
+        .badge.multi {
+            background: rgba(147, 51, 234, 0.2);
+            color: #a855f7;
+            border: 1px solid rgba(147, 51, 234, 0.5);
+        }
+        
+        .feature-button {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .feature-button.default {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        
+        .feature-button.default:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+        
+        .feature-button.primary {
+            background: linear-gradient(135deg, #3b82f6, #9333ea);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .feature-button.primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+        
+        .star {
+            color: #fbbf24;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🔓 DeepEyeUnlocker</h1>
+            <div class="tabs">
+                <button class="tab">🤖 Android</button>
+                <button class="tab active">🍎 Apple</button>
+                <button class="tab">🔧 Tools</button>
+            </div>
+        </div>
+        
+        <div class="device-info">
+            <div class="device-icon">📱</div>
+            <div class="device-text">
+                <h3>iPhone 15 Connected</h3>
+                <p>UDID: 00008120-000924940A42201E | iOS 26.5 | A16 Bionic</p>
+            </div>
+        </div>
+        
+        <h2 style="color: #fff; margin-bottom: 1.5rem; font-size: 1.5rem;">🍎 Apple Tools</h2>
+        
+        <div class="features-grid">
+            <!-- iOS Device Info -->
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>iOS Device Info</h3>
+                <p>Get detailed device information including IMEI, serial, and storage</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">INFO</span>
+                </div>
+                <button class="feature-button default">GET INFO</button>
+            </div>
+            
+            <!-- ONE-CLICK BYPASS (PRIMARY) -->
+            <div class="feature-card primary">
+                <div class="feature-icon">🔓</div>
+                <h3>ONE-CLICK BYPASS<span class="star">⭐</span></h3>
+                <p>Automated iOS Info + Activation sequence</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">MULTI</span>
+                </div>
+                <button class="feature-button primary">🔓 ONE-CLICK BYPASS</button>
+            </div>
+            
+            <!-- Activation Check -->
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3>Activation Status</h3>
+                <p>Check device activation state and FMI status</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">CHECK</span>
+                </div>
+                <button class="feature-button default">CHECK STATUS</button>
+            </div>
+            
+            <!-- SHSH Blob Saver -->
+            <div class="feature-card">
+                <div class="feature-icon">💾</div>
+                <h3>SHSH Blob Saver</h3>
+                <p>Save SHSH2 blobs for iOS downgrades</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">TSS</span>
+                </div>
+                <button class="feature-button default">SAVE BLOBS</button>
+            </div>
+            
+            <!-- Force DFU -->
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Force DFU Mode</h3>
+                <p>Put device into DFU mode for advanced operations</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">DFU</span>
+                </div>
+                <button class="feature-button default">ENTER DFU</button>
+            </div>
+            
+            <!-- Passcode Remove -->
+            <div class="feature-card">
+                <div class="feature-icon">🔑</div>
+                <h3>Passcode Remove</h3>
+                <p>Remove device passcode (checkm8 devices only)</p>
+                <div class="feature-meta">
+                    <span class="badge live">✓ LIVE</span>
+                    <span class="badge multi">BYPASS</span>
+                </div>
+                <button class="feature-button default">REMOVE</button>
+            </div>
+        </div>
+        
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 1.25rem; margin-top: 2rem;">
+            <h3 style="color: #22c55e; margin-bottom: 0.5rem;">✅ ideviceactivation Installed</h3>
+            <p style="color: #9ca3af; font-size: 0.875rem;">
+                Tool Version: 1.1.1-28-g9ca1851 | Location: /usr/local/bin/ideviceactivation<br>
+                Status: Ready for activation bypass operations
+            </p>
+        </div>
+    </div>
+</body>
+</html>

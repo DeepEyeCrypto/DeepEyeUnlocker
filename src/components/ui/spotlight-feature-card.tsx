@@ -6,6 +6,7 @@ interface SpotlightFeatureCardProps {
   title: string;
   description: string;
   onClick?: () => void;
+  disabled?: boolean;
   glowColor?: 'blue' | 'purple' | 'green' | 'red' | 'orange';
   badge?: string;
   className?: string;
@@ -16,12 +17,19 @@ export function SpotlightFeatureCard({
   title,
   description,
   onClick,
+  disabled = false,
   glowColor = 'blue',
   badge,
   className = ''
 }: SpotlightFeatureCardProps) {
   return (
-    <div onClick={onClick} className={`cursor-pointer transition-transform hover:scale-[1.02] ${className}`}>
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-disabled={disabled}
+      className={`w-full text-left transition-transform ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:scale-[1.02]'} ${className}`}
+    >
       <GlowCard 
         glowColor={glowColor}
         customSize={true}
@@ -47,6 +55,6 @@ export function SpotlightFeatureCard({
           </div>
         </div>
       </GlowCard>
-    </div>
+    </button>
   );
 }

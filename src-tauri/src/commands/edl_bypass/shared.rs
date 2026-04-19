@@ -25,12 +25,14 @@ pub fn run_cmd(bin: &str, args: &[&str]) -> (bool, String) {
     }
 }
 
+#[allow(dead_code)]
 pub fn run_adb(serial: &str, args: &[&str]) -> (bool, String) {
     let mut full = vec!["-s", serial];
     full.extend_from_slice(args);
     run_cmd("adb", &full)
 }
 
+#[allow(dead_code)]
 pub fn adb_shell(serial: &str, cmd: &str) -> String {
     run_adb(serial, &["shell", cmd]).1
 }

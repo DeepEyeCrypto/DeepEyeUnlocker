@@ -3,9 +3,11 @@ import './ExecutionConsole.css';
 
 interface ExecutionConsoleProps {
   lines: string[];
+  onClear?: () => void;
+  title?: string;
 }
 
-export function ExecutionConsole({ lines }: ExecutionConsoleProps) {
+export function ExecutionConsole({ lines, onClear, title = 'GLOBAL EXECUTION LOG' }: ExecutionConsoleProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,8 +19,8 @@ export function ExecutionConsole({ lines }: ExecutionConsoleProps) {
   return (
     <div className="execution-console">
       <div className="console-header">
-        <span className="console-title">GLOBAL EXECUTION LOG</span>
-        <button className="clear-btn" onClick={() => {}}>Clear</button>
+        <span className="console-title">{title}</span>
+        <button className="clear-btn" onClick={onClear} disabled={!onClear || lines.length === 0}>Clear</button>
       </div>
       <div className="console-body" ref={scrollRef}>
         {lines.length === 0 ? (
@@ -30,7 +32,7 @@ export function ExecutionConsole({ lines }: ExecutionConsoleProps) {
               line.includes('✅') ? 'success' : 
               line.includes('⚠️') ? 'warn' : ''
             }`}>
-              <span className="line-prefix">[{new Date().toLocaleTimeString()}]</span> {line}
+              {line}
             </div>
           ))
         )}

@@ -16,6 +16,7 @@ mod restore;
 mod shsh;
 mod sideloader;
 mod ssh_tunnel;
+mod tool_exec;
 mod toolbox;
 mod usb;
 mod db;
@@ -182,7 +183,8 @@ pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
 
 use shsh::{
     check_signed_versions, futurerestore, futurerestore_no_baseband, get_board_config, get_ecid,
-    list_saved_shsh, save_shsh_all_signed, save_shsh_specific, save_shsh_with_generator,
+    get_shsh_device_info, list_saved_shsh, save_shsh_all_signed, save_shsh_specific,
+    save_shsh_with_generator,
 };
 
 use diagnostics::{
@@ -367,6 +369,7 @@ pub fn run() {
             usb_debug_list_devices,
             get_ecid,
             get_board_config,
+            get_shsh_device_info,
             save_shsh_all_signed,
             save_shsh_specific,
             save_shsh_with_generator,

@@ -1,5 +1,4 @@
 use tauri::{command, AppHandle};
-use serde::{Serialize, Deserialize};
 use super::rebuild::run_binary;
 
 #[command]

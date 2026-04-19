@@ -1,0 +1,1141 @@
+[
+  {
+    "brand": "Xiaomi",
+    "groups": [
+      {
+        "id": "xiaomi_unlock",
+        "title": "UNLOCK OPERATIONS",
+        "features": [
+          {
+            "id": "xi_unlock_bl",
+            "icon": "\ud83d\udd13",
+            "label": "Unlock Bootloader",
+            "tier": 1,
+            "modes": [
+              "FASTBOOT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Official/unofficial BL unlock via fastboot oem unlock",
+            "successLog": "Bootloader unlocked successfully",
+            "warningMsg": "Wipes userdata partition"
+          },
+          {
+            "id": "xi_relock_bl",
+            "icon": "\ud83d\udd12",
+            "label": "Relock Bootloader",
+            "tier": 1,
+            "modes": [
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Relock BL via fastboot oem lock",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_micloud_remove",
+            "icon": "\u2601\ufe0f",
+            "label": "Mi Cloud Remove",
+            "tier": 2,
+            "modes": [
+              "EDL",
+              "TESTPOINT",
+              "FASTBOOT"
+            ],
+            "chipsets": [
+              "QUALCOMM",
+              "MTK"
+            ],
+            "risk": "MODERATE",
+            "requiresAuth": true,
+            "description": "Remove Mi Account lock via EDL firehose / fastboot flash",
+            "successLog": "Mi Cloud account removed",
+            "warningMsg": "Requires EDL or TestPoint on secured devices"
+          },
+          {
+            "id": "xi_micloud_check",
+            "icon": "\ud83d\udd0d",
+            "label": "Mi Cloud Check",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Check Mi Account lock status ON/OFF/LOST via server",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_frp_erase",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "Erase FRP",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "EDL",
+              "FASTBOOT",
+              "TESTPOINT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Wipe FRP partition \u2014 Google account bypass",
+            "successLog": "FRP partition erased",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_auth_bypass",
+            "icon": "\u26a1",
+            "label": "Auth Bypass (SLAH)",
+            "tier": 3,
+            "modes": [
+              "EDL",
+              "TESTPOINT"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "CRITICAL",
+            "requiresAuth": true,
+            "description": "Sahara/Firehose auth bypass for locked EDL devices",
+            "successLog": "",
+            "warningMsg": "\u26a0\ufe0f High risk \u2014 wrong loader = softbrick"
+          }
+        ]
+      },
+      {
+        "id": "xiaomi_firmware",
+        "title": "FIRMWARE & FLASH",
+        "features": [
+          {
+            "id": "xi_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL",
+              "TESTPOINT"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Flash stock MIUI/HyperOS via fastboot or firehose",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_read_fw",
+            "icon": "\ud83d\udcd6",
+            "label": "Read / Backup FW",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "EDL",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Read and backup firmware partitions",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_fastboot_edl",
+            "icon": "\u26a0\ufe0f",
+            "label": "Force EDL Mode",
+            "tier": 3,
+            "modes": [
+              "FASTBOOT",
+              "ADB"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Force reboot to EDL 9008 from fastboot/ADB",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_partition",
+            "icon": "\ud83d\uddc2\ufe0f",
+            "label": "Partition Manager",
+            "tier": 3,
+            "modes": [
+              "EDL",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "CRITICAL",
+            "requiresAuth": false,
+            "description": "Read/write/erase individual partitions",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      },
+      {
+        "id": "xiaomi_repair",
+        "title": "REPAIR & DIAGNOSTICS",
+        "features": [
+          {
+            "id": "xi_imei_repair",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "EDL",
+              "ADB"
+            ],
+            "chipsets": [
+              "QUALCOMM",
+              "MTK"
+            ],
+            "risk": "MODERATE",
+            "requiresAuth": true,
+            "description": "Read/write IMEI via QCN or NV items",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_nv_backup",
+            "icon": "\ud83d\udcbf",
+            "label": "NV Backup/Restore",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "EDL"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Read/write QCN NV file (IMEI, calibration data)",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_device_info",
+            "icon": "\ud83d\udcca",
+            "label": "Device Info Dump",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT",
+              "DIAG"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Dump device info: model, SN, IMEI, BL status",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_demo_retail",
+            "icon": "\ud83c\udfea",
+            "label": "Demo to Retail",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Convert demo unit ROM to retail/global",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_diag_enable",
+            "icon": "\ud83e\ude7a",
+            "label": "Enable DIAG Mode",
+            "tier": 3,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "Enable Qualcomm diagnostic port for IMEI/NV ops",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      },
+      {
+        "id": "xiaomi_screen",
+        "title": "SCREEN & ACCOUNT LOCK",
+        "features": [
+          {
+            "id": "xi_screen_lock",
+            "icon": "\ud83d\udd11",
+            "label": "Remove Screen Lock",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "EDL",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "Wipe lockscreen PIN/pattern via ADB or fastboot",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "xi_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Full factory reset via fastboot -w or ADB",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "brand": "Samsung",
+    "groups": [
+      {
+        "id": "sam_frp",
+        "title": "FRP & ACCOUNT",
+        "features": [
+          {
+            "id": "sam_frp_adb",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "FRP Remove (ADB)",
+            "tier": 1,
+            "modes": [
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Remove FRP via ADB sideload or Settings exploit",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_frp_odin",
+            "icon": "\ud83d\udd25",
+            "label": "FRP Remove (Odin)",
+            "tier": 2,
+            "modes": [
+              "ODIN"
+            ],
+            "chipsets": [
+              "EXYNOS",
+              "QUALCOMM"
+            ],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Flash FRP-clear package via Odin/Heimdall protocol",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_frp_testpoint",
+            "icon": "\u26a1",
+            "label": "FRP (TestPoint)",
+            "tier": 3,
+            "modes": [
+              "TESTPOINT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": true,
+            "description": "Hardware testpoint to bypass SLA auth + FRP erase",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_samsung_account",
+            "icon": "\ud83d\udc64",
+            "label": "Samsung Account Remove",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "ODIN",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "Remove Samsung/Find My Mobile account lock",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      },
+      {
+        "id": "sam_flash",
+        "title": "FLASH & FIRMWARE",
+        "features": [
+          {
+            "id": "sam_odin_flash",
+            "icon": "\u2699\ufe0f",
+            "label": "Odin Flash",
+            "tier": 2,
+            "modes": [
+              "ODIN"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Flash via Samsung Odin/Heimdall download mode",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "ODIN",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Flash full firmware package via Odin protocol",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_read_fw",
+            "icon": "\ud83d\udcd6",
+            "label": "Read Firmware",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "ODIN"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Read firmware info and backup partitions",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      },
+      {
+        "id": "sam_repair",
+        "title": "REPAIR & SECURITY",
+        "features": [
+          {
+            "id": "sam_imei_repair",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "Repair/write IMEI via EFS partition or DIAG",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_efs_backup",
+            "icon": "\ud83d\udee1\ufe0f",
+            "label": "EFS Backup/Restore",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "DIAG",
+              "ISP"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Backup and restore EFS partition (IMEI storage)",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_screen_lock",
+            "icon": "\ud83d\udd11",
+            "label": "Remove Screen Lock",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "ODIN"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "Wipe lock via ADB or Odin flash",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_network_unlock",
+            "icon": "\ud83d\udcf6",
+            "label": "Network Unlock",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "DIAG"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "Remove carrier SIM lock via server code",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "sam_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "ODIN"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Full wipe via ADB or Odin",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          },
+          {
+            "id": "sam_da_key",
+            "icon": "\ud83d\udd10",
+            "label": "DA Public Key Bypass",
+            "tier": 3,
+            "modes": [
+              "TESTPOINT",
+              "BROM"
+            ],
+            "chipsets": [
+              "MTK"
+            ],
+            "risk": "CRITICAL",
+            "requiresAuth": true,
+            "description": "Bypass MTK DA Public Key check (Samsung MTK models)",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "brand": "Oppo",
+    "groups": [
+      {
+        "id": "oppo_unlock",
+        "title": "UNLOCK OPERATIONS",
+        "features": [
+          {
+            "id": "oppo_frp_adb",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "FRP Remove (ADB)",
+            "tier": 1,
+            "modes": [
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Remove FRP via ADB exploit or settings bypass",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_frp_meta",
+            "icon": "\u26a1",
+            "label": "FRP Remove (META)",
+            "tier": 2,
+            "modes": [
+              "META",
+              "PRELOADER"
+            ],
+            "chipsets": [
+              "MTK"
+            ],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "MTK META mode factory reset to bypass FRP",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_oppo_id",
+            "icon": "\ud83d\udc64",
+            "label": "OPPO ID Remove",
+            "tier": 2,
+            "modes": [
+              "EDL",
+              "TESTPOINT",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": true,
+            "description": "Remove OPPO/Realme cloud account lock",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_bl_unlock",
+            "icon": "\ud83d\udd13",
+            "label": "Bootloader Unlock",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Unlock BL via deep test mode or fastboot",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_pattern",
+            "icon": "\ud83d\udd11",
+            "label": "Screen Lock Remove",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "PRELOADER",
+              "META"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "Remove pattern/PIN via ADB or MTK META",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "META",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          }
+        ]
+      },
+      {
+        "id": "oppo_firmware",
+        "title": "FIRMWARE & REPAIR",
+        "features": [
+          {
+            "id": "oppo_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL",
+              "BROM"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Flash ColorOS firmware via ofp/fastboot/scatter",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_read_fw",
+            "icon": "\ud83d\udcd6",
+            "label": "Read Backup",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Backup firmware and critical partitions",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_imei_repair",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "META",
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "Repair IMEI via ADB AT commands or META mode",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "oppo_sn8_edl",
+            "icon": "\u26a0\ufe0f",
+            "label": "SD8Gen2 EDL Mode",
+            "tier": 3,
+            "modes": [
+              "EDL",
+              "TESTPOINT"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "CRITICAL",
+            "requiresAuth": true,
+            "description": "Snapdragon 8 Gen 2 EDL support \u2014 latest OPPO/Realme",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "brand": "Vivo",
+    "groups": [
+      {
+        "id": "vivo_ops",
+        "title": "FRP & UNLOCK",
+        "features": [
+          {
+            "id": "vivo_frp",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "FRP Remove",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "META",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Remove Google FRP via ADB or META mode",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "vivo_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "META",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "Full wipe via META mode or ADB",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          },
+          {
+            "id": "vivo_vivo_id",
+            "icon": "\ud83d\udc64",
+            "label": "Vivo Account Remove",
+            "tier": 2,
+            "modes": [
+              "EDL",
+              "TESTPOINT"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": true,
+            "description": "Remove Vivo account/cloud lock",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "vivo_pattern",
+            "icon": "\ud83d\udd11",
+            "label": "Screen Lock Remove",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "META"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      },
+      {
+        "id": "vivo_firmware",
+        "title": "FIRMWARE & REPAIR",
+        "features": [
+          {
+            "id": "vivo_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL",
+              "BROM"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "vivo_imei",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "brand": "Realme",
+    "groups": [
+      {
+        "id": "realme_ops",
+        "title": "FRP & UNLOCK",
+        "features": [
+          {
+            "id": "rm_frp_adb",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "FRP Remove (ADB)",
+            "tier": 1,
+            "modes": [
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_frp_meta",
+            "icon": "\u26a1",
+            "label": "FRP Remove (META/Preloader)",
+            "tier": 2,
+            "modes": [
+              "PRELOADER",
+              "META"
+            ],
+            "chipsets": [
+              "MTK"
+            ],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "MTK Preloader V3 auth bypass for newer Realme",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_realme_id",
+            "icon": "\ud83d\udc64",
+            "label": "Realme Account Remove",
+            "tier": 2,
+            "modes": [
+              "EDL",
+              "TESTPOINT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_bl_unlock",
+            "icon": "\ud83d\udd13",
+            "label": "Bootloader Unlock",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "META",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          }
+        ]
+      },
+      {
+        "id": "realme_fw",
+        "title": "FIRMWARE",
+        "features": [
+          {
+            "id": "rm_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "BROM",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_imei",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "META"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "rm_sla_bypass",
+            "icon": "\u26a0\ufe0f",
+            "label": "SLA Auth Bypass",
+            "tier": 3,
+            "modes": [
+              "BROM",
+              "TESTPOINT"
+            ],
+            "chipsets": [
+              "MTK"
+            ],
+            "risk": "CRITICAL",
+            "requiresAuth": true,
+            "description": "SLA V3/V5 auth bypass for secured MTK Realme/Tecno",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "brand": "OnePlus",
+    "groups": [
+      {
+        "id": "op_ops",
+        "title": "UNLOCK & FRP",
+        "features": [
+          {
+            "id": "op_frp",
+            "icon": "\ud83d\uddd1\ufe0f",
+            "label": "FRP Remove",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "op_bl_unlock",
+            "icon": "\ud83d\udd13",
+            "label": "Bootloader Unlock",
+            "tier": 1,
+            "modes": [
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "fastboot oem unlock \u2014 officially supported",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "op_screen_lock",
+            "icon": "\ud83d\udd11",
+            "label": "Screen Lock Remove",
+            "tier": 2,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "MODERATE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "op_factory_rst",
+            "icon": "\ud83c\udfed",
+            "label": "Factory Reset",
+            "tier": 1,
+            "modes": [
+              "ADB",
+              "FASTBOOT"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": "Wipes all user data"
+          }
+        ]
+      },
+      {
+        "id": "op_fw",
+        "title": "FIRMWARE & REPAIR",
+        "features": [
+          {
+            "id": "op_write_fw",
+            "icon": "\ud83d\udcbe",
+            "label": "Write Firmware",
+            "tier": 2,
+            "modes": [
+              "FASTBOOT",
+              "EDL"
+            ],
+            "chipsets": [],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "op_imei",
+            "icon": "\ud83d\udce1",
+            "label": "IMEI Repair",
+            "tier": 2,
+            "modes": [
+              "DIAG",
+              "ADB"
+            ],
+            "chipsets": [],
+            "risk": "SAFE",
+            "requiresAuth": true,
+            "description": "",
+            "successLog": "",
+            "warningMsg": null
+          },
+          {
+            "id": "op_edl_force",
+            "icon": "\u26a0\ufe0f",
+            "label": "Force EDL Mode",
+            "tier": 3,
+            "modes": [
+              "FASTBOOT",
+              "ADB"
+            ],
+            "chipsets": [
+              "QUALCOMM"
+            ],
+            "risk": "HIGH",
+            "requiresAuth": false,
+            "description": "Force reboot into Qualcomm 9008 EDL port",
+            "successLog": "",
+            "warningMsg": null
+          }
+        ]
+      }
+    ]
+  }
+]

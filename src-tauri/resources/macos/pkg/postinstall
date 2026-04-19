@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+app_path="/Applications/DeepEyeUnlocker.app"
+app_support_dir="/Library/Application Support/DeepEyeUnlocker"
+log_dir="/Library/Logs/DeepEyeUnlocker"
+launch_daemon_id="com.deepeye.unlocker.usb-monitor"
+bundled_launch_daemon="${app_path}/Contents/Resources/resources/macos/${launch_daemon_id}.plist"
+system_launch_daemon="/Library/LaunchDaemons/${launch_daemon_id}.plist"
+
+mkdir -p "$app_support_dir" "$log_dir"
+chmod 755 "$app_support_dir" "$log_dir"
+
+if [ -d "$app_path" ]; then
+  chmod -R u+rwX,go+rX "$app_path"
+
+  if [ -d "${app_path}/Contents/MacOS" ]; then
+    find "${app_path}/Contents/MacOS" -type f -exec chmod 755 {} \;
+  fi
+fi
+
+if [ -f "$bundled_launch_daemon" ]; then
+  install -o root -g wheel -m 644 "$bundled_launch_daemon" "$system_launch_daemon"
+  launchctl bootout "system/${launch_daemon_id}" >/dev/null 2>&1 || true
+  launchctl bootstrap system "$system_launch_daemon" >/dev/null 2>&1 || launchctl load -w "$system_launch_daemon" >/dev/null 2>&1 || true
+fi
+
+exit 0

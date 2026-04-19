@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use tauri::AppHandle;
 use tauri::Manager;
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DeviceHistoryEntry {
     pub id: String,
@@ -17,11 +18,13 @@ pub struct DeviceHistoryEntry {
     pub platform: String,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, Default)]
 struct HistoryStore {
     entries: Vec<DeviceHistoryEntry>,
 }
 
+#[allow(dead_code)]
 fn history_path(app: &AppHandle) -> Result<PathBuf, String> {
     let data_dir = app
         .path()
@@ -31,6 +34,7 @@ fn history_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(data_dir.join("device_history.json"))
 }
 
+#[allow(dead_code)]
 fn read_store(app: &AppHandle) -> Result<HistoryStore, String> {
     let path = history_path(app)?;
     if !path.exists() {
@@ -40,6 +44,7 @@ fn read_store(app: &AppHandle) -> Result<HistoryStore, String> {
     serde_json::from_str(&data).map_err(|e| format!("parse history error: {e}"))
 }
 
+#[allow(dead_code)]
 fn write_store(app: &AppHandle, store: &HistoryStore) -> Result<(), String> {
     let path = history_path(app)?;
     let json =
@@ -49,6 +54,7 @@ fn write_store(app: &AppHandle, store: &HistoryStore) -> Result<(), String> {
 
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub async fn history_add_entry(
     app: AppHandle,
     model: String,
@@ -90,6 +96,7 @@ pub async fn history_add_entry(
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 pub async fn history_get_entries(
     app: AppHandle,
     limit: Option<usize>,
@@ -102,6 +109,7 @@ pub async fn history_get_entries(
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 pub async fn history_clear(app: AppHandle) -> Result<String, String> {
     let store = HistoryStore::default();
     write_store(&app, &store)?;
@@ -109,6 +117,7 @@ pub async fn history_clear(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 pub async fn history_delete_entry(app: AppHandle, entry_id: String) -> Result<String, String> {
     let mut store = read_store(&app)?;
     let before = store.entries.len();
@@ -121,6 +130,7 @@ pub async fn history_delete_entry(app: AppHandle, entry_id: String) -> Result<St
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 pub async fn history_export_json(app: AppHandle) -> Result<String, String> {
     let store = read_store(&app)?;
     serde_json::to_string_pretty(&store.entries).map_err(|e| format!("export error: {e}"))

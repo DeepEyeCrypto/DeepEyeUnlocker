@@ -113,10 +113,6 @@ pub async fn signal_stage6_carrier(
     slog!("");
 
     let mut attempts: Vec<CarrierUnlockAttempt> = vec![];
-    let mut tried_lockdown = false;
-    let mut tried_bundle = false;
-    let mut tried_network = false;
-    let mut tried_activation = false;
 
     // ── 1. Pre-state snapshot ──────────────────────
     slog!("📸 Reading pre-bypass state...");
@@ -134,7 +130,6 @@ pub async fn signal_stage6_carrier(
     // ── 2. Method A: Activation reset ─────────────
     slog!("");
     slog!("🔑 Method A: Activation record reset...");
-    tried_activation = true;
 
     let (act_ok, act_out) = run_tool("ideviceactivation", &["activate", "-u", &udid]);
     attempts.push(CarrierUnlockAttempt {
@@ -154,7 +149,6 @@ pub async fn signal_stage6_carrier(
     // ── 3. Method B: Lockdown service reset ───────
     slog!("");
     slog!("🔓 Method B: Lockdown service reset...");
-    tried_lockdown = true;
 
     // Restart lockdownd via idevicediagnostics
     let (diag_ok, diag_out) = run_tool("idevicediagnostics", &["-u", &udid, "restart"]);
@@ -183,7 +177,6 @@ pub async fn signal_stage6_carrier(
     // ── 4. Method C: Carrier bundle reset ─────────
     slog!("");
     slog!("📦 Method C: Carrier bundle reset...");
-    tried_bundle = true;
 
     // Read current carrier bundle version
     let bundle_ver = iinfo(&udid, "CarrierBundleVersion");
@@ -206,7 +199,6 @@ pub async fn signal_stage6_carrier(
     // ── 5. Method D: Network service reset ────────
     slog!("");
     slog!("🌐 Method D: Network settings read...");
-    tried_network = true;
 
     // Read current network registration
     let current_mcc = iinfo(&udid, "CurrentMCC");
@@ -326,10 +318,10 @@ pub async fn signal_stage6_carrier(
         sim_status_after: sim_after,
         is_unlocked_after,
         phone_number_after: phone_after,
-        tried_lockdown_reset: tried_lockdown,
-        tried_carrier_bundle_reset: tried_bundle,
-        tried_network_reset: tried_network,
-        tried_activation_reset: tried_activation,
+        tried_lockdown_reset: true,
+        tried_carrier_bundle_reset: true,
+        tried_network_reset: true,
+        tried_activation_reset: true,
         unlock_achieved,
         stage_passed,
         stage_message,
