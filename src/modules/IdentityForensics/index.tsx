@@ -77,7 +77,7 @@ export const IdentityForensics: React.FC = () => {
             )}
 
             {identity && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 animate-in zoom-in duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 animate-in zoom-in duration-300">
                     {[
                         { label: "ECID (HEX)", val: identity.ecid, col: "text-blue-400" },
                         { label: "IMEI", val: identity.imei, col: "text-white" },

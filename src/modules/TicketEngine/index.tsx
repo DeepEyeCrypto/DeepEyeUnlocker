@@ -64,7 +64,7 @@ export const TicketEngine: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-right-4 duration-500">
                     <div className="space-y-4">
                         <div className="text-[10px] font-bold text-gray-500 border-b border-white/10 pb-2">PRIMARY RECORD IDENTITY</div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <div className="text-[8px] text-gray-600 uppercase">State</div>
                                 <div className="text-xs font-bold">{record.activation_state}</div>

@@ -1,12 +1,12 @@
 .device-status-bar {
-  min-height: 48px;
+  min-height: var(--header-height);
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 10px 24px;
+  padding: 8px var(--gap-lg);
   position: relative;
   z-index: 100;
   border-bottom: 1px solid var(--border);
@@ -101,12 +101,13 @@
 
 @media (max-width: 720px) {
   .device-status-bar {
-    padding: 10px 16px;
-    align-items: flex-start;
+    min-height: var(--header-height);
+    padding: 8px var(--gap-md);
+    align-items: center;
   }
 
   .status-meta {
     width: 100%;
-    margin-left: 22px;
+    margin-left: 0;
   }
 }

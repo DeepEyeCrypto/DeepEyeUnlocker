@@ -101,7 +101,7 @@ export const ScreenTimeCrack: React.FC = () => {
                 </div>
             )}
 
-            <div className="bg-black/60 rounded-xl p-4 h-48 overflow-y-auto border border-white/5 space-y-1 mb-6">
+            <div className="bg-black/60 rounded-xl p-4 min-h-48 max-h-72 overflow-y-auto border border-white/5 space-y-1 mb-6">
                 {logs.map((log, i) => (
                     <div key={i} className={log.includes('ERROR') ? 'text-red-400' : 'text-gray-400'}>
                         {log}

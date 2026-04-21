@@ -59,8 +59,31 @@ function humanizeUpdateStatus(status: UpdateStatus): string {
   }
 }
 
+type LayoutZone = 'mobile' | 'tablet' | 'desktop';
+
+function get_layout_zone(): LayoutZone {
+  if (typeof window === 'undefined') {
+    return 'desktop';
+  }
+
+  if (window.innerWidth < 768) {
+    return 'mobile';
+  }
+
+  if (window.innerWidth < 1024) {
+    return 'tablet';
+  }
+
+  return 'desktop';
+}
+
+function get_default_sidebar_collapsed(): boolean {
+  return get_layout_zone() === 'tablet';
+}
+
 export function MainLayout() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('control-center');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => get_default_sidebar_collapsed());
   const [platform, setPlatform] = useState<Platform | null>(getPlatform());
   const [settings, setSettings] = useState<AppSettings>(() => loadAppSettings());
   const [consoleLines, setConsoleLines] = useState<string[]>([
@@ -70,6 +93,7 @@ export function MainLayout() {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [updateMessage, setUpdateMessage] = useState('Update channel idle.');
   const deviceLogIndexRef = useRef(0);
+  const layoutZoneRef = useRef<LayoutZone>(get_layout_zone());
 
   const {
     devices,
@@ -137,6 +161,30 @@ export function MainLayout() {
     void initPlatform()
       .then((detectedPlatform) => setPlatform(detectedPlatform))
       .catch(() => setPlatform(getPlatform()));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const sync_layout_zone = () => {
+      const next_zone = get_layout_zone();
+
+      if (next_zone === layoutZoneRef.current) {
+        return;
+      }
+
+      layoutZoneRef.current = next_zone;
+      setSidebarCollapsed(next_zone === 'tablet');
+    };
+
+    window.addEventListener('resize', sync_layout_zone);
+    sync_layout_zone();
+
+    return () => {
+      window.removeEventListener('resize', sync_layout_zone);
+    };
   }, []);
 
   useEffect(() => {
@@ -258,6 +306,13 @@ export function MainLayout() {
   }, [appendConsole]);
 
   const workspaceMeta = WORKSPACE_META[activeWorkspace];
+  const appBodyStyle = useMemo<CSSProperties>(
+    () =>
+      ({
+        '--sidebar-current-width': sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)',
+      }) as CSSProperties,
+    [sidebarCollapsed],
+  );
 
   const renderWorkspace = () => {
     switch (activeWorkspace) {
@@ -306,16 +361,18 @@ export function MainLayout() {
   };
 
   return (
-    <div className="app-layout">
+    <div className="app-layout main-layout">
       <DeviceStatusBar />
       
-      <div className="app-body">
+      <div className="app-body" style={appBodyStyle}>
         <Sidebar
           active={activeWorkspace}
+          collapsed={sidebarCollapsed}
           items={navigationItems}
           connectedCount={devices.length}
           featureCount={FEATURE_SUMMARY.totalFeatures}
           onSelect={setActiveWorkspace}
+          onToggleCollapsed={() => setSidebarCollapsed((previous) => !previous)}
         />
         
         <main className="main-content">
@@ -343,9 +400,9 @@ export function MainLayout() {
                 </div>
               </section>
 
-              <section className="workspace-metric-grid">
+              <section className="workspace-metric-grid metrics-row">
                 {metricCards.map((metric) => (
-                  <article key={metric.label} className="workspace-metric-card glass-card">
+                  <article key={metric.label} className="workspace-metric-card metric-card glass-card">
                     <span className="workspace-metric-card__label">{metric.label}</span>
                     <strong className="workspace-metric-card__value">{metric.value}</strong>
                     <span className="workspace-metric-card__meta">{metric.meta}</span>
@@ -358,9 +415,9 @@ export function MainLayout() {
               </section>
             </div>
           </div>
-
-          <ExecutionConsole lines={consoleLines} onClear={clearConsole} title="DESKTOP OPERATIONS BUS" />
         </main>
+
+        <ExecutionConsole lines={consoleLines} onClear={clearConsole} title="DESKTOP OPERATIONS BUS" />
       </div>
     </div>
   );

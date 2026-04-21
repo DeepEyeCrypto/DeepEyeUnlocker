@@ -138,7 +138,7 @@ export default function EdlPage() {
       </div>
 
       {/* EDL Pipeline - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="tools-grid" style={{ marginBottom: '1.5rem' }}>
         <SpotlightFeatureCard
           icon={<Zap className="w-6 h-6 text-cyan-400" />}
           title="Step 1: Detect Device"

@@ -155,16 +155,16 @@ export default function DashboardPage({
     <div className="page">
       <div className="row-between">
         <h2 className="page-title">Dashboard</h2>
-        <div className="tab-row" role="tablist" aria-label="Platform tabs">
-          <button className={`btn btn-sm ${tab === "android" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("android")}>Android</button>
-          <button className={`btn btn-sm ${tab === "apple" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("apple")}>Apple</button>
-          <button className={`btn btn-sm ${tab === "tools" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("tools")}>Tools</button>
+        <div className="tab-row tab-bar" role="tablist" aria-label="Platform tabs">
+          <button className={`btn btn-sm tab-btn ${tab === "android" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("android")}>Android</button>
+          <button className={`btn btn-sm tab-btn ${tab === "apple" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("apple")}>Apple</button>
+          <button className={`btn btn-sm tab-btn ${tab === "tools" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("tools")}>Tools</button>
         </div>
       </div>
 
       <ProgressStep steps={steps} />
 
-      <div className="card glass glass-hover" style={{ padding: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div className="card glass glass-hover metric-card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '25%', color: '#3b82f6' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
@@ -208,7 +208,7 @@ export default function DashboardPage({
       />
 
       {/* Spotlight Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="tools-grid" style={{ marginBottom: '1.5rem' }}>
         <SpotlightFeatureCard
           icon={<Shield className="w-6 h-6 text-cyan-400" />}
           title="Check FMI"

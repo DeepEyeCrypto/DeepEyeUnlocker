@@ -70,10 +70,10 @@ export const DeepExtraction: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6 mb-10">
-                <div className="col-span-2 space-y-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
+                <div className="xl:col-span-2 space-y-4">
                     <div className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em]">Extraction Parameters</div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <input 
                             type="text" 
                             value={savePath}
@@ -101,7 +101,7 @@ export const DeepExtraction: React.FC = () => {
             </div>
 
             {report && (
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {report.results.map((res, i) => (
                         <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between group hover:bg-white/[0.08] transition-all">
                             <div className="flex items-center gap-4">
@@ -121,7 +121,7 @@ export const DeepExtraction: React.FC = () => {
 
             <div className="mt-auto">
                 <div className="text-[9px] text-gray-600 font-bold uppercase tracking-[0.2em] mb-3">Live Session Logs</div>
-                <div className="bg-black/80 rounded-2xl p-6 h-48 overflow-y-auto border border-white/5 space-y-2 custom-scrollbar shadow-inner">
+                <div className="bg-black/80 rounded-2xl p-6 min-h-48 max-h-80 overflow-y-auto border border-white/5 space-y-2 custom-scrollbar shadow-inner">
                     {logs.map((log, i) => (
                         <div key={i} className="flex gap-4 items-start">
                             <span className="text-gray-700 text-[8px] font-bold mt-0.5">[{i}]</span>

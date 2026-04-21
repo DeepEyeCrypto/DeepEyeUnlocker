@@ -84,7 +84,7 @@ export default function AdbPage() {
           <span className="adb-icon">📱</span>
           <h1>ADB DEVICES</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {lastScanned && (
             <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
               Last scan: {lastScanned.toLocaleTimeString()}
@@ -97,7 +97,7 @@ export default function AdbPage() {
       </div>
 
       {/* ADB Actions - Spotlight Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6" style={{ position: 'relative', zIndex: 10 }}>
+      <div className="tools-grid" style={{ position: 'relative', zIndex: 10, marginBottom: '1.5rem' }}>
         <SpotlightFeatureCard
           icon={<Smartphone className="w-5 h-5 text-cyan-400" />}
           title="Scan Devices"

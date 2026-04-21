@@ -58,7 +58,7 @@ export default function SamsungPage() {
       </div>
 
       {/* Samsung Workflow - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="tools-grid" style={{ marginBottom: '1.5rem' }}>
         <SpotlightFeatureCard
           icon={<Smartphone className="w-6 h-6 text-cyan-400" />}
           title="Step 1: Detect Device"
@@ -113,7 +113,7 @@ export default function SamsungPage() {
         {/* Operations */}
         <div className="samsung-card">
           <h2>Operations</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="tools-grid">
             <SpotlightFeatureCard
               icon={<Upload className="w-5 h-5 text-orange-400" />}
               title="Flash Partition"

@@ -28,7 +28,7 @@ export default function FmiPage() {
       </p>
 
       {/* FMI Operations - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="tools-grid mb-6">
         <SpotlightFeatureCard
           icon={<MapPin className="w-6 h-6 text-cyan-400" />}
           title="Read FMI Status"

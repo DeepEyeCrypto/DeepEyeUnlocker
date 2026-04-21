@@ -7,7 +7,9 @@
 
 .edl-stage-card {
   width: 100%;
-  max-width: 980px;
+  max-width: 520px;
+  margin: 0 auto;
+  box-sizing: border-box;
   padding: 1.35rem;
   border-radius: 28px;
   border: 1px solid rgba(148, 163, 184, 0.22);
@@ -112,7 +114,7 @@
 .edl-badge-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: 6px;
   margin: 0.85rem 0;
 }
 
@@ -146,17 +148,19 @@
 }
 
 .edl-console {
+  width: 100%;
   margin-top: 1rem;
   padding: 0.95rem;
   min-height: 160px;
-  max-height: 260px;
+  max-height: 200px;
   overflow: auto;
   border-radius: 20px;
   border: 1px solid rgba(51, 65, 85, 0.7);
   background: rgba(2, 6, 23, 0.88);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.78rem;
+  font-size: var(--font-sm);
   line-height: 1.45;
+  word-break: break-all;
 }
 
 .edl-log-line,
@@ -200,6 +204,8 @@
 }
 
 .edl-result-grid {
+  width: 100%;
+  overflow: hidden;
   background: rgba(15, 23, 42, 0.68);
 }
 
@@ -227,6 +233,10 @@
   text-align: right;
   color: #e2e8f0;
   font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .edl-guide-list {
@@ -301,5 +311,15 @@
 
   .edl-info-value {
     text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .edl-stage-card {
+    padding: 12px;
+  }
+
+  .edl-info-value {
+    max-width: 140px;
   }
 }

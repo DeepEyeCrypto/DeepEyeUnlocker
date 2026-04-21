@@ -22,7 +22,7 @@ export default function ToolboxPage() {
       </p>
 
       {/* Toolbox Operations - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="tools-grid mb-6">
         <SpotlightFeatureCard
           icon={<Shield className="w-6 h-6 text-cyan-400" />}
           title="OTA Blocker"

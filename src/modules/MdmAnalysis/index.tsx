@@ -70,7 +70,7 @@ export const MdmAnalysis: React.FC = () => {
             </div>
 
             {state && (
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
                         <div className="text-[10px] text-gray-500 uppercase mb-1">Organization</div>
                         <div className="text-sm font-bold truncate">{state.org_name || 'N/A'}</div>
@@ -82,7 +82,7 @@ export const MdmAnalysis: React.FC = () => {
                 </div>
             )}
 
-            <div className="bg-black/60 rounded-xl p-4 h-48 overflow-y-auto border border-white/5 space-y-1 mb-6">
+            <div className="bg-black/60 rounded-xl p-4 min-h-48 max-h-72 overflow-y-auto border border-white/5 space-y-1 mb-6">
                 {logs.map((log, i) => (
                     <div key={i} className={log.includes('ERROR') ? 'text-red-400' : 'text-gray-400'}>
                         {log}

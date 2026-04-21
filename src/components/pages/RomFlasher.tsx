@@ -344,15 +344,15 @@ export default function RomFlasherPage() {
           <h2 className="page-title">Fastboot Protocol</h2>
           <p className="page-subtitle">Query devices, inspect getvar output, flash partitions, erase partitions, wipe data, and reboot targets</p>
         </div>
-        <div className="tab-row">
+        <div className="tab-row tab-bar">
           <button
-            className={`btn btn-sm ${mode === "sideload" ? "btn-primary" : "btn-ghost"}`}
+            className={`btn btn-sm tab-btn ${mode === "sideload" ? "btn-primary" : "btn-ghost"}`}
             onClick={() => { setMode("sideload"); setStep(0); }}
           >
             TWRP Sideload
           </button>
           <button
-            className={`btn btn-sm ${mode === "fastboot" ? "btn-primary" : "btn-ghost"}`}
+            className={`btn btn-sm tab-btn ${mode === "fastboot" ? "btn-primary" : "btn-ghost"}`}
             onClick={() => { setMode("fastboot"); setStep(0); }}
           >
             Fastboot Flash

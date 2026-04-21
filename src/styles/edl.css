@@ -184,7 +184,8 @@
 .info-table td:first-child {
   color: var(--text-2);
   font-size: 0.875rem;
-  width: 120px;
+  width: auto;
+  max-width: 120px;
 }
 
 .info-table td:last-child {
@@ -241,7 +242,9 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem;
-  height: clamp(220px, 30vh, 280px);
+  min-height: 220px;
+  height: 30vh;
+  max-height: 280px;
   overflow-y: auto;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -468,6 +471,6 @@
   }
 
   .terminal-box {
-    height: 220px;
+    min-height: 220px;
   }
 }

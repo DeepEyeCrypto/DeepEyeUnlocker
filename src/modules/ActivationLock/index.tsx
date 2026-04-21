@@ -91,7 +91,7 @@ export const ActivationLock: React.FC = () => {
             </div>
 
             {state && (
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
                         <div className="text-[10px] text-gray-500 uppercase mb-1">Detected Chip</div>
                         <div className="text-sm font-bold">{state.chip}</div>
@@ -103,7 +103,7 @@ export const ActivationLock: React.FC = () => {
                 </div>
             )}
 
-            <div className="bg-black/60 rounded-xl p-4 h-64 overflow-y-auto border border-white/5 space-y-1 mb-6">
+            <div className="bg-black/60 rounded-xl p-4 min-h-64 max-h-80 overflow-y-auto border border-white/5 space-y-1 mb-6">
                 {logs.map((log, i) => (
                     <div key={i} className={log.includes('ERROR') ? 'text-red-400' : 'text-gray-400'}>
                         {log}

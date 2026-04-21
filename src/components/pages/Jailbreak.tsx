@@ -28,7 +28,7 @@ export default function JailbreakPage() {
       </p>
 
       {/* PwnDFU State - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="tools-grid mb-4">
         <SpotlightFeatureCard
           icon={<Bomb className="w-6 h-6 text-red-400" />}
           title="Run Gaster PWN"
@@ -47,7 +47,7 @@ export default function JailbreakPage() {
       </div>
 
       {/* Integrated Exploits - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="tools-grid mb-4">
         <SpotlightFeatureCard
           icon={<Zap className="w-6 h-6 text-orange-400" />}
           title="checkra1n"
@@ -66,7 +66,7 @@ export default function JailbreakPage() {
       </div>
 
       {/* Advanced Primitives - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="tools-grid mb-4">
         <SpotlightFeatureCard
           icon={<Zap className="w-5 h-5 text-green-400" />}
           title="Surgical Patch"

@@ -136,7 +136,7 @@ export default function SettingsPage({
           </div>
 
           {/* Quick Settings Actions - Spotlight Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="tools-grid" style={{ marginTop: '1.5rem' }}>
             <SpotlightFeatureCard
               icon={<TestTube className="w-5 h-5 text-cyan-400" />}
               title="Test ADB Connection"

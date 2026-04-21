@@ -107,7 +107,7 @@ export default function ActivationPage() {
       />
 
       {/* Detection Engine - Spotlight Card */}
-      <div className="mb-6">
+      <div className="tools-grid mb-6">
         <SpotlightFeatureCard
           icon={<Smartphone className="w-6 h-6 text-cyan-400" />}
           title="Detection Engine"
@@ -119,7 +119,7 @@ export default function ActivationPage() {
       </div>
 
       {/* Activation Methods - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="tools-grid">
         <SpotlightFeatureCard
           icon={<Shield className="w-6 h-6 text-green-400" />}
           title="Hello Bypass"

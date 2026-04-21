@@ -1,9 +1,13 @@
+.stage-card,
 .s1-card {
   background: rgba(18, 18, 20, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 22px;
   padding: 20px;
-  max-width: 340px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  box-sizing: border-box;
   color: #fff;
   font-family: -apple-system, "SF Pro Display", system-ui, sans-serif;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -62,7 +66,7 @@
 
 .badge-row {
   display: flex;
-  gap: 7px;
+  gap: 6px;
   flex-wrap: wrap;
   margin-bottom: 8px;
 }
@@ -105,17 +109,19 @@
 }
 
 .log-console {
+  width: 100%;
   background: #0a0a0c;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 10px 12px;
   margin: 12px 0;
-  max-height: 180px;
+  max-height: 200px;
   overflow-y: auto;
   font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 11px;
+  font-size: var(--font-sm);
   line-height: 1.6;
   scrollbar-width: thin;
+  word-break: break-all;
 }
 
 .log-ok {
@@ -143,6 +149,8 @@
 }
 
 .result-grid {
+  width: 100%;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
@@ -174,7 +182,10 @@
   font-size: 12px;
   color: rgba(255, 255, 255, 0.85);
   text-align: right;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .info-val.mono {
@@ -264,4 +275,15 @@
 .next-btn:hover {
   background: rgba(124, 58, 237, 0.2);
   border-color: rgba(124, 58, 237, 0.6);
+}
+
+@media (max-width: 480px) {
+  .stage-card,
+  .s1-card {
+    padding: 12px;
+  }
+
+  .info-val {
+    max-width: 140px;
+  }
 }

@@ -630,8 +630,8 @@ export default function AdvancedPage() {
       </p>
 
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 20,
-        background: "rgba(0,0,0,0.3)", padding: 4, borderRadius: 12, flexWrap: "wrap" }}>
+      <div className="tab-row tab-bar" style={{ marginBottom: 20,
+        background: "rgba(0,0,0,0.3)", padding: 4, borderRadius: 12 }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flex: 1, minWidth: 60, padding: "7px 4px", borderRadius: 8, border: "none",
@@ -641,7 +641,7 @@ export default function AdvancedPage() {
             color: tab === t.id ? "#e2e8f0" : "#64748b",
             cursor: "pointer", fontSize: 11, fontWeight: tab === t.id ? 600 : 400,
             transition: "all 0.2s",
-          }}>{t.label}</button>
+          }} className="tab-btn">{t.label}</button>
         ))}
       </div>
 

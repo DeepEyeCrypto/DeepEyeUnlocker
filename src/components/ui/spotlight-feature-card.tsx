@@ -28,12 +28,12 @@ export function SpotlightFeatureCard({
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       aria-disabled={disabled}
-      className={`w-full text-left transition-transform ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:scale-[1.02]'} ${className}`}
+      className={`tool-card w-full min-w-0 text-left transition-transform ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:scale-[1.02]'} ${className}`}
     >
       <GlowCard 
         glowColor={glowColor}
         customSize={true}
-        className="h-full min-h-[180px]"
+        className="tool-card h-full min-h-[160px] md:min-h-[180px]"
       >
         <div className="flex flex-col gap-3" style={{ position: 'relative', zIndex: 20 }}>
           {/* Icon */}

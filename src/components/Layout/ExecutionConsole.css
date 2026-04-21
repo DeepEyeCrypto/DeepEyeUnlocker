@@ -1,12 +1,16 @@
 .execution-console {
   display: flex;
   flex-direction: column;
-  height: clamp(160px, 24vh, 220px);
-  flex: 0 0 auto;
+  height: var(--console-height);
+  min-height: 80px;
+  max-height: 300px;
+  resize: vertical;
   background: rgba(0, 0, 0, 0.4);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(10px);
   overflow: hidden;
+  font-size: var(--font-sm);
+  font-family: var(--font-mono, monospace);
 }
 
 .console-header {
@@ -19,7 +23,7 @@
 }
 
 .console-title {
-  font-size: 0.7rem;
+  font-size: var(--font-sm);
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--text-faint);
@@ -49,20 +53,21 @@
   flex: 1;
   padding: 12px 16px;
   overflow-y: auto;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.8rem;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .empty-console {
   color: var(--text-faint);
   font-style: italic;
-  font-size: 0.8rem;
+  font-size: inherit;
 }
 
 .console-line {
   padding: 2px 0;
   color: var(--text-muted);
   white-space: pre-wrap;
+  word-break: break-word;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -77,7 +82,13 @@
 .console-line.error { color: var(--accent-red); }
 .console-line.warn { color: var(--accent-gold); }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
+  .execution-console {
+    font-size: 10px;
+    height: 120px;
+    resize: none;
+  }
+
   .console-header,
   .console-body {
     padding-left: 12px;

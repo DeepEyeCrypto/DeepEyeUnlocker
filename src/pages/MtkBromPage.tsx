@@ -252,7 +252,7 @@ export default function MtkBromPage() {
       )}
 
       {/* Connection & Operations - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="tools-grid" style={{ marginBottom: '1.5rem' }}>
         <SpotlightFeatureCard
           icon={<Cpu className="w-6 h-6 text-cyan-400" />}
           title="Connect & Identify"

@@ -144,7 +144,7 @@ export default function SHSHPage() {
       </div>
 
       {/* SHSH Operations - Spotlight Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="tools-grid mb-6">
         <SpotlightFeatureCard
           icon={<Save className="w-6 h-6 text-green-400" />}
           title="Save All Signed"
@@ -200,7 +200,7 @@ export default function SHSHPage() {
       </div>
 
       {/* FutureRestore - Spotlight Card */}
-      <div className="mb-6">
+      <div className="tools-grid mb-6">
         <SpotlightFeatureCard
           icon={<Upload className="w-6 h-6 text-red-400" />}
           title={restoreMode === "noBaseband" ? "futurerestore (--no-baseband)" : "futurerestore"}
@@ -212,7 +212,7 @@ export default function SHSHPage() {
         />
         
         {/* File Selection Buttons */}
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           <button
             className="btn btn-primary btn-sm"
             onClick={async () => {
@@ -246,7 +246,7 @@ export default function SHSHPage() {
           </div>
         </div>
 
-        <div className="flex gap-3 mt-3">
+        <div className="flex flex-wrap gap-3 mt-3">
           <button
             type="button"
             className={`btn btn-sm ${restoreMode === "noBaseband" ? "btn-primary" : "btn-secondary"}`}

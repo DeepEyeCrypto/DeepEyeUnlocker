@@ -223,11 +223,15 @@
 
 .feature-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+  gap: var(--gap-md);
+  padding: 0;
 }
 
 .feature-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.12);
   background: rgba(15, 23, 42, 0.66);
@@ -553,5 +557,6 @@
 
   .feature-card-grid {
     grid-template-columns: 1fr;
+    gap: var(--gap-sm);
   }
 }
