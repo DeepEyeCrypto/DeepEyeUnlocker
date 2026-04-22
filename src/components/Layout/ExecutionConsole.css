@@ -55,6 +55,8 @@
   overflow-y: auto;
   font-family: inherit;
   font-size: inherit;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
 }
 
 .empty-console {

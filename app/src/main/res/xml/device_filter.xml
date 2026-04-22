@@ -1,45 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Accept all USB devices for OTG support -->
-    <usb-device />
-    
-    <!-- ═══ MediaTek BROM Mode ═══ -->
-    <!-- MT6789 / Helio G99 (RMX3845) — BROM -->
-    <usb-device vendor-id="0x0e8d" product-id="0x0003" />
-    <!-- MT6789 — Preloader mode -->
-    <usb-device vendor-id="0x0e8d" product-id="0x2000" />
-    <!-- MT6789 — DA Download Agent -->
-    <usb-device vendor-id="0x0e8d" product-id="0x2001" />
-    <!-- MTK generic BROM -->
-    <usb-device vendor-id="0x0e8d" product-id="0x0023" />
-    <!-- MTK Preloader alternate -->
-    <usb-device vendor-id="0x0e8d" product-id="0x201c" />
-    <!-- MTK ADB in BROM -->
-    <usb-device vendor-id="0x0e8d" product-id="0x0c02" />
-    <!-- MTK generic vendor ID catch-all -->
-    <usb-device vendor-id="0x0e8d" />
-    
-    <!-- ═══ Realme / OPPO MTK variants ═══ -->
-    <usb-device vendor-id="0x22d9" product-id="0x2764" />
-    <usb-device vendor-id="0x22d9" product-id="0x276a" />
-    
-    <!-- ═══ Qualcomm EDL mode ═══ -->
-    <usb-device vendor-id="0x05c6" product-id="0x9008" />
-    <usb-device vendor-id="0x05c6" product-id="0x900e" />
-    <usb-device vendor-id="0x05c6" product-id="0xf007" />
-    
-    <!-- ═══ Samsung Download/Odin mode ═══ -->
-    <usb-device vendor-id="0x04e8" product-id="0x685d" />
-    <usb-device vendor-id="0x04e8" product-id="0x6860" />
-    <usb-device vendor-id="0x04e8" product-id="0x685f" />
-    
-    <!-- ═══ SPD/Unisoc ═══ -->
-    <usb-device vendor-id="0x1782" product-id="0x4d00" />
-    <usb-device vendor-id="0x1782" />
-    
-    <!-- ═══ Google/Nexus ═══ -->
-    <usb-device vendor-id="0x18d1" />
-    
-    <!-- ═══ Huawei/Honor ═══ -->
-    <usb-device vendor-id="0x12d1" />
+  <!-- Qualcomm EDL 9008 -->
+  <usb-device vendor-id="1478" product-id="36872" /> <!-- 0x05C6, 0x9008 in dec -->
+  <!-- Qualcomm normal -->
+  <usb-device vendor-id="1478" /> 
+  <!-- MTK BROM -->
+  <usb-device vendor-id="3725" product-id="3" /> <!-- 0x0E8D, 0x0003 -->
+  <!-- Samsung -->
+  <usb-device vendor-id="1256" /> <!-- 0x04E8 -->
+  <!-- Apple -->
+  <usb-device vendor-id="1452" /> <!-- 0x05AC -->
 </resources>

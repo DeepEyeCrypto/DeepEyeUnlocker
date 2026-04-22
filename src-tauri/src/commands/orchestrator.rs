@@ -38,9 +38,35 @@ pub async fn ios_poll_orchestrator(app: AppHandle) -> Result<DeviceMode, String>
 }
 
 #[tauri::command]
-pub async fn ios_inject_surgical_patch(_app: AppHandle, patch_id: String) -> Result<bool, String> {
+pub async fn ios_inject_surgical_patch(app: AppHandle, patch_id: String) -> Result<bool, String> {
     println!("[ORCHESTRATOR] Injecting surgical patch: {}", patch_id);
-    // Simulation: would write to mounted ramdisk
-    tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
-    Ok(true)
+
+    // Determine the patch file from bundled resources
+    let patch_script = python_script_path(&app, "ios_backup/cli.py")?;
+
+    let output = app
+        .shell()
+        .command("python3")
+        .args([
+            patch_script
+                .to_str()
+                .ok_or_else(|| "invalid cli script path".to_string())?,
+            "inject-patch",
+            &patch_id,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run patch injection: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(format!("Patch injection failed: {stderr}"));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Python script returns JSON with {"success": true/false}
+    let val: serde_json::Value =
+        serde_json::from_str(&stdout).map_err(|e| format!("Parse error: {e}"))?;
+
+    Ok(val["success"].as_bool().unwrap_or(false))
 }

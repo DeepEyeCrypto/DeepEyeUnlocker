@@ -158,7 +158,7 @@
 }
 
 .main-layout .workspace-status__meta {
-  max-width: 320px;
+  max-width: min(320px, 100%);
   text-align: right;
   color: #94a3b8;
   line-height: 1.6;

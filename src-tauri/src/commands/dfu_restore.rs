@@ -25,12 +25,70 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
     app.path().resource_dir().unwrap().join("python")
 }
 
+/// Parse a hex or decimal value like "0x8020" or "32800" from irecovery output
+fn parse_hex_or_dec(s: &str) -> Option<u32> {
+    let trimmed = s.trim();
+    if let Some(hex) = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")) {
+        u32::from_str_radix(hex, 16).ok()
+    } else {
+        trimmed.parse::<u32>().ok()
+    }
+}
+
 #[tauri::command]
 pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
     println!("[COMMAND] ios_detect_dfu_state");
 
-    // In a real implementation, we'd use irecovery -v or similar
-    // For now, call our python helper
+    // Try irecovery -q first for real device state detection
+    let irecovery_result = app
+        .shell()
+        .command("irecovery")
+        .args(["-q"])
+        .output()
+        .await;
+
+    if let Ok(output) = irecovery_result {
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+
+            // Parse fields from irecovery -q output
+            let mut ecid: Option<String> = None;
+            let mut chip_id: Option<u32> = None;
+            let mut board_id: Option<u32> = None;
+            let mut mode = DeviceMode::Unknown;
+
+            for line in stdout.lines() {
+                let line_lower = line.to_lowercase();
+                if let Some(val) = line.split(':').nth(1) {
+                    let val = val.trim();
+                    if line_lower.contains("ecid") {
+                        ecid = Some(val.to_string());
+                    } else if line_lower.contains("cpid") || line_lower.contains("chip id") {
+                        chip_id = parse_hex_or_dec(val);
+                    } else if line_lower.contains("bdid") || line_lower.contains("board id") {
+                        board_id = parse_hex_or_dec(val);
+                    } else if line_lower.contains("mode") {
+                        mode = match val.to_lowercase().as_str() {
+                            "dfu" | "wtr dfu" => DeviceMode::Dfu,
+                            "recovery" | "recovery mode" => DeviceMode::Recovery,
+                            "normal" => DeviceMode::Normal,
+                            "restore" => DeviceMode::Restore,
+                            _ => DeviceMode::Unknown,
+                        };
+                    }
+                }
+            }
+
+            return Ok(DfuState {
+                mode,
+                ecid,
+                chip_id,
+                board_id,
+            });
+        }
+    }
+
+    // Fallback to python helper if irecovery is not available
     let output = app
         .shell()
         .command("python3")
@@ -63,9 +121,9 @@ pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
 
     Ok(DfuState {
         mode,
-        ecid: None, // TODO: Extract from irecovery output
-        chip_id: None,
-        board_id: None,
+        ecid: val["ecid"].as_str().map(|s| s.to_string()),
+        chip_id: val["chip_id"].as_u64().map(|v| v as u32),
+        board_id: val["board_id"].as_u64().map(|v| v as u32),
     })
 }
 
@@ -135,6 +193,16 @@ pub async fn ios_restore_device(
     Ok(())
 }
 
+/// IPSW download response from ipsw.me API
+#[derive(Deserialize)]
+struct IpswApiFirmware {
+    url: Option<String>,
+    version: Option<String>,
+    buildid: Option<String>,
+    sha1sum: Option<String>,
+    signed: Option<bool>,
+}
+
 #[tauri::command]
 pub async fn ios_download_ipsw(
     app: AppHandle,
@@ -146,19 +214,132 @@ pub async fn ios_download_ipsw(
         model, ios_version
     );
 
-    // PSEUDO: IPSW download logic
-    // In production, this would use reqwest or curl to download from ipsw.me
-    let dest = format!("/tmp/{}_{}_Restore.ipsw", model, ios_version);
-    app.emit(
+    let _ = app.emit(
         "dfu-progress",
-        format!("Starting download for {}...", model),
-    )
-    .unwrap();
+        format!("Querying ipsw.me for {} {}...", model, ios_version),
+    );
 
-    // Simulate progress
-    app.emit("dfu-progress", "Downloading: 10%").unwrap();
-    app.emit("dfu-progress", "Downloading: 50%").unwrap();
-    app.emit("dfu-progress", "Downloading: 100%").unwrap();
+    // Step 1: Query ipsw.me API to find the download URL
+    let api_url = format!(
+        "https://api.ipsw.me/v4/device/{}?type=ipsw",
+        model
+    );
+
+    let client = reqwest::Client::builder()
+        .user_agent("DeepEyeUnlocker/2027")
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("HTTP client error: {e}"))?;
+
+    let resp = client
+        .get(&api_url)
+        .send()
+        .await
+        .map_err(|e| format!("ipsw.me API error: {e}"))?;
+
+    if !resp.status().is_success() {
+        return Err(format!(
+            "ipsw.me returned HTTP {}",
+            resp.status().as_u16()
+        ));
+    }
+
+    let body: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("JSON parse error: {e}"))?;
+
+    // Find the matching firmware entry
+    let firmwares = body["firmwares"]
+        .as_array()
+        .ok_or_else(|| "No firmwares found in API response".to_string())?;
+
+    let firmware = firmwares
+        .iter()
+        .find(|fw| {
+            fw["version"].as_str().map(|v| v == ios_version).unwrap_or(false)
+                && fw["signed"].as_bool().unwrap_or(false)
+        })
+        .or_else(|| {
+            // Fallback: find any firmware matching the version even if unsigned
+            firmwares
+                .iter()
+                .find(|fw| fw["version"].as_str().map(|v| v == ios_version).unwrap_or(false))
+        })
+        .ok_or_else(|| {
+            format!(
+                "No IPSW found for {} version {}",
+                model, ios_version
+            )
+        })?;
+
+    let download_url = firmware["url"]
+        .as_str()
+        .ok_or_else(|| "IPSW URL not found".to_string())?;
+
+    let sha1sum = firmware["sha1sum"]
+        .as_str()
+        .unwrap_or("unknown")
+        .to_string();
+
+    let dest = format!("/tmp/{}_{}_Restore.ipsw", model, ios_version);
+
+    let _ = app.emit(
+        "dfu-progress",
+        format!("Downloading IPSW from {}...", download_url),
+    );
+
+    // Step 2: Download with progress via streamed response
+    let download_resp = client
+        .get(download_url)
+        .send()
+        .await
+        .map_err(|e| format!("Download error: {e}"))?;
+
+    let total_size = download_resp.content_length().unwrap_or(0);
+    let mut downloaded: u64 = 0;
+    let mut last_pct: u64 = 0;
+
+    let mut file = tokio::fs::File::create(&dest)
+        .await
+        .map_err(|e| format!("Cannot create {}: {e}", dest))?;
+
+    use tokio::io::AsyncWriteExt;
+    let mut stream = download_resp.bytes_stream();
+    use futures_util::StreamExt;
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.map_err(|e| format!("Download stream error: {e}"))?;
+        file.write_all(&chunk)
+            .await
+            .map_err(|e| format!("Write error: {e}"))?;
+
+        downloaded += chunk.len() as u64;
+
+        // Emit progress every 5%
+        if total_size > 0 {
+            let pct = (downloaded * 100) / total_size;
+            if pct >= last_pct + 5 {
+                last_pct = pct;
+                let _ = app.emit(
+                    "dfu-progress",
+                    format!("Downloading: {}% ({}/{} MB)", pct, downloaded / 1_048_576, total_size / 1_048_576),
+                );
+            }
+        }
+    }
+
+    file.flush()
+        .await
+        .map_err(|e| format!("Flush error: {e}"))?;
+
+    let _ = app.emit(
+        "dfu-progress",
+        format!(
+            "Download complete: {} (SHA1: {})",
+            dest, sha1sum
+        ),
+    );
 
     Ok(dest)
 }

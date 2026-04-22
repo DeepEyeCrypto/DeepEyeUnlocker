@@ -383,8 +383,30 @@ pub async fn run_sahara_handshake(app: AppHandle) -> Result<String, String> {
 // APPLE — Real idevice tool execution via shell
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// Helper to check if a binary exists in PATH
-fn check_tool_exists(bin: &str) -> Result<String, String> {
+/// Search well-known directories for a binary, resolving the full path.
+/// Checks /usr/local/bin and /opt/homebrew/bin FIRST (macOS GUI apps
+/// don't inherit the terminal PATH), then falls back to the rest of PATH.
+pub fn find_binary(bin: &str) -> Result<String, String> {
+    // Priority search dirs for macOS Homebrew / manual installs
+    let priority_dirs = [
+        "/usr/local/bin",
+        "/opt/homebrew/bin",
+        "/opt/homebrew/sbin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+    ];
+
+    // Check priority directories first (no need for `which`)
+    for dir in &priority_dirs {
+        let full = format!("{}/{}", dir, bin);
+        if std::path::Path::new(&full).is_file() {
+            return Ok(full);
+        }
+    }
+
+    // Fallback: search the rest of PATH via `which` with augmented PATH
     let path_env = format!(
         "/usr/local/bin:/opt/homebrew/bin:{}",
         std::env::var("PATH").unwrap_or_else(|_| "/usr/bin:/bin".to_string())
@@ -401,28 +423,32 @@ fn check_tool_exists(bin: &str) -> Result<String, String> {
         }
         _ => Err(format!(
             "❌ Tool not found: {bin}\n\n\
+             Searched: {}\n\n\
              💡 Install via Homebrew:\n\
              brew install {bin}\n\n\
              Or build from source:\n\
              https://github.com/libimobiledevice/{bin}\n\n\
-             Alternative: Use Finder/iTunes for activation."
+             Alternative: Use Finder/iTunes for activation.",
+            priority_dirs.join(", ")
         ))
     }
 }
 
-/// Helper to run a system binary and capture output
+/// Helper to run a system binary and capture output.
+/// Always resolves the full binary path via find_binary() before execution
+/// so macOS GUI apps (which lack terminal PATH) can locate Homebrew tools.
 pub(crate) async fn run_binary(app: &AppHandle, bin: &str, args: &[&str]) -> Result<String, String> {
     use tauri_plugin_shell::ShellExt;
     
-    // Check if binary exists before attempting to run
-    let _bin_path = check_tool_exists(bin)?;
+    // Resolve full path — never use bare binary name with Command
+    let bin_path = find_binary(bin)?;
     
     // macOS GUI apps don't inherit terminal PATH. Inject homebrew paths.
     let path_env = std::env::var("PATH").unwrap_or_else(|_| "/usr/bin:/bin:/usr/sbin:/sbin".to_string());
     let augmented_path = format!("/usr/local/bin:/opt/homebrew/bin:{}", path_env);
 
     let output = app.shell()
-        .command(bin)
+        .command(&bin_path)
         .env("PATH", augmented_path)
         .args(args)
         .output()

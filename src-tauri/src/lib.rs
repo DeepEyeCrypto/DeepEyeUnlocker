@@ -41,6 +41,8 @@ use commands::apple::{
 use commands::apple_id::{ios_apple_id_state, ios_fmi_state, ios_remove_apple_id};
 use commands::bruteforce::run_pin_bruteforce;
 use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass, run_bypass, run_otg_bypass};
+use commands::hello_bypass::{hello_bypass_detect, hello_bypass_run};
+use commands::iremoval_bypass::{iremoval_detect, iremoval_run, iremoval_iservices};
 use commands::bypass_advanced::{
     ios_activation_persistence_check, ios_activation_type_check, ios_temp_activation,
     ios_untethered_bypass,
@@ -608,7 +610,6 @@ pub fn run() {
             disconnect_wifi_adb,
             enable_adb_wifi_mode,
             run_unisoc_frp_bypass,
-            unisoc_detect_device,
             check_for_updates,
             get_edl_programmers,
             load_edl_programmer,
@@ -623,6 +624,13 @@ pub fn run() {
             signal_stage8_baseband,
             signal_stage9_verify,
             signal_stage10_complete,
+            // Hello Bypass v2
+            hello_bypass_detect,
+            hello_bypass_run,
+            // iRemoval Bypass Pipeline
+            iremoval_detect,
+            iremoval_run,
+            iremoval_iservices,
         ])
         .run(tauri::generate_context!());
 

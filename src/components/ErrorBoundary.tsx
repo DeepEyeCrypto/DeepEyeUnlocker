@@ -1,69 +1,42 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, ReactNode } from "react"
 
-type ErrorBoundaryProps = {
-  children: ReactNode;
-};
+interface Props { children: ReactNode }
+interface State { error: Error | null }
 
-type ErrorBoundaryState = {
-  error: Error | null;
-  componentStack: string;
-};
+export class ErrorBoundary extends Component<Props, State> {
+  state: State = { error: null }
 
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
-  public constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      error: null,
-      componentStack: "",
-    };
+  static getDerivedStateFromError(error: Error): State {
+    return { error }
   }
 
-  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return {
-      error,
-      componentStack: "",
-    };
-  }
-
-  public componentDidCatch(_error: Error, info: ErrorInfo): void {
-    this.setState({ componentStack: info.componentStack ?? "" });
-  }
-
-  public render() {
-    const { error, componentStack } = this.state;
-
-    if (!error) {
-      return this.props.children;
-    }
-
-    const stackTrace = [error.stack ?? "", componentStack]
-      .filter((entry) => entry.length > 0)
-      .join("\n\n");
-
-    return (
-      <div className="error-boundary-screen">
-        <div className="error-boundary-card">
-          <p className="error-boundary-badge">Application crash intercepted</p>
-          <h1 className="error-boundary-title">DeepEyeUnlocker recovered from a UI fault</h1>
-          <p className="error-boundary-message">{error.message}</p>
-
-          <details className="error-boundary-details">
-            <summary>Stack trace</summary>
-            <pre className="error-boundary-stack">{stackTrace}</pre>
-          </details>
-
-          <button
-            type="button"
-            className="btn btn-primary btn-md"
-            onClick={() => window.location.reload()}
-          >
-            Reload App
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          padding: 24, color: "#ff6b6b",
+          fontFamily: "monospace",
+          background: "#1a1a1a"
+        }}>
+          <h3>❌ Component Error</h3>
+          <pre style={{fontSize: 12}}>
+            {this.state.error.message}
+          </pre>
+          <button onClick={() => this.setState({ error: null })}
+            style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#2b2b2b',
+              color: '#fff',
+              border: '1px solid #444',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>
+            🔄 Retry
           </button>
         </div>
-      </div>
-    );
+      )
+    }
+    return this.props.children
   }
 }

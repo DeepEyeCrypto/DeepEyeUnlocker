@@ -40,9 +40,31 @@ def check_activation_lock(udid=None):
 
 def parse_activation_record(udid):
     """
-    Placeholder for parsing activation record plist.
+    Parse the activation record plist from the device via ideviceactivation.
+    Returns the raw activation record fields or an error.
     """
-    return {"raw": "activation_record_data_mock"}
+    import plistlib
+    try:
+        cmd = ["ideviceactivation", "state"]
+        if udid:
+            cmd.extend(["-u", udid])
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+
+        # ideviceactivation outputs key: value pairs
+        record = {}
+        for line in output.split("\n"):
+            if ":" in line:
+                k, v = line.split(":", 1)
+                record[k.strip()] = v.strip()
+
+        if not record:
+            return {"error": "Empty activation record — device may not support this query"}
+
+        return {"raw": record}
+    except FileNotFoundError:
+        return {"error": "ideviceactivation not installed. Install via: brew install libideviceactivation"}
+    except subprocess.CalledProcessError as e:
+        return {"error": f"ideviceactivation failed: {e.output.decode().strip()}"}
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

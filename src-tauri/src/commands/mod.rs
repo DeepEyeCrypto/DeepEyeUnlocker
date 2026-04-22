@@ -19,6 +19,8 @@ pub mod exploit;
 pub mod extraction;
 pub mod f3arrain;
 pub mod fastboot;
+pub mod hello_bypass;
+pub mod iremoval_bypass;
 pub mod hydra;
 pub mod identity;
 pub mod ios_backup;

@@ -47,10 +47,35 @@ pub async fn ios_check_hello_state(app: AppHandle, udid: String) -> Result<Hello
 }
 
 #[tauri::command]
-pub async fn ios_run_hello_bypass(_app: AppHandle, udid: String) -> Result<bool, String> {
+pub async fn ios_run_hello_bypass(app: AppHandle, udid: String) -> Result<bool, String> {
     println!("[COMMAND] ios_run_hello_bypass udid={}", udid);
-    // Placeholder for actual signal/activation record injection
-    Ok(true)
+
+    // Real: call ideviceactivation to inject activation record for Hello Screen bypass
+    let output = app
+        .shell()
+        .command("python3")
+        .args([
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
+            "hello-bypass",
+            &udid,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run hello bypass: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(format!("Hello bypass failed: {stderr}"));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let val: serde_json::Value =
+        serde_json::from_str(stdout.trim()).unwrap_or(serde_json::json!({"success": false}));
+
+    Ok(val["success"].as_bool().unwrap_or(false))
 }
 
 #[tauri::command]

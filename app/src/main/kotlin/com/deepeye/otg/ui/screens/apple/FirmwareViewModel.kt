@@ -4,16 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.otg.python.PythonBridge
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.delay
 
 data class FirmwareUiState(
     val model: String = "",
@@ -70,7 +74,7 @@ class FirmwareViewModel @Inject constructor(
         }
     }
 
-    fun onDownloadSelected(fw: FirmwareEntry) {
+    fun onDownloadSelected(fw: FirmwareEntry, targetFile: File) {
         viewModelScope.launch {
             val sid = UUID.randomUUID().toString()
             val etaRet = pythonBridge.estimateDownloadTime(fw.sizeGb, 15.0, sid)
@@ -82,9 +86,34 @@ class FirmwareViewModel @Inject constructor(
                 )
             }
 
-            for (i in 1..100) {
-                delay(100) // Dummy download progress
-                _uiState.update { it.copy(downloadProgress = i / 100f) }
+            try {
+                withContext(Dispatchers.IO) {
+                    val url = URL(fw.url)
+                    val connection = url.openConnection()
+                    connection.connect()
+                    
+                    val fileLength = connection.contentLength
+                    val input = connection.getInputStream()
+                    val output = FileOutputStream(targetFile)
+                    
+                    val data = ByteArray(4096)
+                    var total: Long = 0
+                    var count: Int
+                    
+                    while (input.read(data).also { count = it } != -1) {
+                        total += count.toLong()
+                        if (fileLength > 0) {
+                            val progress = (total * 100 / fileLength).toFloat() / 100f
+                            _uiState.update { it.copy(downloadProgress = progress) }
+                        }
+                        output.write(data, 0, count)
+                    }
+                    output.flush()
+                    output.close()
+                    input.close()
+                }
+            } catch (e: Exception) {
+                Timber.e("Firmware download error: \${e.message}")
             }
             
             _uiState.update { it.copy(isDownloading = false, downloadProgress = 1f, downloadEta = "Complete") }

@@ -7,7 +7,7 @@
 
 .edl-stage-card {
   width: 100%;
-  max-width: 520px;
+  max-width: min(520px, 100%);
   margin: 0 auto;
   box-sizing: border-box;
   padding: 1.35rem;
@@ -109,6 +109,7 @@
   color: #cbd5e1;
   line-height: 1.55;
   max-width: 800px;
+  overflow-wrap: break-word;
 }
 
 .edl-badge-row {
@@ -236,7 +237,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 200px;
+  max-width: clamp(140px, 40vw, 280px);
 }
 
 .edl-guide-list {
@@ -317,6 +318,7 @@
 @media (max-width: 480px) {
   .edl-stage-card {
     padding: 12px;
+    max-width: 100%;
   }
 
   .edl-info-value {

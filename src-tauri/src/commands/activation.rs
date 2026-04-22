@@ -78,10 +78,16 @@ pub async fn ios_check_activation_state(
         ActivationRemovalPath::DfuRestore
     };
 
+    // Extract apple_id_bound from JSON output when available
+    let apple_id_bound = val["apple_id"]
+        .as_str()
+        .or_else(|| val["apple_id_bound"].as_str())
+        .map(|s| s.to_string());
+
     Ok(ActivationState {
         locked,
         fmi_enabled,
-        apple_id_bound: None, // TODO: Extract email prefix if possible
+        apple_id_bound,
         removal_path,
         model: val["model"].as_str().unwrap_or("Unknown").to_string(),
         chip,
@@ -126,8 +132,30 @@ pub async fn ios_run_checkra1n(app: AppHandle, udid: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn ios_patch_activation_record(_app: AppHandle, udid: String) -> Result<(), String> {
+pub async fn ios_patch_activation_record(app: AppHandle, udid: String) -> Result<(), String> {
     println!("[COMMAND] ios_patch_activation_record udid={}", udid);
-    // Placeholder for actual patch logic (usually involves SSH to jailbroken device)
+
+    // Real: Use Python CLI to patch activation record via SSH on jailbroken device
+    let output = app
+        .shell()
+        .command("python3")
+        .args([
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
+            "patch-activation",
+            &udid,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run activation patch: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(format!("Activation record patch failed: {stderr}"));
+    }
+
+    let _ = app.emit("activation-complete", 0);
     Ok(())
 }

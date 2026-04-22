@@ -84,8 +84,39 @@ pub async fn ios_run_gaster_pwn(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn ios_boot_ramdisk(_app: AppHandle, ramdisk_path: String) -> Result<(), String> {
+pub async fn ios_boot_ramdisk(app: AppHandle, ramdisk_path: String) -> Result<(), String> {
     println!("[COMMAND] ios_boot_ramdisk path={}", ramdisk_path);
-    // Placeholder for booting ramdisk via gaster or irecovery
+
+    // Step 1: Send ramdisk image via irecovery
+    let send_output = app
+        .shell()
+        .command("irecovery")
+        .args(["-f", &ramdisk_path])
+        .output()
+        .await
+        .map_err(|e| format!("irecovery send failed: {e}"))?;
+
+    if !send_output.status.success() {
+        let stderr = String::from_utf8_lossy(&send_output.stderr).to_string();
+        return Err(format!("irecovery -f failed: {stderr}"));
+    }
+
+    let _ = app.emit("ramdisk-progress", "Ramdisk image sent, booting...");
+
+    // Step 2: Execute boot command
+    let boot_output = app
+        .shell()
+        .command("irecovery")
+        .args(["-c", "bootx"])
+        .output()
+        .await
+        .map_err(|e| format!("irecovery boot failed: {e}"))?;
+
+    if !boot_output.status.success() {
+        let stderr = String::from_utf8_lossy(&boot_output.stderr).to_string();
+        return Err(format!("irecovery bootx failed: {stderr}"));
+    }
+
+    let _ = app.emit("ramdisk-progress", "Ramdisk booted successfully");
     Ok(())
 }

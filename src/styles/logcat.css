@@ -270,6 +270,8 @@
   min-height: 420px;
   font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, monospace;
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.22) transparent;
 }
 
 .logcat-empty-state {
@@ -401,6 +403,10 @@
     grid-template-columns: 126px 56px 52px 120px 1fr;
     gap: 0.65rem;
     font-size: 0.82rem;
+  }
+
+  .logcat-terminal {
+    overflow-x: auto;
   }
 }
 

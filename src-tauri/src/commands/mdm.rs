@@ -57,11 +57,21 @@ pub async fn ios_mdm_state(app: AppHandle, udid: String) -> Result<MdmState, Str
 
     let enrolled = val["enrolled"].as_bool().unwrap_or(false);
 
+    // Parse restrictions from JSON array if present
+    let restrictions = val["restrictions"]
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
     Ok(MdmState {
         enrolled,
         org_name: val["org_name"].as_str().map(|s| s.to_string()),
         server_url: val["server_url"].as_str().map(|s| s.to_string()),
-        restrictions: vec![], // placeholder for now
+        restrictions,
         removal_path: if enrolled {
             MdmRemovalPath::ProfileRemove
         } else {
@@ -93,13 +103,55 @@ pub async fn ios_list_profiles(app: AppHandle, udid: String) -> Result<Vec<Confi
         return Err(String::from_utf8_lossy(&output.stderr).to_string());
     }
 
-    // placeholder parsing
-    Ok(vec![])
+    // Parse JSON array of profile objects from Python CLI output
+    let json_str = String::from_utf8_lossy(&output.stdout);
+    let val: serde_json::Value =
+        serde_json::from_str(json_str.trim()).map_err(|e| format!("Profile parse error: {e}"))?;
+
+    let profiles = val
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|item| {
+                    Some(ConfigProfile {
+                        id: item["id"].as_str()?.to_string(),
+                        name: item["name"].as_str().unwrap_or("Unknown").to_string(),
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    Ok(profiles)
 }
 
 #[tauri::command]
-pub async fn ios_remove_mdm(_app: AppHandle, udid: String) -> Result<bool, String> {
+pub async fn ios_remove_mdm(app: AppHandle, udid: String) -> Result<bool, String> {
     println!("[COMMAND] ios_remove_mdm udid={}", udid);
-    // placeholder logic using ideviceactivation or similar
-    Ok(true)
+
+    let output = app
+        .shell()
+        .command("python3")
+        .args([
+            python_path(&app)
+                .join("ios_backup/cli.py")
+                .to_str()
+                .unwrap(),
+            "remove-mdm",
+            &udid,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run MDM removal: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(format!("MDM removal failed: {stderr}"));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let val: serde_json::Value =
+        serde_json::from_str(stdout.trim()).unwrap_or(serde_json::json!({"success": false}));
+
+    Ok(val["success"].as_bool().unwrap_or(false))
 }

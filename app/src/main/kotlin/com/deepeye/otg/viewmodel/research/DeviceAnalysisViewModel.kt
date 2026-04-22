@@ -17,13 +17,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 // ──────────────────────────────────────────────────────────────
 // Device Analysis ViewModel
 // DeepEye OTG — ViewModels Module (Part 9)
 // ──────────────────────────────────────────────────────────────
 
-class DeviceAnalysisViewModel(
+@HiltViewModel
+class DeviceAnalysisViewModel @Inject constructor(
     private val appleSession: UsbAppleSession,
     private val patchStateAnalyzer: PatchStateAnalyzer,
     private val versionMappingEngine: VersionMappingEngine,

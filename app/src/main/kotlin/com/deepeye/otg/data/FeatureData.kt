@@ -716,3 +716,74 @@ object FeatureData {
             it.brand.equals(name, ignoreCase = true)
         } ?: xiaomi
 }
+
+enum class FeatureCategory {
+    ANDROID_BYPASS, APPLE_BYPASS, FIRMWARE_FLASH, DIAGNOSTICS, REPAIR
+}
+
+enum class ChipFamily {
+    QUALCOMM, MTK, SAMSUNG_EXYNOS, APPLE, UNISOC, ALL
+}
+
+data class FeatureStage(
+    val stageNum: Int,
+    val name: String,
+    val command: String,      // real ADB/fastboot
+    val args: List<String>,   // real args
+    val successPattern: String, // regex to verify
+    val failurePattern: String,
+    val timeoutMs: Long = 30_000L,
+)
+
+data class Feature(
+    val id: String,
+    val title: String,
+    val category: FeatureCategory,
+    val chipFamily: List<ChipFamily>,
+    val requiredTools: List<String>,
+    val stages: List<FeatureStage>,
+    val isRealImpl: Boolean = true,
+)
+
+object RealFeatureData {
+    val features = mapOf(
+        "frp_bypass_adb" to Feature(
+            id = "frp_bypass_adb",
+            title = "FRP Bypass (ADB)",
+            category = FeatureCategory.ANDROID_BYPASS,
+            chipFamily = listOf(ChipFamily.QUALCOMM, ChipFamily.MTK, ChipFamily.SAMSUNG_EXYNOS),
+            requiredTools = listOf("adb"),
+            stages = listOf(
+                FeatureStage(1, "ADB Connection", "adb", listOf("get-state"), "device", "not found|offline"),
+                FeatureStage(2, "Disable FRP", "adb", listOf("shell", "content", "insert", "--uri", "content://settings/secure", "--bind", "name:s:user_setup_complete", "--bind", "value:s:1"), "", "Error|Exception"),
+                FeatureStage(3, "Launch Setup Exit", "adb", listOf("shell", "am", "start", "-n", "com.google.android.setupwizard/.SetupWizardExitActivity"), "Starting", "Error")
+            ),
+            isRealImpl = true
+        ),
+        "mtk_brom_unlock" to Feature(
+            id = "mtk_brom_unlock",
+            title = "MTK BROM Unlock (Helio G99)",
+            category = FeatureCategory.ANDROID_BYPASS,
+            chipFamily = listOf(ChipFamily.MTK),
+            requiredTools = listOf("usb_driver"),
+            stages = listOf(
+                FeatureStage(1, "Handshake", "mtk", listOf("handshake"), "OK", "FAIL"),
+                FeatureStage(2, "Disable Watchdog", "mtk", listOf("write32", "0x10007000", "0x22000000"), "OK", "FAIL"),
+                FeatureStage(3, "Bypass Auth", "mtk", listOf("payload", "bypass.bin"), "SLA/DA Bypass Success", "FAIL")
+            ),
+            isRealImpl = true
+        ),
+        "samsung_factory_reset_odin" to Feature(
+            id = "samsung_factory_reset_odin",
+            title = "Factory Reset (Odin/Download)",
+            category = FeatureCategory.DIAGNOSTICS,
+            chipFamily = listOf(ChipFamily.SAMSUNG_EXYNOS, ChipFamily.QUALCOMM),
+            requiredTools = listOf("odin"),
+            stages = listOf(
+                FeatureStage(1, "Detect Download Mode", "odin", listOf("devices"), "ID:", "No device detected"),
+                FeatureStage(2, "Reset via PIT", "odin", listOf("-a", "PIT_WIPE.pit"), "Success", "Failed")
+            ),
+            isRealImpl = true
+        )
+    )
+}

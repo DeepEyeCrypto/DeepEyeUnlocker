@@ -1,18 +1,16 @@
 package com.deepeye.otg.viewmodel
 
-import android.content.Context
 import android.hardware.usb.UsbDevice
-import android.hardware.usb.UsbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.deepeye.otg.core.usb.UsbDeviceDetector
 import com.deepeye.otg.usecase.FrpResult
 import com.deepeye.otg.usecase.FrpUseCase
-import com.deepeye.otg.usb.UsbPermissionGuard
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -29,165 +27,118 @@ data class FrpUiState(
 @HiltViewModel
 class FrpViewModel @Inject constructor(
     private val frpUseCase: FrpUseCase,
-    @ApplicationContext private val context: Context  // ✅ Added for permission management
+    private val deviceDetector: UsbDeviceDetector
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FrpUiState())
     val uiState: StateFlow<FrpUiState> = _uiState.asStateFlow()
     
-    // ✅ Track permission state
     private val _permissionGranted = MutableStateFlow(false)
     val permissionGranted: StateFlow<Boolean> = _permissionGranted.asStateFlow()
     
-    // ✅ Track current device for permission polling
-    private var currentDevice: UsbDevice? = null
-    private var isPollingActive = true
+    private var currentDevicePath: String? = null
     
-    // ✅ FIX: Poll permission state to detect broadcast receiver changes
     init {
+        // Reactive monitoring of USB devices and their permissions
         viewModelScope.launch {
-            while (isPollingActive) {
-                kotlinx.coroutines.delay(1000)
-                currentDevice?.let { device ->
-                    val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
-                    val hasPermission = usbManager.hasPermission(device)
-                    
-                    // Update state if changed
-                    if (_permissionGranted.value != hasPermission) {
-                        _permissionGranted.value = hasPermission
-                        
-                        if (hasPermission) {
-                            _uiState.value = _uiState.value.copy(
-                                statusMessage = "USB Permission Granted - Ready to start",
-                                logs = _uiState.value.logs + "[INFO] USB permission detected (polling)"
-                            )
-                        }
+            deviceDetector.observeDevices().collect { devices ->
+                val target = devices.find { it.name == currentDevicePath }
+                if (target != null) {
+                    if (target.hasPermission && !_permissionGranted.value) {
+                        _permissionGranted.value = true
+                        addLog("[INFO] USB permission detected reactively")
+                        _uiState.update { it.copy(statusMessage = "Permission Granted - Ready") }
+                    } else if (!target.hasPermission && _permissionGranted.value) {
+                        _permissionGranted.value = false
+                        addLog("[WARN] USB permission lost")
                     }
                 }
             }
         }
     }
-    
-    override fun onCleared() {
-        super.onCleared()
-        isPollingActive = false  // Stop polling when ViewModel is destroyed
-    }
 
-    // ✅ FIX: Check permission before starting bypass
     fun startBypass(device: UsbDevice, androidVersion: Int) {
-        currentDevice = device  // ✅ Track device for polling
-        val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+        currentDevicePath = device.deviceName
         
-        // Check permission first
-        if (!usbManager.hasPermission(device)) {
-            _uiState.value = _uiState.value.copy(
+        if (!deviceDetector.hasPermission(device)) {
+            _uiState.update { it.copy(
                 isRunning = false,
                 statusMessage = "USB Permission Required",
-                error = "USB permission not granted.\n\nPlease accept the USB permission dialog and try again.",
-                logs = _uiState.value.logs + "[ERROR] USB permission not granted"
-            )
+                error = "Please grant USB permission first."
+            )}
+            addLog("[ERROR] Attempted start without permission")
             return
         }
         
         _permissionGranted.value = true
-        
         val sessionId = UUID.randomUUID().toString()
+        
         viewModelScope.launch {
-            _uiState.value = FrpUiState(
+            _uiState.update { it.copy(
                 isRunning = true,
                 statusMessage = "Initializing...",
-                logs = listOf("[INFO] Starting FRP bypass session: $sessionId")
-            )
+                logs = it.logs + "[INFO] Starting session: $sessionId"
+            )}
             
             try {
                 frpUseCase.executeBypass(device, androidVersion, sessionId).collect { result ->
                     when (result) {
                         is FrpResult.Progress -> {
-                            _uiState.value = _uiState.value.copy(
+                            _uiState.update { it.copy(
                                 progress = result.percentage,
-                                statusMessage = result.message,
-                                logs = _uiState.value.logs + "[INFO] ${result.message}"
-                            )
+                                statusMessage = result.message
+                            )}
+                            addLog("[INFO] ${result.message}")
                         }
                         is FrpResult.Success -> {
-                            _uiState.value = _uiState.value.copy(
+                            _uiState.update { it.copy(
                                 isRunning = false,
                                 progress = 100,
                                 statusMessage = "Bypass Successful",
-                                success = result.message,
-                                logs = _uiState.value.logs + "[SUCCESS] ${result.message}"
-                            )
+                                success = result.message
+                            )}
+                            addLog("[SUCCESS] ${result.message}")
                         }
                         is FrpResult.Error -> {
-                            _uiState.value = _uiState.value.copy(
+                            _uiState.update { it.copy(
                                 isRunning = false,
                                 statusMessage = "Bypass Failed",
-                                error = result.message,
-                                logs = _uiState.value.logs + "[ERROR] ${result.message}"
-                            )
+                                error = result.message
+                            )}
+                            addLog("[ERROR] ${result.message}")
                         }
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isRunning = false,
                     statusMessage = "Unexpected Error",
-                    error = "Unexpected error: ${e.message}",
-                    logs = _uiState.value.logs + "[ERROR] ${e.message}"
-                )
+                    error = e.message
+                )}
+                addLog("[ERROR] Exception: ${e.message}")
             }
         }
     }
     
-    // ✅ FIX: Request USB permission
     fun requestUsbPermission(device: UsbDevice) {
-        currentDevice = device  // ✅ Track device for polling
-        val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
-        
-        if (usbManager.hasPermission(device)) {
+        currentDevicePath = device.deviceName
+        if (deviceDetector.hasPermission(device)) {
             _permissionGranted.value = true
-            _uiState.value = _uiState.value.copy(
-                statusMessage = "USB Permission Granted",
-                logs = _uiState.value.logs + "[INFO] USB permission already granted"
-            )
+            _uiState.update { it.copy(statusMessage = "USB Permission Already Granted") }
             return
         }
         
-        // Request permission using UsbPermissionGuard
-        UsbPermissionGuard.requestPermission(
-            context = context,
-            usbManager = usbManager,
-            device = device,
-            actionPermission = UsbPermissionGuard.ACTION_USB_PERMISSION
-        )
-        
-        _uiState.value = _uiState.value.copy(
-            statusMessage = "Waiting for USB permission...",
-            logs = _uiState.value.logs + "[INFO] USB permission dialog shown"
-        )
+        deviceDetector.requestPermission(device)
+        addLog("[INFO] Requesting USB permission dynamically...")
     }
     
-    // ✅ FIX: Update permission state from broadcast receiver
-    fun onPermissionResult(granted: Boolean, device: UsbDevice) {
-        _permissionGranted.value = granted
-        
-        if (granted) {
-            _uiState.value = _uiState.value.copy(
-                statusMessage = "USB Permission Granted - Ready to start",
-                logs = _uiState.value.logs + "[INFO] USB permission granted by user"
-            )
-        } else {
-            _uiState.value = _uiState.value.copy(
-                statusMessage = "USB Permission Denied",
-                error = "USB permission was denied. Cannot proceed with FRP bypass.",
-                logs = _uiState.value.logs + "[ERROR] USB permission denied by user"
-            )
-        }
+    private fun addLog(message: String) {
+        _uiState.update { it.copy(logs = it.logs + message) }
     }
 
     fun clearState() {
         _uiState.value = FrpUiState()
         _permissionGranted.value = false
-        currentDevice = null  // ✅ Clear tracked device
+        currentDevicePath = null
     }
 }
