@@ -4,6 +4,16 @@ import { useState, useEffect, useRef } from "react"
 import { SignalBypassFlow } from "../SignalBypassFlow"
 import "./Stage1Card.css"
 
+interface AutoRunProps {
+  isRunningAll: boolean
+  autoMode: boolean
+  currentStage: number
+  logs: string[]
+  finalResult: boolean
+  stageResults: Record<number, any>
+  runAllStagesAuto: () => Promise<void>
+}
+
 interface Stage1Result {
   udid: string
   model_name: string
@@ -30,9 +40,11 @@ interface Stage1Result {
 export function Stage1Card({
   onPass,
   onClose,
+  autoRunProps,
 }: {
   onPass: (r: Stage1Result) => void
   onClose?: () => void
+  autoRunProps?: AutoRunProps
 }) {
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
@@ -40,6 +52,11 @@ export function Stage1Card({
   const [error, setError] = useState<string | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const [flowOpen, setFlowOpen] = useState(false)
+  const isRunningAll = autoRunProps?.isRunningAll || false
+  const currentStage = autoRunProps?.currentStage || 1
+  const autoLogs = autoRunProps?.logs || []
+  const finalResult = autoRunProps?.finalResult || false
+  const runAllStagesAuto = autoRunProps?.runAllStagesAuto || (() => Promise.resolve())
 
   useEffect(() => {
     const u = listen<string>("s1-log", (e) =>
@@ -176,6 +193,79 @@ export function Stage1Card({
         >
           {result.stage_message}
         </div>
+      )}
+
+      {/* AUTO RUN ALL button */}
+      {!onClose && !flowOpen && (
+        <>
+          {/* Stage progress indicator */}
+          {isRunningAll && (
+            <div className="stages-track">
+              {Array.from({ length: 10 }, (_, i) => (
+                <div
+                  key={i}
+                  className={`stage-dot ${
+                    i + 1 < currentStage ? "done" :
+                    i + 1 === currentStage ? "active" :
+                    "pending"
+                  }`}
+                  title={`Stage ${i + 1}`}
+                >
+                  {i + 1 < currentStage ? "✓" : i + 1}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            className="btn-auto-run-all"
+            onClick={runAllStagesAuto}
+            disabled={isRunningAll}
+          >
+            {isRunningAll
+              ? `⚡ Running Stage ${currentStage}/10...`
+              : "⚡ AUTO RUN ALL (10 Stages)"}
+          </button>
+
+          {/* Progress bar */}
+          {isRunningAll && (
+            <div className="progress-bar-bg">
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${(currentStage / 10) * 100}%` }}
+              />
+            </div>
+          )}
+
+          {/* Auto-run logs */}
+          {autoLogs.length > 0 && (
+            <div className="log-console" ref={logRef}>
+              {autoLogs.map((l, i) => (
+                <div
+                  key={i}
+                  className={
+                    l.includes("✅") || l.startsWith("🚀") || l.includes("═")
+                      ? "log-ok"
+                      : l.includes("❌") || l.includes("⛔")
+                        ? "log-err"
+                        : l.includes("⚡") || l.includes("🎯")
+                          ? "log-info"
+                          : "log-line"
+                  }
+                >
+                  {l}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Final result banner */}
+          {finalResult && (
+            <div className="pass-banner">
+              🎯 All 10 stages complete! Check results above.
+            </div>
+          )}
+        </>
       )}
 
       {/* RUN button */}
