@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import com.deepeye.otg.util.detectAppleMode
 import com.deepeye.otg.usb.DeviceMatrix
 import kotlinx.coroutines.channels.awaitClose
@@ -38,7 +39,11 @@ class DeviceRepository @Inject constructor(
                 }
             }
         }
-        context.registerReceiver(receiver, filter)
+        context.registerReceiver(receiver, filter, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_NOT_EXPORTED
+        } else {
+            0
+        })
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
@@ -60,7 +65,12 @@ class DeviceRepository @Inject constructor(
             }
         }
 
-        context.registerReceiver(receiver, filter)
+        context.registerReceiver(receiver, filter, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_NOT_EXPORTED
+        } else {
+            0
+        })
+
         awaitClose { context.unregisterReceiver(receiver) }
     }
 }

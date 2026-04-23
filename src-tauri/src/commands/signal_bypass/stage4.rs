@@ -109,17 +109,25 @@ fn determine_lock_severity(
     if is_act_locked && find_my == "On" {
         return (
             "Hard Lock",
-            "Full iCloud Activation Lock + Find My ON. \
-             Requires original Apple ID credentials. \
-             Signal bypass not possible without unlock.",
+            "Signal Bypass Pipeline (A12+ Multi-method) — \
+             1. ideviceactivation session -s\n\
+             2. Albert carrier server POST\n\
+             3. mobileactivation local patch\n\
+             4. checkm8 ramdisk (if A7-A11)\n\
+             5. ECID server ticket request\n\
+             Note: Find My ON — partial bypass expected (WiFi access likely, iCloud restricted)",
         );
     }
     if is_icloud && !wildcard {
         return (
             "Hard Lock",
-            "iCloud Activation Lock detected. \
-             Use original Apple ID at appleid.apple.com, \
-             or contact original owner to remove device.",
+            "Signal Bypass Pipeline — \
+             1. ideviceactivation session -s\n\
+             2. Albert carrier server POST\n\
+             3. mobileactivation local patch\n\
+             4. checkm8 ramdisk (if A7-A11)\n\
+             5. ECID server ticket request\n\
+             Note: Direct method will be attempted",
         );
     }
     if is_act_locked && wildcard {
@@ -322,13 +330,12 @@ pub async fn signal_stage4_icloud(
     slog!("   Severity: {}", lock_severity);
     slog!("   Route: {}", bypass_route);
 
-    // ── 8. Stage pass/fail ─────────────────────────
+    // ── 8. Stage pass/fail — Hard Lock no longer blocks, attempt bypass ───
     slog!("");
-    let stage_passed = lock_severity != "Hard Lock";
+    let stage_passed = true; // Always pass to allow bypass attempt
     let stage_message = if lock_severity == "Hard Lock" {
         format!(
-            "Hard iCloud Lock detected. Find My: {} — cannot bypass without Apple ID. ⛔",
-            find_my_state
+            "⚠️  Hard Lock detected — attempting advanced bypass methods...",
         )
     } else if lock_severity == "Soft Lock" {
         format!(
@@ -343,10 +350,7 @@ pub async fn signal_stage4_icloud(
         slog!("╔══════════════════════════════════╗");
         slog!("║  ✅  STAGE 4 PASSED              ║");
         slog!("╚══════════════════════════════════╝");
-    } else {
-        slog!("╔══════════════════════════════════╗");
-        slog!("║  ⛔  STAGE 4 BLOCKED — HARD LOCK ║");
-        slog!("╚══════════════════════════════════╝");
+        slog!("   Proceeding to bypass pipeline...");
     }
     slog!("   {}", stage_message);
 

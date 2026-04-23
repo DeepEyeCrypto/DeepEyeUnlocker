@@ -33,7 +33,7 @@ export function SpotlightFeatureCard({
       <GlowCard 
         glowColor={glowColor}
         customSize={true}
-        className="tool-card h-full min-h-[160px] md:min-h-[180px]"
+        className="tool-card h-full min-h-[120px] sm:min-h-[160px] md:min-h-[180px]"
       >
         <div className="flex flex-col gap-3" style={{ position: 'relative', zIndex: 20 }}>
           {/* Icon */}

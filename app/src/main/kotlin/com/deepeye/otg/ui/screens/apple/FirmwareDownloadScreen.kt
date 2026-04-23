@@ -70,7 +70,13 @@ fun FirmwareDownloadScreen(
                     FirmwareEntryCard(
                         firmware = fw,
                         onDownload = {
-                            viewModel.onDownloadSelected(fw)
+                            val targetDir = java.io.File(
+                                android.os.Environment.getExternalStorageDirectory(),
+                                "DeepEye/firmware"
+                            )
+                            targetDir.mkdirs()
+                            val targetFile = java.io.File(targetDir, "${fw.buildId}_iOS${fw.iosVersion}.ipsw")
+                            viewModel.onDownloadSelected(fw, targetFile)
                         }
                     )
                 }

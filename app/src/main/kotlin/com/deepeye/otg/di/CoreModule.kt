@@ -18,6 +18,8 @@ import com.deepeye.otg.exploit.ExploitExecutor
 import com.deepeye.otg.intelligence.vulndb.CveDao
 import com.deepeye.otg.intelligence.vulndb.CveDatabase
 import com.deepeye.otg.intelligence.vulndb.CveImporter
+import com.deepeye.otg.intelligence.vulndb.PatchStateAnalyzer
+import com.deepeye.otg.protocol.apple.UsbAppleSession
 import com.deepeye.otg.usb.AdbExecutor
 import com.deepeye.otg.usb.AdbManager
 import com.deepeye.otg.usb.AdbSession
@@ -208,4 +210,16 @@ object CoreModule {
     fun provideXiaomiExploitEngine(
         @ApplicationContext context: Context
     ): XiaomiExploitEngine = XiaomiExploitEngine(context)
+
+    @Provides
+    @Singleton
+    fun provideUsbAppleSession(usbManager: UsbManager): UsbAppleSession {
+        return UsbAppleSession(usbManager)
+    }
+
+    @Provides
+    @Singleton
+    fun providePatchStateAnalyzer(cveDao: CveDao): PatchStateAnalyzer {
+        return PatchStateAnalyzer(cveDao)
+    }
 }

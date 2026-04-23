@@ -157,7 +157,7 @@
   text-decoration: underline;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .settings-section__header {
     flex-direction: column;
   }

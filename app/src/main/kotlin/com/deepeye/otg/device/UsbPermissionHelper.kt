@@ -42,7 +42,11 @@ object UsbPermissionHelper {
         
         val pi = PendingIntent.getBroadcast(context, 0, permissionIntent, flags)
 
-        context.registerReceiver(receiver, IntentFilter(ACTION_USB_PERMISSION))
+        context.registerReceiver(receiver, IntentFilter(ACTION_USB_PERMISSION), if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_NOT_EXPORTED
+        } else {
+            0
+        })
         usbManager.requestPermission(device, pi)
 
         cont.invokeOnCancellation { context.unregisterReceiver(receiver) }

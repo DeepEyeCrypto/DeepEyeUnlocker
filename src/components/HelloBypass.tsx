@@ -140,20 +140,20 @@ export default function HelloBypass() {
   }[status];
 
   return (
-    <div className="p-6 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 text-white font-mono text-xs space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 text-white font-mono text-xs space-y-5">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tighter text-violet-400">
           HELLO BYPASS ENGINE v2
         </h2>
-        <div className={`px-3 py-1 rounded-full border text-[10px] ${statusColor} border-current`}>
+        <div className={`px-3 py-1 rounded-full border text-xs ${statusColor} border-current`}>
           {status.toUpperCase()}
         </div>
       </div>
 
       {/* Device Info Panel */}
       {device ? (
-        <div className="bg-white/5 rounded-xl border border-white/10 p-4 space-y-2">
+        <div className="bg-white/5 rounded-xl border border-white/10 p-3 sm:p-4 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-white/60">DEVICE</span>
             <span className="text-white font-bold">{device.model}</span>
@@ -172,11 +172,11 @@ export default function HelloBypass() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-white/60">SERIAL</span>
-            <span className="text-white/70 text-[10px]">{device.serial}</span>
+            <span className="text-white/70 text-xs">{device.serial}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-white/60">UDID</span>
-            <span className="text-white/50 text-[10px] truncate max-w-[200px]">
+            <span className="text-white/50 text-xs truncate max-w-full sm:max-w-[200px]">
               {device.udid}
             </span>
           </div>
@@ -185,7 +185,7 @@ export default function HelloBypass() {
           {routeLabel && (
             <div className="pt-2">
               <div
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold ${routeColor}`}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold ${routeColor}`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full bg-current`}
@@ -196,13 +196,13 @@ export default function HelloBypass() {
           )}
         </div>
       ) : (
-        <div className="bg-white/5 rounded-xl border border-white/10 p-4 text-center text-white/30">
+        <div className="bg-white/5 rounded-xl border border-white/10 p-3 sm:p-4 text-center text-white/30">
           NO DEVICE DETECTED — CONNECT iOS DEVICE AND CLICK DETECT
         </div>
       )}
 
       {/* Progress Log Terminal */}
-      <div className="bg-black/60 rounded-xl p-3 min-h-[160px] max-h-64 overflow-y-auto border border-white/5 space-y-0.5">
+      <div className="bg-black/60 rounded-xl p-3 min-h-[120px] sm:min-h-[160px] max-h-48 sm:max-h-64 overflow-y-auto border border-white/5 space-y-0.5">
         {logs.length === 0 ? (
           <div className="text-white/20 italic">awaiting commands…</div>
         ) : (
@@ -258,7 +258,7 @@ export default function HelloBypass() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <button
           onClick={handleDetect}
           disabled={status === "detecting" || status === "running"}

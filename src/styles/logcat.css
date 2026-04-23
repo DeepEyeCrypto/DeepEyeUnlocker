@@ -389,7 +389,7 @@
   word-break: break-word;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .logcat-hero {
     flex-direction: column;
   }
@@ -410,7 +410,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .logcat-terminal {
     min-height: 320px;
   }

@@ -2,8 +2,6 @@ package com.deepeye.otg.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -21,9 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.otg.ui.theme.DeepEyeColors
-import com.deepeye.otg.viewmodel.AdbBypassMethod
 import com.deepeye.otg.viewmodel.AdbFrpBypassViewModel
-import com.deepeye.otg.viewmodel.Risk
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,10 +29,7 @@ fun AdbFrpBypassScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(deviceModel) {
-        viewModel.setDeviceModel(deviceModel)
-    }
+    var serial by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -99,10 +92,32 @@ fun AdbFrpBypassScreen(
                 }
             }
 
-            // Run All Button
+            // Serial Input
+            OutlinedTextField(
+                value = serial,
+                onValueChange = { serial = it },
+                label = { Text("Device Serial") },
+                placeholder = { Text("e.g. R5CR80XXXXX") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = DeepEyeColors.GoldAccent,
+                    unfocusedBorderColor = DeepEyeColors.BorderGlass
+                )
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Run Bypass Button
             Button(
-                onClick = { viewModel.runAllMethods() },
-                enabled = !uiState.isRunning,
+                onClick = {
+                    if (serial.isNotBlank()) {
+                        viewModel.runBypass(serial)
+                    }
+                },
+                enabled = !uiState.isRunning && serial.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
@@ -121,35 +136,11 @@ fun AdbFrpBypassScreen(
                 } else {
                     Icon(Icons.Default.PlayArrow, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Run All Methods")
+                    Text("Run FRP Bypass")
                 }
             }
 
             Spacer(Modifier.height(16.dp))
-
-            // Methods List
-            Text(
-                "Bypass Methods",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(viewModel.bypassMethods) { method ->
-                    MethodCard(
-                        method = method,
-                        isRunning = uiState.isRunning,
-                        isCurrentMethod = uiState.currentMethod == method.id,
-                        onClick = { viewModel.runMethod(method.id) }
-                    )
-                }
-            }
 
             // Execution Log
             if (uiState.log.isNotEmpty()) {
@@ -168,12 +159,13 @@ fun AdbFrpBypassScreen(
                     color = Color.Black,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    Column(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
                         val logLines = uiState.log.split("\n")
-                        items(logLines) { line ->
+                        logLines.forEach { line ->
                             Text(
                                 text = line,
                                 color = when {
@@ -189,127 +181,6 @@ fun AdbFrpBypassScreen(
                         }
                     }
                 }
-            }
-
-            // Last Result Summary
-            uiState.lastResult?.let { result ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (result.success)
-                            Color(0xFF4CAF50).copy(alpha = 0.1f)
-                        else
-                            Color(0xFFFF5252).copy(alpha = 0.1f)
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = if (result.success) "✅ SUCCESS" else "❌ FAILED",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (result.success) Color(0xFF4CAF50) else Color(0xFFFF5252)
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "Method: ${result.method}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = DeepEyeColors.TextMuted
-                        )
-                        Text(
-                            "Success Rate: ${(result.successRate * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = DeepEyeColors.TextMuted
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MethodCard(
-    method: AdbBypassMethod,
-    isRunning: Boolean,
-    isCurrentMethod: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        enabled = !isRunning,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCurrentMethod)
-                DeepEyeColors.GoldAccent.copy(alpha = 0.1f)
-            else
-                DeepEyeColors.Surface
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icon based on risk
-            Icon(
-                imageVector = when (method.risk) {
-                    Risk.LOW -> Icons.Default.CheckCircle
-                    Risk.MEDIUM -> Icons.Default.Warning
-                    Risk.HIGH -> Icons.Default.Error
-                },
-                contentDescription = null,
-                tint = when (method.risk) {
-                    Risk.LOW -> Color(0xFF4CAF50)
-                    Risk.MEDIUM -> Color(0xFFFF9800)
-                    Risk.HIGH -> Color(0xFFFF5252)
-                },
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        method.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        method.successRate,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = DeepEyeColors.GoldAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Text(
-                    method.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = DeepEyeColors.TextMuted
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (method.requiresRoot) "⚠️ Root Required" else "✓ No Root",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (method.requiresRoot) Color(0xFFFF9800) else Color(0xFF4CAF50)
-                    )
-                }
-            }
-
-            if (isCurrentMethod && isRunning) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
-                )
             }
         }
     }

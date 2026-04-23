@@ -38,13 +38,13 @@
 
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
   --font-sans: "Inter", "SF Pro Display", system-ui, sans-serif;
-  --font-size-xs: clamp(10px, 1.5vw, 11px);
-  --font-size-sm: clamp(12px, 1.8vw, 13px);
-  --font-size-base: clamp(14px, 2vw, 15px);
-  --font-size-md: clamp(15px, 2.2vw, 16px);
-  --font-size-lg: clamp(18px, 2.5vw, 20px);
-  --font-size-xl: clamp(22px, 3vw, 24px);
-  --font-size-2xl: clamp(28px, 4vw, 32px);
+  --font-size-xs: clamp(10px, 1.2vw, 12px);
+  --font-size-sm: clamp(12px, 1.5vw, 14px);
+  --font-size-base: clamp(13px, 1.8vw, 16px);
+  --font-size-md: clamp(14px, 2vw, 18px);
+  --font-size-lg: clamp(16px, 2.2vw, 20px);
+  --font-size-xl: clamp(18px, 2.5vw, 24px);
+  --font-size-2xl: clamp(24px, 3.5vw, 32px);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -58,6 +58,18 @@
   --titlebar-height: 48px;
   --sidebar-width: 220px;
   --scrollbar-width: 6px;
+
+  /* Standardized breakpoints */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1536px;
+  --bp-3xl: 1920px;
+  --bp-4k: 2560px;
+
+  /* 4K scaling */
+  --scale-4k: 1;
 }
 
 [data-platform="macos"] {
@@ -74,6 +86,17 @@
   --radius-md: 6px;
   --radius-lg: 10px;
   --scrollbar-width: 8px;
+}
+
+/* 4K Ultra-wide optimizations */
+@media (min-width: 2560px) {
+  :root {
+    --font-size-sm: 14px;
+    --font-size-base: 17px;
+    --font-size-lg: 22px;
+    --font-size-xl: 28px;
+    --sidebar-width: 260px;
+  }
 }
 
 [data-platform="android"],

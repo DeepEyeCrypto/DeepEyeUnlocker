@@ -14,13 +14,48 @@
   --font-xl: clamp(18px, 2.2vw, 24px);
 }
 
-@media (max-width: 767px) {
+/* Mobile: < 640px */
+@media (max-width: 639px) {
   :root {
+    --card-min-width: 100%;
+    --gap-sm: 6px;
+    --gap-md: 10px;
+    --gap-lg: 14px;
+    --console-height: 80px;
     --sidebar-width: 100%;
     --header-height: 48px;
-    --console-height: 120px;
+  }
+}
+
+/* Tablet: 640px - 1023px */
+@media (min-width: 640px) and (max-width: 1023px) {
+  :root {
+    --card-min-width: 240px;
+    --gap-sm: 8px;
     --gap-md: 12px;
     --gap-lg: 16px;
+    --console-height: 120px;
+  }
+}
+
+/* Desktop: 1024px+ (keep existing defaults as baseline) */
+
+/* Large/4K: 1536px+ */
+@media (min-width: 1536px) {
+  :root {
+    --card-min-width: 320px;
+    --gap-sm: 10px;
+    --gap-md: 16px;
+    --gap-lg: 24px;
+    --scale-4k: 1.1;
+  }
+}
+
+/* Ultra-wide 4K: 2560px+ */
+@media (min-width: 2560px) {
+  :root {
+    --scale-4k: 1.25;
+    --card-min-width: 360px;
   }
 }
 

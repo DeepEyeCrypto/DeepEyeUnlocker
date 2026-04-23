@@ -93,7 +93,7 @@
   gap: 1rem;
 }
 
-@media (max-width: 640px) { .samsung-two-col { grid-template-columns: 1fr; } }
+@media (max-width: 639px) { .samsung-two-col { grid-template-columns: 1fr; } }
 
 .samsung-card {
   background: #0d1420;

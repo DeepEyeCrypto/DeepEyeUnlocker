@@ -1,5 +1,7 @@
 package com.deepeye.otg.intelligence.vulndb
 
+import javax.inject.Inject
+
 // Avoid android.util.Log in JVM tests; use LogSafe.
 
 // ──────────────────────────────────────────────────────────────
@@ -30,7 +32,7 @@ private const val TAG = "VersionMapping"
  * 2. Detects when observed builds diverge from expected (silent updates)
  * 3. Provides lookup for patch-state analysis
  */
-class VersionMappingEngine {
+class VersionMappingEngine @Inject constructor() {
 
     /**
      * iOS version → map of component → expected build

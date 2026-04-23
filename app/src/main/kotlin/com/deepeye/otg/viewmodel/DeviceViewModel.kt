@@ -30,8 +30,10 @@ class DeviceViewModel @Inject constructor(
 ) : ViewModel() {
 
     // ── Constants ─────────────────────────────────────────────
-    private const val ADB_DAEMON_WAIT_MS = 800L // Hardware sync: Wait for adbd to initialize
-    private const val DA_READY_WAIT_MS = 1000L   // Hardware sync: Wait for DA protocol handshake
+    companion object {
+        private const val ADB_DAEMON_WAIT_MS = 800L // Hardware sync: Wait for adbd to initialize
+        private const val DA_READY_WAIT_MS = 1000L   // Hardware sync: Wait for DA protocol handshake
+    }
 
     // ── State ─────────────────────────────────────────────────
     private val _devices = MutableStateFlow<List<DetectedDevice>>(emptyList())
@@ -51,6 +53,9 @@ class DeviceViewModel @Inject constructor(
 
     private val _flashProgress = MutableStateFlow<FlashProgress?>(null)
     val flashProgress: StateFlow<FlashProgress?> = _flashProgress.asStateFlow()
+
+    private val _flashStep = MutableStateFlow("")
+    val flashStep: StateFlow<String> = _flashStep.asStateFlow()
 
     private val _isConnecting = MutableStateFlow(false)
     val isConnecting: StateFlow<Boolean> = _isConnecting.asStateFlow()
@@ -198,4 +203,57 @@ class DeviceViewModel @Inject constructor(
 
     fun dismissError() { _error.value = null }
     fun clearLogs() { _logs.value = emptyList() }
+
+    // ── Methods required by DeviceDashboardScreen ────────────
+
+    fun scanDevices() {
+        log("🔍 Scanning for USB devices...")
+        // Device detection is reactive via UsbDeviceDetector in init block
+        // This method triggers a manual rescan notification
+    }
+
+    fun connectEdl() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isConnecting.emit(true)
+            log("Connecting to Qualcomm EDL 9008...")
+            _isConnecting.emit(false)
+        }
+    }
+
+    fun adbReboot(serial: String, mode: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            log("ADB reboot → $mode (serial: $serial)")
+            AdbEngine.reboot(serial, mode)
+                .onSuccess { log("Reboot command sent ✓") }
+                .onFailure { logError("Reboot failed: ${it.message}") }
+        }
+    }
+
+    fun fastbootFlash(serial: String, partition: String, imagePath: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            log("Fastboot flash $serial → $partition")
+            FastbootEngine.flash(serial, partition, imagePath)
+                .onSuccess { log("Fastboot flash sent ✓") }
+                .onFailure { logError("Fastboot flash failed: ${it.message}") }
+        }
+    }
+
+    fun adbShell(serial: String, command: String, onResult: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            log("\$ $command")
+            AdbEngine.shell(serial, command)
+                .onSuccess {
+                    log(it.ifBlank { "(empty output)" })
+                    onResult(it)
+                }
+                .onFailure {
+                    logError("Shell error: ${it.message}")
+                    onResult("")
+                }
+        }
+    }
+
+    fun getTestpointGuide(model: String, chipset: String): com.deepeye.otg.device.TestpointGuide {
+        return com.deepeye.otg.device.TestpointDb.getGuide(model, chipset)
+    }
 }

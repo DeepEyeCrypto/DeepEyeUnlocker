@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
+import android.os.Build
 import com.deepeye.otg.usb.UsbPermissionGuard
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
@@ -78,7 +79,11 @@ class UsbDeviceDetector @Inject constructor(
             addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
             addAction(UsbPermissionGuard.ACTION_USB_PERMISSION) // Listen for permission changes too
         }
-        context.registerReceiver(receiver, filter)
+        context.registerReceiver(receiver, filter, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_NOT_EXPORTED
+        } else {
+            0
+        })
         trySend(getConnectedDevices())
         awaitClose {
             context.unregisterReceiver(receiver)

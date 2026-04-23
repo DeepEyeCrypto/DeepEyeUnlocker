@@ -89,7 +89,7 @@
 }
 
 .rom-manager-grid {
-  grid-template-columns: minmax(0, 1.85fr) minmax(18rem, 0.95fr);
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 0.95fr);
   align-items: start;
 }
 
@@ -458,14 +458,14 @@
   min-height: 14rem;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1279px) {
   .rom-manager-grid,
   .rom-manager-detail-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .rom-manager-hero,
   .rom-manager-dropzone {
     grid-template-columns: 1fr;
@@ -481,14 +481,41 @@
   .rom-manager-details-grid {
     grid-template-columns: 1fr;
   }
+
+  .rom-manager-device-row {
+    flex-direction: column;
+  }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639px) {
   .rom-manager-table-wrap {
     overflow-x: auto;
   }
 
   .rom-manager-table {
     min-width: 48rem;
+  }
+
+  .rom-manager-hero__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .rom-manager-hero__actions .rom-manager-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rom-manager-source-cell {
+    min-width: 0;
+  }
+
+  .rom-manager-queue-item {
+    grid-template-columns: 1fr;
+  }
+
+  .rom-manager-queue-item__actions {
+    flex-direction: row;
+    justify-content: flex-end;
   }
 }

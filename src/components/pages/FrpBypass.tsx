@@ -324,7 +324,7 @@ function CompactMethodCard({
             </span>
           </div>
 
-          <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
+          <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3">
             <button
               className={cn(
                 "rounded-xl border px-2 py-2 text-[11px] font-medium tracking-wide text-white transition-all duration-200",
@@ -1084,7 +1084,7 @@ export default function FrpBypassPage() {
                 <div className="action-title">{entry.label}</div>
                 <div className="page-subtitle">Actual commands discovered during backend audit</div>
               </div>
-              <div className="frp-meta-list" style={{ maxWidth: 520 }}>
+              <div className="frp-meta-list" style={{ maxWidth: "100%" }}>
                 {entry.commands.map((command) => (
                   <span key={command}>{command}</span>
                 ))}
@@ -1298,7 +1298,7 @@ export default function FrpBypassPage() {
           {detecting ? (
             <div className={cn(
               "grid gap-3",
-              methodGridCols === 4 ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-2 md:grid-cols-3",
+              methodGridCols === 4 ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
             )}>
               {Array.from({ length: methodGridCols === 4 ? 8 : 6 }).map((_, index) => (
                 <div
@@ -1316,7 +1316,7 @@ export default function FrpBypassPage() {
               layout
               className={cn(
                 "grid gap-3",
-                methodGridCols === 4 ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-2 md:grid-cols-3",
+                methodGridCols === 4 ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
               )}
             >
               <AnimatePresence mode="popLayout">

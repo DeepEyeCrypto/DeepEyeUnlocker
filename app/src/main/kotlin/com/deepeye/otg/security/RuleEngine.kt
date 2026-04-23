@@ -5,6 +5,7 @@ import com.deepeye.otg.intelligence.vulndb.*
 import com.deepeye.otg.protocol.apple.model.AppleDeviceProfile
 import com.deepeye.otg.protocol.apple.model.AppleDeviceMode
 import com.deepeye.otg.protocol.apple.model.PairingState
+import javax.inject.Inject
 
 // ──────────────────────────────────────────────────────────────
 // Rule Engine — Security Detection Rules
@@ -76,7 +77,7 @@ data class DetectionRule(
  * - Unsafe trust relationships
  * - Missing security configurations
  */
-class RuleEngine {
+class RuleEngine @Inject constructor() {
 
     private val rules = mutableListOf<DetectionRule>()
 

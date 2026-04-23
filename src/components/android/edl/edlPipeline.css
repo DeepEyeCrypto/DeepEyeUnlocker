@@ -315,7 +315,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .edl-stage-card {
     padding: 12px;
     max-width: 100%;

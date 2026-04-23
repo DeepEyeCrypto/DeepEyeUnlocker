@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1920px',
+        '4k': '2560px',
+      },
       animation: {
         "border-beam": "border-beam calc(var(--duration) * 1s) infinite linear",
         "shine-pulse": "shine-pulse 14s infinite linear",

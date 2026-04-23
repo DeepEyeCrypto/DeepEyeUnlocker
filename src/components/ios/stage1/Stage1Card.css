@@ -277,7 +277,7 @@
   border-color: rgba(124, 58, 237, 0.6);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .stage-card,
   .s1-card {
     padding: 12px;

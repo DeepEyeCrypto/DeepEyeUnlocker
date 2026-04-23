@@ -210,33 +210,16 @@
   min-height: 0;
 }
 
-@media (max-width: 1024px) {
-  .main-layout .app-body {
-    grid-template-columns: var(--sidebar-current-width, var(--sidebar-collapsed)) minmax(0, 1fr);
+/* ── Mobile (<640px): single-column stacked, no sidebar ─────────────── */
+@media (max-width: 639px) {
+  .main-layout {
+    overflow-x: hidden;
   }
 
-  .main-layout .main-scroll-region {
-    padding: var(--gap-md);
-  }
-
-  .main-layout .workspace-header {
-    align-items: flex-start;
-  }
-
-  .main-layout .workspace-header__status {
-    align-items: flex-start;
-  }
-
-  .main-layout .workspace-status__meta {
-    text-align: left;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 767px) {
   .main-layout .app-body {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) var(--console-height) 56px;
+    overflow-x: hidden;
   }
 
   .main-layout .sidebar {
@@ -252,6 +235,7 @@
   .main-layout .execution-console {
     grid-column: 1;
     grid-row: 2;
+    min-height: 80px;
   }
 
   .main-layout .main-scroll-region {
@@ -278,21 +262,80 @@
 
   .main-layout .workspace-metric-grid,
   .main-layout .metrics-row {
+    grid-template-columns: 1fr;
+    gap: var(--gap-sm);
+  }
+}
+
+/* ── Tablet (640px–1023px): collapsed sidebar (64px) + content ───────── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .main-layout .app-body {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .main-layout .execution-console {
+    min-height: 120px;
+  }
+
+  .main-layout .main-scroll-region {
+    padding: var(--gap-md);
+  }
+
+  .main-layout .workspace-header {
+    align-items: flex-start;
+  }
+
+  .main-layout .workspace-header__status {
+    align-items: flex-start;
+  }
+
+  .main-layout .workspace-status__meta {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .main-layout .workspace-metric-grid,
+  .main-layout .metrics-row {
     grid-template-columns: 1fr 1fr;
     gap: var(--gap-sm);
   }
 }
 
-@media (max-width: 600px) {
-  .main-layout .workspace-metric-grid,
-  .main-layout .metrics-row {
-    grid-template-columns: 1fr 1fr;
+/* ── Desktop (1024px–1535px): full sidebar (220px) + content ─────────── */
+@media (min-width: 1024px) {
+  .main-layout .app-body {
+    grid-template-columns: var(--sidebar-current-width, var(--sidebar-width)) minmax(0, 1fr);
+  }
+
+  .main-layout .execution-console {
+    min-height: 180px;
   }
 }
 
-@media (max-width: 480px) {
-  .main-layout .workspace-metric-grid,
-  .main-layout .metrics-row {
-    grid-template-columns: 1fr;
+/* ── Large (1536px+): full sidebar + max-width container ─────────────── */
+@media (min-width: 1536px) {
+  .main-layout {
+    max-width: 2200px;
+    margin: 0 auto;
+  }
+
+  .main-layout .app-body {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    gap: var(--gap-lg);
+  }
+}
+
+/* ── 4K Ultra-wide (2560px+): expanded container + wider sidebar ─────── */
+@media (min-width: 2560px) {
+  .main-layout {
+    max-width: 2400px;
+  }
+
+  .main-layout .app-body {
+    gap: 20px;
+  }
+
+  .main-layout .sidebar {
+    width: 260px;
   }
 }

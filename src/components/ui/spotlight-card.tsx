@@ -175,6 +175,8 @@ const GlowCard: React.FC<GlowCardProps> = ({
           p-4 
           gap-4 
           backdrop-blur-[2px]
+          overflow-hidden
+          max-w-full
           ${className}
         `}
       >

@@ -13,6 +13,7 @@ import com.deepeye.otg.research.fuzz.Mutator
 import com.deepeye.otg.research.fuzz.MutatorFactory
 import com.deepeye.otg.research.fuzz.ReproRecorder
 import com.deepeye.otg.research.fuzz.TargetSurface
+import com.deepeye.otg.security.RemediationGenerator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -120,5 +121,11 @@ object ResearchModule {
     @Singleton
     fun provideMutators(corpusManager: CorpusManager): List<Mutator> {
         return MutatorFactory.createDefaultSet(corpusManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemediationGenerator(@ApplicationContext context: Context): RemediationGenerator {
+        return RemediationGenerator(researchDir(context, "security", "remediation"))
     }
 }

@@ -1,5 +1,7 @@
 package com.deepeye.otg.security
 
+import javax.inject.Inject
+
 // ──────────────────────────────────────────────────────────────
 // Severity Scorer — Finding Risk Scoring
 // DeepEye OTG — Detection + Hardening Module (Part 7)
@@ -47,7 +49,7 @@ data class CategoryScore(
  * - Weight active exploitation and critical findings heavily
  * - Category breakdown for targeted remediation
  */
-class SeverityScorer {
+class SeverityScorer @Inject constructor() {
 
     companion object {
         // Severity deduction weights

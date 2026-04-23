@@ -34,7 +34,7 @@ function NoncePanel() {
       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: "#a78bfa" }}>
         🔢 Nonce Generator Engine
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
         <div className="glass" style={{ padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Current Nonce</div>
           <button className="btn" style={{ width: "100%" }}
@@ -103,7 +103,7 @@ function SSHPanel() {
       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: "#38bdf8" }}>
         🔐 SSH Tunnel Manager
       </h3>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+      <div className="flex flex-col sm:flex-row gap-2 mb-3">
         {[
           { label: "▶ Start Tunnel", cmd: "start_ssh_tunnel", color: "success" },
           { label: "■ Stop Tunnel",  cmd: "stop_ssh_tunnel",  color: "danger" },
@@ -116,7 +116,7 @@ function SSHPanel() {
 
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Run SSH Command</div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2">
           <input value={cmd} onChange={e => setCmd(e.target.value)}
             placeholder="e.g. cat /etc/hosts"
             style={{ flex: 1, padding: "8px 10px", borderRadius: 8,
@@ -131,7 +131,7 @@ function SSHPanel() {
 
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>File Transfer (SCP)</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
           <div>
             <div style={{ fontSize: 10, color: "#64748b", marginBottom: 4 }}>Local Path</div>
             <div style={{ display: "flex", gap: 6 }}>
@@ -152,7 +152,7 @@ function SSHPanel() {
                 color: "#e2e8f0", fontSize: 11, fontFamily: "monospace" }} />
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2">
           <button className="btn" style={{ flex: 1 }}
             onClick={() => run("ssh_upload_file", { local_path: localPath, remote_path: remotePath })}
             disabled={!localPath || st === "running"}>⬆ Upload to Device</button>
@@ -164,7 +164,7 @@ function SSHPanel() {
 
       <div className="glass" style={{ padding: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Sileo / apt-get Package Installer</div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2">
           <input value={pkg} onChange={e => setPkg(e.target.value)}
             placeholder="e.g. openssh, substrate, cydia"
             style={{ flex: 1, padding: "8px 10px", borderRadius: 8,
@@ -215,7 +215,7 @@ ObjC.schedule(ObjC.mainQueue, function() {
 
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Target Process / Bundle ID</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input value={processTarget} onChange={e => setProcessTarget(e.target.value)}
             placeholder="e.g. SpringBoard or com.apple.AppStore"
             style={{ flex: 1, padding: "8px 10px", borderRadius: 8,
@@ -253,7 +253,7 @@ ObjC.schedule(ObjC.mainQueue, function() {
 
       <div className="glass" style={{ padding: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Inject .dylib</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input value={bundleId} onChange={e => setBundleId(e.target.value)}
             placeholder="Bundle ID" style={{ flex: 1, padding: "7px 10px", borderRadius: 6,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
@@ -291,7 +291,7 @@ function IPSWPanel() {
         ⬇️ IPSW Downloader
       </h3>
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2.5">
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, color: "#64748b", marginBottom: 4 }}>Device Identifier</div>
             <input value={identifier} onChange={e => setIdentifier(e.target.value)}
@@ -363,7 +363,7 @@ function CrashPanel() {
       </div>
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Read / Symbolicate Log</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input value={file} onChange={e => setFile(e.target.value)}
             placeholder="filename.ips or .crash"
             style={{ flex: 1, padding: "7px 10px", borderRadius: 6,
@@ -411,7 +411,7 @@ function AFCPanel() {
 
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Path Explorer</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input value={path} onChange={e => setPath(e.target.value)}
             style={{ flex: 1, padding: "8px 10px", borderRadius: 8,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
@@ -423,7 +423,7 @@ function AFCPanel() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
         <div className="glass" style={{ padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>File Content</div>
           <button className="btn" style={{ width: "100%", marginBottom: 8 }}
@@ -468,7 +468,7 @@ function BackupPanel() {
         💾 Full Backup & Restore Manager
       </h3>
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
           <div>
             <div style={{ fontSize: 10, color: "#64748b", marginBottom: 4 }}>Backup Label</div>
             <input value={label} onChange={e => setLabel(e.target.value)}
@@ -499,7 +499,7 @@ function BackupPanel() {
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Granular App Data Extraction</div>
         <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8 }}>Target specific App Store / System bundle IDs</div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2">
           <input value={appId} onChange={e => setAppId(e.target.value)} placeholder="e.g. com.apple.mobilesafari"
             style={{ flex: 1, padding: "8px 10px", borderRadius: 8,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
@@ -527,7 +527,7 @@ function SideloaderPanel() {
       </h3>
       <div className="glass" style={{ padding: 14, marginBottom: 10 }}>
         <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Install Application</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2.5">
           <input value={ipa} readOnly placeholder="Select .ipa file"
             style={{ flex: 1, padding: "7px 10px", borderRadius: 6,
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
@@ -537,7 +537,7 @@ function SideloaderPanel() {
             if (f) setIpa(String(f));
           }}>📁 Browse</button>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex flex-col sm:flex-row gap-2">
           <button className="btn primary" style={{ flex: 1 }}
             onClick={() => run("install_ipa", { path: ipa })}
             disabled={!ipa || st === "running"}>📦 Install IPA</button>
@@ -547,7 +547,7 @@ function SideloaderPanel() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         <div className="glass" style={{ padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Inventory</div>
           <button className="btn" style={{ width: "100%", marginBottom: 8 }}
@@ -580,7 +580,7 @@ function DeveloperPanel() {
       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: "#818cf8" }}>
         🛠️ Developer Instruments & Mounts
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
         <div className="glass" style={{ padding: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Disk Management</div>
           <button className="btn success" style={{ width: "100%", marginBottom: 8 }}

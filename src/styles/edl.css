@@ -418,7 +418,7 @@
   box-shadow: 0 0 8px rgba(99,102,241,0.4);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1279px) {
   .edl-grid {
     grid-template-columns: 1fr;
   }
@@ -437,7 +437,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .edl-page {
     gap: 1rem;
   }

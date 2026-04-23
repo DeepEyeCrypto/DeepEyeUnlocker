@@ -210,26 +210,26 @@ export default function IRemovalBypass() {
   const isBusy = status === "detecting" || status === "running";
 
   return (
-    <div className="p-6 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 text-white font-mono text-xs space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 text-white font-mono text-xs space-y-5">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold tracking-tighter text-cyan-400">
             iREMOVAL BYPASS ENGINE
           </h2>
-          <p className="text-white/30 text-[10px] mt-0.5">
+          <p className="text-white/30 text-xs mt-0.5">
             A7–A18 · checkm8 · Server Bypass · iServices Fix
           </p>
         </div>
         <div
-          className={`px-3 py-1 rounded-full border text-[10px] ${statusColor} border-current`}
+          className={`px-3 py-1 rounded-full border text-xs sm:text-sm ${statusColor} border-current`}
         >
           {status.toUpperCase()}
         </div>
       </div>
 
       {/* Technique Cards */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
         {(Object.keys(TECHNIQUE_CONFIG) as Technique[]).map((key) => {
           const cfg = TECHNIQUE_CONFIG[key];
           const isActive = route === key;
@@ -257,14 +257,14 @@ export default function IRemovalBypass() {
                 </span>
               </div>
               <div
-                className={`text-[10px] ${
+                className={`text-xs ${
                   isActive ? "text-white/80" : "text-white/30"
                 }`}
               >
                 {cfg.subtitle}
               </div>
               <div
-                className={`text-[9px] ${
+                className={`text-xs ${
                   isActive ? cfg.textClass : "text-white/20"
                 }`}
               >
@@ -277,9 +277,9 @@ export default function IRemovalBypass() {
 
       {/* Device Info Panel */}
       {device ? (
-        <div className="bg-white/5 rounded-xl border border-white/10 p-4 space-y-2">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-            <div className="flex justify-between items-center col-span-2">
+        <div className="bg-white/5 rounded-xl border border-white/10 p-3 sm:p-4 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <div className="flex justify-between items-center col-span-1 sm:col-span-2">
               <span className="text-white/60">DEVICE</span>
               <span className="text-white font-bold">{device.model}</span>
             </div>
@@ -295,15 +295,15 @@ export default function IRemovalBypass() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-white/60">SERIAL</span>
-              <span className="text-white/70 text-[10px]">{device.serial}</span>
+              <span className="text-white/70 text-xs">{device.serial}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-white/60">IMEI</span>
-              <span className="text-white/70 text-[10px]">{device.imei}</span>
+              <span className="text-white/70 text-xs">{device.imei}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-white/60">ECID</span>
-              <span className="text-white/70 text-[10px]">{device.ecid}</span>
+              <span className="text-white/70 text-xs">{device.ecid}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-white/60">METHOD</span>
@@ -323,7 +323,7 @@ export default function IRemovalBypass() {
           {route && (
             <div className="pt-1.5">
               <div
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold ${
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-bold ${
                   TECHNIQUE_CONFIG[route].borderClass
                 } ${TECHNIQUE_CONFIG[route].textClass}`}
               >
@@ -337,13 +337,13 @@ export default function IRemovalBypass() {
           )}
         </div>
       ) : (
-        <div className="bg-white/5 rounded-xl border border-white/10 p-4 text-center text-white/30">
+        <div className="bg-white/5 rounded-xl border border-white/10 p-3 sm:p-4 text-center text-white/30">
           NO DEVICE DETECTED — CONNECT iOS DEVICE AND CLICK DETECT
         </div>
       )}
 
       {/* Progress Log Terminal */}
-      <div className="bg-black/60 rounded-xl p-3 min-h-[140px] max-h-56 overflow-y-auto border border-white/5 space-y-0.5">
+      <div className="bg-black/60 rounded-xl p-3 min-h-[120px] sm:min-h-[160px] max-h-48 sm:max-h-64 overflow-y-auto border border-white/5 space-y-0.5">
         {logs.length === 0 ? (
           <div className="text-white/20 italic">awaiting commands…</div>
         ) : (
@@ -400,7 +400,7 @@ export default function IRemovalBypass() {
         >
           {status === "detecting" ? "DETECTING…" : "DETECT DEVICE"}
         </button>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={handleRun}
             disabled={!device || isBusy}
