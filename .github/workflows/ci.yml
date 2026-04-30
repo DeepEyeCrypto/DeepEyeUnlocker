@@ -43,6 +43,7 @@ jobs:
             librsvg2-dev \
             patchelf \
             libayatana-appindicator3-dev \
+            libsqlite3-dev \
             pkg-config
 
       - name: Check Rust formatting

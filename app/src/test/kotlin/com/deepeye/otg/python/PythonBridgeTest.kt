@@ -69,6 +69,6 @@ class PythonBridgeTest {
             if (i % 2 == 1) { n *= 2; if (n > 9) n -= 9 }
             sum += n
         }
-        return sum % 10 == 0
+        return sum % 10 == 0 && sum > 0
     }
 }

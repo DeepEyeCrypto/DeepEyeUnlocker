@@ -20,9 +20,11 @@ class FridaManagerTest {
     private lateinit var manager: FridaManager
 
     @Before
-    fun setup() {
-        MockitoAnnotations.openMocks(this)
+    fun setup() = runBlocking {
+        MockitoAnnotations.openMocks(this@FridaManagerTest)
         `when`(context.assets).thenReturn(assetManager)
+        `when`(context.cacheDir).thenReturn(java.io.File("/tmp"))
+        `when`(adbExecutor.shell(org.mockito.ArgumentMatchers.anyString())).thenReturn("")
         manager = FridaManager(context, adbExecutor)
     }
 
@@ -41,6 +43,10 @@ class FridaManagerTest {
         
         `when`(assetManager.open("frida/hooks/ssl.js")).thenReturn(ByteArrayInputStream(sslContent.toByteArray()))
         `when`(assetManager.open("frida/hooks/root.js")).thenReturn(ByteArrayInputStream(rootContent.toByteArray()))
+        `when`(assetManager.open("frida/frida-server")).thenReturn(ByteArrayInputStream(ByteArray(0)))
+        
+        // Mock list of hooks for buildCombinedScript
+        `when`(assetManager.list("frida/hooks")).thenReturn(arrayOf("ssl.js", "root.js"))
 
         runBlocking {
             val result = manager.deployHooks("com.test.app", listOf("ssl.js", "root.js")) { println(it) }

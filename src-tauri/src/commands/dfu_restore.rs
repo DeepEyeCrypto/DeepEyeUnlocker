@@ -311,7 +311,10 @@ pub async fn ios_download_ipsw(
         downloaded += chunk.len() as u64;
 
         // Emit progress every 5%
-        if let Some(pct) = downloaded.checked_mul(100).and_then(|d| d.checked_div(total_size)) {
+        if let Some(pct) = downloaded
+            .checked_mul(100)
+            .and_then(|d| d.checked_div(total_size))
+        {
             if pct >= last_pct + 5 {
                 last_pct = pct;
                 let _ = app.emit(
