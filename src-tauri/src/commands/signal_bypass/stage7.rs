@@ -132,15 +132,8 @@ fn tac_to_manufacturer(tac: &str) -> (&'static str, &'static str) {
     match &tac[..2] {
         "01" => ("Apple", "iPhone"),
         "35" => ("Apple", "iPhone"),
-        "86" => {
-            // Can be Apple or Xiaomi depending on following digits, assuming Apple for bypass tools generally
-            if tac.starts_with("86") && (tac.contains("Apple") || tac.len() >= 8) {
-                // Simplification for the match statement structure
-                ("Apple/Xiaomi", "Mobile")
-            } else {
-                ("Unknown", "Mobile")
-            }
-        }
+        "86" if tac.contains("Apple") || tac.len() >= 8 => ("Apple/Xiaomi", "Mobile"),
+        "86" => ("Unknown", "Mobile"),
         "00" => ("Ericsson", "Mobile"),
         "30" => ("Motorola", "Mobile"),
         "33" => ("Motorola", "Mobile"),

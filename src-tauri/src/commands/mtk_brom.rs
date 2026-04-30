@@ -285,10 +285,8 @@ fn locate_brom_device() -> Result<(Device<GlobalContext>, InterfaceLayout), Brom
 
                 return Ok((device, layout));
             }
-            MTK_PRELOADER_PID => {
-                if preloader_candidate.is_none() {
-                    preloader_candidate = build_device(&device, &descriptor);
-                }
+            MTK_PRELOADER_PID if preloader_candidate.is_none() => {
+                preloader_candidate = build_device(&device, &descriptor);
             }
             _ => {}
         }

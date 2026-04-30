@@ -9,11 +9,13 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import java.io.ByteArrayInputStream
+import kotlinx.coroutines.runBlocking
 
 class FridaManagerTest {
 
     @Mock lateinit var context: Context
     @Mock lateinit var assetManager: AssetManager
+    @Mock lateinit var adbExecutor: com.deepeye.otg.usb.AdbExecutor
 
     private lateinit var manager: FridaManager
 
@@ -21,7 +23,7 @@ class FridaManagerTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         `when`(context.assets).thenReturn(assetManager)
-        manager = FridaManager(context)
+        manager = FridaManager(context, adbExecutor)
     }
 
     @Test
@@ -40,7 +42,9 @@ class FridaManagerTest {
         `when`(assetManager.open("frida/hooks/ssl.js")).thenReturn(ByteArrayInputStream(sslContent.toByteArray()))
         `when`(assetManager.open("frida/hooks/root.js")).thenReturn(ByteArrayInputStream(rootContent.toByteArray()))
 
-        val result = manager.deployHooks("com.test.app", listOf("ssl.js", "root.js")) { println(it) }
-        assertTrue(result.isSuccess)
+        runBlocking {
+            val result = manager.deployHooks("com.test.app", listOf("ssl.js", "root.js")) { println(it) }
+            assertTrue(result.isSuccess)
+        }
     }
 }
