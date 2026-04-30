@@ -114,6 +114,7 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 10px 12px;
+  padding-right: 80px; /* Space for copy button */
   margin: 12px 0;
   max-height: 200px;
   overflow-y: auto;
@@ -122,6 +123,41 @@
   line-height: 1.6;
   scrollbar-width: thin;
   word-break: break-all;
+}
+
+/* Log console wrapper with copy button */
+.log-console-wrapper {
+  position: relative;
+  margin: 12px 0;
+}
+
+/* Copy button for logs */
+.btn-copy-logs {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 12px;
+  background: rgba(124, 58, 237, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  border-radius: 8px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-copy-logs:hover {
+  background: rgba(124, 58, 237, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.btn-copy-logs:active {
+  transform: translateY(0);
 }
 
 .log-ok {

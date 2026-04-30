@@ -195,6 +195,7 @@ pub async fn ios_restore_device(
 
 /// IPSW download response from ipsw.me API
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct IpswApiFirmware {
     url: Option<String>,
     version: Option<String>,

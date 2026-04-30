@@ -9,8 +9,8 @@ usage() {
   cat <<'EOF'
 Usage: bash ./scripts/build_macos_pkg.sh [--target <triple>]... [--config <path>] [--skip-build]
 
-Builds DeepEyeUnlocker macOS installer artifacts by generating a Tauri `.app` + `.dmg`
-bundle and wrapping the `.app` bundle in a `.pkg` installer built with `pkgbuild`.
+Builds DeepEyeUnlocker macOS installer artifacts by generating a Tauri `.app`
+bundle and wrapping it in a `.pkg` installer built with `pkgbuild`.
 
 Options:
   --target <triple>  macOS target triple to package. May be supplied more than once.
@@ -27,7 +27,7 @@ declare -a cleanup_dirs=()
 
 cleanup() {
   local dir_path
-  for dir_path in "${cleanup_dirs[@]}"; do
+  for dir_path in "${cleanup_dirs[@]:-}"; do
     if [ -n "$dir_path" ] && [ -d "$dir_path" ]; then
       rm -rf "$dir_path"
     fi
@@ -177,7 +177,7 @@ build_target() {
   fi
 
   echo "Building Tauri macOS bundles for ${target}"
-  npx tauri build --config "$config_path" --target "$target" --bundles app,dmg
+  npx tauri build --config "$config_path" --target "$target" --bundles app
 }
 
 package_target() {

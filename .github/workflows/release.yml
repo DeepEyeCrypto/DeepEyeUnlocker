@@ -29,11 +29,11 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-            bundles: app,dmg
+            bundles: app
             artifact_name: release-aarch64-apple-darwin
           - os: macos-latest
             target: x86_64-apple-darwin
-            bundles: app,dmg
+            bundles: app
             artifact_name: release-x86_64-apple-darwin
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
@@ -110,7 +110,7 @@ jobs:
       - name: Prepare Tauri release config
         shell: bash
         env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD != '' }}
+          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -137,7 +137,7 @@ jobs:
         shell: bash
         env:
           CI: "true"
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD != '' }}
+          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_SIGNING_IDENTITY: "-"
@@ -181,23 +181,19 @@ jobs:
 
           files = []
           if target == "aarch64-apple-darwin":
-              files.extend(bundle_dir.glob("dmg/*.dmg"))
               files.extend(bundle_dir.glob("pkg/*.pkg"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
               rename = {
-                  ".dmg": f"DeepEyeUnlocker_{version}_aarch64.dmg",
                   ".pkg": f"DeepEyeUnlocker_{version}_aarch64.pkg",
                   ".app.tar.gz": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz",
                   ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz.sig",
               }
           elif target == "x86_64-apple-darwin":
-              files.extend(bundle_dir.glob("dmg/*.dmg"))
               files.extend(bundle_dir.glob("pkg/*.pkg"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
               files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
               rename = {
-                  ".dmg": f"DeepEyeUnlocker_{version}_x86_64.dmg",
                   ".pkg": f"DeepEyeUnlocker_{version}_x86_64.pkg",
                   ".app.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz",
                   ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz.sig",
@@ -413,7 +409,7 @@ jobs:
       - name: Generate latest.json
         shell: bash
         env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD != '' }}
+          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
         run: |
@@ -486,7 +482,7 @@ jobs:
       - name: Sync releases/latest.json to main branch
         shell: bash
         env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD != '' }}
+          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
           GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
         run: |
           set -euo pipefail

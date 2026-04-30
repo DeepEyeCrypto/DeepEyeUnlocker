@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { safeInvoke } from "../lib/tauri-utils";
 import { useMemo, useState } from "react";
 import { WaitingQueuePanel } from "../components/WaitingQueuePanel";
 import { useWaitQueue } from "../hooks/useWaitQueue";
@@ -109,13 +109,13 @@ export default function DashboardPage({
       setActiveOperation(operation.name);
       try {
         if (operation.params.command === DASHBOARD_COMMANDS.CHECK_FMI) {
-          const enabled = await invoke<boolean>(operation.params.command, { udid: connectedDevice.id });
+          const enabled = await safeInvoke<boolean>(operation.params.command, { udid: connectedDevice.id });
           addLog(`[info] Find My is ${enabled ? "enabled" : "disabled"}.`);
           return;
         }
 
         if (operation.params.command === DASHBOARD_COMMANDS.CHECK_ACTIVATION) {
-          const result = await invoke<ActivationStateResponse>(operation.params.command, {
+          const result = await safeInvoke<ActivationStateResponse>(operation.params.command, {
             udid: connectedDevice.id,
           });
           addLog(`[info] ${formatActivationResult(result)}`);
@@ -129,7 +129,7 @@ export default function DashboardPage({
             : {}),
         };
 
-        const result = await invoke<string>(operation.params.command, args);
+        const result = await safeInvoke<string>(operation.params.command, args);
         if (result.trim()) {
           addLog(result.trim());
           return;

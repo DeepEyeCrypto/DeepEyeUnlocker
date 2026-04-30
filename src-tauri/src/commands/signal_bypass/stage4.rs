@@ -264,9 +264,7 @@ pub async fn signal_stage4_icloud(
     let owner_apple_id = mask_apple_id(&raw_apple_id);
 
     // Find My state inference
-    let find_my_state = if is_activation_locked {
-        "On".to_string()
-    } else if act_output.to_lowercase().contains("find my") {
+    let find_my_state = if is_activation_locked || act_output.to_lowercase().contains("find my") {
         "On".to_string()
     } else if activation_state == "Activated" && !is_icloud_locked {
         "Off".to_string()
@@ -334,9 +332,7 @@ pub async fn signal_stage4_icloud(
     slog!("");
     let stage_passed = true; // Always pass to allow bypass attempt
     let stage_message = if lock_severity == "Hard Lock" {
-        format!(
-            "⚠️  Hard Lock detected — attempting advanced bypass methods...",
-        )
+        "⚠️  Hard Lock detected — attempting advanced bypass methods...".to_string()
     } else if lock_severity == "Soft Lock" {
         format!(
             "Soft lock ({}) — Stage 5 MDM + Stage 6 carrier will clear. ⚠️ Continue.",

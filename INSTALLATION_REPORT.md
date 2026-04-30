@@ -83,8 +83,6 @@ target/x86_64-apple-darwin/release/bundle/
 │   └── DeepEyeUnlocker_2027.18.1_x86_64.pkg  (8.3 MB) ← INSTALLED
 ├── macos/
 │   └── DeepEyeUnlocker.app                     (30 MB)
-└── dmg/
-    └── DeepEyeUnlocker_2027.18.1_x64.dmg      (252 KB - template)
 ```
 
 ### Mobile (Android)

@@ -485,7 +485,7 @@
   color: #fde68a;
 }
 
-.device-status-bar {
+/* .device-status-bar {
   position: fixed;
   left: 16px;
   right: 16px;
@@ -500,7 +500,7 @@
   box-shadow: 0 16px 40px rgba(2, 6, 23, 0.35);
   backdrop-filter: blur(16px);
   padding: 10px;
-}
+} */
 
 [data-platform="android"] .device-status-bar,
 [data-platform="ios"] .device-status-bar {

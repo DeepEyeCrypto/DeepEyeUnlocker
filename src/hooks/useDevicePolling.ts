@@ -68,8 +68,8 @@ export function useDevicePolling(pollIntervalMs = 2000) {
     // Event-driven refresh (Tauri backend usb_detector)
     let unlisten: any;
     const setupListener = async () => {
-      const { listen } = await import('@tauri-apps/api/event');
-      unlisten = await listen('usb-devices-changed', () => {
+      const { safeListen } = await import('../lib/tauri-utils');
+      unlisten = await safeListen('usb-devices-changed', () => {
         console.log("[usb] devices changed event received, refreshing...");
         void refresh(true);
       });

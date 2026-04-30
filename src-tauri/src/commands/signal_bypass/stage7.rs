@@ -121,7 +121,7 @@ fn luhn_check(imei: &str) -> (bool, u8) {
         .sum();
 
     let check_digit = digits[14];
-    (sum % 10 == 0, check_digit)
+    (sum.is_multiple_of(10), check_digit)
 }
 
 // ── TAC code → manufacturer/model hint ────────────

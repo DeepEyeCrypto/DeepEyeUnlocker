@@ -52,11 +52,32 @@ export function Stage1Card({
   const [error, setError] = useState<string | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const [flowOpen, setFlowOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const isRunningAll = autoRunProps?.isRunningAll || false
   const currentStage = autoRunProps?.currentStage || 1
   const autoLogs = autoRunProps?.logs || []
   const finalResult = autoRunProps?.finalResult || false
   const runAllStagesAuto = autoRunProps?.runAllStagesAuto || (() => Promise.resolve())
+
+  // Copy logs to clipboard
+  const copyLogs = async (logArray: string[]) => {
+    const text = logArray.join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   useEffect(() => {
     const u = listen<string>("s1-log", (e) =>
@@ -118,23 +139,33 @@ export function Stage1Card({
 
       {/* Log console */}
       {logs.length > 0 && (
-        <div className="log-console" ref={logRef}>
-          {logs.map((l, i) => (
-            <div
-              key={i}
-              className={
-                l.startsWith("✅") || l.startsWith("╔")
-                  ? "log-ok"
-                  : l.startsWith("❌") || l.startsWith("⛔")
-                    ? "log-err"
-                    : l.startsWith("📡") || l.startsWith("📱")
-                      ? "log-info"
-                      : "log-line"
-              }
-            >
-              {l}
-            </div>
-          ))}
+        <div className="log-console-wrapper">
+          <div className="log-console" ref={logRef}>
+            {logs.map((l, i) => (
+              <div
+                key={i}
+                className={
+                  l.startsWith("✅") || l.startsWith("╔")
+                    ? "log-ok"
+                    : l.startsWith("❌") || l.startsWith("⛔")
+                      ? "log-err"
+                      : l.startsWith("📡") || l.startsWith("📱")
+                        ? "log-info"
+                        : "log-line"
+                }
+              >
+                {l}
+              </div>
+            ))}
+          </div>
+          {/* Copy button */}
+          <button
+            className="btn-copy-logs"
+            onClick={() => copyLogs(logs)}
+            title="Copy logs to clipboard"
+          >
+            {copied ? "✓ Copied" : "📋 Copy"}
+          </button>
         </div>
       )}
 
@@ -239,23 +270,33 @@ export function Stage1Card({
 
           {/* Auto-run logs */}
           {autoLogs.length > 0 && (
-            <div className="log-console" ref={logRef}>
-              {autoLogs.map((l, i) => (
-                <div
-                  key={i}
-                  className={
-                    l.includes("✅") || l.startsWith("🚀") || l.includes("═")
-                      ? "log-ok"
-                      : l.includes("❌") || l.includes("⛔")
-                        ? "log-err"
-                        : l.includes("⚡") || l.includes("🎯")
-                          ? "log-info"
-                          : "log-line"
-                  }
-                >
-                  {l}
-                </div>
-              ))}
+            <div className="log-console-wrapper">
+              <div className="log-console" ref={logRef}>
+                {autoLogs.map((l, i) => (
+                  <div
+                    key={i}
+                    className={
+                      l.includes("✅") || l.startsWith("🚀") || l.includes("═")
+                        ? "log-ok"
+                        : l.includes("❌") || l.includes("⛔")
+                          ? "log-err"
+                          : l.includes("⚡") || l.includes("🎯")
+                            ? "log-info"
+                            : "log-line"
+                    }
+                  >
+                    {l}
+                  </div>
+                ))}
+              </div>
+              {/* Copy button for auto-run logs */}
+              <button
+                className="btn-copy-logs"
+                onClick={() => copyLogs(autoLogs)}
+                title="Copy logs to clipboard"
+              >
+                {copied ? "✓ Copied" : "📋 Copy"}
+              </button>
             </div>
           )}
 

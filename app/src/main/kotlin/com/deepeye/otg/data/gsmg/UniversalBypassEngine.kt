@@ -52,6 +52,8 @@ class UniversalBypassEngine @Inject constructor(
     private val adbSession: AdbSession,
     private val firmwareAssets: FirmwareAssetManager,
     private val pythonBridge: com.deepeye.otg.python.PythonBridge,
+    private val a12ServerExec: com.deepeye.otg.protocol.ios.A12ServerBypassExecutor,
+    private val fridaManager: com.deepeye.otg.intelligence.FridaManager,
 ) {
     companion object {
         private const val MAX_RETRIES  = 3
@@ -298,8 +300,13 @@ class UniversalBypassEngine @Inject constructor(
             ProtocolFamily.ADB_GENERIC -> {
                 when (feature.mechanism) {
                     BypassMechanism.FRP_ADB,
-                    BypassMechanism.ADB_EXPLOIT ->
-                        adbExec.eraseFrpAdb(sessionId)
+                    BypassMechanism.ADB_EXPLOIT -> {
+                        if (feature.id == "ANDROID_BIOMETRIC_BYPASS") {
+                            fridaManager.deployBiometricBypass(sessionId)
+                        } else {
+                            adbExec.eraseFrpAdb(sessionId)
+                        }
+                    }
 
                     BypassMechanism.MI_ACCOUNT_REMOVE ->
                         adbExec.removeMiAccount(sessionId)
@@ -368,15 +375,37 @@ class UniversalBypassEngine @Inject constructor(
                 }
             }
 
-            // ── iOS Normal / Recovery ─────────────────────────────────────
             ProtocolFamily.IOS_NORMAL,
             ProtocolFamily.IOS_RECOVERY -> {
-                serverExec.requestBypassToken(
-                    ecid       = device.ecid ?: throw ProtocolException("ECID required", "SERVER"),
-                    serial     = device.serial,
-                    iosVersion = device.iosVersion,
-                    sessionId  = sessionId,
-                )
+                when (feature.mechanism) {
+                    BypassMechanism.SERVER_REGISTRATION ->
+                        a12ServerExec.fullSignalBypass(
+                            imei = device.imei ?: throw ProtocolException("IMEI required for signal", "VALIDATION"),
+                            ecid = device.ecid ?: throw ProtocolException("ECID required", "VALIDATION"),
+                            sessionId = sessionId
+                        )
+                    BypassMechanism.SERVER_EXPLOIT -> {
+                        if (feature.id.contains("FAKE_ERASE")) {
+                            a12ServerExec.fakeEraseBypass(
+                                ecid = device.ecid ?: throw ProtocolException("ECID required", "VALIDATION"),
+                                sessionId = sessionId
+                            )
+                        } else {
+                            a12ServerExec.wifiBypass(
+                                ecid = device.ecid ?: throw ProtocolException("ECID required", "VALIDATION"),
+                                sessionId = sessionId
+                            )
+                        }
+                    }
+                    else -> {
+                        serverExec.requestBypassToken(
+                            ecid = device.ecid ?: throw ProtocolException("ECID required", "SERVER"),
+                            serial = device.serial,
+                            iosVersion = device.iosVersion,
+                            sessionId = sessionId,
+                        )
+                    }
+                }
             }
 
             // ── UniSoc / SPD ──────────────────────────────────────────────

@@ -265,19 +265,41 @@ class AdbSession(
      * Executes a single shell command and returns the output.
      * Opens a stream, reads until CLSE, and closes.
      */
-    suspend fun shell(command: String, timeoutMs: Long = 10000): Result<String> {
+    suspend fun shell(command: String, timeoutMs: Long = 10000): Result<String> = sessionMutex.withLock {
+        if (!_isConnected.value) {
+            val connected = connect()
+            if (!connected) return Result.failure(Exception("ADB not connected"))
+        }
+
         val streamId = open("shell:$command") 
             ?: return Result.failure(Exception("Failed to open shell stream"))
 
         return try {
             val output = StringBuilder()
-            // In a real implementation, we'd loop until CLSE. 
-            // For now, read the first chunk of response.
-            val chunk = readString(streamId)
-            if (chunk != null) output.append(chunk)
+            var closed = false
+            
+            // Read until stream is closed or error
+            while (!closed) {
+                val rId = activeStreams[streamId] ?: break
+                val msg = receiveMessage() ?: break
+                
+                when (msg.command) {
+                    AdbProtocol.A_WRTE -> {
+                        // Acknowledge WRITE (OKAY)
+                        val okay = AdbMessage(AdbProtocol.A_OKAY, streamId, rId, null)
+                        transport!!.write(okay.serialize())
+                        msg.data?.let { output.append(String(it)) }
+                    }
+                    AdbProtocol.A_CLSE -> {
+                        activeStreams.remove(streamId)
+                        closed = true
+                    }
+                }
+            }
             
             Result.success(output.toString())
         } catch (e: Exception) {
+            SafeLog.e(TAG, "Shell error: ${e.message}")
             Result.failure(e)
         } finally {
             close(streamId)

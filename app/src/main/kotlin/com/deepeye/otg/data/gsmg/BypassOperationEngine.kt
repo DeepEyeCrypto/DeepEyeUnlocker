@@ -6,6 +6,8 @@ import android.hardware.usb.UsbManager
 import com.deepeye.otg.protocol.android.RealAdbExecutor
 import com.deepeye.otg.protocol.ios.RealServerBypassExecutor
 import com.deepeye.otg.protocol.mtk.RealMtkV6Executor
+import com.deepeye.otg.protocol.qualcomm.RealQcEdlExecutor
+import com.deepeye.otg.protocol.samsung.RealSamsungOdinExecutor
 import com.deepeye.otg.usb.AdbSession
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -50,21 +52,49 @@ class BypassOperationEngine @Inject constructor(
     private val mtkV6Executor     by lazy { RealMtkV6Executor(usbManager, context, pythonBridge) }
     private val adbExecutor       by lazy { RealAdbExecutor(adbSession) }
     private val serverExecutor    by lazy { RealServerBypassExecutor(pythonBridge) }
+    private val qcEdlExecutor     by lazy { RealQcEdlExecutor(usbManager, context) }
+    private val odinExecutor      by lazy { RealSamsungOdinExecutor(usbManager, context) }
 
     // ── DA binary loader ──────────────────────────────────────────────────
 
     private fun loadDa(hwCode: Int): ByteArray? = runCatching {
-        val assetName = when (hwCode) {
+        // 1. Try specific DA
+        val specificAsset = when (hwCode) {
             0x1209 -> "da/mt6835t_da.bin"   // Realme 14x
             0x6765 -> "da/mt6765_da.bin"    // Helio G35
             0x6769 -> "da/mt6769_da.bin"    // Helio G85
-            0x6833 -> "da/mt6833_da.bin"    // Dimensity 700
-            0x6853 -> "da/mt6853_da.bin"    // Dimensity 720
-            0x6873 -> "da/mt6873_da.bin"    // Dimensity 800
-            0x6893 -> "da/mt6893_da.bin"    // Dimensity 1200
-            0x6895 -> "da/mt6895_da.bin"    // Dimensity 8100
             else   -> null
-        } ?: return null
+        }
+
+        if (specificAsset != null) {
+            val bytes = context.assets.open(specificAsset).readBytes()
+            if (bytes.isNotEmpty()) return bytes
+        }
+
+        // 2. Fallback to Universal Strategy (V5 for Helio, V6 for Dimensity)
+        val isDimensity = (hwCode and 0xF000) == 0x0000 || (hwCode in 0x6833..0x6895)
+        val universalAsset = if (isDimensity) "da/MTK_DA_V6.bin" else "da/MTK_DA_V5.bin"
+        
+        Timber.d("[ENGINE] loadDa hwCode=0x${hwCode.toString(16)} " +
+                 "using universal=$universalAsset")
+        context.assets.open(universalAsset).readBytes()
+    }.getOrNull()
+
+    private fun loadProgrammer(chipName: String?): ByteArray? = runCatching {
+        val assetName = when {
+            chipName == null -> null
+            "SM8650" in chipName -> "prog/sm8650_ufs_firehose.elf"
+            "SM8550" in chipName -> "prog/sm8550_ufs_firehose.elf"
+            "SM8450" in chipName -> "prog/sm8450_ufs_firehose.elf"
+            "SM8350" in chipName -> "prog/sm8350_ufs_firehose.elf"
+            "SM8250" in chipName -> "prog/sm8250_ufs_firehose.elf"
+            "MSM8998" in chipName -> "prog/msm8998_ufs_firehose.elf"
+            "MSM8953" in chipName -> "prog/msm8953_emmc_firehose.elf"
+            "MSM8937" in chipName -> "prog/msm8937_emmc_firehose.elf"
+            else -> null
+        } ?: "prog/msm8953_emmc_firehose.elf" // generic fallback for older QC
+        
+        Timber.d("[ENGINE] loadProgrammer chip=$chipName selected=$assetName")
         context.assets.open(assetName).readBytes()
     }.getOrNull()
 
@@ -336,12 +366,24 @@ class BypassOperationEngine @Inject constructor(
             // ── QC EDL (Samsung/Xiaomi/OPPO QC FRP) ──────────────────────
             BypassMechanism.FRP_QC_EDL -> {
                 requireUsb(usbDevice, sessionId)
-                ProtocolResult.NotImplementedYet(
-                    reason      = "QC EDL FRP: Wire QcEdlSession.eraseFrpEdl() from FirehoseSession",
-                    mechanism   = feature.mechanism.name,
+                val usb = usbDevice ?: return ProtocolResult.UsbTransportError("Device detached", sessionId)
+
+                val progAsset = getProgrammerAsset(device.chipName)
+                
+                emit(BypassEvent.StepBegin(
+                    feature.id,
+                    ExecutionStep(1, "EDL Handshake", "Initializing Sahara protocol", true),
+                    sessionId,
+                ))
+
+                qcEdlExecutor.eraseFrp(
+                    device      = usb,
+                    programmer  = progAsset,
                     sessionId   = sessionId,
-                    trackerNote = "See v2026.31.0 Stage 1 QC implementation",
-                )
+                ) { pct, phase ->
+                    progress(pct, phase)
+                    // Note: Progress events are handled by the caller/engine flow
+                }
             }
 
             // ── Samsung ODIN FRP ──────────────────────────────────────────
@@ -349,12 +391,20 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.FRP_SAMSUNG_MODEM,
             BypassMechanism.FRP_DOWNLOAD_MODE -> {
                 requireUsb(usbDevice, sessionId)
-                ProtocolResult.NotImplementedYet(
-                    reason      = "Samsung FRP: Wire OdinSession.eraseFrp() after PIT parse",
-                    mechanism   = feature.mechanism.name,
-                    sessionId   = sessionId,
-                    trackerNote = "See v2026.31.0 Stage 2",
-                )
+                val usb = usbDevice ?: return ProtocolResult.UsbTransportError("Device detached", sessionId)
+
+                emit(BypassEvent.StepBegin(
+                    feature.id,
+                    ExecutionStep(1, "Odin Connect", "Initializing Samsung protocol", true),
+                    sessionId,
+                ))
+
+                odinExecutor.eraseFrp(
+                    device    = usb,
+                    sessionId = sessionId,
+                ) { pct, phase ->
+                    progress(pct, phase)
+                }
             }
 
             // ── SPD/UniSoc ────────────────────────────────────────────────
@@ -748,6 +798,22 @@ class BypassOperationEngine @Inject constructor(
         val lower = chipName.lowercase()
         return knownCodes.entries.firstOrNull { lower.contains(it.key) }?.value
             ?: 0x1209  // fallback: Realme 14x hw_code
+    }
+
+    private fun getProgrammerAsset(chipName: String?): String {
+        val lower = chipName?.lowercase() ?: ""
+        return when {
+            "sm8650" in lower -> "prog/sm8650_ufs_firehose.elf"
+            "sm8550" in lower -> "prog/sm8550_ufs_firehose.elf"
+            "sm8450" in lower -> "prog/sm8450_ufs_firehose.elf"
+            "sm8350" in lower -> "prog/sm8350_ufs_firehose.elf"
+            "sm8250" in lower -> "prog/sm8250_ufs_firehose.elf"
+            "sm8150" in lower -> "prog/sm8150_ufs_firehose.elf"
+            "msm8998" in lower -> "prog/msm8998_ufs_firehose.elf"
+            "msm8953" in lower -> "prog/msm8953_emmc_firehose.elf"
+            "msm8937" in lower -> "prog/msm8937_emmc_firehose.elf"
+            else -> "prog/msm8953_emmc_firehose.elf" // generic
+        }
     }
 
     private fun isRetryable(e: Exception, mechanism: BypassMechanism): Boolean = when {

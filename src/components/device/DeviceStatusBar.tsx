@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { safeInvoke, safeListen } from '../../lib/tauri-utils';
 import './DeviceStatusBar.css';
 
 interface DetectedDevice {
@@ -20,14 +19,14 @@ export function DeviceStatusBar() {
 
   useEffect(() => {
     // Listen for USB device events from Rust
-    const unlisten = listen('device-detected', (event) => {
+    const unlisten = safeListen('device-detected', (event) => {
       setDevice(event.payload as DetectedDevice);
     });
     
     // Poll every 2 seconds for initial state or missed events
     const interval = setInterval(async () => {
       try {
-        const d = await invoke<DetectedDevice | null>('get_connected_device');
+        const d = await safeInvoke<DetectedDevice | null>('get_connected_device');
         setDevice(d ?? null);
       } catch (e) {
         console.error("Failed to poll device:", e);

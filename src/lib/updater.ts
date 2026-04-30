@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { safeInvoke } from "./tauri-utils";
 
 export const UPDATER_COMMANDS = {
   CHECK: "check_update",
@@ -21,11 +21,11 @@ export type UpdateInfo = {
 };
 
 export async function checkForUpdate(): Promise<UpdateInfo | null> {
-  return invoke<UpdateInfo | null>(UPDATER_COMMANDS.CHECK);
+  return safeInvoke<UpdateInfo | null>(UPDATER_COMMANDS.CHECK);
 }
 
 export async function installUpdate(): Promise<void> {
-  await invoke<void>(UPDATER_COMMANDS.INSTALL);
+  await safeInvoke<void>(UPDATER_COMMANDS.INSTALL);
 }
 
 export function summarizeChangelog(body: string, maxLines = 2): string {

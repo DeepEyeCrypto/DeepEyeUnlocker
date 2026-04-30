@@ -161,9 +161,9 @@ sudo -E RUST_LOG=debug npm run tauri dev
 
 - If the locally built app bundle loses entitlements, re-sign it before raw USB testing.
 
-### macOS Release Installers (DMG + PKG)
+### macOS Release Installers (.pkg)
 
-- Tauri v2 produces the `.app` and `.dmg` bundles directly.
+- Tauri v2 produces the `.app` bundle directly.
 - DeepEyeUnlocker generates the `.pkg` installer from the built `.app` by running `pkgbuild` through `bash ./scripts/build_macos_pkg.sh`.
 - Local macOS installer build:
 
@@ -171,7 +171,7 @@ sudo -E RUST_LOG=debug npm run tauri dev
 bash ./scripts/build_macos_pkg.sh
 ```
 
-- GitHub release workflows now publish both architecture-specific `.dmg` and `.pkg` assets.
+- GitHub release workflows now publish architecture-specific `.pkg` assets.
 - The PKG post-install hook creates `/Library/Application Support/DeepEyeUnlocker` and `/Library/Logs/DeepEyeUnlocker`, normalizes app bundle permissions, and reloads `com.deepeye.unlocker.usb-monitor.plist` automatically when that LaunchDaemon resource is shipped inside the app bundle.
 
 ### Windows WinUSB Driver Setup (Zadig)

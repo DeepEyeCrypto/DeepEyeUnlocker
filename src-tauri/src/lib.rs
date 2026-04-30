@@ -156,6 +156,9 @@ use commands::signal_bypass::stage7::signal_stage7_imei;
 use commands::signal_bypass::stage8::signal_stage8_baseband;
 use commands::signal_bypass::stage9::signal_stage9_verify;
 use commands::signal_bypass::stage10::signal_stage10_complete;
+use commands::ios_chain::{
+    ios_detect_device, run_hello_bypass, run_full_signal_bypass, run_fake_erase
+};
 use commands::rebuild::{
     get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
     run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
@@ -631,6 +634,11 @@ pub fn run() {
             iremoval_detect,
             iremoval_run,
             iremoval_iservices,
+            // Swift Native Core
+            ios_detect_device,
+            run_hello_bypass,
+            run_full_signal_bypass,
+            run_fake_erase,
         ])
         .run(tauri::generate_context!());
 

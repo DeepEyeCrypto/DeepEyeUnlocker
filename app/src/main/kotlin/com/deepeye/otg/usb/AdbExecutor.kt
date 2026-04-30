@@ -9,14 +9,31 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AdbExecutor @Inject constructor() {
+class AdbExecutor @Inject constructor(
+    private val adbSession: AdbSession
+) {
 
-    fun shell(command: String): String {
-        return "OK"
+    suspend fun shell(command: String): String {
+        return adbSession.shell(command).getOrNull() ?: "error"
     }
 
-    fun push(localFile: java.io.File, remotePath: String) {
-        // No-op for now
+    suspend fun push(localFile: java.io.File, remotePath: String) {
+        val bytes = localFile.readBytes()
+        val streamId = adbSession.open("shell:cat > $remotePath") 
+            ?: throw Exception("Failed to open push stream")
+        
+        try {
+            val chunkSize = 16384
+            var offset = 0
+            while (offset < bytes.size) {
+                val end = (offset + chunkSize).coerceAtMost(bytes.size)
+                val chunk = bytes.sliceArray(offset until end)
+                adbSession.write(streamId, chunk)
+                offset = end
+            }
+        } finally {
+            adbSession.close(streamId)
+        }
     }
 
     suspend fun adbFrpUnlock(
@@ -25,39 +42,18 @@ class AdbExecutor @Inject constructor() {
     ): Flow<FrpResult> = flow {
         emit(FrpResult.Progress(0.1f, "ADB connecting..."))
 
-        val authOk = performAdbAuth(connection, sessionId)
-        if (!authOk) {
-            emit(FrpResult.Error("ADB auth failed — enable USB debugging"))
-            return@flow
-        }
-
-        emit(FrpResult.Progress(0.4f, "Sending FRP unlock command..."))
         val cmd = "content delete --uri content://settings/secure --where \"name='user_setup_complete'\""
-        val result = sendAdbShell(connection, cmd, sessionId)
-        delay(50)
-
+        val result = shell(cmd)
+        
         if (result.contains("Exception", true) || result.contains("error", true)) {
             emit(FrpResult.Error("ADB FRP command rejected: $result"))
             return@flow
         }
 
         val cmd2 = "am broadcast -a com.google.android.gsf.LOGIN_ACCOUNTS_CHANGED"
-        sendAdbShell(connection, cmd2, sessionId)
-        delay(50)
-
+        shell(cmd2)
+        
         emit(FrpResult.Success("ADB FRP unlock sent. Reboot device to verify."))
-    }
-
-    private fun performAdbAuth(connection: UsbDeviceConnection, sessionId: String): Boolean {
-        return connection.fileDescriptor > 0 && sessionId.isNotBlank()
-    }
-
-    private fun sendAdbShell(connection: UsbDeviceConnection, command: String, sessionId: String): String {
-        return if (connection.fileDescriptor > 0 && command.isNotBlank() && sessionId.isNotBlank()) {
-            "OK"
-        } else {
-            "error"
-        }
     }
 }
 

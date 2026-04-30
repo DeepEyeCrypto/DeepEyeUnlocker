@@ -5,7 +5,7 @@ import { ExecutionConsole } from './ExecutionConsole';
 import { HistoryScreen } from '../history/HistoryScreen';
 import { WifiAdbScreen } from '../adb/WifiAdbScreen';
 import { SignalBypassFlow } from '../ios/SignalBypassFlow';
-import { listen } from '@tauri-apps/api/event';
+import { safeListen } from '../../lib/tauri-utils';
 import DashboardPage from '../../pages/Dashboard';
 import AdbPage from '../../pages/AdbPage';
 import EdlPage from '../../pages/EdlPage';
@@ -210,7 +210,7 @@ export function MainLayout() {
     let stopBackendLog: (() => void) | undefined;
     let stopProfileDetect: (() => void) | undefined;
 
-    void listen<string>('log', (event) => {
+    void safeListen<string>('log', (event) => {
       appendConsole(String(event.payload));
     }).then((unlisten) => {
       if (disposed) {
@@ -220,7 +220,7 @@ export function MainLayout() {
       stopBackendLog = unlisten;
     });
 
-    void listen<string>('device-profile-detected', (event) => {
+    void safeListen<string>('device-profile-detected', (event) => {
       const payload = String(event.payload).toLowerCase();
       const suggestedWorkspace: WorkspaceId = payload.includes('samsung')
         ? 'samsung-odin'

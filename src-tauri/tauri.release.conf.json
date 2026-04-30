@@ -34,7 +34,6 @@
     "createUpdaterArtifacts": false,
     "targets": [
       "app",
-      "dmg",
       "nsis",
       "appimage",
       "deb"
@@ -63,26 +62,7 @@
     },
     "macOS": {
       "entitlements": "Entitlements.plist",
-      "minimumSystemVersion": "10.13",
-      "dmg": {
-        "background": "assets/dmg-background.png",
-        "windowSize": {
-          "width": 660,
-          "height": 400
-        },
-        "windowPosition": {
-          "x": 400,
-          "y": 100
-        },
-        "appPosition": {
-          "x": 180,
-          "y": 170
-        },
-        "applicationFolderPosition": {
-          "x": 480,
-          "y": 170
-        }
-      }
+      "minimumSystemVersion": "10.13"
     }
   },
   "plugins": {

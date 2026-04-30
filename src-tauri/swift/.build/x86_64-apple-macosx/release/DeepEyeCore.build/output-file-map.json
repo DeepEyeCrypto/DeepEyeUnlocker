@@ -1,0 +1,55 @@
+{
+  "": {
+    "dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeepEyeCore.d",
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeepEyeCore.o",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/master.swiftdeps"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.dia"
+  },
+  "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift": {
+    "object": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.swift.o",
+    "swiftmodule": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.swiftdeps",
+    "diagnostics": "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.dia"
+  }
+}

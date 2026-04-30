@@ -5,7 +5,7 @@ use serde::Deserialize;
 struct GitHubRelease {
     tag_name: String,
     html_url: String,
-    published_at: Option<String>,
+    _published_at: Option<String>,
 }
 
 /// Current embedded DB version — bump when device_db JSON ships with a new build.

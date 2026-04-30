@@ -222,4 +222,13 @@ object CoreModule {
     fun providePatchStateAnalyzer(cveDao: CveDao): PatchStateAnalyzer {
         return PatchStateAnalyzer(cveDao)
     }
+
+    @Provides
+    @Singleton
+    fun provideFridaManager(
+        @ApplicationContext context: Context,
+        adbExecutor: AdbExecutor
+    ): com.deepeye.otg.intelligence.FridaManager {
+        return com.deepeye.otg.intelligence.FridaManager(context, adbExecutor)
+    }
 }

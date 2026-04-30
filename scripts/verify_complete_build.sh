@@ -102,12 +102,12 @@ main() {
         
         # macOS ARM64
         log_info "  macOS ARM64:"
-        check_directory_not_empty "target/aarch64-apple-darwin/release/bundle/dmg" "macOS ARM64 DMG"
+        check_directory_not_empty "target/aarch64-apple-darwin/release/bundle/pkg" "macOS ARM64 PKG"
         check_directory_not_empty "target/aarch64-apple-darwin/release/bundle/app" "macOS ARM64 App"
         
         # macOS x86_64
         log_info "  macOS x86_64:"
-        check_directory_not_empty "target/x86_64-apple-darwin/release/bundle/dmg" "macOS x86_64 DMG"
+        check_directory_not_empty "target/x86_64-apple-darwin/release/bundle/pkg" "macOS x86_64 PKG"
         check_directory_not_empty "target/x86_64-apple-darwin/release/bundle/app" "macOS x86_64 App"
         
         # Linux

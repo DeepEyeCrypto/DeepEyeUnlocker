@@ -1,6 +1,6 @@
 {
   "productName": "DeepEyeUnlocker",
-  "version": "2027.18.1",
+  "version": "2027.20.0",
   "identifier": "com.deepeye.otg",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -32,13 +32,7 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": true,
-    "targets": [
-      "app",
-      "dmg",
-      "nsis",
-      "appimage",
-      "deb"
-    ],
+    "targets": ["app", "nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/64x64.png",
@@ -53,7 +47,8 @@
       "python/ios_exploit/**/*",
       "resources/linux/**/*",
       "resources/macos/**/*",
-      "resources/windows/**/*"
+      "resources/windows/**/*",
+      "resources/deepeye-core"
     ],
     "windows": {
       "nsis": {
@@ -63,26 +58,7 @@
     },
     "macOS": {
       "entitlements": "Entitlements.plist",
-      "minimumSystemVersion": "10.13",
-      "dmg": {
-        "background": "assets/dmg-background.png",
-        "windowSize": {
-          "width": 660,
-          "height": 400
-        },
-        "windowPosition": {
-          "x": 400,
-          "y": 100
-        },
-        "appPosition": {
-          "x": 180,
-          "y": 170
-        },
-        "applicationFolderPosition": {
-          "x": 480,
-          "y": 170
-        }
-      }
+      "minimumSystemVersion": "10.13"
     }
   },
   "plugins": {

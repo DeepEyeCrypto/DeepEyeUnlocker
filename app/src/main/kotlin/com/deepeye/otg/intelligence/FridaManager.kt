@@ -5,14 +5,18 @@ import com.deepeye.otg.usb.AdbExecutor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import java.io.File
 
 /**
  * FridaManager handles the deployment and management of Frida hooks on the device.
  * Capability: SSL Pinning, Root Detection, and Biometric bypasses.
  */
-class FridaManager(
-    private val context: Context,
+@Singleton
+class FridaManager @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val adbExecutor: AdbExecutor
 ) {
 
@@ -174,6 +178,53 @@ class FridaManager(
         } catch (e: Exception) {
             Timber.e(e, "[FRIDA] Failed to inject into $packageName")
             throw e
+        }
+    }
+
+    /**
+     * Specialized deployment for Biometric Bypass.
+     * Hooks system_server and com.android.systemui.
+     */
+    suspend fun deployBiometricBypass(sessionId: String): com.deepeye.otg.data.gsmg.ProtocolResult = withContext(Dispatchers.IO) {
+        try {
+            Timber.i("[FRIDA] Starting Biometric Bypass deployment... sessionId=$sessionId")
+            
+            // 1. Setup Frida Server
+            pushFridaServer()
+            startFridaServer()
+            
+            // 2. Setup Biometric Script
+            val script = buildCombinedScript(listOf("biometric_bypass.js"))
+            pushScriptToDevice(script)
+            
+            // 3. Inject into System Processes
+            // system_server is where the biometric check logic usually lives
+            // com.android.systemui is where the biometric dialog is displayed
+            val targets = listOf("system_server", "com.android.systemui")
+            
+            targets.forEach { target ->
+                Timber.d("[FRIDA] Injecting into $target...")
+                try {
+                    // Note: In some Android versions, you attach (-n) rather than spawn (-f) for system processes
+                    val command = "frida -U -n $target -l $FRIDA_SCRIPT_REMOTE --no-pause"
+                    adbExecutor.shell(command)
+                } catch (e: Exception) {
+                    Timber.w("[FRIDA] Failed to inject into $target: ${e.message}")
+                }
+            }
+            
+            com.deepeye.otg.data.gsmg.ProtocolResult.GenericSuccess(
+                operation = "FRIDA_BIOMETRIC_BYPASS_ACTIVE",
+                sessionId = sessionId
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "[FRIDA] Biometric bypass deployment failed")
+            com.deepeye.otg.data.gsmg.ProtocolResult.Failure(
+                reason = e.message ?: "Frida deployment failed",
+                layer = "FRIDA_INTELLIGENCE",
+                retryable = true,
+                sessionId = sessionId
+            )
         }
     }
 

@@ -1,3 +1,19 @@
+## [2027.19.0] — 2026-04-30
+
+### ✨ Native Swift Migration & A12+ Signal Bypass
+- **Swift Core Engine**: Migrated core iOS detection and checkm8 exploitation flow from Python to a high-performance native Swift binary (`deepeye-core`).
+- **A12+ Server Bypass**: Implemented A12+ Full Signal and Fake Erase logic in Swift, leveraging native `URLSession` for faster network handshakes and thread-safe token caching.
+- **Rust-Swift Orchestration**: Consolidated legacy Python subprocess orchestration into a unified `ios_chain` module that manages the native binary lifecycle.
+- **Improved Latency**: Reduced engine startup time by ~200ms by removing Python runtime overhead.
+- **Unified Release**: Synchronized versioning across Desktop (Tauri) and Mobile (Android) for the v2027.19.0 rollout.
+
+### ✅ Validation
+- `bash scripts/build_swift.sh`
+- `npm run tauri:build`
+- `npm run android:release`
+
+---
+
 ## [2027.18.1] — 2026-04-10
 
 ### 🔧 CI Stability Release

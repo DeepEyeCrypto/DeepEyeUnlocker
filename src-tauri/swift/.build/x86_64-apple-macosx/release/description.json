@@ -1,0 +1,356 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.DeepEyeCore-x86_64-apple-macosx15.0-release.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/sources",
+      "importPath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "DeepEyeCore",
+      "moduleOutputPath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/Modules/DeepEyeCore.swiftmodule",
+      "objects" : [
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.swift.o",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-apple-macosx12.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "4",
+        "-serialize-diagnostics",
+        "-O",
+        "-j4",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "DeepEyeCore_main",
+        "-swift-version",
+        "5",
+        "-O",
+        "-whole-module-optimization",
+        "-I",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-L",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-plugin-path",
+        "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "swift"
+      ],
+      "outputFileMapPath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/Modules/DeepEyeCore.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift",
+        "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift"
+      ],
+      "tempsPath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "DeepEyeCore" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "DeepEyeCore",
+      "-package-name",
+      "swift",
+      "-c",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift",
+      "-I",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/Modules",
+      "-target",
+      "x86_64-apple-macosx12.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "4",
+      "-serialize-diagnostics",
+      "-O",
+      "-j4",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "DeepEyeCore_main",
+      "-swift-version",
+      "5",
+      "-O",
+      "-whole-module-optimization",
+      "-I",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-L",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-plugin-path",
+      "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "swift",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "DeepEyeCore" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/sources"
+    },
+    "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/deepeye-core.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/A12ServerBypass.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/DeviceDetector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/HelloBypass.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/Logger.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/NetworkClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/ProcessRunner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/TokenCache.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/DeepEyeCore.build/main.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/deepeye-core.product/Objects.LinkFileList"
+    },
+    "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/.build/x86_64-apple-macosx/release/swift-version--1AB21518FC5DEDBE.txt"
+    }
+  }
+}

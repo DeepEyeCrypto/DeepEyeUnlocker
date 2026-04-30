@@ -86,6 +86,7 @@ pub fn resolve_tool(candidates: &[&str]) -> (bool, String) {
     (false, candidates.join("/"))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn build_stage_result(
     stage: usize,
     title: &str,

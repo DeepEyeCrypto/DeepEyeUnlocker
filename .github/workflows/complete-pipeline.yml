@@ -665,101 +665,6 @@ jobs:
   # STAGE 5: RELEASE & DEPLOYMENT
   # ─────────────────────────────────────────────────────────────
 
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [
-      build-tauri-macos-arm,
-      build-tauri-macos-intel,
-      build-tauri-linux,
-      build-tauri-windows,
-      build-android-release
-    ]
-    if: |
-      github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Set release version
-        id: version
-        run: |
-          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
-            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate release notes from changelog
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-          sections = []
-          current = []
-          for line in changelog.splitlines():
-              if line.startswith("## ["):
-                  if current:
-                      sections.append("\n".join(current).strip())
-                  current = [line]
-              elif current:
-                  current.append(line)
-          if current:
-              sections.append("\n".join(current).strip())
-
-          release_notes = sections[0] if sections else "Release notes unavailable."
-          Path("release_notes.md").write_text(release_notes + "\n", encoding="utf-8")
-          PY
-
-      - name: Stage release artifacts
-        run: |
-          mkdir -p release-staging
-          
-          # Copy Tauri artifacts
-          find artifacts/tauri-macos-arm64 -name "*.dmg" -o -name "*.pkg" | xargs -I {} cp {} release-staging/ 2>/dev/null || true
-          find artifacts/tauri-macos-x86_64 -name "*.dmg" | xargs -I {} cp {} release-staging/ 2>/dev/null || true
-          find artifacts/tauri-linux -name "*.AppImage" -o -name "*.deb" | xargs -I {} cp {} release-staging/ 2>/dev/null || true
-          find artifacts/tauri-windows -name "*.exe" | xargs -I {} cp {} release-staging/ 2>/dev/null || true
-          
-          # Copy Android artifacts
-          find artifacts/android-release-apk -name "*.apk" | xargs -I {} cp {} release-staging/ 2>/dev/null || true
-          
-          # Rename with version
-          VERSION="${{ steps.version.outputs.tag }}"
-          VERSION_NUM="${VERSION#v}"
-          
-          cd release-staging
-          for file in *; do
-            if [[ "$file" == *.dmg ]] && [[ ! "$file" == *"$VERSION_NUM"* ]]; then
-              mv "$file" "DeepEyeUnlocker_${VERSION_NUM}_$file"
-            fi
-          done
-
-      - name: List staged artifacts
-        run: |
-          echo "Release artifacts:"
-          ls -lh release-staging/ || echo "No artifacts staged"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: DeepEyeUnlocker ${{ steps.version.outputs.tag }}
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.tag, 'beta') || contains(steps.version.outputs.tag, 'alpha') || contains(steps.version.outputs.tag, 'rc') }}
-          body_path: release_notes.md
-          files: release-staging/*
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ─────────────────────────────────────────────────────────────
   # STAGE 6: NOTIFICATION & REPORTING
@@ -768,7 +673,13 @@ jobs:
   notify-completion:
     name: Notify Build Completion
     runs-on: ubuntu-latest
-    needs: [create-release]
+    needs: [
+      build-tauri-macos-arm,
+      build-tauri-macos-intel,
+      build-tauri-linux,
+      build-tauri-windows,
+      build-android-release
+    ]
     if: always()
     steps:
       - name: Build summary
@@ -778,7 +689,7 @@ jobs:
           echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch/Tag**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: COMPLETE" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Desktop: macOS (ARM64 + x86_64), Linux, Windows" >> $GITHUB_STEP_SUMMARY

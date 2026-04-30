@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { safeInvoke } from "./tauri-utils";
 
 export type ConnectedDevice = {
   id: string;
@@ -14,7 +14,7 @@ export type ConnectedDevice = {
 export type DeviceConnectionState = "idle" | "scanning" | "connected" | "error";
 
 export async function fetchConnectedDevices(): Promise<ConnectedDevice[]> {
-  return invoke<ConnectedDevice[]>("get_connected_devices");
+  return safeInvoke<ConnectedDevice[]>("get_connected_devices");
 }
 
 export function createStableId(prefix: string): string {

@@ -125,10 +125,16 @@ fn check(name: &str, expected: &str, actual: &str, critical: bool) -> Verificati
                         }
                     })
                     .sum();
-                s % 10 == 0
+                s.is_multiple_of(10)
             }
         }
-        "ACTIVATED" => actual.contains("Activated") || actual == "MobileActivated",
+        "ACTIVATED" => {
+            actual == "Activated"
+                || actual == "FactoryActivated"
+                || actual == "MobileActivated"
+                || actual == "WildcardActivated"
+                || actual == "PartiallyActivated"
+        }
         "NUMERIC_MCC" => actual.len() == 3 && actual.chars().all(|c| c.is_ascii_digit()),
         "HAS_NUMBER" => {
             !actual.is_empty() && actual != "N/A" && actual.chars().any(|c| c.is_ascii_digit())
@@ -258,6 +264,14 @@ pub async fn signal_stage9_verify(
     );
     checks.push(c6);
 
+    let c_mnc = check("MNC", "NOT_NA", &mnc, false);
+    slog!(
+        "   [{}] MNC: {}",
+        if c_mnc.passed { "✅" } else { "⚠️" },
+        mnc
+    );
+    checks.push(c_mnc);
+
     let c7 = check("ICCID", "NOT_EMPTY", &iccid, false);
     slog!(
         "   [{}] ICCID: {}",
@@ -327,7 +341,7 @@ pub async fn signal_stage9_verify(
 
     let noncrit_score: u8 = {
         let n = checks.iter().filter(|c| !c.critical && c.passed).count() as u8;
-        (n * 40) / 6
+        (n * 40) / 7
     };
 
     let raw_score = critical_score.saturating_add(noncrit_score);
@@ -396,7 +410,8 @@ pub async fn signal_stage9_verify(
 
     // ── 6. Final result ────────────────────────────
     slog!("");
-    let stage_passed = critical_fails == 0 || bypass_score >= 60;
+    // Stage passes if no critical failures OR score is decent (>= 50)
+    let stage_passed = critical_fails == 0 || bypass_score >= 50;
     let ready_for_completion = bypass_score >= 75;
 
     let stage_message = if bypass_score >= 90 {

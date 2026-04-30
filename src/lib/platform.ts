@@ -16,8 +16,12 @@ function fallbackPlatform(): Platform {
 export async function initPlatform(): Promise<Platform> {
   if (cachedPlatform) return cachedPlatform;
   try {
-    const p = (await tauriPlatform()) as Platform;
-    cachedPlatform = p;
+    if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+      const p = (await tauriPlatform()) as Platform;
+      cachedPlatform = p;
+    } else {
+      cachedPlatform = fallbackPlatform();
+    }
   } catch {
     cachedPlatform = fallbackPlatform();
   }
