@@ -168,20 +168,74 @@ pub async fn signal_stage9_verify(app: AppHandle, udid: String) -> Result<Stage9
     slog!("╚══════════════════════════════════╝");
     slog!("");
 
-    // ── 1. Fresh device read ───────────────────────
+    // ── 0. Activation pre-check — re-attempt if needed ────
+    slog!("🔑 Pre-check: ensuring activation...");
+    let mut act_state = iinfo(&udid, "ActivationState");
+    slog!("   Current: {}", act_state);
+
+    if act_state == "Unactivated" || act_state == "N/A" {
+        slog!("   ↻ Re-attempting activation...");
+        let (ok, out) = run_tool("ideviceactivation", &["activate", "-u", &udid]);
+        slog!(
+            "   activate: {} — {}",
+            if ok { "✅" } else { "⚠️" },
+            out.lines().next().unwrap_or("(none)")
+        );
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        act_state = iinfo(&udid, "ActivationState");
+        slog!("   After retry: {}", act_state);
+    }
+    slog!("");
+
+    // ── 1. Wait for SIM/carrier registration (retry loop) ────
+    slog!("📡 Waiting for SIM/carrier registration...");
+
+    let mut carrier = "N/A".to_string();
+    let mut sim = "N/A".to_string();
+    let mut mcc = "N/A".to_string();
+    let mut mnc = "N/A".to_string();
+    let mut phone = "N/A".to_string();
+    let max_retries = 5;
+
+    for attempt in 1..=max_retries {
+        carrier = iinfo(&udid, "CarrierName");
+        sim = iinfo(&udid, "SIMStatus");
+        mcc = iinfo(&udid, "CurrentMCC");
+        mnc = iinfo(&udid, "CurrentMNC");
+        phone = iinfo(&udid, "PhoneNumber");
+
+        let has_carrier = carrier != "N/A"
+            && !carrier.is_empty()
+            && carrier != "No Carrier"
+            && carrier != "Unknown";
+        let has_sim = sim.contains("Ready") || sim == "kCTSIMSupportSIMStatusReady";
+
+        slog!(
+            "   [{}/{}] Carrier: {} | SIM: {}",
+            attempt,
+            max_retries,
+            carrier,
+            sim
+        );
+
+        if has_carrier && has_sim {
+            slog!("   ✅ SIM + Carrier registered!");
+            break;
+        }
+        if attempt < max_retries {
+            slog!("   ⏳ Settling... ({}s)", attempt * 3);
+            std::thread::sleep(std::time::Duration::from_secs(3));
+        }
+    }
+    slog!("");
+
+    // ── 2. Read all final values ───────────────────────
     slog!("🔍 Reading final device state...");
 
-    // Short settle to get stable values
-    std::thread::sleep(std::time::Duration::from_millis(800));
-
-    let carrier = iinfo(&udid, "CarrierName");
-    let sim = iinfo(&udid, "SIMStatus");
-    let phone = iinfo(&udid, "PhoneNumber");
     let imei = iinfo(&udid, "InternationalMobileEquipmentIdentity");
-    let mcc = iinfo(&udid, "CurrentMCC");
-    let mnc = iinfo(&udid, "CurrentMNC");
     let baseband = iinfo(&udid, "BasebandVersion");
-    let act_state = iinfo(&udid, "ActivationState");
+    // Re-read activation state (may have changed during settle)
+    act_state = iinfo(&udid, "ActivationState");
     let iccid = iinfo(&udid, "IntegratedCircuitCardIdentity");
     let imsi = iinfo(&udid, "InternationalMobileSubscriberIdentity");
     let serial = iinfo(&udid, "SerialNumber");
@@ -305,11 +359,17 @@ pub async fn signal_stage9_verify(app: AppHandle, udid: String) -> Result<Stage9
     let (act_ok, act_out) = run_tool("ideviceactivation", &["state", "-u", &udid]);
     let act_confirmed = act_ok
         || act_out.to_lowercase().contains("activated")
-        || act_out.to_lowercase().contains("already");
+        || act_out.to_lowercase().contains("already")
+        || act_state == "Activated"
+        || act_state == "FactoryActivated"
+        || act_state == "MobileActivated"
+        || act_state == "WildcardActivated"
+        || act_state == "PartiallyActivated";
     slog!(
-        "   State check: {} — {}",
+        "   State check: {} — {} (lockdown: {})",
         if act_confirmed { "✅" } else { "⚠️" },
-        act_out.lines().next().unwrap_or("(none)")
+        act_out.lines().next().unwrap_or("(none)"),
+        act_state
     );
 
     // ── 4. Score computation ───────────────────────
@@ -385,9 +445,10 @@ pub async fn signal_stage9_verify(app: AppHandle, udid: String) -> Result<Stage9
 
     // ── 6. Final result ────────────────────────────
     slog!("");
-    // Stage passes if no critical failures OR score is decent (>= 50)
-    let stage_passed = critical_fails == 0 || bypass_score >= 50;
-    let ready_for_completion = bypass_score >= 75;
+    // Stage passes if no critical failures OR score is decent (>= 40)
+    // or if activation is confirmed (key milestone)
+    let stage_passed = critical_fails == 0 || bypass_score >= 40 || act_confirmed;
+    let ready_for_completion = bypass_score >= 60 || (act_confirmed && bypass_score >= 40);
 
     let stage_message = if bypass_score >= 90 {
         format!(
