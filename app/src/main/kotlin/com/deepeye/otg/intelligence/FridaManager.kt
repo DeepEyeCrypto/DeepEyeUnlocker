@@ -219,7 +219,7 @@ class FridaManager @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "[FRIDA] Biometric bypass deployment failed")
-            com.deepeye.otg.data.gsmg.ProtocolResult.Failure(
+            com.deepeye.otg.data.gsmg.ProtocolResult.GenericFailure(
                 reason = e.message ?: "Frida deployment failed",
                 layer = "FRIDA_INTELLIGENCE",
                 retryable = true,

@@ -94,8 +94,8 @@ object CoreModule {
 
     @Provides
     @Singleton
-    fun provideAdbExecutor(): AdbExecutor {
-        return AdbExecutor()
+    fun provideAdbExecutor(adbSession: AdbSession): AdbExecutor {
+        return AdbExecutor(adbSession)
     }
 
     @Provides

@@ -95,6 +95,13 @@ sealed interface ProtocolResult {
         override val message: String? get() = "[$layer] $reason (session: $sessionId)"
     }
 
+    data class GenericFailure(
+        override val reason:    String,
+        override val layer:     String     = "GENERIC",
+        override val sessionId: String,
+        override val retryable: Boolean    = false,
+    ) : Failure()
+
     data class UsbTransportError(
         override val reason:    String,
         override val layer:     String     = "USB_TRANSPORT",

@@ -29,7 +29,7 @@ class A12ServerBypassExecutor @Inject constructor() {
         Timber.d("[A12_SVR] Starting Full Signal Bypass for IMEI: $imei")
         
         if (!validateLuhn(imei)) {
-            return@withContext ProtocolResult.Failure("Invalid IMEI (Luhn check failed)", "VALIDATION", sessionId)
+            return@withContext ProtocolResult.GenericFailure("Invalid IMEI (Luhn check failed)", "VALIDATION", sessionId)
         }
 
         val payload = JSONObject().apply {
@@ -49,7 +49,7 @@ class A12ServerBypassExecutor @Inject constructor() {
                 sessionId = sessionId
             )
         } else {
-            ProtocolResult.Failure(response?.optString("error") ?: "Server Error", "SERVER", sessionId)
+            ProtocolResult.GenericFailure(response?.optString("error") ?: "Server Error", "SERVER", sessionId)
         }
     }
 
@@ -71,7 +71,7 @@ class A12ServerBypassExecutor @Inject constructor() {
         if (response?.optBoolean("success") == true) {
             ProtocolResult.GenericSuccess("Fake Erase Complete - Data Preserved", sessionId)
         } else {
-            ProtocolResult.Failure(response?.optString("error") ?: "Exploit Failed", "SERVER", sessionId)
+            ProtocolResult.GenericFailure(response?.optString("error") ?: "Exploit Failed", "SERVER", sessionId)
         }
     }
 
@@ -92,7 +92,7 @@ class A12ServerBypassExecutor @Inject constructor() {
         if (response?.optBoolean("success") == true) {
             ProtocolResult.ActivationBypassed("GSMG_WIFI", false, true, sessionId)
         } else {
-            ProtocolResult.Failure(response?.optString("error") ?: "WiFi Bypass Failed", "SERVER", sessionId)
+            ProtocolResult.GenericFailure(response?.optString("error") ?: "WiFi Bypass Failed", "SERVER", sessionId)
         }
     }
 

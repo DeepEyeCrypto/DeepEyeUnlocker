@@ -53,7 +53,7 @@ class BypassOperationEngine @Inject constructor(
     private val adbExecutor       by lazy { RealAdbExecutor(adbSession) }
     private val serverExecutor    by lazy { RealServerBypassExecutor(pythonBridge) }
     private val qcEdlExecutor     by lazy { RealQcEdlExecutor(usbManager, context) }
-    private val odinExecutor      by lazy { RealSamsungOdinExecutor(usbManager, context) }
+    private val odinExecutor      by lazy { RealSamsungOdinExecutor(usbManager) }
 
     // ── DA binary loader ──────────────────────────────────────────────────
 
@@ -366,7 +366,7 @@ class BypassOperationEngine @Inject constructor(
             // ── QC EDL (Samsung/Xiaomi/OPPO QC FRP) ──────────────────────
             BypassMechanism.FRP_QC_EDL -> {
                 requireUsb(usbDevice, sessionId)
-                val usb = usbDevice ?: return ProtocolResult.UsbTransportError("Device detached", sessionId)
+                val usb = usbDevice!!
 
                 val progAsset = getProgrammerAsset(device.chipName)
                 
@@ -391,7 +391,7 @@ class BypassOperationEngine @Inject constructor(
             BypassMechanism.FRP_SAMSUNG_MODEM,
             BypassMechanism.FRP_DOWNLOAD_MODE -> {
                 requireUsb(usbDevice, sessionId)
-                val usb = usbDevice ?: return ProtocolResult.UsbTransportError("Device detached", sessionId)
+                val usb = usbDevice!!
 
                 emit(BypassEvent.StepBegin(
                     feature.id,
