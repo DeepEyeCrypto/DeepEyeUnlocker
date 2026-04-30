@@ -5,22 +5,22 @@ use tauri::{AppHandle, Emitter};
 pub struct Stage1Result {
     // Identity
     pub udid: String,
-    pub model_id: String,        // "iPhone14,2"
-    pub model_name: String,      // "iPhone 13 Pro"
-    pub ios_version: String,     // "17.4.1"
-    pub build_version: String,   // "21E236"
+    pub model_id: String,      // "iPhone14,2"
+    pub model_name: String,    // "iPhone 13 Pro"
+    pub ios_version: String,   // "17.4.1"
+    pub build_version: String, // "21E236"
 
     // IMEI
     pub imei: String,
-    pub imei2: Option<String>,   // dual SIM
+    pub imei2: Option<String>, // dual SIM
     pub meid: String,
     pub serial_number: String,
     pub ecid: String, // for SHSH2
 
     // Chip
-    pub chip: String,        // "A15 Bionic"
-    pub chip_id: String,     // raw chip identifier
-    pub is_a12_plus: bool,   // gating flag
+    pub chip: String,      // "A15 Bionic"
+    pub chip_id: String,   // raw chip identifier
+    pub is_a12_plus: bool, // gating flag
 
     // SIM basic read (full analysis in Stage 3)
     pub iccid: String,

@@ -25,9 +25,7 @@ pub async fn reporter_generate_audit(app: AppHandle) -> Result<DeviceAuditReport
     };
 
     // Pull real operation history from the database
-    let history_entries = crate::db::history::get_history()
-        .await
-        .unwrap_or_default();
+    let history_entries = crate::db::history::get_history().await.unwrap_or_default();
 
     let logs_summary: Vec<String> = history_entries
         .iter()

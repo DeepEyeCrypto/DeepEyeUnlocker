@@ -77,11 +77,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -98,10 +94,7 @@ fn check(name: &str, expected: &str, actual: &str, critical: bool) -> Verificati
                 || actual == "SIMStatusReady"
         }
         "HAS_CARRIER" => {
-            actual != "N/A"
-                && !actual.is_empty()
-                && actual != "No Carrier"
-                && actual != "Unknown"
+            actual != "N/A" && !actual.is_empty() && actual != "No Carrier" && actual != "Unknown"
         }
         "LUHN_PASS" => {
             let d: Vec<u32> = actual.chars().filter_map(|c| c.to_digit(10)).collect();
@@ -160,10 +153,7 @@ fn score_grade(score: u8) -> &'static str {
 }
 
 #[tauri::command]
-pub async fn signal_stage9_verify(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage9Result, String> {
+pub async fn signal_stage9_verify(app: AppHandle, udid: String) -> Result<Stage9Result, String> {
     macro_rules! slog {
         ($msg:expr) => {
             let _ = app.emit("s9-log", $msg.to_string());
@@ -257,11 +247,7 @@ pub async fn signal_stage9_verify(
     checks.push(c5);
 
     let c6 = check("MCC", "NUMERIC_MCC", &mcc, false);
-    slog!(
-        "   [{}] MCC: {}",
-        if c6.passed { "✅" } else { "⚠️" },
-        mcc
-    );
+    slog!("   [{}] MCC: {}", if c6.passed { "✅" } else { "⚠️" }, mcc);
     checks.push(c6);
 
     let c_mnc = check("MNC", "NOT_NA", &mnc, false);
@@ -367,17 +353,10 @@ pub async fn signal_stage9_verify(
         "   Signal:     {}",
         if signal_ok { "✅ YES" } else { "❌ NO" }
     );
-    slog!(
-        "   SIM:        {}",
-        if sim_ok { "✅ YES" } else { "❌ NO" }
-    );
+    slog!("   SIM:        {}", if sim_ok { "✅ YES" } else { "❌ NO" });
     slog!(
         "   Carrier:    {}",
-        if carrier_ok_flag {
-            "✅ YES"
-        } else {
-            "❌ NO"
-        }
+        if carrier_ok_flag { "✅ YES" } else { "❌ NO" }
     );
     slog!(
         "   Calls:      {}",
@@ -389,11 +368,7 @@ pub async fn signal_stage9_verify(
     );
     slog!(
         "   Data:       {}",
-        if data_ok {
-            "✅ YES"
-        } else {
-            "⚠️ PENDING"
-        }
+        if data_ok { "✅ YES" } else { "⚠️ PENDING" }
     );
     slog!(
         "   IMEI:       {}",
@@ -444,20 +419,12 @@ pub async fn signal_stage9_verify(
     if bypass_score >= 75 {
         slog!("╔══════════════════════════════════╗");
         slog!("║  ✅  STAGE 9 — VERIFIED          ║");
-        slog!(
-            "║  Grade: {}  Score: {}/100        ║",
-            grade,
-            bypass_score
-        );
+        slog!("║  Grade: {}  Score: {}/100        ║", grade, bypass_score);
         slog!("╚══════════════════════════════════╝");
     } else {
         slog!("╔══════════════════════════════════╗");
         slog!("║  ⚠️   STAGE 9 — PARTIAL          ║");
-        slog!(
-            "║  Score: {}/100 Grade: {}          ║",
-            bypass_score,
-            grade
-        );
+        slog!("║  Score: {}/100 Grade: {}          ║", bypass_score, grade);
         slog!("╚══════════════════════════════════╝");
     }
     slog!("   Score: {}/100 — {}", bypass_score, grade);

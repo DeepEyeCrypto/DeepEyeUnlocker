@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: '--target universal-apple-darwin --bundles app,dmg'
+            args: '--target universal-apple-darwin --bundles app'
           # - platform: ubuntu-22.04
           #   args: ''
 
@@ -61,7 +61,6 @@ jobs:
         with:
           name: DeepEyeUnlocker-${{ matrix.platform }}
           path: |
-            target/**/release/bundle/**/*.dmg
             target/**/release/bundle/**/*.pkg
             target/**/release/bundle/**/*.deb
             target/**/release/bundle/**/*.AppImage

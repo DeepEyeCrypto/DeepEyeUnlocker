@@ -79,11 +79,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -140,11 +136,11 @@ fn tac_to_manufacturer(tac: &str) -> (&'static str, &'static str) {
             // Can be Apple or Xiaomi depending on following digits, assuming Apple for bypass tools generally
             if tac.starts_with("86") && (tac.contains("Apple") || tac.len() >= 8) {
                 // Simplification for the match statement structure
-                 ("Apple/Xiaomi", "Mobile")
+                ("Apple/Xiaomi", "Mobile")
             } else {
-                 ("Unknown", "Mobile")
+                ("Unknown", "Mobile")
             }
-        },
+        }
         "00" => ("Ericsson", "Mobile"),
         "30" => ("Motorola", "Mobile"),
         "33" => ("Motorola", "Mobile"),
@@ -166,7 +162,7 @@ fn tac_to_manufacturer(tac: &str) -> (&'static str, &'static str) {
 
 // Helper to refine tac
 fn tac_manufacturer_resolved(tac: &str) -> (&'static str, &'static str) {
-      if tac.len() < 2 {
+    if tac.len() < 2 {
         return ("Unknown", "Mobile");
     }
     match &tac[..2] {
@@ -219,10 +215,7 @@ fn validate_imei(imei: &str) -> ImeiCheckResult {
 }
 
 #[tauri::command]
-pub async fn signal_stage7_imei(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage7Result, String> {
+pub async fn signal_stage7_imei(app: AppHandle, udid: String) -> Result<Stage7Result, String> {
     macro_rules! slog {
         ($msg:expr) => {
             let _ = app.emit("s7-log", $msg.to_string());
@@ -358,7 +351,10 @@ pub async fn signal_stage7_imei(
         mg_preview
     );
 
-    let gestalt_registration = mg_ok || (!imei_primary.is_empty() && imei_primary.len() >= 8 && mg_out.contains(&imei_primary[..8]));
+    let gestalt_registration = mg_ok
+        || (!imei_primary.is_empty()
+            && imei_primary.len() >= 8
+            && mg_out.contains(&imei_primary[..8]));
 
     // ── 6. Lockdown IMEI confirmation ─────────────
     slog!("");

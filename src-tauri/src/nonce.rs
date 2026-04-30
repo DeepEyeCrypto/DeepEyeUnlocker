@@ -9,10 +9,12 @@ use tauri::AppHandle;
 
 fn validate_generator(generator: &str) -> Result<String, String> {
     let value = generator.trim();
-    if value.len() != 18 || !value.starts_with("0x") || !value[2..].chars().all(|c| c.is_ascii_hexdigit()) {
+    if value.len() != 18
+        || !value.starts_with("0x")
+        || !value[2..].chars().all(|c| c.is_ascii_hexdigit())
+    {
         return Err(
-            "Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)"
-                .into(),
+            "Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)".into(),
         );
     }
 
@@ -214,5 +216,7 @@ pub async fn set_nonce_checkra1n(app: AppHandle, generator: String) -> Result<St
     )
     .await?;
 
-    Ok(format!("Nonce set via checkra1n using {generator}\n\n{output}"))
+    Ok(format!(
+        "Nonce set via checkra1n using {generator}\n\n{output}"
+    ))
 }

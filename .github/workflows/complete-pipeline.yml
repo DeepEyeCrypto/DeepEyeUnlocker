@@ -282,7 +282,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: "-"
           TAURI_SKIP_NOTARIZATION: "true"
         run: |
-          pnpm tauri build --target aarch64-apple-darwin --bundles app,dmg
+          pnpm tauri build --target aarch64-apple-darwin --bundles app
 
       - name: Build macOS PKG installer
         run: |
@@ -295,7 +295,6 @@ jobs:
         with:
           name: tauri-macos-arm64
           path: |
-            target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
             target/aarch64-apple-darwin/release/bundle/pkg/*.pkg
             target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz
           if-no-files-found: error
@@ -351,14 +350,14 @@ jobs:
           APPLE_SIGNING_IDENTITY: "-"
           TAURI_SKIP_NOTARIZATION: "true"
         run: |
-          pnpm tauri build --target x86_64-apple-darwin --bundles app,dmg
+          pnpm tauri build --target x86_64-apple-darwin --bundles app
 
       - name: Upload macOS x86_64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: tauri-macos-x86_64
           path: |
-            target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            target/x86_64-apple-darwin/release/bundle/pkg/*.pkg
             target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz
           if-no-files-found: error
           retention-days: 30

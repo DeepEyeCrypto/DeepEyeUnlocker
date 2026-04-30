@@ -1,8 +1,10 @@
 mod afc;
 mod backup;
 mod commands;
+mod config;
 mod crash_logs;
 mod cve;
+mod db;
 mod developer;
 mod device;
 mod diagnostics;
@@ -12,17 +14,15 @@ mod identity;
 mod ipsw_dl;
 mod nonce;
 mod purple;
+mod qualcomm;
 mod restore;
 mod shsh;
 mod sideloader;
 mod ssh_tunnel;
 mod tool_exec;
 mod toolbox;
-mod usb;
-mod db;
-mod config;
-mod qualcomm;
 mod unisoc;
+mod usb;
 mod vault;
 
 use commands::activation::{
@@ -41,8 +41,6 @@ use commands::apple::{
 use commands::apple_id::{ios_apple_id_state, ios_fmi_state, ios_remove_apple_id};
 use commands::bruteforce::run_pin_bruteforce;
 use commands::bypass::{ios_check_hello_state, ios_run_hello_bypass, run_bypass, run_otg_bypass};
-use commands::hello_bypass::{hello_bypass_detect, hello_bypass_run};
-use commands::iremoval_bypass::{iremoval_detect, iremoval_run, iremoval_iservices};
 use commands::bypass_advanced::{
     ios_activation_persistence_check, ios_activation_type_check, ios_temp_activation,
     ios_untethered_bypass,
@@ -60,8 +58,6 @@ use commands::device_db::{
     db_auto_route, db_list_all, db_lookup_model, db_lookup_vid_pid, db_search_devices,
     frp_execute_protocol,
 };
-use db::history::{add_history_entry, get_history, clear_history, export_history_csv};
-use config::settings::{load_settings, save_settings};
 use commands::dfu_restore::{
     ios_detect_dfu_state, ios_download_ipsw, ios_enter_dfu, ios_restore_device,
 };
@@ -71,14 +67,6 @@ use commands::edl::{
     edl_reboot, edl_sahara_handshake, edl_upload_programmer, edl_write_partition,
 };
 use commands::edl_bypass::stage1::edl_stage1_detect;
-use commands::edl_bypass::stage2::edl_stage2_sahara;
-use commands::edl_bypass::stage3::edl_stage3_programmer;
-use commands::edl_bypass::stage4::edl_stage4_firehose_upload;
-use commands::edl_bypass::stage5::edl_stage5_firehose_config;
-use commands::edl_bypass::stage6::edl_stage6_storage_probe;
-use commands::edl_bypass::stage7::edl_stage7_gpt;
-use commands::edl_bypass::stage8::edl_stage8_partition_map;
-use commands::edl_bypass::stage9::edl_stage9_frp_plan;
 use commands::edl_bypass::stage10::edl_stage10_frp_erase;
 use commands::edl_bypass::stage11::edl_stage11_userdata_plan;
 use commands::edl_bypass::stage12::edl_stage12_userdata_format;
@@ -89,16 +77,29 @@ use commands::edl_bypass::stage16::edl_stage16_partition_write;
 use commands::edl_bypass::stage17::edl_stage17_xml_console;
 use commands::edl_bypass::stage18::edl_stage18_power_control;
 use commands::edl_bypass::stage19::edl_stage19_verify;
+use commands::edl_bypass::stage2::edl_stage2_sahara;
 use commands::edl_bypass::stage20::edl_stage20_complete;
+use commands::edl_bypass::stage3::edl_stage3_programmer;
+use commands::edl_bypass::stage4::edl_stage4_firehose_upload;
+use commands::edl_bypass::stage5::edl_stage5_firehose_config;
+use commands::edl_bypass::stage6::edl_stage6_storage_probe;
+use commands::edl_bypass::stage7::edl_stage7_gpt;
+use commands::edl_bypass::stage8::edl_stage8_partition_map;
+use commands::edl_bypass::stage9::edl_stage9_frp_plan;
 use commands::exploit::{bypass_icloud_activation, run_palera1n, verify_pwned_dfu};
 use commands::extraction::{ios_mass_extract, ios_mount_ramdisk};
 use commands::f3arrain::{f3arrain_run_bypass, f3arrain_send_iboot};
+use commands::hello_bypass::{hello_bypass_detect, hello_bypass_run};
 use commands::hydra::{hydra_detect_protocol, hydra_run_mtk_meta, hydra_samsung_frp_bypass};
 use commands::identity::{ios_device_identity, ios_imei_state};
 use commands::ios_backup::{
     ios_backup_info, ios_extract_hash, ios_extract_screentime, ios_run_crack,
 };
 use commands::ios_bypass::ios_bypass_full;
+use commands::ios_chain::{
+    ios_detect_device, run_fake_erase, run_full_signal_bypass, run_hello_bypass,
+};
+use commands::iremoval_bypass::{iremoval_detect, iremoval_iservices, iremoval_run};
 use commands::logcat::{
     adb_logcat_clear, adb_logcat_dump, adb_logcat_export, adb_logcat_start, adb_logcat_stop,
     clear_logcat_buffer, export_logcat_to_file, start_logcat_stream, stop_logcat_stream,
@@ -116,6 +117,46 @@ use commands::mtk_brom::{
 };
 use commands::orchestrator::{ios_inject_surgical_patch, ios_poll_orchestrator};
 use commands::ramdisk::{ios_boot_ramdisk, ios_check_pwn_state, ios_run_gaster_pwn};
+use commands::rebuild::check_for_updates;
+use commands::rebuild::{
+    check_activation_status,
+    check_samsung_download_mode,
+    // Edge Cases & Diagnostics
+    check_usb_permissions,
+    get_all_testpoints,
+
+    get_connected_device,
+    // Apple Tools
+    get_ios_device_info,
+    restart_adb_server,
+    run_activation_bypass,
+    run_adb_frp,
+    run_da_bypass,
+    run_deepeye_agent,
+    run_force_dfu,
+    run_frp_erase,
+    run_full_bypass,
+
+    run_ipsw_flash,
+
+    run_mdm_bypass,
+    run_meta_bypass,
+    run_mtk_brom_bypass,
+    run_passcode_remove,
+    run_pattern_bypass,
+    run_qcom_edl,
+    run_qcom_frp_erase,
+    run_sahara_handshake,
+    // Samsung Tools
+    run_samsung_frp,
+    run_samsung_odin_info,
+
+    run_screen_bypass,
+    run_shsh_save,
+    run_tool_version_check,
+    // Database
+    search_testpoints,
+};
 use commands::reporter::reporter_generate_audit;
 use commands::rom_flasher::{
     fastboot_erase_partition, fastboot_get_all_variables, fastboot_list_devices,
@@ -131,22 +172,9 @@ use commands::samsung::{
     samsung_do_erase_frp_cmd, samsung_do_handshake_cmd, samsung_find_device_cmd,
     samsung_flash_part_cmd, samsung_get_pit_cmd, samsung_reboot_device_cmd,
 };
-use commands::wifi_adb::{
-    pair_wifi_adb, connect_wifi_adb, disconnect_wifi_adb, enable_adb_wifi_mode
-};
-use unisoc::edl::run_unisoc_frp_bypass;
-use qualcomm::programmer_db::{get_edl_programmers, load_edl_programmer};
-use commands::rebuild::check_for_updates;
 use commands::screentime::{ios_extract_screentime_hash, ios_run_screentime_crack};
-use commands::ticket::{
-    ios_activation_record_state, ios_parse_activation_record, ios_scan_tickets,
-};
-use commands::unisoc::unisoc_detect_device;
-use commands::updater::{check_update, do_install_update};
-use commands::usb_detector::start_usb_watcher;
-use commands::usb_utils::usb_debug_list_devices;
-use commands::vault::ios_create_deepvault;
 use commands::signal_bypass::stage1::signal_stage1_detect;
+use commands::signal_bypass::stage10::signal_stage10_complete;
 use commands::signal_bypass::stage2::signal_stage2_activation;
 use commands::signal_bypass::stage3::signal_stage3_baseband;
 use commands::signal_bypass::stage4::signal_stage4_icloud;
@@ -155,30 +183,21 @@ use commands::signal_bypass::stage6::signal_stage6_carrier;
 use commands::signal_bypass::stage7::signal_stage7_imei;
 use commands::signal_bypass::stage8::signal_stage8_baseband;
 use commands::signal_bypass::stage9::signal_stage9_verify;
-use commands::signal_bypass::stage10::signal_stage10_complete;
-use commands::ios_chain::{
-    ios_detect_device, run_hello_bypass, run_full_signal_bypass, run_fake_erase
+use commands::ticket::{
+    ios_activation_record_state, ios_parse_activation_record, ios_scan_tickets,
 };
-use commands::rebuild::{
-    get_connected_device, run_mtk_brom_bypass, run_da_bypass, run_meta_bypass,
-    run_frp_erase, run_adb_frp, run_deepeye_agent, run_pattern_bypass,
-    run_screen_bypass, run_qcom_edl, run_qcom_frp_erase, run_sahara_handshake,
-    run_full_bypass,
-    
-    // Apple Tools
-    get_ios_device_info, check_activation_status, run_activation_bypass, 
-    run_mdm_bypass, run_force_dfu, run_passcode_remove, run_shsh_save, run_ipsw_flash,
-    
-    // Samsung Tools
-    run_samsung_frp, run_samsung_odin_info,
-    
-    // Database
-    search_testpoints, get_all_testpoints,
-    
-    // Edge Cases & Diagnostics
-    check_usb_permissions, restart_adb_server, check_samsung_download_mode, 
-    run_tool_version_check,
+use commands::unisoc::unisoc_detect_device;
+use commands::updater::{check_update, do_install_update};
+use commands::usb_detector::start_usb_watcher;
+use commands::usb_utils::usb_debug_list_devices;
+use commands::vault::ios_create_deepvault;
+use commands::wifi_adb::{
+    connect_wifi_adb, disconnect_wifi_adb, enable_adb_wifi_mode, pair_wifi_adb,
 };
+use config::settings::{load_settings, save_settings};
+use db::history::{add_history_entry, clear_history, export_history_csv, get_history};
+use qualcomm::programmer_db::{get_edl_programmers, load_edl_programmer};
+use unisoc::edl::run_unisoc_frp_bypass;
 
 // Server bypass URL (configure per deployment)
 pub const BYPASS_SERVER_URL: &str = match option_env!("BYPASS_SERVER_URL") {
@@ -581,7 +600,6 @@ pub fn run() {
             run_qcom_edl,
             run_qcom_frp_erase,
             run_sahara_handshake,
-            
             // Apple Tools
             get_ios_device_info,
             check_activation_status,
@@ -591,22 +609,18 @@ pub fn run() {
             run_passcode_remove,
             run_shsh_save,
             run_ipsw_flash,
-            
             // Samsung Tools
             run_samsung_frp,
             run_samsung_odin_info,
-            
             // Database
             search_testpoints,
             get_all_testpoints,
             run_full_bypass,
-            
             // Edge Cases & Diagnostics
             check_usb_permissions,
             restart_adb_server,
             check_samsung_download_mode,
             run_tool_version_check,
-            
             // v1.2.0 New Commands
             pair_wifi_adb,
             connect_wifi_adb,

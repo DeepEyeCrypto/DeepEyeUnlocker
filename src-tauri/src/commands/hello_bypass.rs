@@ -45,17 +45,12 @@ pub async fn hello_bypass_detect(
 ) -> Result<HelloBypassDevice, String> {
     println!("[COMMAND] hello_bypass_detect session_id={}", session_id);
 
-    let script_path = python_path(&app)
-        .join("ios_bypass/hello_bypass.py");
+    let script_path = python_path(&app).join("ios_bypass/hello_bypass.py");
 
     let output = app
         .shell()
         .command("python3")
-        .args([
-            script_path.to_str().unwrap(),
-            "detect",
-            &session_id,
-        ])
+        .args([script_path.to_str().unwrap(), "detect", &session_id])
         .output()
         .await
         .map_err(|e| format!("Failed to run hello_bypass detect: {e}"))?;
@@ -120,8 +115,7 @@ pub async fn hello_bypass_run(
 ) -> Result<HelloBypassResult, String> {
     println!("[COMMAND] hello_bypass_run session_id={}", session_id);
 
-    let script_path = python_path(&app)
-        .join("ios_bypass/hello_bypass.py");
+    let script_path = python_path(&app).join("ios_bypass/hello_bypass.py");
 
     // Emit a "starting" progress event immediately
     let start_progress = HelloBypassProgress {
@@ -135,11 +129,7 @@ pub async fn hello_bypass_run(
     let output = app
         .shell()
         .command("python3")
-        .args([
-            script_path.to_str().unwrap(),
-            "run",
-            &session_id,
-        ])
+        .args([script_path.to_str().unwrap(), "run", &session_id])
         .output()
         .await
         .map_err(|e| format!("Failed to spawn hello_bypass.py: {e}"))?;
@@ -175,7 +165,10 @@ pub async fn hello_bypass_run(
 
             // Capture the final "complete" event as the result
             if event_name == "complete" {
-                let success = val.get("success").and_then(|v| v.as_bool()).unwrap_or(false);
+                let success = val
+                    .get("success")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
                 let method = val
                     .get("method")
                     .and_then(|v| v.as_str())

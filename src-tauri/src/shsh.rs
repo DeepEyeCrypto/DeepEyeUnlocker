@@ -48,9 +48,7 @@ where
     }
 
     if !value.chars().all(allow_char) {
-        return Err(format!(
-            "Invalid {label}. Example: {example}",
-        ));
+        return Err(format!("Invalid {label}. Example: {example}",));
     }
 
     Ok(value.to_string())
@@ -95,10 +93,12 @@ fn validate_ios_version(ios: &str) -> Result<String, String> {
 
 fn validate_generator(generator: &str) -> Result<String, String> {
     let value = generator.trim();
-    if value.len() != 18 || !value.starts_with("0x") || !value[2..].chars().all(|c| c.is_ascii_hexdigit()) {
+    if value.len() != 18
+        || !value.starts_with("0x")
+        || !value[2..].chars().all(|c| c.is_ascii_hexdigit())
+    {
         return Err(
-            "Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)"
-                .into(),
+            "Generator must be 0x followed by 16 hex chars (e.g. 0x1111111111111111)".into(),
         );
     }
 
@@ -425,7 +425,10 @@ pub async fn list_saved_shsh(app: AppHandle) -> Result<String, String> {
         .join("\n");
 
     let _ = app;
-    Ok(format!("Saved SHSH2 blobs in {}\n\n{listing}", root.display()))
+    Ok(format!(
+        "Saved SHSH2 blobs in {}\n\n{listing}",
+        root.display()
+    ))
 }
 
 /// Check which iOS versions are currently signed by Apple
@@ -446,12 +449,16 @@ pub async fn check_signed_versions(app: AppHandle, model: String) -> Result<Stri
                 .lines()
                 .filter(|line| {
                     let lower = line.to_ascii_lowercase();
-                    lower.contains("signed") || lower.contains("available") || lower.contains("version")
+                    lower.contains("signed")
+                        || lower.contains("available")
+                        || lower.contains("version")
                 })
                 .collect::<Vec<_>>();
 
             if filtered_lines.is_empty() {
-                return Ok(format!("Signed version API fallback triggered: {api_error}\n\n{output}"));
+                return Ok(format!(
+                    "Signed version API fallback triggered: {api_error}\n\n{output}"
+                ));
             }
 
             Ok(filtered_lines.join("\n"))

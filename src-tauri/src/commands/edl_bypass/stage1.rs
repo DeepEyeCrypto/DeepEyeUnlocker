@@ -142,7 +142,10 @@ pub async fn edl_stage1_detect(app: AppHandle) -> Result<EdlStage1Result, String
 
     log!("");
     log!("🔍 Scanning USB bus...");
-    let (_, sp) = run_cmd("system_profiler", &["SPUSBDataType", "-detailLevel", "mini"]);
+    let (_, sp) = run_cmd(
+        "system_profiler",
+        &["SPUSBDataType", "-detailLevel", "mini"],
+    );
     let (_, io) = run_cmd("ioreg", &["-p", "IOUSB", "-l", "-w", "0"]);
     let mut devices = parse_usb(&format!("{sp}\n{io}"));
 
@@ -198,7 +201,10 @@ pub async fn edl_stage1_detect(app: AppHandle) -> Result<EdlStage1Result, String
         let _ = run_cmd("adb", &["reboot", "edl"]);
         log!("   ⏳ Waiting 5s for 9008 mode...");
         wait_secs(5);
-        let (_, sp_retry) = run_cmd("system_profiler", &["SPUSBDataType", "-detailLevel", "mini"]);
+        let (_, sp_retry) = run_cmd(
+            "system_profiler",
+            &["SPUSBDataType", "-detailLevel", "mini"],
+        );
         let new_devices = parse_usb(&sp_retry);
         if !new_devices.is_empty() {
             log!("   ✅ Device entered EDL 9008!");

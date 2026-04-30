@@ -143,11 +143,7 @@ impl DaSession {
             data.extend_from_slice(&chunk);
             remaining -= chunk.len();
 
-            log::debug!(
-                "[MTK DA] Read progress: {}/{} bytes",
-                data.len(),
-                size
-            );
+            log::debug!("[MTK DA] Read progress: {}/{} bytes", data.len(), size);
         }
 
         log::info!(

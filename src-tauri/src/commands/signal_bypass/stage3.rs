@@ -6,24 +6,24 @@ pub struct Stage3Result {
     pub udid: String,
 
     // Baseband identity
-    pub baseband_version: String,  // e.g. "2.01.00"
+    pub baseband_version: String, // e.g. "2.01.00"
     pub baseband_serial: String,
-    pub baseband_cert_id: String,  // hex cert ID
+    pub baseband_cert_id: String, // hex cert ID
     pub baseband_chip_id: String,
 
     // SIM deep analysis
-    pub sim_status: String,        // kCTSIMSupport...
-    pub sim_status_label: String,  // human readable
-    pub sim_tray_status: String,   // SIMTrayStatus
+    pub sim_status: String,       // kCTSIMSupport...
+    pub sim_status_label: String, // human readable
+    pub sim_tray_status: String,  // SIMTrayStatus
     pub iccid: String,
-    pub imsi: String,              // carrier identity
-    pub mcc_mnc: String,           // e.g. "310 260"
+    pub imsi: String,    // carrier identity
+    pub mcc_mnc: String, // e.g. "310 260"
     pub carrier_name: String,
     pub carrier_bundle: String,
     pub carrier_roaming: bool,
 
     // Lock analysis
-    pub sim_lock_type: String,     // None/Locked/Blocked
+    pub sim_lock_type: String, // None/Locked/Blocked
     pub is_carrier_locked: bool,
     pub is_sim_absent: bool,
     pub is_sim_blocked: bool,
@@ -92,10 +92,7 @@ fn determine_lock_type(
 ) -> (&'static str, &'static str) {
     // Returns (lock_type, bypass_method)
     if is_blocked {
-        return (
-            "SIM Blocked",
-            "Replace SIM card — PUK unlock needed",
-        );
+        return ("SIM Blocked", "Replace SIM card — PUK unlock needed");
     }
     if is_absent {
         return (
@@ -125,10 +122,7 @@ fn determine_lock_type(
 }
 
 #[tauri::command]
-pub async fn signal_stage3_baseband(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage3Result, String> {
+pub async fn signal_stage3_baseband(app: AppHandle, udid: String) -> Result<Stage3Result, String> {
     // ── Log helper ─────────────────────────────────
     macro_rules! slog {
         ($msg:expr) => {

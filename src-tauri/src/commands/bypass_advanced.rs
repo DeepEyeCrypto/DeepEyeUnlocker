@@ -236,10 +236,15 @@ pub async fn ios_untethered_bypass(
             .shell()
             .command("sshpass")
             .args([
-                "-p", "alpine",
-                "ssh", "-o", "StrictHostKeyChecking=no",
-                "-p", "44", "root@localhost",
-                "mount_filesystems || mount -a"
+                "-p",
+                "alpine",
+                "ssh",
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-p",
+                "44",
+                "root@localhost",
+                "mount_filesystems || mount -a",
             ])
             .output()
             .await;
@@ -271,11 +276,16 @@ pub async fn ios_untethered_bypass(
             .shell()
             .command("sshpass")
             .args([
-                "-p", "alpine",
-                "ssh", "-o", "StrictHostKeyChecking=no",
-                "-p", "44", "root@localhost",
+                "-p",
+                "alpine",
+                "ssh",
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-p",
+                "44",
+                "root@localhost",
                 "nvram auto-boot=true && \
-                 /usr/libexec/cydia/firmware.sh || true"
+                 /usr/libexec/cydia/firmware.sh || true",
             ])
             .output()
             .await;
@@ -308,10 +318,15 @@ pub async fn ios_untethered_bypass(
                 .shell()
                 .command("sshpass")
                 .args([
-                    "-p", "alpine",
-                    "ssh", "-o", "StrictHostKeyChecking=no",
-                    "-p", "44", "root@localhost",
-                    "reboot"
+                    "-p",
+                    "alpine",
+                    "ssh",
+                    "-o",
+                    "StrictHostKeyChecking=no",
+                    "-p",
+                    "44",
+                    "root@localhost",
+                    "reboot",
                 ])
                 .output()
                 .await;

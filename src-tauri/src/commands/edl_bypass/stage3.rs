@@ -3,7 +3,9 @@ use tauri::command;
 use crate::commands::edl_bypass::shared::{build_stage_result, EdlPipelineStageResult};
 
 #[command]
-pub async fn edl_stage3_programmer(serial: Option<String>) -> Result<EdlPipelineStageResult, String> {
+pub async fn edl_stage3_programmer(
+    serial: Option<String>,
+) -> Result<EdlPipelineStageResult, String> {
     Ok(build_stage_result(
         3,
         "Programmer Selection",

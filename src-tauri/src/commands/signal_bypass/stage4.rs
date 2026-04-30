@@ -72,11 +72,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let combined = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let combined = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), combined)
         }
         Err(e) => (false, format!("tool not found: {e}")),
@@ -158,10 +154,7 @@ fn determine_lock_severity(
 }
 
 #[tauri::command]
-pub async fn signal_stage4_icloud(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage4Result, String> {
+pub async fn signal_stage4_icloud(app: AppHandle, udid: String) -> Result<Stage4Result, String> {
     // ── Log helper ─────────────────────────────────
     macro_rules! slog {
         ($msg:expr) => {
@@ -181,8 +174,8 @@ pub async fn signal_stage4_icloud(
     slog!("☁️  Reading activation state...");
 
     let activation_state = iinfo(&udid, "ActivationState");
-    let is_icloud_locked = activation_state.to_lowercase().contains("icloud")
-        || activation_state == "Unactivated";
+    let is_icloud_locked =
+        activation_state.to_lowercase().contains("icloud") || activation_state == "Unactivated";
 
     slog!("   State: {}", activation_state);
 
@@ -190,8 +183,7 @@ pub async fn signal_stage4_icloud(
     slog!("");
     slog!("🔍 Running ideviceactivation deep check...");
 
-    let (act_available, act_output) =
-        run_tool("ideviceactivation", &["state", "-u", &udid]);
+    let (act_available, act_output) = run_tool("ideviceactivation", &["state", "-u", &udid]);
 
     let act_tool_available = act_available || !act_output.contains("not found");
 
@@ -241,8 +233,7 @@ pub async fn signal_stage4_icloud(
     let is_internal_raw = iinfo(&udid, "InternalBuild");
     let is_internal_build = is_internal_raw.to_lowercase() == "true";
     let eligible_raw = iinfo(&udid, "EligibleForIOSUpdate");
-    let eligible_for_ios_update =
-        eligible_raw.to_lowercase() == "true" || eligible_raw == "N/A";
+    let eligible_for_ios_update = eligible_raw.to_lowercase() == "true" || eligible_raw == "N/A";
 
     slog!("   Product: {}", product_name);
     slog!("   Region: {}", region_info);
@@ -295,10 +286,7 @@ pub async fn signal_stage4_icloud(
     );
 
     // DST root cert check via security tool
-    let (dst_ok, _) = run_tool(
-        "security",
-        &["find-certificate", "-c", "DST Root CA X3"],
-    );
+    let (dst_ok, _) = run_tool("security", &["find-certificate", "-c", "DST Root CA X3"]);
 
     slog!(
         "   Activation server: {}",
@@ -310,7 +298,11 @@ pub async fn signal_stage4_icloud(
     );
     slog!(
         "   DST Root cert: {}",
-        if dst_ok { "found ✅" } else { "missing ⚠️" }
+        if dst_ok {
+            "found ✅"
+        } else {
+            "missing ⚠️"
+        }
     );
 
     // ── 7. Lock severity + bypass route ───────────

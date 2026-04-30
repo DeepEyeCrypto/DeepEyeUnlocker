@@ -287,9 +287,9 @@ pub fn firehose_read_partition(
     let mut buf = vec![0u8; 1048576]; // 1MB read buffer
 
     while total_read < total_expected {
-        let n = handle
-            .read_bulk(EP_IN, &mut buf, TIMEOUT)
-            .map_err(|e| EdlError::UsbError(format!("Bulk read failed at offset {total_read}: {e}")))?;
+        let n = handle.read_bulk(EP_IN, &mut buf, TIMEOUT).map_err(|e| {
+            EdlError::UsbError(format!("Bulk read failed at offset {total_read}: {e}"))
+        })?;
         if n == 0 {
             break;
         }
@@ -330,7 +330,8 @@ pub fn firehose_write_partition(
 
     // Read final ACK
     let mut resp_buf = [0u8; 4096];
-    let n = handle.read_bulk(EP_IN, &mut resp_buf, TIMEOUT)
+    let n = handle
+        .read_bulk(EP_IN, &mut resp_buf, TIMEOUT)
         .map_err(|e| EdlError::UsbError(format!("ACK read failed: {e}")))?;
     let resp = String::from_utf8_lossy(&resp_buf[..n]).to_string();
     if resp.contains("value=\"NAK\"") {
@@ -378,7 +379,11 @@ pub fn firehose_get_storage_info(
 
     Ok(StorageInfo {
         total_blocks,
-        block_size: if block_size_val > 0 { block_size_val as u32 } else { 4096 },
+        block_size: if block_size_val > 0 {
+            block_size_val as u32
+        } else {
+            4096
+        },
         storage_type: storage_type.to_string(),
     })
 }

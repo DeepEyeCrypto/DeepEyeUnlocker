@@ -1,4 +1,4 @@
-use crate::device::detector::{DeviceMode, DetectedDevice, scan_usb_devices};
+use crate::device::detector::{scan_usb_devices, DetectedDevice, DeviceMode};
 use serde::Serialize;
 
 /// Protocol session types

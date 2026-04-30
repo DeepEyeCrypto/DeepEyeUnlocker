@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgrammerEntry {
@@ -169,8 +169,7 @@ pub async fn get_edl_programmers() -> Vec<ProgrammerEntry> {
 
 #[tauri::command]
 pub async fn load_edl_programmer(path: String) -> Result<String, String> {
-    let metadata = std::fs::metadata(&path)
-        .map_err(|e| format!("Cannot read file: {e}"))?;
+    let metadata = std::fs::metadata(&path).map_err(|e| format!("Cannot read file: {e}"))?;
     Ok(format!(
         "✅ Programmer loaded!\nFile: {path}\nSize: {} KB",
         metadata.len() / 1024

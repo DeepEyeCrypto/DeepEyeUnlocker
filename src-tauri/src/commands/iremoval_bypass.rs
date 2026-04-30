@@ -40,23 +40,15 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 /// Runs iremoval_bypass.py with "detect" mode, parses streaming JSON events,
 /// and emits "iremoval-progress" Tauri events for each line.
 #[tauri::command]
-pub async fn iremoval_detect(
-    app: AppHandle,
-    session_id: String,
-) -> Result<IRemovalDevice, String> {
+pub async fn iremoval_detect(app: AppHandle, session_id: String) -> Result<IRemovalDevice, String> {
     println!("[COMMAND] iremoval_detect session_id={}", session_id);
 
-    let script_path = python_path(&app)
-        .join("ios_bypass/iremoval_bypass.py");
+    let script_path = python_path(&app).join("ios_bypass/iremoval_bypass.py");
 
     let output = app
         .shell()
         .command("python3")
-        .args([
-            script_path.to_str().unwrap(),
-            "detect",
-            &session_id,
-        ])
+        .args([script_path.to_str().unwrap(), "detect", &session_id])
         .output()
         .await
         .map_err(|e| format!("Failed to run iremoval_bypass detect: {e}"))?;
@@ -115,14 +107,10 @@ pub async fn iremoval_detect(
 /// captures stdout line by line, parses each JSON event, emits "iremoval-progress"
 /// Tauri events, and returns an IRemovalResult on completion.
 #[tauri::command]
-pub async fn iremoval_run(
-    app: AppHandle,
-    session_id: String,
-) -> Result<IRemovalResult, String> {
+pub async fn iremoval_run(app: AppHandle, session_id: String) -> Result<IRemovalResult, String> {
     println!("[COMMAND] iremoval_run session_id={}", session_id);
 
-    let script_path = python_path(&app)
-        .join("ios_bypass/iremoval_bypass.py");
+    let script_path = python_path(&app).join("ios_bypass/iremoval_bypass.py");
 
     // Emit a "starting" progress event immediately
     let start_progress = IRemovalProgress {
@@ -136,11 +124,7 @@ pub async fn iremoval_run(
     let output = app
         .shell()
         .command("python3")
-        .args([
-            script_path.to_str().unwrap(),
-            "run",
-            &session_id,
-        ])
+        .args([script_path.to_str().unwrap(), "run", &session_id])
         .output()
         .await
         .map_err(|e| format!("Failed to spawn iremoval_bypass.py: {e}"))?;
@@ -176,7 +160,10 @@ pub async fn iremoval_run(
 
             // Capture the final "complete" or "failed" event as the result
             if event_name == "complete" || event_name == "failed" {
-                let success = val.get("success").and_then(|v| v.as_bool()).unwrap_or(event_name == "complete");
+                let success = val
+                    .get("success")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(event_name == "complete");
                 let technique = val
                     .get("technique")
                     .and_then(|v| v.as_str())
@@ -229,8 +216,7 @@ pub async fn iremoval_iservices(
 ) -> Result<IRemovalResult, String> {
     println!("[COMMAND] iremoval_iservices session_id={}", session_id);
 
-    let script_path = python_path(&app)
-        .join("ios_bypass/iremoval_bypass.py");
+    let script_path = python_path(&app).join("ios_bypass/iremoval_bypass.py");
 
     // Emit a "starting" progress event immediately
     let start_progress = IRemovalProgress {
@@ -244,11 +230,7 @@ pub async fn iremoval_iservices(
     let output = app
         .shell()
         .command("python3")
-        .args([
-            script_path.to_str().unwrap(),
-            "iservices",
-            &session_id,
-        ])
+        .args([script_path.to_str().unwrap(), "iservices", &session_id])
         .output()
         .await
         .map_err(|e| format!("Failed to spawn iremoval_bypass.py (iservices): {e}"))?;
@@ -284,7 +266,10 @@ pub async fn iremoval_iservices(
 
             // Capture the final "complete" or "failed" event as the result
             if event_name == "complete" || event_name == "failed" {
-                let success = val.get("success").and_then(|v| v.as_bool()).unwrap_or(event_name == "complete");
+                let success = val
+                    .get("success")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(event_name == "complete");
                 let technique = val
                     .get("technique")
                     .and_then(|v| v.as_str())
@@ -317,7 +302,9 @@ pub async fn iremoval_iservices(
         };
         let _ = app.emit("iremoval-progress", err_progress);
 
-        return Err(format!("iremoval_bypass.py (iservices) exited with error: {stderr}"));
+        return Err(format!(
+            "iremoval_bypass.py (iservices) exited with error: {stderr}"
+        ));
     }
 
     Ok(result.unwrap_or(IRemovalResult {

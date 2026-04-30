@@ -84,11 +84,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -144,10 +140,7 @@ fn is_supported_baseband(ver: &str) -> bool {
 }
 
 #[tauri::command]
-pub async fn signal_stage8_baseband(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage8Result, String> {
+pub async fn signal_stage8_baseband(app: AppHandle, udid: String) -> Result<Stage8Result, String> {
     macro_rules! slog {
         ($msg:expr) => {
             let _ = app.emit("s8-log", $msg.to_string());

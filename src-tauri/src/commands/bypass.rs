@@ -117,9 +117,7 @@ pub async fn run_otg_bypass(carrier: String) -> Result<bool, String> {
                     println!("[OTG] ✓ Bypass command sent successfully");
                     Ok(true)
                 }
-                Ok(false) => {
-                    Err("[OTG] ✗ Bypass command failed".to_string())
-                }
+                Ok(false) => Err("[OTG] ✗ Bypass command failed".to_string()),
                 Err(e) => {
                     eprintln!("[OTG] ✗ Error: {}", e);
                     Err(format!("[OTG] ✗ Error: {}", e))

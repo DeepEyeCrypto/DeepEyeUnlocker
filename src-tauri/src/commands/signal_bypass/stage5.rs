@@ -72,11 +72,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -139,10 +135,7 @@ fn parse_profiles(raw: &str) -> Vec<MdmProfile> {
                 .to_string();
         }
         if line.starts_with("PayloadType:") {
-            current_type = line
-                .trim_start_matches("PayloadType:")
-                .trim()
-                .to_string();
+            current_type = line.trim_start_matches("PayloadType:").trim().to_string();
         }
     }
 
@@ -174,10 +167,7 @@ fn parse_profiles(raw: &str) -> Vec<MdmProfile> {
 }
 
 #[tauri::command]
-pub async fn signal_stage5_mdm(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage5Result, String> {
+pub async fn signal_stage5_mdm(app: AppHandle, udid: String) -> Result<Stage5Result, String> {
     macro_rules! slog {
         ($msg:expr) => {
             let _ = app.emit("s5-log", $msg.to_string());
@@ -270,8 +260,7 @@ pub async fn signal_stage5_mdm(
     } else {
         // Remove each profile by ID
         for profile in profiles.iter_mut() {
-            let (ok, out) =
-                run_tool("ideviceprovision", &["-u", &udid, "remove", &profile.id]);
+            let (ok, out) = run_tool("ideviceprovision", &["-u", &udid, "remove", &profile.id]);
             if ok || out.to_lowercase().contains("success") {
                 profile.removed = true;
                 removed_count += 1;
@@ -302,9 +291,7 @@ pub async fn signal_stage5_mdm(
         || (is_supervised && supervised_by != "N/A" && removed_count == 0);
 
     if mdm_locked {
-        slog!(
-            "   ⚠️  DEP/ABM enrolled — MDM lock may persist after profile removal"
-        );
+        slog!("   ⚠️  DEP/ABM enrolled — MDM lock may persist after profile removal");
         slog!("   💡 Device needs to be erased + re-enrolled to fully clear DEP");
     } else {
         slog!("   ✅ No persistent MDM lock");

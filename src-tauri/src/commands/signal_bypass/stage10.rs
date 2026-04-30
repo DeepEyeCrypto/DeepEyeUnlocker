@@ -83,11 +83,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -237,27 +233,16 @@ pub async fn signal_stage10_complete(
     slog!("");
     slog!("📊 Final capability evaluation...");
 
-    let signal_restored = sim_ready(&sim2)
-        && carrier2 != "N/A"
-        && !carrier2.is_empty()
-        && carrier2 != "No Carrier";
+    let signal_restored =
+        sim_ready(&sim2) && carrier2 != "N/A" && !carrier2.is_empty() && carrier2 != "No Carrier";
 
     let calls_capable = signal_restored && (act2.contains("Activated") || act_final_ok);
 
     let data_capable = signal_restored && mcc.len() == 3 && mcc.chars().all(|c| c.is_ascii_digit());
 
-    slog!(
-        "   Signal:  {}",
-        if signal_restored { "✅" } else { "⚠️" }
-    );
-    slog!(
-        "   Calls:   {}",
-        if calls_capable { "✅" } else { "⚠️" }
-    );
-    slog!(
-        "   Data:    {}",
-        if data_capable { "✅" } else { "⚠️" }
-    );
+    slog!("   Signal:  {}", if signal_restored { "✅" } else { "⚠️" });
+    slog!("   Calls:   {}", if calls_capable { "✅" } else { "⚠️" });
+    slog!("   Data:    {}", if data_capable { "✅" } else { "⚠️" });
 
     // ── 5. Compute final score ─────────────────────
     // Blend Stage 9 score (70%) + persistence (30%)

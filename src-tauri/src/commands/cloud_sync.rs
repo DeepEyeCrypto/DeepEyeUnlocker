@@ -49,9 +49,7 @@ pub async fn cloud_sync_db() -> Result<String, String> {
     } else {
         Ok(format!(
             "Update available: {} → {} — {}",
-            LOCAL_DB_VERSION,
-            release.tag_name,
-            release.html_url
+            LOCAL_DB_VERSION, release.tag_name, release.html_url
         ))
     }
 }

@@ -28,7 +28,10 @@ fn python_path(app: &AppHandle) -> std::path::PathBuf {
 /// Parse a hex or decimal value like "0x8020" or "32800" from irecovery output
 fn parse_hex_or_dec(s: &str) -> Option<u32> {
     let trimmed = s.trim();
-    if let Some(hex) = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")) {
+    if let Some(hex) = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+    {
         u32::from_str_radix(hex, 16).ok()
     } else {
         trimmed.parse::<u32>().ok()
@@ -40,12 +43,7 @@ pub async fn ios_detect_dfu_state(app: AppHandle) -> Result<DfuState, String> {
     println!("[COMMAND] ios_detect_dfu_state");
 
     // Try irecovery -q first for real device state detection
-    let irecovery_result = app
-        .shell()
-        .command("irecovery")
-        .args(["-q"])
-        .output()
-        .await;
+    let irecovery_result = app.shell().command("irecovery").args(["-q"]).output().await;
 
     if let Ok(output) = irecovery_result {
         if output.status.success() {
@@ -221,10 +219,7 @@ pub async fn ios_download_ipsw(
     );
 
     // Step 1: Query ipsw.me API to find the download URL
-    let api_url = format!(
-        "https://api.ipsw.me/v4/device/{}?type=ipsw",
-        model
-    );
+    let api_url = format!("https://api.ipsw.me/v4/device/{}?type=ipsw", model);
 
     let client = reqwest::Client::builder()
         .user_agent("DeepEyeUnlocker/2027")
@@ -239,10 +234,7 @@ pub async fn ios_download_ipsw(
         .map_err(|e| format!("ipsw.me API error: {e}"))?;
 
     if !resp.status().is_success() {
-        return Err(format!(
-            "ipsw.me returned HTTP {}",
-            resp.status().as_u16()
-        ));
+        return Err(format!("ipsw.me returned HTTP {}", resp.status().as_u16()));
     }
 
     let body: serde_json::Value = resp
@@ -258,21 +250,22 @@ pub async fn ios_download_ipsw(
     let firmware = firmwares
         .iter()
         .find(|fw| {
-            fw["version"].as_str().map(|v| v == ios_version).unwrap_or(false)
+            fw["version"]
+                .as_str()
+                .map(|v| v == ios_version)
+                .unwrap_or(false)
                 && fw["signed"].as_bool().unwrap_or(false)
         })
         .or_else(|| {
             // Fallback: find any firmware matching the version even if unsigned
-            firmwares
-                .iter()
-                .find(|fw| fw["version"].as_str().map(|v| v == ios_version).unwrap_or(false))
+            firmwares.iter().find(|fw| {
+                fw["version"]
+                    .as_str()
+                    .map(|v| v == ios_version)
+                    .unwrap_or(false)
+            })
         })
-        .ok_or_else(|| {
-            format!(
-                "No IPSW found for {} version {}",
-                model, ios_version
-            )
-        })?;
+        .ok_or_else(|| format!("No IPSW found for {} version {}", model, ios_version))?;
 
     let download_url = firmware["url"]
         .as_str()
@@ -324,7 +317,12 @@ pub async fn ios_download_ipsw(
                 last_pct = pct;
                 let _ = app.emit(
                     "dfu-progress",
-                    format!("Downloading: {}% ({}/{} MB)", pct, downloaded / 1_048_576, total_size / 1_048_576),
+                    format!(
+                        "Downloading: {}% ({}/{} MB)",
+                        pct,
+                        downloaded / 1_048_576,
+                        total_size / 1_048_576
+                    ),
                 );
             }
         }
@@ -336,10 +334,7 @@ pub async fn ios_download_ipsw(
 
     let _ = app.emit(
         "dfu-progress",
-        format!(
-            "Download complete: {} (SHA1: {})",
-            dest, sha1sum
-        ),
+        format!("Download complete: {} (SHA1: {})", dest, sha1sum),
     );
 
     Ok(dest)

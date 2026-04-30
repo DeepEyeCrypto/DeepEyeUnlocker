@@ -84,10 +84,7 @@ fn classify_device(vid: u16, pid: u16) -> DeviceMode {
 fn is_mtp_device(vid: u16, pid: u16) -> bool {
     matches!(
         (vid, pid),
-        (MTK_VID, 0x201D)
-            | (QCOM_VID, 0x9048)
-            | (0x04E8, 0x6860)
-            | (0x18D1, 0x4EE2)
+        (MTK_VID, 0x201D) | (QCOM_VID, 0x9048) | (0x04E8, 0x6860) | (0x18D1, 0x4EE2)
     )
 }
 

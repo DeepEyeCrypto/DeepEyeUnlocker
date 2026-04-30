@@ -16,7 +16,8 @@ pub async fn edl_stage14_modem_backup(
         true,
         vec![
             "Capture modemst1 and modemst2 before writeback experiments.".to_string(),
-            "Hash backup images immediately after download to catch transfer corruption.".to_string(),
+            "Hash backup images immediately after download to catch transfer corruption."
+                .to_string(),
             "Verify slot-specific modem labels on A/B devices.".to_string(),
         ],
     ))

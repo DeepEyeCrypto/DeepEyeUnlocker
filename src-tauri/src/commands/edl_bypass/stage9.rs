@@ -3,9 +3,7 @@ use tauri::command;
 use crate::commands::edl_bypass::shared::{build_stage_result, EdlPipelineStageResult};
 
 #[command]
-pub async fn edl_stage9_frp_plan(
-    serial: Option<String>,
-) -> Result<EdlPipelineStageResult, String> {
+pub async fn edl_stage9_frp_plan(serial: Option<String>) -> Result<EdlPipelineStageResult, String> {
     Ok(build_stage_result(
         9,
         "FRP Plan",

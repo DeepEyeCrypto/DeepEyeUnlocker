@@ -18,11 +18,7 @@ pub fn list_usb_devices() -> Result<Vec<UsbDeviceInfo>, String> {
 
     for device in devices.iter() {
         if let Ok(desc) = device.device_descriptor() {
-            let name = format!(
-                "VID:{:04x} PID:{:04x}",
-                desc.vendor_id(),
-                desc.product_id()
-            );
+            let name = format!("VID:{:04x} PID:{:04x}", desc.vendor_id(), desc.product_id());
 
             // Try to get serial number if available
             let serial = if let Ok(handle) = device.open() {
@@ -74,16 +70,14 @@ pub fn send_bypass_command(vendor_id: u16, product_id: u16) -> Result<bool, Stri
             {
                 if handle.kernel_driver_active(0).unwrap_or(false) {
                     println!("[USB] Detaching kernel driver...");
-                    handle
-                        .detach_kernel_driver(0)
-                        .map_err(|e| e.to_string())?;
+                    handle.detach_kernel_driver(0).map_err(|e| e.to_string())?;
                 }
             }
 
             // Claim interface 0
-            handle.claim_interface(0).map_err(|e| {
-                format!("Failed to claim interface: {}", e)
-            })?;
+            handle
+                .claim_interface(0)
+                .map_err(|e| format!("Failed to claim interface: {}", e))?;
 
             println!("[USB] Interface claimed, sending bypass command...");
 

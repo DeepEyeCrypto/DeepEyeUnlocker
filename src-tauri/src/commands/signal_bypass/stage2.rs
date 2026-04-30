@@ -4,16 +4,16 @@ use tauri::{AppHandle, Emitter};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Stage2Result {
     pub udid: String,
-    pub activation_status: String,   // raw string
-    pub activation_enum: String,     // enum label
+    pub activation_status: String, // raw string
+    pub activation_enum: String,   // enum label
     pub is_icloud_locked: bool,
     pub is_activated: bool,
-    pub apple_id_linked: String,     // email if available
+    pub apple_id_linked: String, // email if available
     pub find_my_enabled: bool,
     pub supervision_enabled: bool,
     pub supervised_by: String,
-    pub escrow_bag: String,          // activation token
-    pub activation_blob: String,     // raw blob hash
+    pub escrow_bag: String,      // activation token
+    pub activation_blob: String, // raw blob hash
     pub bypass_possible: bool,
     pub recommended_action: String,
     pub stage_passed: bool,
@@ -189,11 +189,7 @@ pub async fn signal_stage2_activation(
 
     // Truncate blob for display
     let blob_preview = if activation_blob.len() > 32 {
-        format!(
-            "{}...[{}b]",
-            &activation_blob[..32],
-            activation_blob.len()
-        )
+        format!("{}...[{}b]", &activation_blob[..32], activation_blob.len())
     } else {
         activation_blob.clone()
     };

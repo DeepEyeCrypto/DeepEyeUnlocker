@@ -1,6 +1,6 @@
-use tauri::{command, AppHandle, Manager};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::process::Command;
+use tauri::{command, AppHandle, Manager};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SwiftDevice {
@@ -13,7 +13,8 @@ pub struct SwiftDevice {
 }
 
 fn get_core_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path().resource_dir()
+    app.path()
+        .resource_dir()
         .map(|p| p.join("resources").join("deepeye-core"))
         .map_err(|e| format!("Resource dir error: {e}"))
 }
@@ -21,7 +22,7 @@ fn get_core_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
 #[command]
 pub async fn ios_detect_device(app: AppHandle, session_id: String) -> Result<SwiftDevice, String> {
     let bin = get_core_path(&app)?;
-    
+
     let output = Command::new(bin)
         .arg("detect")
         .arg(session_id)
@@ -30,17 +31,20 @@ pub async fn ios_detect_device(app: AppHandle, session_id: String) -> Result<Swi
 
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr).to_string();
-        return Err(if err.is_empty() { "Unknown error in Swift core".to_string() } else { err });
+        return Err(if err.is_empty() {
+            "Unknown error in Swift core".to_string()
+        } else {
+            err
+        });
     }
 
-    serde_json::from_slice(&output.stdout)
-        .map_err(|e| format!("JSON parse error: {e}"))
+    serde_json::from_slice(&output.stdout).map_err(|e| format!("JSON parse error: {e}"))
 }
 
 #[command]
 pub async fn run_hello_bypass(app: AppHandle, session_id: String) -> Result<String, String> {
     let bin = get_core_path(&app)?;
-    
+
     let status = Command::new(bin)
         .arg("hello-bypass")
         .arg(session_id)
@@ -57,17 +61,17 @@ pub async fn run_hello_bypass(app: AppHandle, session_id: String) -> Result<Stri
 #[command]
 #[allow(clippy::too_many_arguments)]
 pub async fn run_full_signal_bypass(
-    app: AppHandle, 
-    ecid: String, 
-    imei: String, 
-    imei2: String, 
-    serial: String, 
-    ios: String, 
+    app: AppHandle,
+    ecid: String,
+    imei: String,
+    imei2: String,
+    serial: String,
+    ios: String,
     model: String,
-    session_id: String
+    session_id: String,
 ) -> Result<String, String> {
     let bin = get_core_path(&app)?;
-    
+
     let status = Command::new(bin)
         .arg("full-signal")
         .arg(ecid)
@@ -95,10 +99,10 @@ pub async fn run_fake_erase(
     serial: String,
     ios: String,
     model: String,
-    session_id: String
+    session_id: String,
 ) -> Result<String, String> {
     let bin = get_core_path(&app)?;
-    
+
     let status = Command::new(bin)
         .arg("fake-erase")
         .arg(ecid)

@@ -16,12 +16,16 @@ pub struct DeviceScanResult {
 #[tauri::command]
 pub async fn device_scan_all() -> Result<DeviceScanResult, String> {
     log::info!("[Device] Scanning all USB devices...");
-    
+
     let devices = scan_all_devices()?;
     let count = devices.len();
     let has_supported = devices.iter().any(|d| d.connected);
 
-    log::info!("[Device] Found {} device(s), {} supported", count, has_supported);
+    log::info!(
+        "[Device] Found {} device(s), {} supported",
+        count,
+        has_supported
+    );
 
     Ok(DeviceScanResult {
         devices,
@@ -100,10 +104,7 @@ pub async fn fastboot_get_info() -> Result<crate::commands::fastboot::FastbootDe
 
 /// Fastboot: Flash partition from file
 #[tauri::command]
-pub async fn fastboot_flash_partition(
-    partition: String,
-    file_path: String,
-) -> Result<(), String> {
+pub async fn fastboot_flash_partition(partition: String, file_path: String) -> Result<(), String> {
     let data = std::fs::read(&file_path)
         .map_err(|e| format!("Failed to read file '{}': {}", file_path, e))?;
 

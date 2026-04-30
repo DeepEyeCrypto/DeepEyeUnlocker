@@ -141,7 +141,7 @@ pub fn start_usb_watcher(app: AppHandle) {
                     }
 
                     app.emit("usb-devices-changed", &detected).ok();
-                    
+
                     // Feature 2: Auto-detect chipset/platform
                     for dev in &detected {
                         let platform = match dev.vid {

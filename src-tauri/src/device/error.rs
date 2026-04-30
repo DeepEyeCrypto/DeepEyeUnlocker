@@ -10,16 +10,10 @@ pub enum DeviceError {
     DeviceNotFound(String),
 
     #[error("USB error: {operation} failed: {details}")]
-    UsbError {
-        operation: String,
-        details: String,
-    },
+    UsbError { operation: String, details: String },
 
     #[error("Protocol error: {protocol} — {message}")]
-    ProtocolError {
-        protocol: String,
-        message: String,
-    },
+    ProtocolError { protocol: String, message: String },
 
     #[error("Handshake failed: {0}")]
     HandshakeFailed(String),
@@ -51,9 +45,9 @@ pub fn map_usb_error(operation: &str, error: rusb::Error) -> DeviceError {
             operation: operation.to_string(),
             details: "USB access denied — check permissions/entitlements".to_string(),
         },
-        rusb::Error::NoDevice => DeviceError::DeviceNotFound(
-            "Device disconnected during operation".to_string(),
-        ),
+        rusb::Error::NoDevice => {
+            DeviceError::DeviceNotFound("Device disconnected during operation".to_string())
+        }
         rusb::Error::Io => DeviceError::UsbError {
             operation: operation.to_string(),
             details: "USB I/O error — check cable connection".to_string(),

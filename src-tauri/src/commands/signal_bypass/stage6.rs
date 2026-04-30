@@ -69,11 +69,7 @@ fn run_tool(bin: &str, args: &[&str]) -> (bool, String) {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
             let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            let body = if stdout.is_empty() {
-                stderr
-            } else {
-                stdout
-            };
+            let body = if stdout.is_empty() { stderr } else { stdout };
             (out.status.success(), body)
         }
         Err(e) => (false, format!("not found: {e}")),
@@ -87,17 +83,11 @@ fn is_sim_ready(status: &str) -> bool {
 }
 
 fn is_carrier_present(carrier: &str) -> bool {
-    carrier != "N/A"
-        && !carrier.is_empty()
-        && carrier != "No Carrier"
-        && carrier != "Unknown"
+    carrier != "N/A" && !carrier.is_empty() && carrier != "No Carrier" && carrier != "Unknown"
 }
 
 #[tauri::command]
-pub async fn signal_stage6_carrier(
-    app: AppHandle,
-    udid: String,
-) -> Result<Stage6Result, String> {
+pub async fn signal_stage6_carrier(app: AppHandle, udid: String) -> Result<Stage6Result, String> {
     macro_rules! slog {
         ($msg:expr) => {
             let _ = app.emit("s6-log", $msg.to_string());

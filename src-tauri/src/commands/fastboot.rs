@@ -41,7 +41,9 @@ impl FastbootSession {
             };
 
             let pid = desc.product_id();
-            if desc.vendor_id() == FASTBOOT_VID && (pid == FASTBOOT_PID_D00D || pid == MTK_FASTBOOT_PID) {
+            if desc.vendor_id() == FASTBOOT_VID
+                && (pid == FASTBOOT_PID_D00D || pid == MTK_FASTBOOT_PID)
+            {
                 let handle = device.open().map_err(|e| e.to_string())?;
                 handle.claim_interface(0).map_err(|e| e.to_string())?;
                 return Ok(Self { handle });
@@ -141,7 +143,7 @@ impl FastbootSession {
     fn get_var(&self, name: &str) -> Result<String, String> {
         self.send_command(&format!("getvar:{}", name))?;
         let response = self.read_response()?;
-        
+
         // Response format: "OKAY" or "<name>: <value>"
         if response.starts_with(name) {
             Ok(response

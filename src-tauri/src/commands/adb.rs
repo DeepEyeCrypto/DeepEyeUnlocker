@@ -6,11 +6,11 @@ use tauri_plugin_shell::ShellExt;
 /// Auto-detect ADB binary path across platforms
 fn find_adb() -> String {
     let paths = vec![
-        "/usr/local/bin/adb",                      // macOS Homebrew (Intel)
-        "/opt/homebrew/bin/adb",                   // macOS Homebrew (Apple Silicon)
+        "/usr/local/bin/adb",                                   // macOS Homebrew (Intel)
+        "/opt/homebrew/bin/adb",                                // macOS Homebrew (Apple Silicon)
         "/Users/enayat/Library/Android/sdk/platform-tools/adb", // User's SDK
-        "/usr/bin/adb",                            // System PATH
-        "adb",                                     // Fallback to PATH
+        "/usr/bin/adb",                                         // System PATH
+        "adb",                                                  // Fallback to PATH
     ];
     paths
         .into_iter()
@@ -265,17 +265,15 @@ pub async fn adb_get_device_info(
     .await
     .unwrap_or("Unavailable".to_string());
 
-    let storage_raw = adb_shell(
-        app,
-        serial,
-        "df /data | tail -1 | awk '{print $2,$3,$4}'",
-    )
-    .await
-    .unwrap_or_default();
-    let storage = format!("Total: {}, Used: {}, Free: {}", 
+    let storage_raw = adb_shell(app, serial, "df /data | tail -1 | awk '{print $2,$3,$4}'")
+        .await
+        .unwrap_or_default();
+    let storage = format!(
+        "Total: {}, Used: {}, Free: {}",
         storage_raw.split_whitespace().next().unwrap_or("?"),
         storage_raw.split_whitespace().nth(1).unwrap_or("?"),
-        storage_raw.split_whitespace().nth(2).unwrap_or("?"));
+        storage_raw.split_whitespace().nth(2).unwrap_or("?")
+    );
 
     Ok(DeviceFullInfo {
         serial: serial.to_string(),
