@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: var(--color-bg-primary, #0a0d14);
-  --bg-surface: var(--color-bg-secondary, #111827);
-  --bg-card: rgba(15, 23, 42, 0.78);
-  --bg-card-hover: rgba(30, 41, 59, 0.88);
-  --accent-green: var(--color-success, #10b981);
-  --accent-gold: var(--color-warning, #f59e0b);
-  --accent-red: var(--color-error, #ef4444);
-  --accent-blue: var(--color-accent, #3b82f6);
-  --accent-purple: #a855f7;
-  --text-primary: var(--color-text-primary, #f1f5f9);
-  --text-muted: var(--color-text-secondary, #94a3b8);
-  --text-faint: var(--color-text-muted, #475569);
-  --border: rgba(255,255,255,0.08);
-  --border-hover: rgba(255,255,255,0.15);
-  --radius-sm: 6px;
-  --radius-md: var(--radius, 12px);
-  --radius-lg: 16px;
-  --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.2);
-  --shadow-glow-gold: 0 0 20px rgba(245, 158, 11, 0.2);
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  /* Cybernetic Security Interface Tokens */
+  --bg-primary: #0f0f1a;
+  --bg-surface: #141423;
+  --bg-card: rgba(20, 20, 35, 0.7);
+  --bg-card-hover: rgba(30, 30, 50, 0.8);
+  
+  --accent-cyan: #00d4ff;
+  --accent-purple: #7c3aed;
+  --accent-red: #ff0055;
+  --accent-green: #00ffaa;
+  
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #475569;
+  
+  --border: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(0, 212, 255, 0.5);
+  
+  /* Brutalist Shapes */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  
+  /* Cyber Glows */
+  --shadow-glow-cyan: 0 0 20px rgba(0, 212, 255, 0.2);
+  --shadow-glow-purple: 0 0 20px rgba(124, 58, 237, 0.2);
+  --shadow-glow-red: 0 0 20px rgba(255, 0, 85, 0.2);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.6);
+  
+  /* Typography */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'Fira Code', source-code-pro, Menlo, monospace;
 }
 
 * {
@@ -41,11 +54,21 @@ body,
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-sans, 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif);
-  font-size: var(--font-md);
+  font-family: var(--font-sans);
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   user-select: none;
   overflow: hidden;
+  /* Cyber background grid */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
 }
 
 /* Scrollbar styling */
@@ -57,30 +80,55 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+  background: rgba(0, 212, 255, 0.2);
+  border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--accent-cyan);
 }
 
 /* Glassmorphism helpers */
 .glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(20, 20, 35, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
 }
 
 .glass-card {
   background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  /* Simulated light hitting glass edge */
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05), var(--shadow-card);
   transition: all 0.2s ease;
 }
 
 .glass-card:hover {
   border-color: var(--border-hover);
   background: var(--bg-card-hover);
-  box-shadow: var(--shadow-card);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1), var(--shadow-glow-cyan);
+}
+
+.action-btn {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.action-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: var(--shadow-glow-cyan);
 }

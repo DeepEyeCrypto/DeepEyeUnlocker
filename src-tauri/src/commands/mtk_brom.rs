@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::usb_utils::{
-    debug_list_usb_devices, open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN,
+    open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN,
     EP_OUT as USB_EP_OUT, TIMEOUT as USB_TIMEOUT,
 };
 use rusb::{
@@ -235,9 +235,6 @@ fn find_transport_interface(
 
 pub fn find_mtk_device() -> Option<MtkDevice> {
     let devices = rusb::devices().ok()?;
-
-    #[cfg(debug_assertions)]
-    debug_list_usb_devices();
 
     for device in devices.iter() {
         let Ok(descriptor) = device.device_descriptor() else {

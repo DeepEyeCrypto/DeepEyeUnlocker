@@ -1,5 +1,5 @@
 use super::usb_utils::{
-    check_winusb_installed, debug_list_usb_devices, open_and_claim, EP_IN, EP_OUT,
+    check_winusb_installed, open_and_claim, EP_IN, EP_OUT,
 };
 use rusb::{Device, DeviceDescriptor, DeviceHandle, GlobalContext};
 use serde::Serialize;
@@ -105,8 +105,6 @@ pub fn open_edl_device() -> Result<DeviceHandle<GlobalContext>, EdlError> {
 }
 
 pub fn find_edl_device() -> Result<EdlDeviceInfo, EdlError> {
-    #[cfg(debug_assertions)]
-    debug_list_usb_devices();
 
     let (device, desc) = find_edl_transport()?;
 

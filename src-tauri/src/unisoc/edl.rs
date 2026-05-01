@@ -48,10 +48,13 @@ impl UnisocConnection {
             Err(e) => return Err(format!("USB write failed: {}", e)),
         }
 
-        // Logic for full FDL upload would go here.
-        // For the v1.2.0 baseline, we provide the connection and handshake infrastructure.
+        // Full FDL (First DownLoader) upload requires device-specific firmware blobs.
+        // The handshake above is real — once FDL1 blob is provided, the erase sequence
+        // can proceed via the Spreadtrum Research Download protocol.
+        // FDL blobs are chip-specific (SC9832E, SC9863A, T610, T618, etc.)
 
-        let _ = tx.send("✅ Unisoc FRP Partition Erase Successful (Mock Sequence).".into());
+        let _ = tx.send("✅ Unisoc EDL: Handshake established. FDL upload requires device-specific firmware blob.".into());
+        let _ = tx.send("💡 Provide FDL1 blob for your chipset to proceed with FRP erase.".into());
         Ok(())
     }
 }

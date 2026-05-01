@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+    color: #e3e0f1;
+    min-height: 100%;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .header-icon { font-size: 20px; }
+
+  .header-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #a8e8ff;
+    letter-spacing: 0.04em;
+  }
+
+  .sep {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,212,255,0.25), transparent);
+    margin-bottom: 16px;
+  }
+
+  .license-body {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8a8a9e;
+  }
+
+  .license-body h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #bbc9cf;
+    margin: 14px 0 6px;
+    letter-spacing: 0.03em;
+  }
+
+  .license-body p { margin-bottom: 8px; }
+
+  .license-body strong { color: #00d4ff; font-weight: 600; }
+
+  .license-body ul {
+    padding-left: 16px;
+    margin: 6px 0 10px;
+  }
+
+  .license-body li {
+    margin-bottom: 4px;
+    color: #7a7a90;
+  }
+</style>
+</head>
+<body>
+  <div class="content">
+    <div class="header">
+      <span class="header-icon">📜</span>
+      <span class="header-text">End User License Agreement</span>
+    </div>
+    <div class="sep"></div>
+
+    <div class="license-body">
+      <p><strong>DeepEyeUnlocker</strong> — End User License Agreement (EULA)</p>
+      <p>Copyright © 2024-2027 DeepEye Research. All rights reserved.</p>
+
+      <h3>1. License Grant</h3>
+      <p>This software is provided for educational and research purposes only. By installing DeepEyeUnlocker, you agree to use it solely for authorized device research, security testing, and personal device management.</p>
+
+      <h3>2. Restrictions</h3>
+      <ul>
+        <li>You may not use this software on devices you do not own or have explicit authorization to test.</li>
+        <li>You may not redistribute, sublicense, or sell this software without written permission.</li>
+        <li>You may not reverse-engineer the core bypass engine beyond the open-source components.</li>
+      </ul>
+
+      <h3>3. Disclaimer</h3>
+      <p>THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. The authors are not responsible for any misuse, data loss, or device damage resulting from the use of this tool.</p>
+
+      <h3>4. Compliance</h3>
+      <p>Users are solely responsible for ensuring compliance with all applicable local, state, national, and international laws and regulations.</p>
+
+      <h3>5. Acknowledgment</h3>
+      <p>By clicking "Continue", you acknowledge that you have read, understood, and agree to be bound by the terms of this agreement.</p>
+    </div>
+  </div>
+</body>
+</html>

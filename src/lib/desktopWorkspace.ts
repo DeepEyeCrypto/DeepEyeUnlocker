@@ -10,6 +10,7 @@ export type WorkspaceId =
   | "qualcomm-edl"
   | "samsung-odin"
   | "signal-bypass"
+  | "filesystem-engine"
   | "history"
   | "settings";
 
@@ -82,9 +83,9 @@ const ALL_WORKSPACES: WorkspaceId[] = [
   "wireless-adb",
   "firmware-lab",
   "mtk-brom",
-  "qualcomm-edl",
   "samsung-odin",
   "signal-bypass",
+  "filesystem-engine",
   "history",
   "settings",
 ];
@@ -99,6 +100,7 @@ const WORKSPACE_COUNT_TEMPLATE: Record<WorkspaceId, number> = {
   "qualcomm-edl": 0,
   "samsung-odin": 0,
   "signal-bypass": 0,
+  "filesystem-engine": 0,
   history: 0,
   settings: 0,
 };
@@ -184,6 +186,15 @@ export const WORKSPACE_META: Record<WorkspaceId, WorkspaceMeta> = {
       "A12+ multi-stage carrier, baseband, and IMEI verification flow surfaced directly in desktop UX.",
     section: "labs",
     eyebrow: "Apple advanced flow",
+  },
+  "filesystem-engine": {
+    label: "Filesystem Exploitation",
+    icon: "🗄️",
+    color: "#ef4444",
+    description:
+      "Advanced SSH tunneling, R/W mounting, Setup.app patching, and untethered persistence.",
+    section: "labs",
+    eyebrow: "Apple core exploits",
   },
   history: {
     label: "Session History",

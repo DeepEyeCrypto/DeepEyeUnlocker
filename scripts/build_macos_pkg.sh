@@ -215,6 +215,9 @@ package_target() {
   mkdir -p "${payload_root}/Applications" "$pkg_dir"
   ditto "$app_bundle" "$app_destination"
 
+  # ── Step 1: Build component .pkg with pkgbuild ──
+  local component_pkg="${temp_dir}/${artifact_name}_component.pkg"
+
   pkgbuild_args=(
     --root "$payload_root"
     --install-location "/"
@@ -223,12 +226,56 @@ package_target() {
     --scripts "$scripts_dir"
   )
 
+  echo "Building component package..."
+  pkgbuild "${pkgbuild_args[@]}" "$component_pkg"
+
+  # ── Step 2: Generate distribution XML for productbuild ──
+  local dist_xml="${temp_dir}/distribution.xml"
+  local resources_dir="$project_root/scripts/installer-resources"
+
+  cat > "$dist_xml" <<DISTXML
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>${product_name} ${version}</title>
+    <organization>${identifier}</organization>
+    <domains enable_localSystem="true"/>
+    <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
+
+    <!-- Custom UI Pages -->
+    <welcome    file="welcome.html"    mime-type="text/html"/>
+    <license    file="license.html"    mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="${identifier}"/>
+        </line>
+    </choices-outline>
+
+    <choice id="default"/>
+    <choice id="${identifier}" visible="false">
+        <pkg-ref id="${identifier}"/>
+    </choice>
+
+    <pkg-ref id="${identifier}"
+             version="${version}"
+             onConclusion="none">${artifact_name}_component.pkg</pkg-ref>
+</installer-gui-script>
+DISTXML
+
+  # ── Step 3: Build distribution .pkg with productbuild (custom UI) ──
+  local -a productbuild_args=(
+    --distribution "$dist_xml"
+    --resources "$resources_dir"
+    --package-path "$temp_dir"
+  )
+
   if [ -n "${APPLE_INSTALLER_SIGNING_IDENTITY:-}" ]; then
-    pkgbuild_args+=(--sign "$APPLE_INSTALLER_SIGNING_IDENTITY")
+    productbuild_args+=(--sign "$APPLE_INSTALLER_SIGNING_IDENTITY")
   fi
 
-  echo "Packaging ${app_bundle} -> ${pkg_path}"
-  pkgbuild "${pkgbuild_args[@]}" "$pkg_path"
+  echo "Packaging ${app_bundle} -> ${pkg_path} (with custom UI)"
+  productbuild "${productbuild_args[@]}" "$pkg_path"
 }
 
 for target in "${targets[@]}"; do

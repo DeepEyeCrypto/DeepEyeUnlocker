@@ -37,7 +37,7 @@ export function SpotlightFeatureCard({
       >
         <div className="flex flex-col gap-3" style={{ position: 'relative', zIndex: 20 }}>
           {/* Icon */}
-          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center" style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
+          <div className="w-12 h-12 rounded-[0px] bg-white/10 flex items-center justify-center border border-white/10" style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
             {icon}
           </div>
 
@@ -46,7 +46,7 @@ export function SpotlightFeatureCard({
             <div className="flex items-start justify-between gap-2 mb-2">
               <h3 className="text-white font-bold text-lg leading-tight">{title}</h3>
               {badge && (
-                <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-white/20 text-white whitespace-nowrap">
+                <span className="px-2 py-0.5 text-xs font-bold rounded-[0px] border border-white/20 bg-white/10 text-white whitespace-nowrap uppercase tracking-wider">
                   {badge}
                 </span>
               )}

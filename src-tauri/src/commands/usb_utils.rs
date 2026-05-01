@@ -65,24 +65,7 @@ pub fn open_and_claim_with_options(
     Ok(handle)
 }
 
-pub fn debug_list_usb_devices() {
-    match rusb::devices() {
-        Ok(list) => {
-            for device in list.iter() {
-                if let Ok(desc) = device.device_descriptor() {
-                    println!(
-                        "[usb_debug] Bus {:03} Device {:03} ID {:04x}:{:04x}",
-                        device.bus_number(),
-                        device.address(),
-                        desc.vendor_id(),
-                        desc.product_id()
-                    );
-                }
-            }
-        }
-        Err(error) => eprintln!("[usb_debug] Cannot list devices: {error}"),
-    }
-}
+
 
 #[cfg(target_os = "windows")]
 pub fn check_winusb_installed(vid: u16, pid: u16) -> bool {

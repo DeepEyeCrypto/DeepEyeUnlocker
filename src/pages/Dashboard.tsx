@@ -164,10 +164,10 @@ export default function DashboardPage({
 
       <ProgressStep steps={steps} />
 
-      <div className="card glass glass-hover metric-card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '25%', color: '#3b82f6' }}>
+      <div className="card glass glass-hover metric-card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', borderRadius: '0px', borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+        <div style={{ padding: '1rem', background: 'rgba(0, 212, 255, 0.1)', borderRadius: '0px', color: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
+            <rect x="4" y="4" width="16" height="16" rx="0" ry="0" />
             <rect x="9" y="9" width="6" height="6" />
             <line x1="9" y1="1" x2="9" y2="4" />
             <line x1="15" y1="1" x2="15" y2="4" />
@@ -180,9 +180,9 @@ export default function DashboardPage({
           </svg>
         </div>
         <div>
-          <h3 style={{ margin: 0, fontWeight: 600, fontSize: '1.125rem' }}>1,879 Supported Devices</h3>
-          <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-2)', fontSize: '0.875rem' }}>
-            483 Full BROM · 649 Partial · 412 EDL
+          <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.125rem', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>LIVE ORCHESTRATION</h3>
+          <p style={{ margin: '0.25rem 0 0 0', color: 'var(--accent-cyan)', fontSize: '0.875rem', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>
+            A12+ SIGNAL BYPASS READY
           </p>
         </div>
       </div>

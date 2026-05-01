@@ -28,6 +28,7 @@ const MOBILE_LABELS: Record<WorkspaceId, string> = {
   'qualcomm-edl': 'EDL',
   'samsung-odin': 'Odin',
   'signal-bypass': 'Signal',
+  'filesystem-engine': 'FS Engine',
   history: 'History',
   settings: 'Settings',
 };

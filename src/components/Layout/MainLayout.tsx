@@ -13,6 +13,7 @@ import MtkBromPage from '../../pages/MtkBromPage';
 import SamsungPage from '../../pages/SamsungPage';
 import SettingsPage from '../../pages/SettingsPage';
 import RomManager from '../pages/RomManager';
+import { FilesystemEngine } from '../../modules/FilesystemEngine';
 import { FeatureRemapStudio } from '../workspace/FeatureRemapStudio';
 import { useDevicePolling } from '../../hooks/useDevicePolling';
 import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '../../lib/settings';
@@ -342,6 +343,8 @@ export function MainLayout() {
         return <SamsungPage />;
       case 'signal-bypass':
         return <SignalBypassFlow onClose={() => setActiveWorkspace('control-center')} />;
+      case 'filesystem-engine':
+        return <FilesystemEngine />;
       case 'history':
         return <HistoryScreen />;
       case 'settings':

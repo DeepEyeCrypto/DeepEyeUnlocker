@@ -194,6 +194,15 @@ use commands::vault::ios_create_deepvault;
 use commands::wifi_adb::{
     connect_wifi_adb, disconnect_wifi_adb, enable_adb_wifi_mode, pair_wifi_adb,
 };
+use commands::filesystem::mount::{
+    fs_start_tunnel, fs_mount_readwrite, fs_list_path, fs_read_file,
+    fs_write_file, fs_push_file, fs_pull_file,
+};
+use commands::filesystem::setup_app::{fs_patch_setup_app, fs_restore_setup_app};
+use commands::filesystem::activation::fs_patch_activation;
+use commands::filesystem::lockdown::{fs_patch_lockdown, fs_restore_lockdown};
+use commands::persistence::tethered::{persist_check_tethered, persist_reapply_tethered};
+use commands::persistence::untethered::{persist_install_untethered, persist_remove_untethered};
 use config::settings::{load_settings, save_settings};
 use db::history::{add_history_entry, clear_history, export_history_csv, get_history};
 use qualcomm::programmer_db::{get_edl_programmers, load_edl_programmer};
@@ -653,6 +662,24 @@ pub fn run() {
             run_hello_bypass,
             run_full_signal_bypass,
             run_fake_erase,
+            // Filesystem Access Layer
+            fs_start_tunnel,
+            fs_mount_readwrite,
+            fs_list_path,
+            fs_read_file,
+            fs_write_file,
+            fs_push_file,
+            fs_pull_file,
+            fs_patch_setup_app,
+            fs_restore_setup_app,
+            fs_patch_activation,
+            fs_patch_lockdown,
+            fs_restore_lockdown,
+            // Persistence Engine
+            persist_check_tethered,
+            persist_reapply_tethered,
+            persist_install_untethered,
+            persist_remove_untethered,
         ])
         .run(tauri::generate_context!());
 

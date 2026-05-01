@@ -9,7 +9,7 @@ pub async fn run_pin_bruteforce(
 ) -> Result<String, String> {
     let mut results = Vec::new();
     for pin in pins {
-        // Simulate ADB input for each PIN
+        // Send PIN via ADB input command to device
         let cmd = format!("adb shell input text {}", pin);
         let output = app
             .shell()

@@ -38,6 +38,8 @@ pub mod rom_flasher;
 pub mod rom_manager;
 pub mod samsung;
 pub mod screentime;
+pub mod filesystem;
+pub mod persistence;
 pub mod signal_bypass;
 pub mod ticket;
 pub mod unisoc;

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+    color: #e3e0f1;
+    min-height: 100%;
+    padding: 32px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle grid overlay */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Purple ambient glow */
+  body::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -80px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(124,58,237,0.15), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  /* ─── Logo + Branding ─── */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .logo-box {
+    width: 56px;
+    height: 56px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(0,212,255,0.15), inset 0 0 12px rgba(0,212,255,0.05);
+  }
+
+  .logo-eye {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .brand-text { display: flex; flex-direction: column; gap: 4px; }
+
+  .brand-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 12px rgba(0,212,255,0.4), 0 0 24px rgba(0,212,255,0.15);
+  }
+
+  .version-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: #001f27;
+    background: #00d4ff;
+    padding: 2px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tagline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #a8e8ff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Separator ─── */
+  .sep {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(124,58,237,0.2), transparent);
+    margin: 16px 0;
+  }
+
+  /* ─── Welcome Card ─── */
+  .glass-card {
+    background: rgba(26,26,46,0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top-color: rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+
+  .welcome-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #c8c5d6;
+    margin-bottom: 18px;
+  }
+
+  .welcome-text strong {
+    color: #00d4ff;
+    font-weight: 600;
+  }
+
+  /* ─── Feature List ─── */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(0,212,255,0.04);
+    border: 1px solid rgba(0,212,255,0.08);
+    border-radius: 6px;
+  }
+
+  .feature-icon {
+    font-size: 16px;
+    color: #00d4ff;
+    flex-shrink: 0;
+  }
+
+  .feature-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #bbc9cf;
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── System Requirements ─── */
+  .sys-req {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: #585870;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    padding-top: 8px;
+  }
+
+  .sys-req span {
+    color: #3c494e;
+    margin: 0 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="content">
+    <!-- Branding -->
+    <div class="brand">
+      <div class="logo-box">
+        <span class="logo-eye">👁️</span>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">
+          <span class="app-name">DeepEyeUnlocker</span>
+          <span class="version-badge">v2027.21.0</span>
+        </div>
+        <span class="tagline">Advanced iOS Device Research Platform</span>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Welcome Card -->
+    <div class="glass-card">
+      <p class="welcome-text">
+        Welcome to <strong>DeepEyeUnlocker</strong> — the most advanced multi-platform iOS bypass and device research toolkit. This installer will guide you through the setup process.
+      </p>
+
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">⚡</span>
+          <span class="feature-text">A12+ Signal Bypass Pipeline</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🔄</span>
+          <span class="feature-text">One-Click Full Automation</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🔓</span>
+          <span class="feature-text">Checkm8 & Ramdisk Exploits</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🖥️</span>
+          <span class="feature-text">Cross-Platform Support</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Requirements -->
+    <div class="sys-req">
+      macOS 10.13+ <span>│</span> 200MB Disk Space <span>│</span> USB Connection Required
+    </div>
+  </div>
+</body>
+</html>
