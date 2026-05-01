@@ -108,18 +108,16 @@ pub fn list_cloud_vault() -> Result<String, String> {
                     .modified()
                     .ok()
                     .and_then(|t| {
-                        t.duration_since(std::time::UNIX_EPOCH)
-                            .ok()
-                            .map(|d| {
-                                let secs = d.as_secs();
-                                // Simple date formatting
-                                let days = secs / 86400;
-                                let years = 1970 + days / 365;
-                                let rem_days = days % 365;
-                                let months = rem_days / 30 + 1;
-                                let day = rem_days % 30 + 1;
-                                format!("{}-{:02}-{:02}", years, months, day)
-                            })
+                        t.duration_since(std::time::UNIX_EPOCH).ok().map(|d| {
+                            let secs = d.as_secs();
+                            // Simple date formatting
+                            let days = secs / 86400;
+                            let years = 1970 + days / 365;
+                            let rem_days = days % 365;
+                            let months = rem_days / 30 + 1;
+                            let day = rem_days % 30 + 1;
+                            format!("{}-{:02}-{:02}", years, months, day)
+                        })
                     })
                     .unwrap_or_else(|| "unknown".to_string());
                 Some(format!(

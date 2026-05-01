@@ -20,12 +20,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     match std::process::Command::new("sshpass")
         .env("PATH", path_env())
         .args([
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ])
@@ -86,9 +91,10 @@ pub async fn fs_patch_lockdown(
         let _ = ssh_cmd(port, &format!("cp '{fstab}' '{fstab}.deepeye.bak'"));
 
         // Replace 'ro' with 'rw' in fstab
-        let (ok, _) = ssh_cmd(port, &format!(
-            "sed -i 's/ ro / rw /g; s/ ro,/ rw,/g' '{fstab}' && echo 'PATCHED'"
-        ));
+        let (ok, _) = ssh_cmd(
+            port,
+            &format!("sed -i 's/ ro / rw /g; s/ ro,/ rw,/g' '{fstab}' && echo 'PATCHED'"),
+        );
 
         if ok {
             slog!("   ✅ fstab patched (ro → rw)");
@@ -137,7 +143,10 @@ pub async fn fs_patch_lockdown(
 
         // Append blocking entries
         let escaped = hosts_entries.replace('\'', "'\\''");
-        let (ok, _) = ssh_cmd(port, &format!("printf '%s' '{escaped}' >> '{hosts}' && echo 'PATCHED'"));
+        let (ok, _) = ssh_cmd(
+            port,
+            &format!("printf '%s' '{escaped}' >> '{hosts}' && echo 'PATCHED'"),
+        );
 
         if ok {
             slog!("   ✅ /etc/hosts patched at {}", hosts);
@@ -182,7 +191,10 @@ pub async fn fs_patch_lockdown(
 
     let mut baseband_ticket_cleared = false;
     for bb_path in &bb_paths {
-        let (ok, _) = ssh_cmd(port, &format!("rm -rf '{bb_path}'* 2>/dev/null && echo 'CLEARED'"));
+        let (ok, _) = ssh_cmd(
+            port,
+            &format!("rm -rf '{bb_path}'* 2>/dev/null && echo 'CLEARED'"),
+        );
         if ok {
             slog!("   ✅ Baseband cache cleared: {}", bb_path);
             baseband_ticket_cleared = true;
@@ -198,15 +210,23 @@ pub async fn fs_patch_lockdown(
     slog!("");
     slog!("📝 Step 5: Restarting lockdownd...");
 
-    let (restart_ok, restart_out) = ssh_cmd(port,
+    let (restart_ok, restart_out) = ssh_cmd(
+        port,
         "killall -9 lockdownd 2>/dev/null; \
          killall -9 mobileactivationd 2>/dev/null; \
          killall -9 SpringBoard 2>/dev/null; \
-         sleep 1 && echo 'RESTARTED'"
+         sleep 1 && echo 'RESTARTED'",
     );
 
     let lockdown_daemon_restarted = restart_ok && restart_out.contains("RESTARTED");
-    slog!("   Daemons: {}", if lockdown_daemon_restarted { "✅ Restarted" } else { "⚠️ Partial" });
+    slog!(
+        "   Daemons: {}",
+        if lockdown_daemon_restarted {
+            "✅ Restarted"
+        } else {
+            "⚠️ Partial"
+        }
+    );
 
     let msg = if fstab_patched && hosts_patched {
         "✅ Lock checks fully disabled. Activation server blocked, filesystem R/W."
@@ -231,10 +251,7 @@ pub async fn fs_patch_lockdown(
 
 /// Restore all lockdown patches (undo bypass)
 #[tauri::command]
-pub async fn fs_restore_lockdown(
-    app: AppHandle,
-    ssh_port: Option<u16>,
-) -> Result<String, String> {
+pub async fn fs_restore_lockdown(app: AppHandle, ssh_port: Option<u16>) -> Result<String, String> {
     let port = ssh_port.unwrap_or(2222);
     let _ = app.emit("fs-log", "🔄 Restoring lockdown state...");
 
@@ -242,7 +259,10 @@ pub async fn fs_restore_lockdown(
     let _ = ssh_cmd(port, "find /mnt1 /mnt2 /etc /var -name '*.deepeye.bak' -exec sh -c 'mv \"$1\" \"${1%.deepeye.bak}\"' _ {} \\; 2>/dev/null");
 
     // Remove hosts entries
-    let _ = ssh_cmd(port, "sed -i '/DeepEye Bypass/,/End DeepEye Bypass/d' /etc/hosts 2>/dev/null");
+    let _ = ssh_cmd(
+        port,
+        "sed -i '/DeepEye Bypass/,/End DeepEye Bypass/d' /etc/hosts 2>/dev/null",
+    );
 
     // Restart daemons
     let _ = ssh_cmd(port, "killall -9 lockdownd mobileactivationd 2>/dev/null");

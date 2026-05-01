@@ -1,6 +1,4 @@
-use super::usb_utils::{
-    check_winusb_installed, open_and_claim, EP_IN, EP_OUT,
-};
+use super::usb_utils::{check_winusb_installed, open_and_claim, EP_IN, EP_OUT};
 use rusb::{Device, DeviceDescriptor, DeviceHandle, GlobalContext};
 use serde::Serialize;
 use std::time::Duration;
@@ -105,7 +103,6 @@ pub fn open_edl_device() -> Result<DeviceHandle<GlobalContext>, EdlError> {
 }
 
 pub fn find_edl_device() -> Result<EdlDeviceInfo, EdlError> {
-
     let (device, desc) = find_edl_transport()?;
 
     println!(

@@ -19,12 +19,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     match std::process::Command::new("sshpass")
         .env("PATH", path_env())
         .args([
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ])
@@ -108,17 +113,24 @@ pub async fn fs_patch_activation(
         slog!("   Target: {}", target);
 
         // Backup original
-        let _ = ssh_cmd(port, &format!("cp '{target}' '{target}.deepeye.bak' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("cp '{target}' '{target}.deepeye.bak' 2>/dev/null"),
+        );
 
         // Push via scp
         let (push_ok, push_out) = std::process::Command::new("sshpass")
             .env("PATH", path_env())
             .args([
-                "-p", "alpine",
+                "-p",
+                "alpine",
                 "scp",
-                "-o", "StrictHostKeyChecking=no",
-                "-o", "UserKnownHostsFile=/dev/null",
-                "-P", &port.to_string(),
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-o",
+                "UserKnownHostsFile=/dev/null",
+                "-P",
+                &port.to_string(),
                 local_record,
                 &format!("root@localhost:{target}"),
             ])
@@ -126,7 +138,10 @@ pub async fn fs_patch_activation(
             .map(|o| {
                 let stdout = String::from_utf8_lossy(&o.stdout).trim().to_string();
                 let stderr = String::from_utf8_lossy(&o.stderr).trim().to_string();
-                (o.status.success(), if stdout.is_empty() { stderr } else { stdout })
+                (
+                    o.status.success(),
+                    if stdout.is_empty() { stderr } else { stdout },
+                )
             })
             .unwrap_or((false, "scp not available".to_string()));
 
@@ -155,7 +170,10 @@ pub async fn fs_patch_activation(
         slog!("   Found: {}", ark_path);
 
         // Backup
-        let _ = ssh_cmd(port, &format!("cp '{ark_path}' '{ark_path}.deepeye.bak' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("cp '{ark_path}' '{ark_path}.deepeye.bak' 2>/dev/null"),
+        );
 
         // Patch ActivationState to Activated
         let (ok1, _) = ssh_cmd(port, &format!(
@@ -172,10 +190,13 @@ pub async fn fs_patch_activation(
             data_ark_patched = true;
         } else {
             slog!("   ⚠️ plutil patch failed — trying defaults write...");
-            let (ok3, _) = ssh_cmd(port, &format!(
-                "defaults write '{}' '-ActivationState' 'Activated' 2>/dev/null",
-                ark_path.trim_end_matches(".plist")
-            ));
+            let (ok3, _) = ssh_cmd(
+                port,
+                &format!(
+                    "defaults write '{}' '-ActivationState' 'Activated' 2>/dev/null",
+                    ark_path.trim_end_matches(".plist")
+                ),
+            );
             if ok3 {
                 slog!("   ✅ ActivationState set via defaults");
                 data_ark_patched = true;
@@ -203,7 +224,14 @@ pub async fn fs_patch_activation(
             activation_state_set = true;
         }
     }
-    slog!("   Lockdownd state: {}", if activation_state_set { "✅ Set" } else { "⚠️ Skipped" });
+    slog!(
+        "   Lockdownd state: {}",
+        if activation_state_set {
+            "✅ Set"
+        } else {
+            "⚠️ Skipped"
+        }
+    );
 
     // ── 4. Disable FMI check ────────────────────────
     slog!("");
@@ -222,13 +250,26 @@ pub async fn fs_patch_activation(
             fmi_disabled = true;
         }
     }
-    slog!("   FMI: {}", if fmi_disabled { "✅ Disabled" } else { "⚠️ Skipped" });
+    slog!(
+        "   FMI: {}",
+        if fmi_disabled {
+            "✅ Disabled"
+        } else {
+            "⚠️ Skipped"
+        }
+    );
 
     // ── 5. Clear activation caches ──────────────────
     slog!("");
     slog!("🧹 Clearing activation caches...");
-    let _ = ssh_cmd(port, "rm -rf /var/mobile/Library/Caches/com.apple.mobileactivationd* 2>/dev/null");
-    let _ = ssh_cmd(port, "rm -f /var/mobile/Library/Caches/com.apple.activation* 2>/dev/null");
+    let _ = ssh_cmd(
+        port,
+        "rm -rf /var/mobile/Library/Caches/com.apple.mobileactivationd* 2>/dev/null",
+    );
+    let _ = ssh_cmd(
+        port,
+        "rm -f /var/mobile/Library/Caches/com.apple.activation* 2>/dev/null",
+    );
     slog!("   ✅ Caches cleared");
 
     let msg = if activation_record_injected || data_ark_patched {

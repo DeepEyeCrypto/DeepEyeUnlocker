@@ -19,12 +19,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     match std::process::Command::new("sshpass")
         .env("PATH", path_env())
         .args([
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ])
@@ -100,10 +105,16 @@ pub async fn fs_patch_setup_app(
 </plist>"#;
 
         // Backup original
-        let _ = ssh_cmd(port, &format!("cp '{pb_path}' '{pb_path}.deepeye.bak' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("cp '{pb_path}' '{pb_path}.deepeye.bak' 2>/dev/null"),
+        );
 
         let escaped = plist_content.replace('\'', "'\\''");
-        let (ok, out) = ssh_cmd(port, &format!("printf '%s' '{escaped}' > '{pb_path}' && echo 'PATCHED'"));
+        let (ok, out) = ssh_cmd(
+            port,
+            &format!("printf '%s' '{escaped}' > '{pb_path}' && echo 'PATCHED'"),
+        );
 
         if ok && out.contains("PATCHED") {
             slog!("   ✅ PurpleBuddy patched at {}", pb_path);
@@ -117,10 +128,7 @@ pub async fn fs_patch_setup_app(
     slog!("");
     slog!("📝 Step 2: Disabling Setup.app...");
 
-    let setup_paths = [
-        "/mnt1/Applications/Setup.app",
-        "/Applications/Setup.app",
-    ];
+    let setup_paths = ["/mnt1/Applications/Setup.app", "/Applications/Setup.app"];
 
     let mut setup_app_disabled = false;
     for setup_path in &setup_paths {
@@ -131,16 +139,20 @@ pub async fn fs_patch_setup_app(
         slog!("   Found: {}", setup_path);
 
         // Rename Setup.app to disable it (preserves for restore)
-        let (ok, out) = ssh_cmd(port, &format!(
-            "mv '{setup_path}' '{setup_path}.deepeye_disabled' 2>&1 && echo 'DISABLED'"
-        ));
+        let (ok, out) = ssh_cmd(
+            port,
+            &format!("mv '{setup_path}' '{setup_path}.deepeye_disabled' 2>&1 && echo 'DISABLED'"),
+        );
 
         if ok && out.contains("DISABLED") {
             slog!("   ✅ Setup.app disabled (renamed)");
             setup_app_disabled = true;
             break;
         }
-        slog!("   ⚠️ Rename failed: {}", out.lines().next().unwrap_or("unknown"));
+        slog!(
+            "   ⚠️ Rename failed: {}",
+            out.lines().next().unwrap_or("unknown")
+        );
 
         // Alternative: patch Info.plist to skip
         slog!("   ↻ Trying Info.plist patch instead...");
@@ -158,13 +170,21 @@ pub async fn fs_patch_setup_app(
     slog!("");
     slog!("📝 Step 3: Setting locale defaults...");
 
-    let (lang_ok, _) = ssh_cmd(port, 
+    let (lang_ok, _) = ssh_cmd(
+        port,
         "defaults write /var/mobile/Library/Preferences/.GlobalPreferences AppleLanguages -array en 2>/dev/null && \
          defaults write /var/mobile/Library/Preferences/.GlobalPreferences AppleLocale en_US 2>/dev/null && \
-         echo 'OK'"
+         echo 'OK'",
     );
     let language_set = lang_ok;
-    slog!("   Locale: {}", if language_set { "✅ Set to en_US" } else { "⚠️ Skipped" });
+    slog!(
+        "   Locale: {}",
+        if language_set {
+            "✅ Set to en_US"
+        } else {
+            "⚠️ Skipped"
+        }
+    );
 
     // ── 4. Patch CloudConfigurationDetails ────────
     slog!("");
@@ -192,10 +212,16 @@ pub async fn fs_patch_setup_app(
     for cc_path in &cloud_paths {
         let dir = cc_path.rsplit_once('/').map(|(d, _)| d).unwrap_or("/tmp");
         let _ = ssh_cmd(port, &format!("mkdir -p '{dir}'"));
-        let _ = ssh_cmd(port, &format!("cp '{cc_path}' '{cc_path}.deepeye.bak' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("cp '{cc_path}' '{cc_path}.deepeye.bak' 2>/dev/null"),
+        );
 
         let escaped = cloud_plist.replace('\'', "'\\''");
-        let (ok, out) = ssh_cmd(port, &format!("printf '%s' '{escaped}' > '{cc_path}' && echo 'PATCHED'"));
+        let (ok, out) = ssh_cmd(
+            port,
+            &format!("printf '%s' '{escaped}' > '{cc_path}' && echo 'PATCHED'"),
+        );
         if ok && out.contains("PATCHED") {
             slog!("   ✅ CloudConfiguration patched at {}", cc_path);
             cloud_config_patched = true;
@@ -209,7 +235,10 @@ pub async fn fs_patch_setup_app(
     // ── 5. Clear setup caches ─────────────────────
     slog!("");
     slog!("🧹 Clearing setup caches...");
-    let _ = ssh_cmd(port, "rm -f /var/mobile/Library/Caches/com.apple.setupassistant* 2>/dev/null");
+    let _ = ssh_cmd(
+        port,
+        "rm -f /var/mobile/Library/Caches/com.apple.setupassistant* 2>/dev/null",
+    );
     let _ = ssh_cmd(port, "rm -f /var/mobile/Library/Caches/Setup* 2>/dev/null");
     slog!("   ✅ Caches cleared");
 
@@ -236,17 +265,17 @@ pub async fn fs_patch_setup_app(
 
 /// Restore Setup.app to original state
 #[tauri::command]
-pub async fn fs_restore_setup_app(
-    app: AppHandle,
-    ssh_port: Option<u16>,
-) -> Result<String, String> {
+pub async fn fs_restore_setup_app(app: AppHandle, ssh_port: Option<u16>) -> Result<String, String> {
     let port = ssh_port.unwrap_or(2222);
     let _ = app.emit("fs-log", "🔄 Restoring Setup.app...");
 
     // Restore renamed Setup.app
     let paths = ["/mnt1/Applications/Setup.app", "/Applications/Setup.app"];
     for p in &paths {
-        let _ = ssh_cmd(port, &format!("mv '{p}.deepeye_disabled' '{p}' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("mv '{p}.deepeye_disabled' '{p}' 2>/dev/null"),
+        );
     }
 
     // Restore backed up plists

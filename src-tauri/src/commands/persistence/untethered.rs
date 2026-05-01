@@ -19,12 +19,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     match std::process::Command::new("sshpass")
         .env("PATH", path_env())
         .args([
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ])
@@ -79,7 +84,14 @@ pub async fn persist_install_untethered(
             nvram_persistent = true;
         }
     }
-    slog!("   NVRAM: {}", if nvram_persistent { "✅ Set" } else { "⚠️ Partial" });
+    slog!(
+        "   NVRAM: {}",
+        if nvram_persistent {
+            "✅ Set"
+        } else {
+            "⚠️ Partial"
+        }
+    );
 
     // ── 2. SystemVersion.plist patch ──────────────
     slog!("");
@@ -100,13 +112,17 @@ pub async fn persist_install_untethered(
         slog!("   Found: {}", sv_path);
 
         // Read current version for logging
-        let (_, ver) = ssh_cmd(port, &format!(
-            "plutil -extract ProductVersion raw '{sv_path}' 2>/dev/null"
-        ));
+        let (_, ver) = ssh_cmd(
+            port,
+            &format!("plutil -extract ProductVersion raw '{sv_path}' 2>/dev/null"),
+        );
         slog!("   Current iOS: {}", ver.trim());
 
         // Backup
-        let _ = ssh_cmd(port, &format!("cp '{sv_path}' '{sv_path}.deepeye.bak' 2>/dev/null"));
+        let _ = ssh_cmd(
+            port,
+            &format!("cp '{sv_path}' '{sv_path}.deepeye.bak' 2>/dev/null"),
+        );
 
         // The SystemVersion patch prevents OTA updates from overwriting bypass
         // by setting a flag that makes the update checker skip this device
@@ -165,16 +181,22 @@ pub async fn persist_install_untethered(
 
     let mut launch_daemon_installed = false;
     for daemon_path in &daemon_paths {
-        let dir = daemon_path.rsplit_once('/').map(|(d, _)| d).unwrap_or("/tmp");
+        let dir = daemon_path
+            .rsplit_once('/')
+            .map(|(d, _)| d)
+            .unwrap_or("/tmp");
         let _ = ssh_cmd(port, &format!("mkdir -p '{dir}'"));
 
         let escaped = daemon_plist.replace('\'', "'\\''");
-        let (ok, _) = ssh_cmd(port, &format!(
-            "printf '%s' '{escaped}' > '{daemon_path}' && \
+        let (ok, _) = ssh_cmd(
+            port,
+            &format!(
+                "printf '%s' '{escaped}' > '{daemon_path}' && \
              chmod 644 '{daemon_path}' && \
              chown root:wheel '{daemon_path}' && \
              echo 'INSTALLED'"
-        ));
+            ),
+        );
 
         if ok {
             slog!("   ✅ LaunchDaemon installed: {}", daemon_path);
@@ -238,16 +260,31 @@ pub async fn persist_remove_untethered(
     let _ = app.emit("persist-log", "🔄 Removing untethered persistence...");
 
     // Unload and remove LaunchDaemon
-    let _ = ssh_cmd(port, "launchctl unload /Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null");
-    let _ = ssh_cmd(port, "rm -f /Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null");
-    let _ = ssh_cmd(port, "rm -f /mnt1/Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null");
+    let _ = ssh_cmd(
+        port,
+        "launchctl unload /Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null",
+    );
+    let _ = ssh_cmd(
+        port,
+        "rm -f /Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null",
+    );
+    let _ = ssh_cmd(
+        port,
+        "rm -f /mnt1/Library/LaunchDaemons/io.deepeye.bypass.persist.plist 2>/dev/null",
+    );
 
     // Restore SystemVersion
     let _ = ssh_cmd(port, "find / -name 'SystemVersion.plist.deepeye.bak' -exec sh -c 'mv \"$1\" \"${1%.deepeye.bak}\"' _ {} \\; 2>/dev/null");
 
     // Remove hosts entries
-    let _ = ssh_cmd(port, "sed -i '/DeepEye Bypass/,/End DeepEye Bypass/d' /etc/hosts 2>/dev/null");
+    let _ = ssh_cmd(
+        port,
+        "sed -i '/DeepEye Bypass/,/End DeepEye Bypass/d' /etc/hosts 2>/dev/null",
+    );
 
-    let _ = app.emit("persist-log", "✅ Persistence removed — device will re-lock on reboot");
+    let _ = app.emit(
+        "persist-log",
+        "✅ Persistence removed — device will re-lock on reboot",
+    );
     Ok("✅ Untethered persistence removed".to_string())
 }

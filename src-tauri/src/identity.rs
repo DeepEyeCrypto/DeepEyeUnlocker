@@ -31,7 +31,11 @@ pub async fn check_imei_intel(app: AppHandle, imei: String) -> Result<String, St
             .map(|(i, &x)| {
                 if i % 2 == 1 {
                     let v = x * 2;
-                    if v > 9 { v - 9 } else { v }
+                    if v > 9 {
+                        v - 9
+                    } else {
+                        v
+                    }
                 } else {
                     x
                 }

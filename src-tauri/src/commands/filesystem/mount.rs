@@ -44,12 +44,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     run(
         "sshpass",
         &[
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ],
@@ -133,7 +138,12 @@ pub async fn fs_start_tunnel(
 
     for attempt in 1..=3 {
         let (ok, out) = ssh_cmd(lport, "id");
-        slog!("   [{}/3] SSH: {} — {}", attempt, if ok { "✅" } else { "⚠️" }, out.lines().next().unwrap_or("(none)"));
+        slog!(
+            "   [{}/3] SSH: {} — {}",
+            attempt,
+            if ok { "✅" } else { "⚠️" },
+            out.lines().next().unwrap_or("(none)")
+        );
 
         if ok {
             connected = true;
@@ -144,12 +154,10 @@ pub async fn fs_start_tunnel(
     }
 
     if !connected {
-        return Err(
-            "❌ SSH connection failed after 3 attempts.\n\
+        return Err("❌ SSH connection failed after 3 attempts.\n\
              💡 Ensure device is jailbroken and SSH is running.\n\
              💡 Default credentials: root / alpine"
-                .to_string(),
-        );
+            .to_string());
     }
 
     slog!("   ✅ SSH connected (root={})", device_root);
@@ -184,7 +192,9 @@ pub async fn fs_mount_readwrite(
     // Check SSH connection
     let (ssh_ok, ssh_out) = ssh_cmd(port, "id");
     if !ssh_ok {
-        return Err(format!("❌ SSH not connected: {ssh_out}\n💡 Run fs_start_tunnel first."));
+        return Err(format!(
+            "❌ SSH not connected: {ssh_out}\n💡 Run fs_start_tunnel first."
+        ));
     }
     let device_root = ssh_out.contains("uid=0");
     slog!("🔑 SSH OK (root={})", device_root);
@@ -203,18 +213,30 @@ pub async fn fs_mount_readwrite(
     slog!("");
     slog!("🔓 Remounting / read-write...");
     let (rw_ok, rw_out) = ssh_cmd(port, "mount -o rw,union,update /");
-    slog!("   Result: {} — {}", if rw_ok { "✅" } else { "⚠️" }, rw_out.lines().next().unwrap_or("done"));
+    slog!(
+        "   Result: {} — {}",
+        if rw_ok { "✅" } else { "⚠️" },
+        rw_out.lines().next().unwrap_or("done")
+    );
 
     // Mount data partition
     slog!("🔓 Mounting /mnt1 (System)...");
     let (m1_ok, m1_out) = ssh_cmd(port, "mount -t hfs /dev/disk0s1s1 /mnt1 2>/dev/null || mount -t apfs /dev/disk0s1s1 /mnt1 2>/dev/null || echo 'already_mounted'");
     let mnt1_writable = m1_ok || m1_out.contains("already");
-    slog!("   /mnt1: {} — {}", if mnt1_writable { "✅" } else { "⚠️" }, m1_out.lines().next().unwrap_or("done"));
+    slog!(
+        "   /mnt1: {} — {}",
+        if mnt1_writable { "✅" } else { "⚠️" },
+        m1_out.lines().next().unwrap_or("done")
+    );
 
     slog!("🔓 Mounting /mnt2 (Data)...");
     let (m2_ok, m2_out) = ssh_cmd(port, "mount -t hfs /dev/disk0s1s2 /mnt2 2>/dev/null || mount -t apfs /dev/disk0s1s2 /mnt2 2>/dev/null || echo 'already_mounted'");
     let mnt2_writable = m2_ok || m2_out.contains("already");
-    slog!("   /mnt2: {} — {}", if mnt2_writable { "✅" } else { "⚠️" }, m2_out.lines().next().unwrap_or("done"));
+    slog!(
+        "   /mnt2: {} — {}",
+        if mnt2_writable { "✅" } else { "⚠️" },
+        m2_out.lines().next().unwrap_or("done")
+    );
 
     // Get disk info
     slog!("");
@@ -302,11 +324,17 @@ pub async fn fs_write_file(
     let _ = app.emit("fs-log", format!("✏️ Writing: {remote_path}"));
 
     // Backup original first
-    let _ = ssh_cmd(port, &format!("cp '{remote_path}' '{remote_path}.deepeye.bak' 2>/dev/null"));
+    let _ = ssh_cmd(
+        port,
+        &format!("cp '{remote_path}' '{remote_path}.deepeye.bak' 2>/dev/null"),
+    );
 
     // Write via heredoc
     let escaped = content.replace('\'', "'\\''");
-    let (ok, out) = ssh_cmd(port, &format!("printf '%s' '{escaped}' > '{remote_path}' && echo 'OK'"));
+    let (ok, out) = ssh_cmd(
+        port,
+        &format!("printf '%s' '{escaped}' > '{remote_path}' && echo 'OK'"),
+    );
 
     if !ok || !out.contains("OK") {
         return Err(format!("❌ Write failed: {out}"));
@@ -325,16 +353,23 @@ pub async fn fs_push_file(
     remote_path: String,
 ) -> Result<String, String> {
     let port = ssh_port.unwrap_or(2222);
-    let _ = app.emit("fs-log", format!("📤 Pushing: {local_path} → {remote_path}"));
+    let _ = app.emit(
+        "fs-log",
+        format!("📤 Pushing: {local_path} → {remote_path}"),
+    );
 
     let (ok, out) = run(
         "sshpass",
         &[
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "scp",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-P", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-P",
+            &port.to_string(),
             &local_path,
             &format!("root@localhost:{remote_path}"),
         ],
@@ -357,16 +392,23 @@ pub async fn fs_pull_file(
     local_path: String,
 ) -> Result<String, String> {
     let port = ssh_port.unwrap_or(2222);
-    let _ = app.emit("fs-log", format!("📥 Pulling: {remote_path} → {local_path}"));
+    let _ = app.emit(
+        "fs-log",
+        format!("📥 Pulling: {remote_path} → {local_path}"),
+    );
 
     let (ok, out) = run(
         "sshpass",
         &[
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "scp",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-P", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-P",
+            &port.to_string(),
             &format!("root@localhost:{remote_path}"),
             &local_path,
         ],

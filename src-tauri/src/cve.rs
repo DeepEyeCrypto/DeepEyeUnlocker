@@ -25,7 +25,8 @@ pub fn query_cve_database(version: String, chip: String) -> Result<String, Strin
 
     // iOS 14.x exploits
     if version.starts_with("14.") {
-        vulnerabilities.push("CVE-2021-1782: Kernel race condition (cicuta_virosa) — jailbreak vector");
+        vulnerabilities
+            .push("CVE-2021-1782: Kernel race condition (cicuta_virosa) — jailbreak vector");
         vulnerabilities.push("CVE-2021-1870: WebKit type confusion — remote code execution");
         vulnerabilities.push("CVE-2020-9907: AppleAVD memory corruption");
     }
@@ -55,17 +56,26 @@ pub fn query_cve_database(version: String, chip: String) -> Result<String, Strin
 
     // Chip-specific hardware exploits
     let chip_lower = chip.to_lowercase();
-    if chip_lower.contains("a7") || chip_lower.contains("a8") || chip_lower.contains("a9")
-        || chip_lower.contains("a10") || chip_lower.contains("a11")
+    if chip_lower.contains("a7")
+        || chip_lower.contains("a8")
+        || chip_lower.contains("a9")
+        || chip_lower.contains("a10")
+        || chip_lower.contains("a11")
     {
-        vulnerabilities.push("Hardware: checkm8 bootrom exploit (A5-A11) — unpatchable, persistent");
+        vulnerabilities
+            .push("Hardware: checkm8 bootrom exploit (A5-A11) — unpatchable, persistent");
     }
 
-    if chip_lower.contains("a12") || chip_lower.contains("a13") || chip_lower.contains("a14")
-        || chip_lower.contains("a15") || chip_lower.contains("a16") || chip_lower.contains("a17")
+    if chip_lower.contains("a12")
+        || chip_lower.contains("a13")
+        || chip_lower.contains("a14")
+        || chip_lower.contains("a15")
+        || chip_lower.contains("a16")
+        || chip_lower.contains("a17")
         || chip_lower.contains("a18")
     {
-        vulnerabilities.push("Hardware: No bootrom exploit available — software-only vectors apply");
+        vulnerabilities
+            .push("Hardware: No bootrom exploit available — software-only vectors apply");
         vulnerabilities.push("Strategy: Activation bypass via ideviceactivation + carrier server");
     }
 

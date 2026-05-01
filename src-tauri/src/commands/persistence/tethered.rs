@@ -20,12 +20,17 @@ fn ssh_cmd(port: u16, cmd: &str) -> (bool, String) {
     match std::process::Command::new("sshpass")
         .env("PATH", path_env())
         .args([
-            "-p", "alpine",
+            "-p",
+            "alpine",
             "ssh",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-o", "ConnectTimeout=5",
-            "-p", &port.to_string(),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "ConnectTimeout=5",
+            "-p",
+            &port.to_string(),
             "root@localhost",
             cmd,
         ])
@@ -83,7 +88,8 @@ pub async fn persist_check_tethered(
         // Try without SSH — check via ideviceinfo
         slog!("⚠️ SSH not accessible — checking via USB...");
         let (usb_ok, act_state) = run("ideviceinfo", &["-k", "ActivationState"]);
-        let bypass_active = usb_ok && (act_state.contains("Activated") || act_state.contains("FactoryActivated"));
+        let bypass_active =
+            usb_ok && (act_state.contains("Activated") || act_state.contains("FactoryActivated"));
 
         return Ok(TetheredState {
             bypass_active,
@@ -104,7 +110,10 @@ pub async fn persist_check_tethered(
     let mut patches = Vec::new();
 
     // Check Setup.app state
-    let (_, setup_out) = ssh_cmd(port, "ls -d /Applications/Setup.app /mnt1/Applications/Setup.app 2>/dev/null | head -1");
+    let (_, setup_out) = ssh_cmd(
+        port,
+        "ls -d /Applications/Setup.app /mnt1/Applications/Setup.app 2>/dev/null | head -1",
+    );
     let (_, setup_dis) = ssh_cmd(port, "ls -d /Applications/Setup.app.deepeye_disabled /mnt1/Applications/Setup.app.deepeye_disabled 2>/dev/null | head -1");
     if !setup_dis.is_empty() {
         patches.push("Setup.app disabled ✅".to_string());
@@ -139,7 +148,10 @@ pub async fn persist_check_tethered(
     }
 
     // Check activation state
-    let (_, act_out) = ssh_cmd(port, "defaults read /var/root/Library/Lockdown/data_ark '-ActivationState' 2>/dev/null");
+    let (_, act_out) = ssh_cmd(
+        port,
+        "defaults read /var/root/Library/Lockdown/data_ark '-ActivationState' 2>/dev/null",
+    );
     if act_out.contains("Activated") {
         patches.push("Activation: Activated ✅".to_string());
         slog!("   ✅ Activation: Activated");
@@ -149,7 +161,14 @@ pub async fn persist_check_tethered(
 
     slog!("");
     slog!("📊 Patch summary: {}/{} applied", patches.len(), 5);
-    slog!("   Bypass: {}", if bypass_active { "✅ Active" } else { "⚠️ Incomplete" });
+    slog!(
+        "   Bypass: {}",
+        if bypass_active {
+            "✅ Active"
+        } else {
+            "⚠️ Incomplete"
+        }
+    );
     slog!("   ⚠️ Tethered: Patches lost on reboot — re-exploit required");
 
     Ok(TetheredState {
@@ -159,7 +178,8 @@ pub async fn persist_check_tethered(
         ssh_accessible,
         current_patches: patches,
         stage_message: if bypass_active {
-            "✅ Tethered bypass active. WARNING: Reboot will require re-exploit via checkm8.".to_string()
+            "✅ Tethered bypass active. WARNING: Reboot will require re-exploit via checkm8."
+                .to_string()
         } else {
             "⚠️ Tethered bypass incomplete — some patches missing.".to_string()
         },
@@ -168,19 +188,32 @@ pub async fn persist_check_tethered(
 
 /// Re-apply tethered bypass after reboot (requires device in DFU + checkm8)
 #[tauri::command]
-pub async fn persist_reapply_tethered(
-    app: AppHandle,
-) -> Result<String, String> {
+pub async fn persist_reapply_tethered(app: AppHandle) -> Result<String, String> {
     let _ = app.emit("persist-log", "🔄 Re-applying tethered bypass...");
     let _ = app.emit("persist-log", "");
     let _ = app.emit("persist-log", "Steps required after reboot:");
-    let _ = app.emit("persist-log", "  1. Enter DFU mode (Power + Home/Volume Down)");
+    let _ = app.emit(
+        "persist-log",
+        "  1. Enter DFU mode (Power + Home/Volume Down)",
+    );
     let _ = app.emit("persist-log", "  2. Run checkm8 exploit (gaster pwn)");
-    let _ = app.emit("persist-log", "  3. Boot ramdisk (irecovery -f ramdisk.dmg)");
+    let _ = app.emit(
+        "persist-log",
+        "  3. Boot ramdisk (irecovery -f ramdisk.dmg)",
+    );
     let _ = app.emit("persist-log", "  4. Start SSH tunnel (iproxy 2222 44)");
-    let _ = app.emit("persist-log", "  5. Re-apply patches (fs_patch_setup_app, fs_patch_activation, fs_patch_lockdown)");
+    let _ = app.emit(
+        "persist-log",
+        "  5. Re-apply patches (fs_patch_setup_app, fs_patch_activation, fs_patch_lockdown)",
+    );
     let _ = app.emit("persist-log", "");
-    let _ = app.emit("persist-log", "💡 Use the full bypass pipeline to automate this sequence.");
+    let _ = app.emit(
+        "persist-log",
+        "💡 Use the full bypass pipeline to automate this sequence.",
+    );
 
-    Ok("ℹ️ Tethered re-apply requires DFU + checkm8 exploit sequence. See logs for steps.".to_string())
+    Ok(
+        "ℹ️ Tethered re-apply requires DFU + checkm8 exploit sequence. See logs for steps."
+            .to_string(),
+    )
 }

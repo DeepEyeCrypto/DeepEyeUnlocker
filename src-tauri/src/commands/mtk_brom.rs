@@ -5,8 +5,8 @@ use std::{
 };
 
 use super::usb_utils::{
-    open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN,
-    EP_OUT as USB_EP_OUT, TIMEOUT as USB_TIMEOUT,
+    open_and_claim_with_options, ClaimOptions, EP_IN as USB_EP_IN, EP_OUT as USB_EP_OUT,
+    TIMEOUT as USB_TIMEOUT,
 };
 use rusb::{
     Device, DeviceDescriptor, DeviceHandle, Direction, GlobalContext, TransferType, UsbContext,

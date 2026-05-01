@@ -65,8 +65,6 @@ pub fn open_and_claim_with_options(
     Ok(handle)
 }
 
-
-
 #[cfg(target_os = "windows")]
 pub fn check_winusb_installed(vid: u16, pid: u16) -> bool {
     rusb::open_device_with_vid_pid(vid, pid).is_some()
