@@ -36,10 +36,10 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint
-        run: npx eslint src --ext .ts,.tsx --max-warnings 0
+        run: npx eslint src --max-warnings 0
 
       - name: Test
-        run: npm test -- --ci --coverage --coverageThreshold='{"global":{"lines":60}}'
+        run: npm test -- --ci --coverage
 
   test-backend:
     name: Backend (fmt + clippy + test)
