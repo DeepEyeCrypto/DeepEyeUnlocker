@@ -1,0 +1,84 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type (patch/minor/major)'
+        required: true
+        type: choice
+        options: [patch, minor, major]
+      dry_run:
+        description: 'Dry run (no commit/tag)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Read current version
+        id: current
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compute new version
+        id: new_version
+        run: |
+          IFS='.' read -r major minor patch \
+            <<< "${{ steps.current.outputs.version }}"
+          case "${{ inputs.bump_type }}" in
+            major) new="$((major+1)).0.0" ;;
+            minor) new="${major}.$((minor+1)).0" ;;
+            patch) new="${major}.${minor}.$((patch+1))" ;;
+          esac
+          echo "version=$new" >> $GITHUB_OUTPUT
+          echo "tag=v$new"    >> $GITHUB_OUTPUT
+
+      - name: Bump package.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json'));
+            pkg.version = '${{ steps.new_version.outputs.version }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Bump Cargo.toml
+        run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.new_version.outputs.version }}"/' \
+            src-tauri/Cargo.toml
+
+      - name: Bump tauri.conf.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json'));
+            cfg.version = '${{ steps.new_version.outputs.version }}';
+            fs.writeFileSync('src-tauri/tauri.conf.json',
+              JSON.stringify(cfg, null, 2) + '\n');
+          "
+
+      - name: Commit + tag
+        if: inputs.dry_run == false
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "chore: bump version to ${{ steps.new_version.outputs.tag }}"
+          git tag ${{ steps.new_version.outputs.tag }}
+          git push origin HEAD
+          git push origin ${{ steps.new_version.outputs.tag }}

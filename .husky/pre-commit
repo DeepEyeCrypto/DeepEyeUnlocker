@@ -1,0 +1,11 @@
+
+
+# Fast type check
+npx tsc --noEmit --skipLibCheck
+
+# Lint staged files only (fast)
+npx lint-staged
+
+# Run affected tests only
+npm test -- --passWithNoTests --findRelatedTests \
+  $(git diff --cached --name-only | grep -E '\.(ts|tsx)$' | tr '\n' ' ')

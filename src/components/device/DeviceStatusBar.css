@@ -6,10 +6,10 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 8px var(--gap-lg);
+  padding: 8px var(--space-6);
   position: relative;
   z-index: 100;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .device-indicator {
@@ -25,14 +25,14 @@
 .blink-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background: var(--text-faint);
+  border-radius: var(--radius-full);
+  background: var(--color-text-muted);
   position: relative;
 }
 
 .connected .blink-dot {
-  background: var(--accent-green);
-  box-shadow: 0 0 8px var(--accent-green);
+  background: var(--color-success);
+  box-shadow: var(--shadow-glow-green);
   animation: pulse 2s infinite;
 }
 
@@ -51,46 +51,46 @@
 }
 
 .device-name {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-weight: 600;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .device-badge {
-  background: var(--accent-blue);
-  color: #000;
+  background: var(--color-info);
+  color: var(--color-bg-base);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   text-transform: uppercase;
 }
 
 .device-ids {
-  color: var(--text-faint);
-  font-family: monospace;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .device-speed {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: 0.75rem;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .disconnected .no-device {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-style: italic;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .status-meta {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   margin-left: auto;
 }
@@ -102,7 +102,7 @@
 @media (max-width: 720px) {
   .device-status-bar {
     min-height: var(--header-height);
-    padding: 8px var(--gap-md);
+    padding: 8px var(--space-4);
     align-items: center;
   }
 

@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
-import { Smartphone, Handshake, FileText, Upload, Eraser, RotateCcw } from "lucide-react";
-import { useSamsung } from "../hooks/useSamsung";
-import "../styles/samsung.css";
+import { useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { SpotlightFeatureCard } from '../components/ui/spotlight-feature-card';
+import { Smartphone, Handshake, FileText, Upload, Eraser, RotateCcw } from 'lucide-react';
+import { useSamsung } from '../hooks/useSamsung';
+import '../styles/samsung.css';
 
 const fmt = (bytes: number) => {
   if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} GB`;
@@ -29,8 +29,8 @@ export default function SamsungPage() {
     reboot,
   } = useSamsung();
 
-  const [flashPart, setFlashPart] = useState("");
-  const [flashFile, setFlashFile] = useState("");
+  const [flashPart, setFlashPart] = useState('');
+  const [flashFile, setFlashFile] = useState('');
 
   const handleFlashBrowse = async () => {
     const file = await open();
@@ -42,7 +42,8 @@ export default function SamsungPage() {
     await flashPartition(flashPart, flashFile);
   };
 
-  const isActive = samsungStatus !== "idle" && samsungStatus !== "error" && samsungStatus !== "detected";
+  const isActive =
+    samsungStatus !== 'idle' && samsungStatus !== 'error' && samsungStatus !== 'detected';
 
   return (
     <div className="samsung-page">
@@ -53,7 +54,7 @@ export default function SamsungPage() {
           <span className="samsung-subtitle">Download Mode — VID 0x04e8</span>
         </div>
         <span className={`samsung-status samsung-status--${samsungStatus}`}>
-          {samsungStatus.replace("_", " ").toUpperCase()}
+          {samsungStatus.replace('_', ' ').toUpperCase()}
         </span>
       </div>
 
@@ -65,25 +66,31 @@ export default function SamsungPage() {
           description="Find Samsung device in Download Mode"
           glowColor="blue"
           onClick={detectDevice}
-          badge={isActive ? "Working" : device ? "✓ Found" : undefined}
+          badge={isActive ? 'Working' : device ? '✓ Found' : undefined}
         />
-        
+
         <SpotlightFeatureCard
           icon={<Handshake className="w-6 h-6 text-purple-400" />}
           title="Step 2: Odin Handshake"
           description="Initialize Odin protocol communication"
           glowColor="purple"
           onClick={doHandshake}
-          badge={isActive ? "Working" : odinInfo ? "✓ Connected" : undefined}
+          badge={isActive ? 'Working' : odinInfo ? '✓ Connected' : undefined}
         />
-        
+
         <SpotlightFeatureCard
           icon={<FileText className="w-6 h-6 text-green-400" />}
           title="Step 3: Read PIT"
           description="Read partition table from device"
           glowColor="green"
           onClick={readPit}
-          badge={isActive ? "Working" : pitEntries.length > 0 ? `✓ ${pitEntries.length} parts` : undefined}
+          badge={
+            isActive
+              ? 'Working'
+              : pitEntries.length > 0
+                ? `✓ ${pitEntries.length} parts`
+                : undefined
+          }
         />
       </div>
 
@@ -91,17 +98,32 @@ export default function SamsungPage() {
 
       <div className="samsung-two-col">
         {/* Device Info */}
-        <div className="samsung-card">
+        <div className="glass glass-hover">
           <h2>Device Info</h2>
           {device ? (
             <div className="samsung-info-list">
-              <div><span>VID</span><strong>0x{device.vid.toString(16)}</strong></div>
-              <div><span>PID</span><strong>0x{device.pid.toString(16)}</strong></div>
-              <div><span>Mode</span><strong>{device.mode}</strong></div>
+              <div>
+                <span>VID</span>
+                <strong>0x{device.vid.toString(16)}</strong>
+              </div>
+              <div>
+                <span>PID</span>
+                <strong>0x{device.pid.toString(16)}</strong>
+              </div>
+              <div>
+                <span>Mode</span>
+                <strong>{device.mode}</strong>
+              </div>
               {odinInfo && (
                 <>
-                  <div><span>Protocol</span><strong>{odinInfo.protocol_version}</strong></div>
-                  <div><span>PIT Size</span><strong>{fmt(odinInfo.pit_size)}</strong></div>
+                  <div>
+                    <span>Protocol</span>
+                    <strong>{odinInfo.protocol_version}</strong>
+                  </div>
+                  <div>
+                    <span>PIT Size</span>
+                    <strong>{fmt(odinInfo.pit_size)}</strong>
+                  </div>
                 </>
               )}
             </div>
@@ -111,7 +133,7 @@ export default function SamsungPage() {
         </div>
 
         {/* Operations */}
-        <div className="samsung-card">
+        <div className="glass glass-hover">
           <h2>Operations</h2>
           <div className="tools-grid">
             <SpotlightFeatureCard
@@ -121,7 +143,7 @@ export default function SamsungPage() {
               glowColor="orange"
               onClick={handleFlash}
             />
-            
+
             <SpotlightFeatureCard
               icon={<Eraser className="w-5 h-5 text-red-400" />}
               title="Erase FRP"
@@ -129,7 +151,7 @@ export default function SamsungPage() {
               glowColor="red"
               onClick={eraseFrp}
             />
-            
+
             <SpotlightFeatureCard
               icon={<RotateCcw className="w-5 h-5 text-green-400" />}
               title="Reboot Normal"
@@ -137,7 +159,7 @@ export default function SamsungPage() {
               glowColor="green"
               onClick={() => reboot(0)}
             />
-            
+
             <SpotlightFeatureCard
               icon={<RotateCcw className="w-5 h-5 text-blue-400" />}
               title="Reboot Download"
@@ -145,7 +167,7 @@ export default function SamsungPage() {
               glowColor="blue"
               onClick={() => reboot(1)}
             />
-            
+
             <SpotlightFeatureCard
               icon={<RotateCcw className="w-5 h-5 text-purple-400" />}
               title="Reboot Recovery"
@@ -159,7 +181,7 @@ export default function SamsungPage() {
 
       {/* PIT Table */}
       {pitEntries.length > 0 && (
-        <div className="samsung-card">
+        <div className="glass glass-hover">
           <h2>PIT Table ({pitEntries.length} partitions)</h2>
           <div className="samsung-table-wrap">
             <table className="samsung-table">
@@ -178,13 +200,9 @@ export default function SamsungPage() {
                 {pitEntries.map((p, i) => (
                   <tr
                     key={i}
-                    className={
-                      p.partition_name.toLowerCase() === "frp"
-                        ? "samsung-row--frp"
-                        : ""
-                    }
+                    className={p.partition_name.toLowerCase() === 'frp' ? 'samsung-row--frp' : ''}
                     onClick={() => setFlashPart(p.partition_name)}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: 'pointer' }}
                     title="Click to select for flashing"
                   >
                     <td className="samsung-part-name">{p.partition_name}</td>
@@ -193,7 +211,7 @@ export default function SamsungPage() {
                     <td>{p.device_type}</td>
                     <td className="samsung-mono">0x{p.offset.toString(16)}</td>
                     <td>{fmt(p.size)}</td>
-                    <td className="samsung-filename">{p.flash_filename || "—"}</td>
+                    <td className="samsung-filename">{p.flash_filename || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -204,38 +222,35 @@ export default function SamsungPage() {
 
       {/* Flash Partition */}
       {odinInfo && (
-        <div className="samsung-card">
+        <div className="glass glass-hover">
           <h2>Flash Partition</h2>
           <div className="samsung-flash-row">
             <input
-              className="samsung-input"
+              className="field-input"
               placeholder="Partition name (e.g. BOOT)"
               value={flashPart}
               onChange={(e) => setFlashPart(e.target.value)}
             />
             <input
-              className="samsung-input samsung-input--file"
+              className="field-input samsung-input--file"
               placeholder="File path..."
               value={flashFile}
               readOnly
             />
-            <button className="samsung-btn" onClick={handleFlashBrowse}>
+            <button className="btn" onClick={handleFlashBrowse}>
               Browse
             </button>
             <button
-              className="samsung-btn samsung-btn--primary"
+              className="btn btn-primary"
               onClick={handleFlash}
               disabled={!flashPart || !flashFile || isActive}
             >
               Flash
             </button>
           </div>
-          {samsungStatus === "flashing" && (
+          {samsungStatus === 'flashing' && (
             <div className="samsung-progress-bar">
-              <div
-                className="samsung-progress-fill"
-                style={{ width: `${flashProgress}%` }}
-              />
+              <div className="samsung-progress-fill" style={{ width: `${flashProgress}%` }} />
               <span className="samsung-progress-label">{flashProgress}%</span>
             </div>
           )}
@@ -243,7 +258,7 @@ export default function SamsungPage() {
       )}
 
       {/* Activity Log */}
-      <div className="samsung-card samsung-log-card">
+      <div className="glass glass-hover samsung-log-card">
         <h2>Activity Log</h2>
         <div className="samsung-log">
           {log.length === 0 ? (
@@ -252,7 +267,7 @@ export default function SamsungPage() {
             log.map((line, i) => (
               <div
                 key={i}
-                className={`samsung-log-line ${line.includes("ERROR") ? "samsung-log--error" : ""} ${line.includes("✅") ? "samsung-log--success" : ""}`}
+                className={`samsung-log-line ${line.includes('ERROR') ? 'samsung-log--error' : ''} ${line.includes('✅') ? 'samsung-log--success' : ''}`}
               >
                 {line}
               </div>

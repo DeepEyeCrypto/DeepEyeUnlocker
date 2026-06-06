@@ -26,34 +26,34 @@
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  background: var(--border);
+  background: var(--color-border);
   padding: 2px 8px;
-  border-radius: 4px;
-  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: var(--text-faint);
+  border-radius: var(--radius-full);
+  background: var(--color-text-muted);
 }
 
 .status-dot--live {
-  background: var(--accent-green);
-  box-shadow: 0 0 8px var(--accent-green);
+  background: var(--color-success);
+  box-shadow: var(--shadow-glow-green);
 }
 
 .tool-card__name {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   overflow-wrap: anywhere;
 }
 
 .tool-card__desc {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -67,11 +67,11 @@
 
 .chip-badge {
   font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
   padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--accent-blue);
-  border: 1px solid rgba(0, 191, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
 
 .tool-card__actions {
@@ -85,14 +85,14 @@
 
 .run-btn {
   padding: 8px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: none;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--accent-green);
-  color: #000;
+  transition: all var(--transition-fast);
+  background: var(--color-success);
+  color: var(--color-bg-base);
 }
 
 .run-btn:hover:not(:disabled) {
@@ -106,56 +106,56 @@
 }
 
 .run-btn--running {
-  background: var(--accent-gold);
+  background: var(--color-warning);
 }
 
 .run-btn--error {
-  background: var(--accent-red);
-  color: #fff;
+  background: var(--color-error);
+  color: var(--color-text-primary);
 }
 
 .logs-toggle {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .tool-card__logs {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-bg-base) 60%, transparent);
+  border-radius: var(--radius-md);
   padding: 12px;
   margin-top: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .log-scroll {
   max-height: 150px;
   overflow-y: auto;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
 }
 
 .log-line {
   padding: 2px 0;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   white-space: pre-wrap;
 }
 
-.log-success { color: var(--accent-green); }
-.log-error { color: var(--accent-red); }
-.log-warn { color: var(--accent-gold); }
+.log-success { color: var(--color-success); }
+.log-error { color: var(--color-error); }
+.log-warn { color: var(--color-warning); }
 
 /* v1.1.0 Primary Tool Special Styling */
 .tool-card--primary {
-  border: 1px solid rgba(255, 215, 0, 0.3) !important;
-  background: linear-gradient(135deg, rgba(20, 20, 25, 0.8) 0%, rgba(40, 35, 20, 0.8) 100%) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 16px rgba(255, 215, 0, 0.05);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent) !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-bg-base) 80%, transparent) 0%, color-mix(in srgb, var(--color-warning) 10%, transparent) 100%) !important;
+  box-shadow: var(--shadow-glass), inset 0 0 16px color-mix(in srgb, var(--color-warning) 10%, transparent);
 }
 
 .tool-card--primary .tool-card__name {
-  background: linear-gradient(to right, #fff, var(--accent-gold));
+  background: linear-gradient(to right, var(--color-text-primary), var(--color-warning));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
@@ -163,11 +163,11 @@
 }
 
 .tool-card--primary .run-btn {
-  background: linear-gradient(to bottom, var(--accent-gold), #b8860b);
-  color: #000;
+  background: linear-gradient(to bottom, var(--color-warning), color-mix(in srgb, var(--color-warning) 70%, transparent));
+  color: var(--color-bg-base);
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .tool-card--primary::after {
@@ -175,13 +175,13 @@
   position: absolute;
   top: 12px;
   right: -30px;
-  background: var(--accent-gold);
-  color: #000;
+  background: var(--color-warning);
+  color: var(--color-bg-base);
   font-size: 0.55rem;
   font-weight: 900;
   padding: 2px 30px;
   transform: rotate(45deg);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 640px) {

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeepEye Unlocker - Figma UI Components</title>
+  
+  <!-- Fonts: JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* DESIGN TOKENS AS CSS VARIABLES */
+    :root {
+      --bg-color: #080808;
+      --card-bg: #0E0E0E;
+      --card-radius: 12px;
+      --chip-radius: 4px;
+      
+      --text-primary: #E0E0E0;
+      --text-dim: #666666;
+      
+      --accent-cyan: #00BCD4;
+      --accent-green: #00E676;
+      --accent-orange: #FF9800;
+      --accent-red: #FF1744;
+      --accent-purple: #CE93D8;
+      
+      --border-cyan: rgba(0, 188, 212, 0.35);
+      --glow-cyan: 0 0 12px rgba(0, 188, 212, 0.4);
+      --glow-cyan-intense: 0 0 20px rgba(0, 188, 212, 0.6);
+      
+      --backdrop-blur: 12px;
+      
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 { margin: 0; }
+    
+    .screen-container {
+      width: 1024px;
+      height: 768px;
+      background: var(--bg-color);
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* MacOS Titlebar */
+    .titlebar {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      gap: 8px;
+      -webkit-app-region: drag;
+    }
+    .mac-btn {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .mac-close { background: #FF5F56; }
+    .mac-min { background: #FFBD2E; }
+    .mac-max { background: #27C93F; }
+
+    .titlebar-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* Common Card Style */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--backdrop-blur));
+      -webkit-backdrop-filter: blur(var(--backdrop-blur));
+      border: 1px solid #222;
+      border-radius: var(--card-radius);
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      border-color: var(--border-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+    
+    /* Active Glowing Card */
+    .glass-card.active-card {
+      border-color: var(--border-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: var(--chip-radius);
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      border: 1px solid #333;
+    }
+    .chip-cyan { color: var(--accent-cyan); border-color: rgba(0,188,212,0.5); background: rgba(0,188,212,0.1); }
+    .chip-green { color: var(--accent-green); border-color: rgba(0,230,118,0.5); background: rgba(0,230,118,0.1); }
+    .chip-orange { color: var(--accent-orange); border-color: rgba(255,152,0,0.5); background: rgba(255,152,0,0.1); }
+    .chip-red { color: var(--accent-red); border-color: rgba(255,23,68,0.5); background: rgba(255,23,68,0.1); }
+    .chip-purple { color: var(--accent-purple); border-color: rgba(206,147,216,0.5); background: rgba(206,147,216,0.1); }
+    .chip-outline { color: var(--text-primary); border-color: #555; }
+
+    /* Buttons */
+    .btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: var(--chip-radius);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-cyan {
+      border-color: var(--border-cyan);
+      color: var(--accent-cyan);
+    }
+    .btn-cyan:hover {
+      background: rgba(0,188,212,0.1);
+      box-shadow: var(--glow-cyan);
+    }
+    .btn-run {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(90deg, rgba(0,188,212,0.2) 0%, rgba(0,188,212,0.05) 100%);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      justify-content: center;
+      border-radius: var(--card-radius);
+      box-shadow: var(--glow-cyan);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-run:hover {
+      box-shadow: var(--glow-cyan-intense);
+      background: linear-gradient(90deg, rgba(0,188,212,0.3) 0%, rgba(0,188,212,0.1) 100%);
+    }
+
+    /* Screen Layouts */
+    .layout-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 80px;
+      background: #0A0A0A;
+      border-right: 1px solid #1A1A1A;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      gap: 20px;
+    }
+    .nav-item {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: var(--text-dim);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .nav-item:hover {
+      color: var(--text-primary);
+      background: #151515;
+    }
+    .nav-item.active {
+      color: var(--accent-cyan);
+      background: rgba(0,188,212,0.1);
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 24px;
+      width: 3px;
+      background: var(--accent-cyan);
+      box-shadow: var(--glow-cyan);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .right-rail {
+      width: 320px;
+      background: #0A0A0A;
+      border-left: 1px solid #1A1A1A;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      height: 32px;
+      background: #0A0A0A;
+      border-top: 1px solid #1A1A1A;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-dim);
+      justify-content: space-between;
+    }
+    
+    .status-items {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .dot-green { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+    .dot-orange { background: var(--accent-orange); }
+
+    /* Log Output */
+    .log-area {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .log-line { margin-bottom: 4px; display: flex; gap: 8px;}
+    .log-time { color: #555; }
+    .log-info { color: var(--text-dim); }
+    .log-success { color: var(--accent-green); }
+    .log-warning { color: var(--accent-orange); }
+    .log-error { color: var(--accent-red); }
+    .log-highlight { color: var(--accent-cyan); }
+    
+    /* Stages Styles */
+    .stage-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .stage-sidebar {
+      width: 240px;
+      background: #0A0A0A;
+      border-right: 1px solid #1A1A1A;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    
+    .stage-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+    .stage-item.completed {
+      color: var(--text-primary);
+      opacity: 1;
+    }
+    .stage-item.active {
+      color: var(--accent-cyan);
+      opacity: 1;
+      font-weight: 700;
+    }
+    .stage-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .stage-item.completed .stage-dot {
+      background: rgba(0,230,118,0.1);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+    .stage-item.active .stage-dot {
+      background: rgba(0,188,212,0.1);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: var(--glow-cyan);
+    }
+    
+    .stage-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 32px;
+      gap: 32px;
+    }
+    
+    .stage-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .stage-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+    
+    /* Terminal area */
+    .terminal-container {
+      background: #050505;
+      border: 1px solid #222;
+      border-radius: var(--card-radius);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .terminal-header {
+      padding: 8px 16px;
+      background: #0E0E0E;
+      border-bottom: 1px solid #222;
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    /* Diagnostics Styles */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .table th {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #222;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+    .table td {
+      padding: 12px;
+      border-bottom: 1px solid #151515;
+    }
+    .table tr:hover td {
+      background: #111;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const Icons = {
+      Device: () => <i data-lucide="smartphone"></i>,
+      Recovery: () => <i data-lucide="activity"></i>,
+      DA: () => <i data-lucide="file-code"></i>,
+      Diagnostics: () => <i data-lucide="stethoscope"></i>,
+      History: () => <i data-lucide="history"></i>,
+      Settings: () => <i data-lucide="settings"></i>,
+      Cpu: () => <i data-lucide="cpu"></i>,
+      Usb: () => <i data-lucide="usb"></i>,
+      HardDrive: () => <i data-lucide="hard-drive"></i>,
+      Alert: () => <i data-lucide="alert-triangle"></i>,
+      Check: () => <i data-lucide="check-circle-2"></i>,
+      Lightning: () => <i data-lucide="zap"></i>,
+      Terminal: () => <i data-lucide="terminal"></i>,
+      Download: () => <i data-lucide="download"></i>
+    };
+
+    const MacTitlebar = ({ title }) => (
+      <div className="titlebar">
+        <div className="mac-btn mac-close"></div>
+        <div className="mac-btn mac-min"></div>
+        <div className="mac-btn mac-max"></div>
+        <div className="titlebar-title">{title}</div>
+      </div>
+    );
+
+    const StatusBar = () => (
+      <div className="status-bar">
+        <div className="status-items">
+          <div className="status-item">
+            <div className="dot dot-green"></div>
+            USB: CONNECTED
+          </div>
+          <div className="status-item">
+            <div className="dot dot-green"></div>
+            DA: LOADED
+          </div>
+        </div>
+        <div>SESSION: 8A9B-4F21-C0DE</div>
+      </div>
+    );
+
+    const Sidebar = ({ active = 'Device' }) => {
+      const items = [
+        { id: 'Device', icon: Icons.Device },
+        { id: 'Recovery', icon: Icons.Recovery },
+        { id: 'DA', icon: Icons.DA },
+        { id: 'Diagnostics', icon: Icons.Diagnostics },
+        { id: 'History', icon: Icons.History },
+        { id: 'Settings', icon: Icons.Settings },
+      ];
+      
+      return (
+        <div className="sidebar">
+          {items.map(item => (
+            <div key={item.id} className={`nav-item ${active === item.id ? 'active' : ''}`} title={item.id}>
+              <item.icon />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    const LogStream = () => (
+      <div className="right-rail">
+        <div className="terminal-header" style={{ borderBottom: '1px solid #1A1A1A' }}>
+          <span>LIVE LOG STREAM</span>
+          <Icons.Terminal />
+        </div>
+        <div className="log-area">
+          <div className="log-line"><span className="log-time">[10:45:01]</span><span className="log-info">System initialized.</span></div>
+          <div className="log-line"><span className="log-time">[10:45:03]</span><span className="log-highlight">USB device attached: VID_0E8D&PID_2000</span></div>
+          <div className="log-line"><span className="log-time">[10:45:04]</span><span className="log-success">Device identified: MT6768 (Helio G80)</span></div>
+          <div className="log-line"><span className="log-time">[10:45:05]</span><span className="log-info">Querying device state...</span></div>
+          <div className="log-line"><span className="log-time">[10:45:06]</span><span className="log-warning">BROM protection active. SLA enabled.</span></div>
+          <div className="log-line"><span className="log-time">[10:45:06]</span><span className="log-info">Ready for operation.</span></div>
+        </div>
+      </div>
+    );
+
+    // SCREEN 1: Dashboard / Home
+    const DashboardScreen = () => {
+      return (
+        <div className="screen-container">
+          <MacTitlebar title="DeepEye Unlocker - Dashboard" />
+          <div className="layout-main">
+            <Sidebar active="Device" />
+            
+            <div className="content-area">
+              <h2 className="section-title">Connected Device</h2>
+              
+              <div className="glass-card active-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#fff', marginBottom: '8px' }}>Xiaomi Redmi 9</h1>
+                    <div style={{ color: 'var(--accent-cyan)', fontSize: '14px' }}>MT6768 • Lancelot</div>
+                  </div>
+                  <div className="chip chip-green">BROM MODE</div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ color: 'var(--text-dim)' }}><Icons.Cpu /></div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>CHIP ID</div>
+                      <div style={{ fontSize: '13px' }}>0x07B0</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ color: 'var(--text-dim)' }}><Icons.HardDrive /></div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>STORAGE</div>
+                      <div style={{ fontSize: '13px' }}>eMMC 64GB</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ color: 'var(--text-dim)' }}><Icons.Device /></div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>SYSTEM</div>
+                      <div style={{ fontSize: '13px' }}>MIUI 12 / Android 10</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <h2 className="section-title" style={{ marginTop: '16px' }}>Recommended Actions</h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div className="glass-card" style={{ cursor: 'pointer' }}>
+                  <h3 style={{ fontSize: '15px', color: 'var(--accent-cyan)', marginBottom: '8px' }}>Bypass SLA / DAA</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '16px' }}>Disable secure boot protection to allow flashing.</p>
+                  <div className="chip chip-cyan">PRIMARY</div>
+                </div>
+                
+                <div className="glass-card" style={{ cursor: 'pointer' }}>
+                  <h3 style={{ fontSize: '15px', color: 'var(--accent-orange)', marginBottom: '8px' }}>Erase FRP</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '16px' }}>Remove Factory Reset Protection lock.</p>
+                  <div className="chip chip-orange">WARNING: DATA LOSS</div>
+                </div>
+                
+                <div className="glass-card" style={{ cursor: 'pointer' }}>
+                  <h3 style={{ fontSize: '15px', color: '#fff', marginBottom: '8px' }}>Read Info (DA)</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '16px' }}>Boot DA payload to read extended partitions.</p>
+                  <div className="chip chip-outline">SAFE</div>
+                </div>
+              </div>
+            </div>
+            
+            <LogStream />
+          </div>
+          <StatusBar />
+        </div>
+      );
+    };
+
+    // SCREEN 2: Recovery Stage Panel
+    const RecoveryStageScreen = () => {
+      const stages = [
+        { num: 1, name: 'Handshake & Init', status: 'completed' },
+        { num: 2, name: 'BROM Preflight', status: 'completed' },
+        { num: 3, name: 'DA Upload', status: 'active' },
+        { num: 4, name: 'DA Execution', status: 'pending' },
+        { num: 5, name: 'Partition Table Read', status: 'pending' },
+        { num: 6, name: 'Security Backup', status: 'pending' },
+        { num: 7, name: 'Erase FRP Partition', status: 'pending' },
+        { num: 8, name: 'Format Userdata', status: 'pending' },
+        { num: 9, name: 'Reboot Device', status: 'pending' },
+        { num: 10, name: 'Validation', status: 'pending' },
+      ];
+
+      return (
+        <div className="screen-container">
+          <MacTitlebar title="DeepEye Unlocker - Recovery Process" />
+          <div className="stage-layout">
+            <div className="stage-sidebar">
+              <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px', fontWeight: '700' }}>EXECUTION PLAN</div>
+              {stages.map(s => (
+                <div key={s.num} className={`stage-item ${s.status}`}>
+                  <div className="stage-dot">{s.status === 'completed' ? '✓' : s.num}</div>
+                  <span>{s.name}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="stage-content">
+              <div className="stage-header">
+                <div style={{ color: 'var(--accent-purple)', fontSize: '14px', fontWeight: '700', letterSpacing: '1px' }}>
+                  STAGE 3 / 10
+                </div>
+                <div className="stage-title">DA Upload — Preflight Check</div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="chip chip-cyan">MTK_ALLINONE_DA.bin</div>
+                  <div className="chip chip-outline">USB-COM (tty.usbmodem141)</div>
+                  <div className="chip chip-orange">O(N) COST</div>
+                  <div className="chip chip-green">SAFE</div>
+                </div>
+              </div>
+              
+              <button className="btn-run">
+                <Icons.Lightning /> INITIATE EXECUTION
+              </button>
+              
+              <div className="terminal-container">
+                <div className="terminal-header">
+                  <span>DESKTOP OPERATIONS BUS</span>
+                  <div style={{ display: 'flex', gap: '8px', color: '#555' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#333' }}></div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#333' }}></div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#333' }}></div>
+                  </div>
+                </div>
+                <div className="log-area" style={{ fontFamily: 'var(--font-mono)' }}>
+                  <div className="log-line"><span className="log-time">00.000</span><span className="log-info">[REQ] Requesting BROM CMD: 0xD4 (GET_ME_ID)</span></div>
+                  <div className="log-line"><span className="log-time">00.015</span><span className="log-success">[RSP] 0x00 (SUCCESS) - ME_ID: 98 E4 1A ...</span></div>
+                  <div className="log-line"><span className="log-time">00.022</span><span className="log-info">[REQ] Requesting BROM CMD: 0xDB (SEND_DA)</span></div>
+                  <div className="log-line"><span className="log-time">00.025</span><span className="log-info">[SYS] Loading local payload: MTK_AllInOne_DA_v3.3001.bin</span></div>
+                  <div className="log-line"><span className="log-time">00.040</span><span className="log-info">[SYS] Target address: 0x200000 | Size: 245,760 bytes</span></div>
+                  <div className="log-line"><span className="log-time">00.100</span><span className="log-highlight">[TRX] Sending block 1/64 ...</span></div>
+                  <div className="log-line"><span className="log-time">00.145</span><span className="log-highlight">[TRX] Sending block 2/64 ...</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <StatusBar />
+        </div>
+      );
+    };
+
+    // SCREEN 3: Diagnostics & DA Files
+    const DiagnosticsScreen = () => {
+      const daFiles = [
+        { id: '0x07B0', name: 'MTK_AllInOne_DA_v3.3001.bin', status: 'VALID' },
+        { id: '0x07B3', name: 'DA_PL_MT6765_MT6762.bin', status: 'VALID' },
+        { id: '0x08A0', name: 'DA_BR_MT6893_v2.bin', status: 'PENDING' },
+        { id: '0x0984', name: 'DA_SWSEC_MT6853.bin', status: 'INVALID' },
+      ];
+
+      return (
+        <div className="screen-container">
+          <MacTitlebar title="DeepEye Unlocker - Diagnostics & Payload Mgmt" />
+          <div className="layout-main">
+            <Sidebar active="Diagnostics" />
+            
+            <div className="content-area" style={{ padding: '32px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h2 className="stage-title">System Diagnostics</h2>
+                <button className="btn btn-cyan">
+                  <Icons.Download /> Export Session Bundle
+                </button>
+              </div>
+              
+              <div className="grid-2col">
+                {/* Left Column: Diagnostics */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div className="glass-card">
+                    <h3 className="section-title"><Icons.Check /> Environment Health</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-dim)' }}>libusb Driver</span>
+                        <span style={{ color: 'var(--accent-green)' }}>Loaded (v1.0.26)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-dim)' }}>macOS Gatekeeper</span>
+                        <span style={{ color: 'var(--accent-green)' }}>Bypassed</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-dim)' }}>Payload Repository</span>
+                        <span style={{ color: 'var(--accent-green)' }}>Synced (142 files)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-dim)' }}>Serial Access</span>
+                        <span style={{ color: 'var(--accent-orange)' }}>Requires Admin</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card" style={{ borderColor: 'rgba(255,23,68,0.3)', boxShadow: '0 0 10px rgba(255,23,68,0.1)' }}>
+                    <h3 className="section-title" style={{ color: 'var(--accent-red)' }}><Icons.Alert /> Last Error Profile</h3>
+                    <div style={{ fontSize: '13px', color: '#fff', marginBottom: '8px' }}>[ERR_SLA_AUTH_FAILED]</div>
+                    <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '16px' }}>
+                      Device rejected DA payload due to Secure Boot verification failure. Token mismatch.
+                    </p>
+                    <div style={{ fontSize: '12px', padding: '8px', background: '#1A0505', borderRadius: '4px', border: '1px solid #331111' }}>
+                      <span style={{ color: 'var(--accent-red)', fontWeight: 'bold' }}>FIX: </span>
+                      Run 'Bypass SLA/DAA' stage first to patch brom security before sending DA.
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right Column: DA Files */}
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h3 className="section-title"><Icons.DA /> Download Agent Payloads</h3>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>CHIP ID</th>
+                        <th>DA FILE NAME</th>
+                        <th>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {daFiles.map((da, i) => (
+                        <tr key={i}>
+                          <td style={{ fontFamily: 'var(--font-mono)' }}>{da.id}</td>
+                          <td>{da.name}</td>
+                          <td>
+                            <div className={`chip chip-${da.status === 'VALID' ? 'green' : da.status === 'INVALID' ? 'red' : 'orange'}`}>
+                              {da.status}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  <h3 className="section-title" style={{ marginTop: '32px' }}><Icons.History /> Session History</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '8px 0', borderBottom: '1px solid #222' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>2026-06-01 01:42</span>
+                      <span>Erase FRP (MT6768)</span>
+                      <span style={{ color: 'var(--accent-green)' }}>SUCCESS</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '8px 0', borderBottom: '1px solid #222' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>2026-05-31 22:15</span>
+                      <span>Read Info (MT6833)</span>
+                      <span style={{ color: 'var(--accent-red)' }}>FAILED</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <StatusBar />
+        </div>
+      );
+    };
+
+    const App = () => {
+      // Just initialize lucide icons after render
+      React.useEffect(() => {
+        if (window.lucide) window.lucide.createIcons();
+      });
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '60px', paddingBottom: '100px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px', color: '#fff' }}>DeepEye Unlocker UI Components</h1>
+            <p style={{ color: 'var(--text-dim)' }}>Figma-ready export of the 3 requested screens.</p>
+          </div>
+          
+          <DashboardScreen />
+          <RecoveryStageScreen />
+          <DiagnosticsScreen />
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,66 +1,106 @@
 package com.deepeye.otg.data
 
 import android.content.Context
-import android.content.SharedPreferences
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "deepeye_settings")
 
 class SettingsManager @javax.inject.Inject constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("deepeye_settings", Context.MODE_PRIVATE)
+    // Scope for background disk I/O
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // Preference Keys
+    private val KEY_PERF_MODE = booleanPreferencesKey("perf_mode")
+    private val KEY_ADB_SIG_REQ = booleanPreferencesKey("adb_sig_req")
+    private val KEY_DEBOUNCE_ATTACH = booleanPreferencesKey("debounce_attach")
+    private val KEY_PERM_TIMEOUT = intPreferencesKey("perm_timeout")
+    private val KEY_SHOW_DEBUG = booleanPreferencesKey("show_debug")
+    private val KEY_SHOW_REASON = booleanPreferencesKey("show_reason")
+    private val KEY_MONO_HEX = booleanPreferencesKey("mono_hex")
+    private val KEY_FORCE_RECLASSIFY = booleanPreferencesKey("force_reclassify")
+    private val KEY_LOG_USB_FILE = booleanPreferencesKey("log_usb_file")
     
     // Performance Mode
-    private val _performanceMode = MutableStateFlow(prefs.getBoolean("perf_mode", false))
-    val performanceMode: StateFlow<Boolean> = _performanceMode.asStateFlow()
+    val performanceMode: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_PERF_MODE] ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, false)
     
     // Detection Settings
-    private val _adbSignatureRequired = MutableStateFlow(prefs.getBoolean("adb_sig_req", true))
-    val adbSignatureRequired: StateFlow<Boolean> = _adbSignatureRequired.asStateFlow()
+    val adbSignatureRequired: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_ADB_SIG_REQ] ?: true }
+        .stateIn(scope, SharingStarted.Eagerly, true)
     
-    private val _debounceAttach = MutableStateFlow(prefs.getBoolean("debounce_attach", true))
-    val debounceAttach: StateFlow<Boolean> = _debounceAttach.asStateFlow()
+    val debounceAttach: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_DEBOUNCE_ATTACH] ?: true }
+        .stateIn(scope, SharingStarted.Eagerly, true)
     
-    private val _permissionTimeout = MutableStateFlow(prefs.getInt("perm_timeout", 10)) // Seconds
-    val permissionTimeout: StateFlow<Int> = _permissionTimeout.asStateFlow()
+    val permissionTimeout: StateFlow<Int> = context.dataStore.data
+        .map { it[KEY_PERM_TIMEOUT] ?: 10 }
+        .stateIn(scope, SharingStarted.Eagerly, 10)
     
     // Display Settings
-    private val _showDebugPanel = MutableStateFlow(prefs.getBoolean("show_debug", false))
-    val showDebugPanel: StateFlow<Boolean> = _showDebugPanel.asStateFlow()
+    val showDebugPanel: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_SHOW_DEBUG] ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, false)
     
-    private val _showDetectionReason = MutableStateFlow(prefs.getBoolean("show_reason", true))
-    val showDetectionReason: StateFlow<Boolean> = _showDetectionReason.asStateFlow()
+    val showDetectionReason: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_SHOW_REASON] ?: true }
+        .stateIn(scope, SharingStarted.Eagerly, true)
     
-    private val _monospaceHex = MutableStateFlow(prefs.getBoolean("mono_hex", true))
-    val monospaceHex: StateFlow<Boolean> = _monospaceHex.asStateFlow()
+    val monospaceHex: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_MONO_HEX] ?: true }
+        .stateIn(scope, SharingStarted.Eagerly, true)
     
     // Advanced Settings
-    private val _forceReclassify = MutableStateFlow(prefs.getBoolean("force_reclassify", true))
-    val forceReclassify: StateFlow<Boolean> = _forceReclassify.asStateFlow()
+    val forceReclassify: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_FORCE_RECLASSIFY] ?: true }
+        .stateIn(scope, SharingStarted.Eagerly, true)
     
-    private val _logUsbToFile = MutableStateFlow(prefs.getBoolean("log_usb_file", false))
-    val logUsbToFile: StateFlow<Boolean> = _logUsbToFile.asStateFlow()
+    val logUsbToFile: StateFlow<Boolean> = context.dataStore.data
+        .map { it[KEY_LOG_USB_FILE] ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, false)
     
     // Toggles & Setters
-    fun togglePerformanceMode() = toggle("perf_mode", _performanceMode)
-    fun toggleAdbSignature() = toggle("adb_sig_req", _adbSignatureRequired)
-    fun toggleDebounceAttach() = toggle("debounce_attach", _debounceAttach)
+    fun togglePerformanceMode() = toggle(KEY_PERF_MODE, performanceMode)
+    fun toggleAdbSignature() = toggle(KEY_ADB_SIG_REQ, adbSignatureRequired)
+    fun toggleDebounceAttach() = toggle(KEY_DEBOUNCE_ATTACH, debounceAttach)
+    
     fun setPermissionTimeout(seconds: Int) {
-        prefs.edit().putInt("perm_timeout", seconds).apply()
-        _permissionTimeout.value = seconds
+        scope.launch {
+            context.dataStore.edit { prefs ->
+                prefs[KEY_PERM_TIMEOUT] = seconds
+            }
+        }
     }
     
-    fun toggleShowDebugPanel() = toggle("show_debug", _showDebugPanel)
-    fun toggleShowDetectionReason() = toggle("show_reason", _showDetectionReason)
-    fun toggleMonospaceHex() = toggle("mono_hex", _monospaceHex)
+    fun toggleShowDebugPanel() = toggle(KEY_SHOW_DEBUG, showDebugPanel)
+    fun toggleShowDetectionReason() = toggle(KEY_SHOW_REASON, showDetectionReason)
+    fun toggleMonospaceHex() = toggle(KEY_MONO_HEX, monospaceHex)
     
-    fun toggleForceReclassify() = toggle("force_reclassify", _forceReclassify)
-    fun toggleLogUsbToFile() = toggle("log_usb_file", _logUsbToFile)
+    fun toggleForceReclassify() = toggle(KEY_FORCE_RECLASSIFY, forceReclassify)
+    fun toggleLogUsbToFile() = toggle(KEY_LOG_USB_FILE, logUsbToFile)
 
-    private fun toggle(key: String, flow: MutableStateFlow<Boolean>) {
+    private fun toggle(key: Preferences.Key<Boolean>, flow: StateFlow<Boolean>) {
         val newVal = !flow.value
-        prefs.edit().putBoolean(key, newVal).apply()
-        flow.value = newVal
+        scope.launch {
+            context.dataStore.edit { prefs ->
+                prefs[key] = newVal
+            }
+        }
     }
 }

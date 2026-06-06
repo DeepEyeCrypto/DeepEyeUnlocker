@@ -12,10 +12,12 @@ mod error;
 mod frida;
 mod identity;
 mod ipsw_dl;
+pub mod license;
 mod nonce;
 mod purple;
 mod qualcomm;
 mod restore;
+mod session;
 mod shsh;
 mod sideloader;
 mod ssh_tunnel;
@@ -58,6 +60,7 @@ use commands::device_db::{
     db_auto_route, db_list_all, db_lookup_model, db_lookup_vid_pid, db_search_devices,
     frp_execute_protocol,
 };
+use commands::device_status::{get_current_device_snapshot, refresh_device_detection};
 use commands::dfu_restore::{
     ios_detect_dfu_state, ios_download_ipsw, ios_enter_dfu, ios_restore_device,
 };
@@ -88,7 +91,7 @@ use commands::edl_bypass::stage8::edl_stage8_partition_map;
 use commands::edl_bypass::stage9::edl_stage9_frp_plan;
 use commands::exploit::{bypass_icloud_activation, run_palera1n, verify_pwned_dfu};
 use commands::extraction::{ios_mass_extract, ios_mount_ramdisk};
-use commands::f3arrain::{f3arrain_run_bypass, f3arrain_send_iboot};
+use commands::f3arrain::{f3arrain_checkm8, f3arrain_detect, f3arrain_full};
 use commands::filesystem::activation::fs_patch_activation;
 use commands::filesystem::lockdown::{fs_patch_lockdown, fs_restore_lockdown};
 use commands::filesystem::mount::{
@@ -107,6 +110,9 @@ use commands::ios_chain::{
     ios_detect_device, run_fake_erase, run_full_signal_bypass, run_hello_bypass,
 };
 use commands::iremoval_bypass::{iremoval_detect, iremoval_iservices, iremoval_run};
+use commands::license_commands::{
+    activate_license, check_license_feature, deactivate_license, get_license_status,
+};
 use commands::logcat::{
     adb_logcat_clear, adb_logcat_dump, adb_logcat_export, adb_logcat_start, adb_logcat_stop,
     clear_logcat_buffer, export_logcat_to_file, start_logcat_stream, stop_logcat_stream,
@@ -126,7 +132,6 @@ use commands::orchestrator::{ios_inject_surgical_patch, ios_poll_orchestrator};
 use commands::persistence::tethered::{persist_check_tethered, persist_reapply_tethered};
 use commands::persistence::untethered::{persist_install_untethered, persist_remove_untethered};
 use commands::ramdisk::{ios_boot_ramdisk, ios_check_pwn_state, ios_run_gaster_pwn};
-use commands::rebuild::check_for_updates;
 use commands::rebuild::{
     check_activation_status,
     check_samsung_download_mode,
@@ -182,6 +187,11 @@ use commands::samsung::{
     samsung_flash_part_cmd, samsung_get_pit_cmd, samsung_reboot_device_cmd,
 };
 use commands::screentime::{ios_extract_screentime_hash, ios_run_screentime_crack};
+use commands::session_commands::{
+    cancel_session, clear_active_session, clear_session_history, get_active_session,
+    get_session_history, start_session,
+};
+use commands::settings_commands::{get_settings, reset_settings, save_settings};
 use commands::signal_bypass::stage1::signal_stage1_detect;
 use commands::signal_bypass::stage10::signal_stage10_complete;
 use commands::signal_bypass::stage2::signal_stage2_activation;
@@ -196,6 +206,7 @@ use commands::ticket::{
     ios_activation_record_state, ios_parse_activation_record, ios_scan_tickets,
 };
 use commands::unisoc::unisoc_detect_device;
+use commands::update_commands::check_for_updates;
 use commands::updater::{check_update, do_install_update};
 use commands::usb_detector::start_usb_watcher;
 use commands::usb_utils::usb_debug_list_devices;
@@ -203,7 +214,6 @@ use commands::vault::ios_create_deepvault;
 use commands::wifi_adb::{
     connect_wifi_adb, disconnect_wifi_adb, enable_adb_wifi_mode, pair_wifi_adb,
 };
-use config::settings::{load_settings, save_settings};
 use db::history::{add_history_entry, clear_history, export_history_csv, get_history};
 use qualcomm::programmer_db::{get_edl_programmers, load_edl_programmer};
 use unisoc::edl::run_unisoc_frp_bypass;
@@ -229,7 +239,10 @@ use restore::{exit_recovery, get_recovery_info, restore_latest, restore_local_ip
 
 use purple::{enter_purple_mode, purple_read_all, purple_read_sn, purple_write_sn};
 
-use toolbox::{toolbox_backup_device, toolbox_block_ota, toolbox_factory_reset, toolbox_get_logs};
+use toolbox::{
+    toolbox_backup_device, toolbox_block_ota, toolbox_clear_baseband, toolbox_factory_reset,
+    toolbox_get_logs,
+};
 
 use cve::{query_cve_database, run_intelligence_scan};
 
@@ -288,6 +301,9 @@ pub fn run() {
 
     // [CONFIRMED] Release builds use panic=abort, so startup errors must be logged instead of panicking.
     let app_result = tauri::Builder::default()
+        .manage(device::coordinator::DeviceProbeCoordinator::new())
+        .manage(session::SessionManager::new())
+        .manage(license::manager::LicenseManager::new())
         .setup(|app| {
             start_usb_watcher(app.handle().clone());
             Ok(())
@@ -298,6 +314,7 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             ios_backup_info,
             ios_extract_hash,
@@ -350,6 +367,14 @@ pub fn run() {
             ios_activation_persistence_check,
             get_connected_devices,
             get_supported_brands,
+            get_current_device_snapshot,
+            refresh_device_detection,
+            start_session,
+            get_active_session,
+            cancel_session,
+            clear_active_session,
+            get_session_history,
+            clear_session_history,
             ios_device_identity,
             ios_imei_state,
             ios_parse_activation_record,
@@ -372,8 +397,9 @@ pub fn run() {
             run_palera1n,
             verify_pwned_dfu,
             bypass_icloud_activation,
-            f3arrain_send_iboot,
-            f3arrain_run_bypass,
+            f3arrain_full,
+            f3arrain_detect,
+            f3arrain_checkm8,
             hydra_detect_protocol,
             hydra_run_mtk_meta,
             hydra_samsung_frp_bypass,
@@ -428,6 +454,7 @@ pub fn run() {
             toolbox_factory_reset,
             toolbox_get_logs,
             toolbox_backup_device,
+            toolbox_clear_baseband,
             query_cve_database,
             run_intelligence_scan,
             push_to_cloud_vault,
@@ -550,8 +577,13 @@ pub fn run() {
             get_history,
             clear_history,
             export_history_csv,
-            load_settings,
+            get_settings,
             save_settings,
+            reset_settings,
+            activate_license,
+            get_license_status,
+            deactivate_license,
+            check_license_feature,
             // Stage 12 — Device Database
             db_search_devices,
             db_lookup_model,

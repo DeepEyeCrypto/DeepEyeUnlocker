@@ -222,9 +222,10 @@ fn build_logcat_args(serial: &Option<String>, include_dump: bool) -> Vec<String>
 }
 
 async fn run_adb_output(app: &AppHandle, args: Vec<String>) -> Result<String, String> {
+    let adb_path = crate::commands::adb::find_adb();
     let output = app
         .shell()
-        .command("adb")
+        .command(&adb_path)
         .args(args)
         .output()
         .await
@@ -361,9 +362,10 @@ pub async fn start_logcat_stream(app: AppHandle, filter: LogcatFilter) -> Result
     let _ = stop_logcat_stream_internal(&app, "Preparing logcat stream").await;
 
     let args = build_logcat_args(&filter.serial, false);
+    let adb_path = crate::commands::adb::find_adb();
     let (mut receiver, child) = app
         .shell()
-        .command("adb")
+        .command(&adb_path)
         .args(args)
         .spawn()
         .map_err(|error| format!("failed to spawn adb logcat: {error}"))?;
@@ -502,10 +504,31 @@ pub async fn clear_logcat_buffer(app: AppHandle, serial: Option<String>) -> Resu
 
 #[tauri::command]
 pub async fn export_logcat_to_file(
+    app: tauri::AppHandle,
     entries: Vec<LogcatEntry>,
     file_path: String,
 ) -> Result<String, String> {
+    if file_path.contains("..") {
+        return Err("Path traversal detected".to_string());
+    }
+
     let export_path = Path::new(&file_path);
+
+    use tauri::Manager;
+    let path_resolver = app.path();
+    let is_safe = [
+        path_resolver.document_dir(),
+        path_resolver.download_dir(),
+        path_resolver.desktop_dir(),
+        path_resolver.app_data_dir(),
+    ]
+    .into_iter()
+    .flatten()
+    .any(|safe_dir| export_path.starts_with(&safe_dir));
+
+    if !is_safe {
+        return Err("Security error: Export path must be within user Documents, Downloads, Desktop, or AppData directories".to_string());
+    }
 
     if let Some(parent) = export_path.parent() {
         if !parent.as_os_str().is_empty() {
@@ -567,8 +590,9 @@ pub async fn adb_logcat_dump(
 
 #[tauri::command]
 pub async fn adb_logcat_export(
+    app: AppHandle,
     entries: Vec<LogcatEntry>,
     output_path: String,
 ) -> Result<String, String> {
-    export_logcat_to_file(entries, output_path).await
+    export_logcat_to_file(app, entries, output_path).await
 }

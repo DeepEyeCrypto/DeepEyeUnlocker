@@ -794,7 +794,7 @@ private fun CveExposuresDialog(
                             color = DeepEyeColors.WHITE_MED
                         )
                     }
-                    Divider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                 }
             }
         },

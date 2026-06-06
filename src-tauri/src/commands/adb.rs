@@ -4,19 +4,27 @@ use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
 /// Auto-detect ADB binary path across platforms
-fn find_adb() -> String {
-    let paths = vec![
-        "/usr/local/bin/adb",                                   // macOS Homebrew (Intel)
-        "/opt/homebrew/bin/adb",                                // macOS Homebrew (Apple Silicon)
-        "/Users/enayat/Library/Android/sdk/platform-tools/adb", // User's SDK
-        "/usr/bin/adb",                                         // System PATH
-        "adb",                                                  // Fallback to PATH
+pub fn find_adb() -> String {
+    let mut paths = vec![
+        "/usr/local/bin/adb".to_string(),    // macOS Homebrew (Intel)
+        "/opt/homebrew/bin/adb".to_string(), // macOS Homebrew (Apple Silicon)
+        "/usr/bin/adb".to_string(),          // System PATH
+        "adb".to_string(),                   // Fallback to PATH
     ];
+
+    if let Ok(android_home) = std::env::var("ANDROID_HOME") {
+        paths.insert(0, format!("{}/platform-tools/adb", android_home));
+    } else if let Ok(home) = std::env::var("HOME") {
+        paths.insert(
+            0,
+            format!("{}/Library/Android/sdk/platform-tools/adb", home),
+        );
+    }
+
     paths
         .into_iter()
         .find(|p| std::path::Path::new(p).exists())
-        .unwrap_or("adb")
-        .to_string()
+        .unwrap_or_else(|| "adb".to_string())
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -58,6 +66,21 @@ pub enum AdbError {
     PermissionDenied,
     #[error("Device offline")]
     DeviceOffline,
+}
+
+fn validate_serial(serial: &str) -> Result<(), AdbError> {
+    if serial.is_empty() {
+        return Err(AdbError::CommandFailed("Empty serial".into()));
+    }
+    if !serial
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == ':' || c == '.' || c == '-')
+    {
+        return Err(AdbError::CommandFailed(
+            "Invalid characters in serial".into(),
+        ));
+    }
+    Ok(())
 }
 
 async fn run_adb(app: &AppHandle, args: &[&str]) -> Result<String, AdbError> {
@@ -128,15 +151,18 @@ pub async fn adb_devices(app: &AppHandle) -> Result<Vec<AdbDevice>, AdbError> {
 }
 
 pub async fn adb_shell(app: &AppHandle, serial: &str, cmd: &str) -> Result<String, AdbError> {
+    validate_serial(serial)?;
     run_adb(app, &["-s", serial, "shell", cmd]).await
 }
 
 pub async fn adb_get_prop(app: &AppHandle, serial: &str, prop: &str) -> Result<String, AdbError> {
+    validate_serial(serial)?;
     let cmd = format!("getprop {}", prop);
     run_adb(app, &["-s", serial, "shell", &cmd]).await
 }
 
 pub async fn adb_reboot(app: &AppHandle, serial: &str, mode: &str) -> Result<(), AdbError> {
+    validate_serial(serial)?;
     match mode {
         "system" => run_adb(app, &["-s", serial, "reboot"]).await?,
         _ => run_adb(app, &["-s", serial, "reboot", mode]).await?,
@@ -149,6 +175,7 @@ pub async fn adb_install(
     serial: &str,
     apk_path: &str,
 ) -> Result<String, AdbError> {
+    validate_serial(serial)?;
     run_adb(app, &["-s", serial, "install", "-r", apk_path]).await
 }
 
@@ -158,6 +185,7 @@ pub async fn adb_push(
     local: &str,
     remote: &str,
 ) -> Result<(), AdbError> {
+    validate_serial(serial)?;
     run_adb(app, &["-s", serial, "push", local, remote]).await?;
     Ok(())
 }
@@ -168,16 +196,19 @@ pub async fn adb_pull(
     remote: &str,
     local: &str,
 ) -> Result<(), AdbError> {
+    validate_serial(serial)?;
     run_adb(app, &["-s", serial, "pull", remote, local]).await?;
     Ok(())
 }
 
 pub async fn adb_sideload(app: &AppHandle, serial: &str, zip_path: &str) -> Result<(), AdbError> {
+    validate_serial(serial)?;
     run_adb(app, &["-s", serial, "sideload", zip_path]).await?;
     Ok(())
 }
 
 pub async fn adb_erase_frp(app: &AppHandle, serial: &str) -> Result<(), AdbError> {
+    validate_serial(serial)?;
     // get block size first
     let size_str = adb_shell(
         app,
@@ -195,6 +226,7 @@ pub async fn adb_erase_frp(app: &AppHandle, serial: &str) -> Result<(), AdbError
 }
 
 pub async fn adb_check_root(app: &AppHandle, serial: &str) -> Result<bool, AdbError> {
+    validate_serial(serial)?;
     let out = adb_shell(app, serial, "id").await?;
     Ok(out.contains("uid=0"))
 }
@@ -203,6 +235,7 @@ pub async fn adb_get_device_info(
     app: &AppHandle,
     serial: &str,
 ) -> Result<DeviceFullInfo, AdbError> {
+    validate_serial(serial)?;
     let model = adb_get_prop(app, serial, "ro.product.model")
         .await
         .unwrap_or_default();
@@ -387,13 +420,19 @@ pub async fn adb_check_root_access(app: AppHandle, serial: String) -> Result<boo
 #[tauri::command]
 pub async fn adb_test_binary(app: AppHandle, path: String) -> Result<String, String> {
     let binary = if path.trim().is_empty() {
-        "adb"
+        find_adb()
     } else {
-        path.trim()
+        path.trim().to_string()
     };
+
+    // Prevent arbitrary binary execution
+    if binary != "adb" && !binary.ends_with("/adb") && !binary.ends_with("\\adb.exe") {
+        return Err("Security error: only adb executable is allowed".to_string());
+    }
+
     let output = app
         .shell()
-        .command(binary)
+        .command(&binary)
         .arg("version")
         .output()
         .await

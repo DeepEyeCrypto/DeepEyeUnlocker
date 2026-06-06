@@ -5,49 +5,31 @@
   min-height: 80px;
   max-height: 300px;
   resize: vertical;
-  background: rgba(0, 0, 0, 0.4);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(10px);
+  background: var(--color-bg-glass);
+  border-top: 1px solid var(--color-border);
+  backdrop-filter: var(--blur-md);
   overflow: hidden;
-  font-size: var(--font-sm);
+  font-size: var(--font-size-sm);
   font-family: var(--font-mono, monospace);
 }
 
 .console-header {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-bg-glass-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .console-title {
-  font-size: var(--font-sm);
+  font-size: var(--font-size-xs);
   font-weight: 800;
   letter-spacing: 1px;
-  color: var(--text-faint);
+  color: var(--color-text-muted);
 }
 
-.clear-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
 
-.clear-btn:hover {
-  background: var(--border);
-  color: var(--text-primary);
-}
-
-.clear-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 .console-body {
   flex: 1;
@@ -56,18 +38,18 @@
   font-family: inherit;
   font-size: inherit;
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+  scrollbar-color: var(--color-border-subtle) transparent;
 }
 
 .empty-console {
-  color: var(--text-faint);
+  color: var(--color-text-muted);
   font-style: italic;
   font-size: inherit;
 }
 
 .console-line {
   padding: 2px 0;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
   display: flex;
@@ -76,13 +58,13 @@
 }
 
 .line-prefix {
-  color: var(--text-faint);
+  color: var(--color-text-muted);
   flex-shrink: 0;
 }
 
-.console-line.success { color: var(--accent-green); }
-.console-line.error { color: var(--accent-red); }
-.console-line.warn { color: var(--accent-gold); }
+.console-line.success { color: var(--color-success); }
+.console-line.error { color: var(--color-error); }
+.console-line.warn { color: var(--color-warning); }
 
 @media (max-width: 767px) {
   .execution-console {

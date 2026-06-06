@@ -20,10 +20,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.8rem;
-  border: 1px solid rgba(103, 232, 249, 0.2);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.55);
-  color: rgba(125, 211, 252, 0.92);
+  border: 1px solid color-mix(in srgb, var(--color-info) 20%, transparent);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-glass-subtle);
+  color: var(--color-info);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -34,13 +34,13 @@
   margin: 0.85rem 0 0.3rem;
   font-size: clamp(1.9rem, 2.4vw, 2.65rem);
   font-weight: 800;
-  color: rgba(248, 250, 252, 0.98);
+  color: var(--color-text-primary);
 }
 
 .rom-manager-subtitle {
   max-width: 64rem;
   margin: 0;
-  color: rgba(191, 219, 254, 0.82);
+  color: var(--color-text-secondary);
   line-height: 1.6;
 }
 
@@ -57,25 +57,25 @@
 
 .rom-manager-banner {
   padding: 0.9rem 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(15, 23, 42, 0.72);
-  color: rgba(226, 232, 240, 0.92);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass);
+  color: var(--color-text-primary);
   backdrop-filter: blur(18px);
 }
 
 .rom-manager-banner--info {
-  border-color: rgba(59, 130, 246, 0.22);
+  border-color: color-mix(in srgb, var(--color-info) 22%, transparent);
 }
 
 .rom-manager-banner--warn {
-  border-color: rgba(245, 158, 11, 0.28);
-  color: rgba(254, 240, 138, 0.95);
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  color: var(--color-warning);
 }
 
 .rom-manager-banner--error {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: rgba(254, 202, 202, 0.96);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+  color: var(--color-error);
   white-space: pre-wrap;
 }
 
@@ -104,11 +104,9 @@
 }
 
 .rom-manager-card {
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.7)),
-    linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(34, 197, 94, 0.05));
-  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.28);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass);
+  box-shadow: var(--shadow-glass);
   backdrop-filter: blur(24px);
 }
 
@@ -126,15 +124,15 @@
   align-items: center;
   min-height: 11rem;
   padding: 1.2rem;
-  border: 1px dashed rgba(125, 211, 252, 0.26);
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(15, 23, 42, 0.45));
+  border: 1px dashed color-mix(in srgb, var(--color-info) 30%, transparent);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-glass-subtle);
   transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
 }
 
 .rom-manager-dropzone.active {
-  border-color: rgba(103, 232, 249, 0.64);
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(15, 23, 42, 0.7));
+  border-color: var(--color-info);
+  background: color-mix(in srgb, var(--color-info) 10%, var(--color-bg-glass-subtle));
   transform: translateY(-1px);
 }
 
@@ -143,16 +141,16 @@
   place-items: center;
   width: 3.25rem;
   height: 3.25rem;
-  border-radius: 1rem;
-  background: rgba(8, 47, 73, 0.66);
-  color: rgba(103, 232, 249, 0.96);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-info) 30%, var(--color-bg-base));
+  color: var(--color-info);
 }
 
 .rom-manager-dropzone__content h2,
 .rom-manager-package-name,
 .rom-manager-empty-state h2 {
   margin: 0;
-  color: rgba(248, 250, 252, 0.98);
+  color: var(--color-text-primary);
 }
 
 .rom-manager-dropzone__content p,
@@ -160,7 +158,7 @@
 .rom-manager-empty-state p,
 .rom-manager-empty-text {
   margin: 0.35rem 0 0;
-  color: rgba(191, 219, 254, 0.74);
+  color: var(--color-text-secondary);
 }
 
 .rom-manager-dropzone__actions {
@@ -175,7 +173,7 @@
 .rom-manager-detail-label,
 .rom-manager-section__header h3,
 .rom-manager-metric span {
-  color: rgba(148, 163, 184, 0.82);
+  color: var(--color-text-muted);
   font-size: 0.82rem;
 }
 
@@ -187,39 +185,39 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.42rem 0.78rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(15, 23, 42, 0.62);
-  color: rgba(226, 232, 240, 0.92);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
 .rom-manager-chip--ready,
 .rom-manager-compatibility--positive {
-  border-color: rgba(34, 197, 94, 0.28);
-  color: rgba(187, 247, 208, 0.96);
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  color: var(--color-success);
 }
 
 .rom-manager-chip--warn,
 .rom-manager-compatibility--warn,
 .rom-manager-risk--medium {
-  border-color: rgba(245, 158, 11, 0.28);
-  color: rgba(254, 240, 138, 0.96);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  color: var(--color-warning);
 }
 
 .rom-manager-chip--error,
 .rom-manager-compatibility--error,
 .rom-manager-risk--high,
 .rom-manager-risk--critical {
-  border-color: rgba(239, 68, 68, 0.28);
-  color: rgba(254, 202, 202, 0.96);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+  color: var(--color-error);
 }
 
 .rom-manager-chip--idle,
 .rom-manager-compatibility--neutral,
 .rom-manager-risk--low {
-  border-color: rgba(148, 163, 184, 0.16);
+  border-color: var(--color-border);
 }
 
 .rom-manager-button,
@@ -228,11 +226,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 0.72rem 0.95rem;
-  background: rgba(15, 23, 42, 0.74);
-  color: rgba(248, 250, 252, 0.96);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   font-weight: 700;
   cursor: pointer;
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
@@ -241,7 +239,7 @@
 .rom-manager-button:hover,
 .rom-manager-icon-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(125, 211, 252, 0.28);
+  border-color: var(--color-info);
 }
 
 .rom-manager-button:disabled,
@@ -252,23 +250,23 @@
 }
 
 .rom-manager-button--primary {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.9), rgba(6, 182, 212, 0.9));
-  border-color: rgba(125, 211, 252, 0.3);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-info) 80%, transparent), color-mix(in srgb, var(--color-accent) 80%, transparent));
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 .rom-manager-button--secondary {
-  background: rgba(30, 41, 59, 0.9);
+  background: var(--color-bg-elevated);
 }
 
 .rom-manager-button--ghost,
 .rom-manager-icon-button {
   padding: 0.55rem 0.72rem;
-  background: rgba(15, 23, 42, 0.58);
+  background: var(--color-bg-glass-subtle);
 }
 
 .rom-manager-icon-button--danger {
-  border-color: rgba(239, 68, 68, 0.24);
-  color: rgba(254, 202, 202, 0.94);
+  border-color: color-mix(in srgb, var(--color-error) 24%, transparent);
+  color: var(--color-error);
 }
 
 .rom-manager-summary-head,
@@ -288,20 +286,20 @@
 .rom-manager-metric,
 .rom-manager-detail-block {
   padding: 0.95rem 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(15, 23, 42, 0.52);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass-subtle);
 }
 
 .rom-manager-metric strong,
 .rom-manager-detail-block strong {
   display: block;
   margin-top: 0.35rem;
-  color: rgba(248, 250, 252, 0.98);
+  color: var(--color-text-primary);
 }
 
 .rom-manager-mono {
-  font-family: "SFMono-Regular", SFMono-Regular, ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.82rem;
   word-break: break-all;
 }
@@ -320,13 +318,13 @@
 .rom-manager-table th,
 .rom-manager-table td {
   padding: 0.78rem 0.65rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
 
 .rom-manager-table th {
-  color: rgba(148, 163, 184, 0.82);
+  color: var(--color-text-muted);
   font-size: 0.78rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -338,14 +336,14 @@
 
 .rom-manager-source-cell span,
 .rom-manager-archive-row span {
-  color: rgba(226, 232, 240, 0.92);
+  color: var(--color-text-primary);
   word-break: break-word;
 }
 
 .rom-manager-source-cell small {
   display: block;
   margin-top: 0.3rem;
-  color: rgba(148, 163, 184, 0.72);
+  color: var(--color-text-muted);
 }
 
 .rom-manager-target-cell {
@@ -357,7 +355,7 @@
 .rom-manager-checkbox {
   width: 1rem;
   height: 1rem;
-  accent-color: rgb(14, 165, 233);
+  accent-color: var(--color-info);
 }
 
 .rom-manager-section__header {
@@ -365,14 +363,14 @@
   align-items: center;
   gap: 0.55rem;
   margin-bottom: 0.55rem;
-  color: rgba(191, 219, 254, 0.92);
+  color: var(--color-info);
 }
 
 .rom-manager-list,
 .rom-manager-mini-list {
   margin: 0;
   padding-left: 1rem;
-  color: rgba(226, 232, 240, 0.92);
+  color: var(--color-text-primary);
 }
 
 .rom-manager-list {
@@ -382,11 +380,11 @@
 }
 
 .rom-manager-list--warn {
-  color: rgba(254, 240, 138, 0.96);
+  color: var(--color-warning);
 }
 
 .rom-manager-list--error {
-  color: rgba(254, 202, 202, 0.96);
+  color: var(--color-error);
 }
 
 .rom-manager-mini-list {
@@ -413,14 +411,14 @@
 
 .rom-manager-archive-row {
   padding: 0.65rem 0.75rem;
-  border-radius: 0.8rem;
-  background: rgba(15, 23, 42, 0.44);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-glass-subtle);
 }
 
 .rom-manager-archive-row strong,
 .rom-manager-queue-item__meta,
 .rom-manager-queue-item__footer {
-  color: rgba(148, 163, 184, 0.82);
+  color: var(--color-text-muted);
   font-size: 0.82rem;
 }
 
@@ -429,14 +427,14 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.75rem;
   padding: 0.85rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  background: rgba(15, 23, 42, 0.52);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass-subtle);
 }
 
 .rom-manager-queue-item.selected {
-  border-color: rgba(56, 189, 248, 0.34);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(15, 23, 42, 0.7));
+  border-color: color-mix(in srgb, var(--color-info) 34%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-info) 12%, transparent), var(--color-bg-glass));
 }
 
 .rom-manager-queue-item__select {

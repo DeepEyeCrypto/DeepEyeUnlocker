@@ -54,6 +54,32 @@ pub async fn mtk_run_command(app: AppHandle, args: Vec<String>) -> Result<String
     if args.is_empty() {
         return Err("mtk_run_command requires at least one argument".to_string());
     }
+
+    // Whitelist allowed subcommands to prevent arbitrary injection
+    let allowed_commands = ["r", "w", "e", "printgpt", "da", "seccfg"];
+    if !allowed_commands.contains(&args[0].as_str()) {
+        return Err(format!(
+            "Security error: unauthorized mtk command '{}'",
+            args[0]
+        ));
+    }
+
+    // Additional validation to block potential shell metacharacters just in case
+    for arg in &args {
+        if arg.contains(';')
+            || arg.contains('&')
+            || arg.contains('|')
+            || arg.contains('$')
+            || arg.contains('>')
+            || arg.contains('<')
+            || arg.contains('`')
+        {
+            return Err(
+                "Security error: shell metacharacters not allowed in arguments".to_string(),
+            );
+        }
+    }
+
     let borrowed: Vec<&str> = args.iter().map(String::as_str).collect();
     run_mtk_client(&app, &borrowed).await
 }
@@ -66,6 +92,12 @@ pub async fn mtk_read_partition(
 ) -> Result<String, String> {
     if partition.trim().is_empty() {
         return Err("partition must not be empty".to_string());
+    }
+    if !partition
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err("Security error: invalid characters in partition name".to_string());
     }
     if output_path.trim().is_empty() {
         return Err("output_path must not be empty".to_string());
@@ -83,6 +115,12 @@ pub async fn mtk_write_partition(
     if partition.trim().is_empty() {
         return Err("partition must not be empty".to_string());
     }
+    if !partition
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err("Security error: invalid characters in partition name".to_string());
+    }
     if input_path.trim().is_empty() {
         return Err("input_path must not be empty".to_string());
     }
@@ -94,6 +132,12 @@ pub async fn mtk_write_partition(
 pub async fn mtk_erase_partition(app: AppHandle, partition: String) -> Result<String, String> {
     if partition.trim().is_empty() {
         return Err("partition must not be empty".to_string());
+    }
+    if !partition
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err("Security error: invalid characters in partition name".to_string());
     }
 
     run_mtk_client(&app, &["e", partition.trim()]).await

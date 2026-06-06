@@ -70,6 +70,18 @@ fn is_edl_pid(pid: u16) -> bool {
     pid == EDL_PID_9008 || pid == EDL_PID_900E
 }
 
+fn validate_xml_safe(value: &str) -> Result<(), EdlError> {
+    if !value
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err(EdlError::XmlError(
+            "Invalid characters in XML parameter".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn find_edl_transport() -> Result<(Device<GlobalContext>, DeviceDescriptor), EdlError> {
     let devices = rusb::devices().map_err(|error| map_usb_error("enumerate USB devices", error))?;
 
@@ -131,7 +143,7 @@ pub fn sahara_handshake(handle: &DeviceHandle<GlobalContext>) -> Result<SaharaIn
         .read_bulk(EP_IN, &mut buf, TIMEOUT)
         .map_err(|e| EdlError::UsbError(format!("Read failed: {}", e)))?;
 
-    if len < 8 {
+    if len < 24 {
         return Err(EdlError::SaharaFailed("Incomplete Hello Packet".into()));
     }
     let cmd = u32::from_le_bytes(buf[0..4].try_into().unwrap());
@@ -188,9 +200,20 @@ pub fn sahara_upload_programmer(
 
         if cmd == 0x03 {
             // READ_DATA
+            if len < 20 {
+                return Err(EdlError::ProgrammerFailed("Short READ_DATA packet".into()));
+            }
             let _image_id = u32::from_le_bytes(buf[8..12].try_into().unwrap());
             let offset = u32::from_le_bytes(buf[12..16].try_into().unwrap()) as usize;
             let length = u32::from_le_bytes(buf[16..20].try_into().unwrap()) as usize;
+
+            if offset > payload.len() {
+                return Err(EdlError::ProgrammerFailed(format!(
+                    "Offset {} exceeds payload length {}",
+                    offset,
+                    payload.len()
+                )));
+            }
 
             let end = std::cmp::min(offset + length, payload.len());
             let chunk = &payload[offset..end];
@@ -252,6 +275,7 @@ pub fn firehose_erase(
     handle: &DeviceHandle<GlobalContext>,
     partition_name: &str,
 ) -> Result<(), EdlError> {
+    validate_xml_safe(partition_name)?;
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><erase SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" /></data>",
         partition_name
@@ -266,6 +290,7 @@ pub fn firehose_read_partition(
     num_sectors: u64,
     out_path: &std::path::Path,
 ) -> Result<u64, EdlError> {
+    validate_xml_safe(partition_name)?;
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><read SECTOR_SIZE_IN_BYTES=\"4096\" label=\"{}\" num_partition_sectors=\"{}\" /></data>",
         partition_name, num_sectors
@@ -305,6 +330,7 @@ pub fn firehose_write_partition(
     partition_name: &str,
     data_path: &std::path::Path,
 ) -> Result<(), EdlError> {
+    validate_xml_safe(partition_name)?;
     let data = std::fs::read(data_path)
         .map_err(|e| EdlError::UsbError(format!("Cannot read data file: {e}")))?;
     let size = data.len() as u64;
@@ -384,6 +410,7 @@ pub fn firehose_get_storage_info(
 }
 
 pub fn firehose_reboot(handle: &DeviceHandle<GlobalContext>, mode: &str) -> Result<(), EdlError> {
+    validate_xml_safe(mode)?;
     let xml = format!(
         "<?xml version=\"1.0\" ?><data><power value=\"{}\"/></data>",
         mode

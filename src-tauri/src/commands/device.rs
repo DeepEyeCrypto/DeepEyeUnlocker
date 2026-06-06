@@ -65,6 +65,7 @@ pub async fn device_check_mode(mode: String) -> Result<bool, String> {
         "adb" => DeviceMode::Adb,
         "samsung" | "odin" => DeviceMode::SamsungOdin,
         "unisoc" | "fdl" => DeviceMode::UnisocFdl,
+        "recovery" => DeviceMode::Recovery,
         _ => return Err(format!("Unknown device mode: {}", mode)),
     };
 
@@ -83,6 +84,7 @@ pub async fn device_get_protocol_name(protocol: String) -> Result<String, String
         "unisocfdl" => ProtocolType::UnisocFdl,
         "adb" => ProtocolType::Adb,
         "mtp" => ProtocolType::Mtp,
+        "recovery" => ProtocolType::Recovery,
         _ => ProtocolType::Unknown,
     };
 

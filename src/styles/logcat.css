@@ -16,7 +16,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(125, 211, 252, 0.88);
+  color: var(--color-info);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -33,7 +33,7 @@
 .logcat-subtitle {
   max-width: 72ch;
   margin: 0.45rem 0 0;
-  color: rgba(198, 211, 230, 0.86);
+  color: var(--color-text-secondary);
   line-height: 1.65;
 }
 
@@ -42,11 +42,11 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.85rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(17, 24, 39, 0.64));
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass);
   backdrop-filter: blur(20px);
-  color: #e2e8f0;
+  color: var(--color-text-primary);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -54,27 +54,27 @@
 }
 
 .logcat-status-pill.running {
-  border-color: rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15), 0 18px 48px rgba(14, 165, 233, 0.16);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-info) 20%, transparent), 0 18px 48px color-mix(in srgb, var(--color-info) 16%, transparent);
 }
 
 .logcat-status-pill__dot {
   width: 0.55rem;
   height: 0.55rem;
-  border-radius: 999px;
-  background: #22d3ee;
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.75);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent) 80%, transparent);
 }
 
 .logcat-status-pill.idle .logcat-status-pill__dot {
-  background: rgba(148, 163, 184, 0.9);
+  background: var(--color-text-muted);
   box-shadow: none;
 }
 
 .logcat-card {
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.88), rgba(8, 10, 18, 0.88));
-  box-shadow: 0 24px 64px rgba(2, 6, 23, 0.34);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-glass);
+  box-shadow: var(--shadow-glass);
   backdrop-filter: blur(24px);
 }
 
@@ -97,7 +97,7 @@
 }
 
 .logcat-field__label {
-  color: rgba(191, 219, 254, 0.85);
+  color: var(--color-info);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -108,10 +108,10 @@
 .logcat-input {
   width: 100%;
   min-height: 2.85rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 0.95rem;
-  background: rgba(8, 12, 24, 0.74);
-  color: #e2e8f0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   padding: 0.8rem 0.95rem;
   outline: none;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
@@ -119,9 +119,9 @@
 
 .logcat-select:focus,
 .logcat-input:focus {
-  border-color: rgba(34, 211, 238, 0.55);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14);
-  background: rgba(10, 16, 30, 0.9);
+  border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+  background: var(--color-bg-base);
 }
 
 .logcat-toolbar,
@@ -138,7 +138,7 @@
 }
 
 .logcat-toggle-row__meta {
-  color: rgba(148, 163, 184, 0.82);
+  color: var(--color-text-secondary);
   font-size: 0.84rem;
 }
 
@@ -146,12 +146,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #dbeafe;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
 .logcat-toggle input {
-  accent-color: #22d3ee;
+  accent-color: var(--color-accent);
 }
 
 .logcat-button {
@@ -161,10 +161,10 @@
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.72rem 1rem;
-  border-radius: 0.95rem;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
-  background: rgba(15, 23, 42, 0.68);
-  color: #e2e8f0;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   font-weight: 700;
   letter-spacing: 0.01em;
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, opacity 140ms ease;
@@ -180,56 +180,56 @@
 }
 
 .logcat-button--primary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(34, 211, 238, 0.82));
-  color: #f8fafc;
-  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.24);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-info) 90%, transparent), color-mix(in srgb, var(--color-accent) 80%, transparent));
+  color: var(--color-bg-base);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-info) 25%, transparent);
 }
 
 .logcat-button--secondary {
-  border-color: rgba(56, 189, 248, 0.26);
-  background: rgba(13, 22, 37, 0.82);
+  border-color: var(--color-border);
+  background: var(--color-bg-elevated);
 }
 
 .logcat-button--danger {
-  border-color: rgba(239, 68, 68, 0.26);
-  background: rgba(69, 10, 10, 0.45);
-  color: #fecaca;
+  border-color: var(--color-error);
+  background: var(--color-error-glow);
+  color: var(--color-error);
 }
 
 .logcat-button--ghost {
-  border-color: rgba(148, 163, 184, 0.16);
-  background: rgba(15, 23, 42, 0.54);
+  border-color: var(--color-border);
+  background: transparent;
 }
 
 .logcat-banner {
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   padding: 0.9rem 1rem;
   font-weight: 600;
   backdrop-filter: blur(18px);
 }
 
 .logcat-banner--info {
-  background: rgba(14, 116, 144, 0.18);
-  border: 1px solid rgba(34, 211, 238, 0.22);
-  color: #d9faff;
+  background: color-mix(in srgb, var(--color-info) 20%, transparent);
+  border: 1px solid var(--color-info);
+  color: var(--color-info);
 }
 
 .logcat-banner--warn {
-  background: rgba(120, 53, 15, 0.22);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  color: #fde68a;
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
 }
 
 .logcat-banner--error {
-  background: rgba(127, 29, 29, 0.26);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  color: #fecaca;
+  background: var(--color-error-glow);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
 }
 
 .logcat-banner--success {
-  background: rgba(20, 83, 45, 0.24);
-  border: 1px solid rgba(34, 197, 94, 0.28);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--color-success) 20%, transparent);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .logcat-summary {
@@ -240,9 +240,9 @@
 }
 
 .logcat-summary__item {
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 0.9rem;
-  background: rgba(8, 12, 24, 0.58);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
   padding: 0.9rem 1rem;
 }
 
@@ -250,11 +250,11 @@
   display: block;
   margin-top: 0.35rem;
   font-size: 1rem;
-  color: #f8fafc;
+  color: var(--color-text-primary);
 }
 
 .logcat-summary__label {
-  color: rgba(148, 163, 184, 0.86);
+  color: var(--color-text-secondary);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.11em;
@@ -262,16 +262,16 @@
 }
 
 .logcat-terminal {
-  background: #070b14;
-  border: 1px solid rgba(56, 189, 248, 0.16);
-  border-radius: 1.1rem;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: auto;
   max-height: 58vh;
   min-height: 420px;
-  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, monospace;
+  font-family: var(--font-mono);
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.22) transparent;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 .logcat-empty-state {
@@ -279,7 +279,7 @@
   place-items: center;
   min-height: 320px;
   padding: 2rem;
-  color: rgba(148, 163, 184, 0.86);
+  color: var(--color-text-secondary);
   text-align: center;
 }
 
@@ -292,42 +292,42 @@
   border: 0;
   border-left: 3px solid transparent;
   background: transparent;
-  color: #dbeafe;
+  color: var(--color-text-primary);
   text-align: left;
   padding: 0.78rem 0.95rem;
 }
 
 .logcat-row:hover {
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-bg-surface);
 }
 
 .logcat-row.selected {
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.24);
+  background: var(--color-bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--color-info);
 }
 
 .logcat-row--verbose {
-  border-left-color: #6b7280;
+  border-left-color: var(--color-text-muted);
 }
 
 .logcat-row--debug {
-  border-left-color: #3b82f6;
+  border-left-color: var(--color-info);
 }
 
 .logcat-row--info {
-  border-left-color: #22c55e;
+  border-left-color: var(--color-success);
 }
 
 .logcat-row--warn {
-  border-left-color: #f59e0b;
+  border-left-color: var(--color-warning);
 }
 
 .logcat-row--error {
-  border-left-color: #ef4444;
+  border-left-color: var(--color-error);
 }
 
 .logcat-row--fatal {
-  border-left-color: #dc2626;
+  border-left-color: var(--color-error);
 }
 
 .logcat-row__timestamp,
@@ -339,7 +339,7 @@
 
 .logcat-row__timestamp,
 .logcat-row__pid {
-  color: rgba(148, 163, 184, 0.92);
+  color: var(--color-text-secondary);
 }
 
 .logcat-row__level {
@@ -348,43 +348,43 @@
   justify-content: center;
   min-height: 1.8rem;
   width: 2.2rem;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.14);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
   font-size: 0.78rem;
   font-weight: 800;
 }
 
 .logcat-row__level--verbose {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .logcat-row__level--debug {
-  color: #60a5fa;
+  color: var(--color-info);
 }
 
 .logcat-row__level--info {
-  color: #4ade80;
+  color: var(--color-success);
 }
 
 .logcat-row__level--warn {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .logcat-row__level--error {
-  color: #f87171;
+  color: var(--color-error);
 }
 
 .logcat-row__level--fatal {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .logcat-row__tag {
-  color: #93c5fd;
+  color: var(--color-info);
   font-weight: 700;
 }
 
 .logcat-row__message {
-  color: #e2e8f0;
+  color: var(--color-text-primary);
   white-space: pre-wrap;
   word-break: break-word;
 }

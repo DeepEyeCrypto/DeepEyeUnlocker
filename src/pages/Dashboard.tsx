@@ -1,20 +1,14 @@
-import { safeInvoke } from "../lib/tauri-utils";
-import { useMemo, useState } from "react";
-import { WaitingQueuePanel } from "../components/WaitingQueuePanel";
-import { useWaitQueue } from "../hooks/useWaitQueue";
-import { TerminalLog } from "../components/ui/TerminalLog";
-import { ProgressStep, type ProgressItem } from "../components/ui/ProgressStep";
-import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
-import { Shield, Smartphone, Settings, Zap } from "lucide-react";
-import {
-  DASHBOARD_COMMANDS,
-  type PlatformTab,
-} from "../lib/dashboard";
-import type {
-  ConnectedDevice,
-  DeviceConnectionState,
-} from "../lib/devices";
-import { isMobile, type Platform } from "../lib/platform";
+import { safeInvoke } from '../lib/tauri-utils';
+import { useMemo, useState } from 'react';
+import { WaitingQueuePanel } from '../components/WaitingQueuePanel';
+import { useWaitQueue } from '../hooks/useWaitQueue';
+import { TerminalLog } from '../components/ui/TerminalLog';
+import { ProgressStep, type ProgressItem } from '../components/ui/ProgressStep';
+import { SpotlightFeatureCard } from '../components/ui/spotlight-feature-card';
+import { Shield, Smartphone, Settings, Zap } from 'lucide-react';
+import { DASHBOARD_COMMANDS, type PlatformTab } from '../lib/dashboard';
+import type { ConnectedDevice, DeviceConnectionState } from '../lib/devices';
+import { isMobile, type Platform } from '../lib/platform';
 
 type ActivationStateResponse = {
   locked?: boolean;
@@ -40,16 +34,16 @@ type DashboardQueuedCommand = {
 };
 
 function formatActivationResult(result: ActivationStateResponse): string {
-  const locked = result.locked ? "Locked" : "Unlocked";
+  const locked = result.locked ? 'Locked' : 'Unlocked';
   const fmiEnabled = result.fmiEnabled ?? result.fmi_enabled ?? false;
-  const removalPath = result.removalPath ?? result.removal_path ?? "Unknown";
+  const removalPath = result.removalPath ?? result.removal_path ?? 'Unknown';
   return [
     `Activation state: ${locked}`,
-    `FMI: ${fmiEnabled ? "enabled" : "disabled"}`,
-    `Model: ${result.model ?? "Unknown"}`,
-    `Chip: ${result.chip ?? "Unknown"}`,
+    `FMI: ${fmiEnabled ? 'enabled' : 'disabled'}`,
+    `Model: ${result.model ?? 'Unknown'}`,
+    `Chip: ${result.chip ?? 'Unknown'}`,
     `Removal path: ${removalPath}`,
-  ].join(" • ");
+  ].join(' • ');
 }
 
 export default function DashboardPage({
@@ -60,27 +54,27 @@ export default function DashboardPage({
   onRefresh,
 }: DashboardPageProps) {
   const mobile = isMobile();
-  const [tab, setTab] = useState<PlatformTab>(platform === "android" ? "android" : "apple");
-  const [logLines, setLogLines] = useState<string[]>(["[info] Dashboard initialized"]);
+  const [tab, setTab] = useState<PlatformTab>(platform === 'android' ? 'android' : 'apple');
+  const [logLines, setLogLines] = useState<string[]>(['[info] Dashboard initialized']);
   const [logCollapsed, setLogCollapsed] = useState(true);
   const [_activeOperation, setActiveOperation] = useState<string | null>(null);
 
   const steps = useMemo<ProgressItem[]>(() => {
     return [
-      { id: "usb", label: "USB Detect", status: connectionState === "idle" ? "idle" : "done" },
+      { id: 'usb', label: 'USB Detect', status: connectionState === 'idle' ? 'idle' : 'done' },
       {
-        id: "scan",
-        label: "Identity Scan",
+        id: 'scan',
+        label: 'Identity Scan',
         status:
-          connectionState === "scanning"
-            ? "active"
-            : connectionState === "connected"
-              ? "done"
-              : connectionState === "error"
-                ? "error"
-                : "idle",
+          connectionState === 'scanning'
+            ? 'active'
+            : connectionState === 'connected'
+              ? 'done'
+              : connectionState === 'error'
+                ? 'error'
+                : 'idle',
       },
-      { id: "ready", label: "Ready", status: connectionState === "connected" ? "done" : "idle" },
+      { id: 'ready', label: 'Ready', status: connectionState === 'connected' ? 'done' : 'idle' },
     ];
   }, [connectionState]);
 
@@ -88,60 +82,61 @@ export default function DashboardPage({
     setLogLines((prev) => [...prev, line]);
   };
 
-  const {
-    waitingOperation,
-    waitingElapsedMs,
-    enqueueOrRunOperation,
-    cancelQueuedOperation,
-  } = useWaitQueue<DashboardQueuedCommand>({
-    isDeviceCompatible: (connectedDevice) => connectedDevice.source === "apple",
-    onQueued: (operation) => {
-      addLog(`[queue] Waiting for device... ${operation.name} queued.`);
-    },
-    onDeviceDetected: (connectedDevice, operation) => {
-      addLog(`[queue] Device detected! Starting ${operation.name} on ${connectedDevice.model}...`);
-    },
-    onError: (message) => {
-      addLog(`[error] ${message}`);
-      setActiveOperation(null);
-    },
-    onExecute: async (connectedDevice, operation) => {
-      setActiveOperation(operation.name);
-      try {
-        if (operation.params.command === DASHBOARD_COMMANDS.CHECK_FMI) {
-          const enabled = await safeInvoke<boolean>(operation.params.command, { udid: connectedDevice.id });
-          addLog(`[info] Find My is ${enabled ? "enabled" : "disabled"}.`);
-          return;
-        }
-
-        if (operation.params.command === DASHBOARD_COMMANDS.CHECK_ACTIVATION) {
-          const result = await safeInvoke<ActivationStateResponse>(operation.params.command, {
-            udid: connectedDevice.id,
-          });
-          addLog(`[info] ${formatActivationResult(result)}`);
-          return;
-        }
-
-        const args = {
-          ...operation.params.args,
-          ...(operation.params.command === DASHBOARD_COMMANDS.CHECK_SHSH && !operation.params.args.model
-            ? { model: connectedDevice.model }
-            : {}),
-        };
-
-        const result = await safeInvoke<string>(operation.params.command, args);
-        if (result.trim()) {
-          addLog(result.trim());
-          return;
-        }
-        addLog(`[info] ${operation.name} completed.`);
-      } catch (executeError: unknown) {
-        addLog(`[error] ${String(executeError)}`);
-      } finally {
+  const { waitingOperation, waitingElapsedMs, enqueueOrRunOperation, cancelQueuedOperation } =
+    useWaitQueue<DashboardQueuedCommand>({
+      isDeviceCompatible: (connectedDevice) => connectedDevice.source === 'apple',
+      onQueued: (operation) => {
+        addLog(`[queue] Waiting for device... ${operation.name} queued.`);
+      },
+      onDeviceDetected: (connectedDevice, operation) => {
+        addLog(
+          `[queue] Device detected! Starting ${operation.name} on ${connectedDevice.model}...`,
+        );
+      },
+      onError: (message) => {
+        addLog(`[error] ${message}`);
         setActiveOperation(null);
-      }
-    },
-  });
+      },
+      onExecute: async (connectedDevice, operation) => {
+        setActiveOperation(operation.name);
+        try {
+          if (operation.params.command === DASHBOARD_COMMANDS.CHECK_FMI) {
+            const enabled = await safeInvoke<boolean>(operation.params.command, {
+              udid: connectedDevice.id,
+            });
+            addLog(`[info] Find My is ${enabled ? 'enabled' : 'disabled'}.`);
+            return;
+          }
+
+          if (operation.params.command === DASHBOARD_COMMANDS.CHECK_ACTIVATION) {
+            const result = await safeInvoke<ActivationStateResponse>(operation.params.command, {
+              udid: connectedDevice.id,
+            });
+            addLog(`[info] ${formatActivationResult(result)}`);
+            return;
+          }
+
+          const args = {
+            ...operation.params.args,
+            ...(operation.params.command === DASHBOARD_COMMANDS.CHECK_SHSH &&
+            !operation.params.args.model
+              ? { model: connectedDevice.model }
+              : {}),
+          };
+
+          const result = await safeInvoke<string>(operation.params.command, args);
+          if (result.trim()) {
+            addLog(result.trim());
+            return;
+          }
+          addLog(`[info] ${operation.name} completed.`);
+        } catch (executeError: unknown) {
+          addLog(`[error] ${String(executeError)}`);
+        } finally {
+          setActiveOperation(null);
+        }
+      },
+    });
 
   const queueDashboardAction = async (
     name: string,
@@ -156,17 +151,41 @@ export default function DashboardPage({
       <div className="row-between">
         <h2 className="page-title">Dashboard</h2>
         <div className="tab-row tab-bar" role="tablist" aria-label="Platform tabs">
-          <button className={`btn btn-sm tab-btn ${tab === "android" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("android")}>Android</button>
-          <button className={`btn btn-sm tab-btn ${tab === "apple" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("apple")}>Apple</button>
-          <button className={`btn btn-sm tab-btn ${tab === "tools" ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab("tools")}>Tools</button>
+          <button
+            className={`btn btn-sm tab-btn ${tab === 'android' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setTab('android')}
+          >
+            Android
+          </button>
+          <button
+            className={`btn btn-sm tab-btn ${tab === 'apple' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setTab('apple')}
+          >
+            Apple
+          </button>
+          <button
+            className={`btn btn-sm tab-btn ${tab === 'tools' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setTab('tools')}
+          >
+            Tools
+          </button>
         </div>
       </div>
 
       <ProgressStep steps={steps} />
 
-      <div className="card glass glass-hover metric-card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', borderRadius: '0px', borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-        <div style={{ padding: '1rem', background: 'rgba(0, 212, 255, 0.1)', borderRadius: '0px', color: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="glass glass-hover metric-card mb-4 flex items-center gap-4 flex-wrap">
+        <div className="p-4 bg-cyan-400/10 text-cyan-400 border border-cyan-400 rounded-lg">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="4" y="4" width="16" height="16" rx="0" ry="0" />
             <rect x="9" y="9" width="6" height="6" />
             <line x1="9" y1="1" x2="9" y2="4" />
@@ -180,24 +199,28 @@ export default function DashboardPage({
           </svg>
         </div>
         <div>
-          <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.125rem', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>LIVE ORCHESTRATION</h3>
-          <p style={{ margin: '0.25rem 0 0 0', color: 'var(--accent-cyan)', fontSize: '0.875rem', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>
+          <h3 className="m-0 font-bold text-lg font-display text-white">LIVE ORCHESTRATION</h3>
+          <p className="mt-1 text-cyan-400 text-sm font-mono tracking-widest uppercase">
             A12+ SIGNAL BYPASS READY
           </p>
         </div>
       </div>
 
-      {platform === "android" && (
+      {platform === 'android' && (
         <div className="runtime-note">
           Android runtime detected. Desktop Apple probe commands are disabled on device.
         </div>
       )}
-      {connectionState === "idle" && <div className="panel pulse-panel">No device connected</div>}
-      {connectionState === "scanning" && <div className="panel pulse-panel">Scanning for connected devices...</div>}
-      {connectionState === "error" && (
+      {connectionState === 'idle' && <div className="panel pulse-panel">No device connected</div>}
+      {connectionState === 'scanning' && (
+        <div className="panel pulse-panel">Scanning for connected devices...</div>
+      )}
+      {connectionState === 'error' && (
         <div className="danger-note row-between">
-          <span>{error || "Connection error"}</span>
-          <button className="action-btn" onClick={() => void onRefresh()}>Retry</button>
+          <span>{error || 'Connection error'}</span>
+          <button className="action-btn" onClick={() => void onRefresh()}>
+            Retry
+          </button>
         </div>
       )}
 
@@ -214,35 +237,39 @@ export default function DashboardPage({
           title="Check FMI"
           description="Check Find My iPhone status and activation state"
           glowColor="blue"
-          onClick={() => queueDashboardAction("Check FMI", DASHBOARD_COMMANDS.CHECK_FMI)}
+          onClick={() => queueDashboardAction('Check FMI', DASHBOARD_COMMANDS.CHECK_FMI)}
         />
-        
+
         <SpotlightFeatureCard
           icon={<Smartphone className="w-6 h-6 text-purple-400" />}
           title="Check SHSH"
           description="Verify signed iOS versions for your device"
           glowColor="purple"
-          onClick={() => queueDashboardAction("Check SHSH", DASHBOARD_COMMANDS.CHECK_SHSH, {
-            model: device?.model ?? "",
-          })}
+          onClick={() =>
+            queueDashboardAction('Check SHSH', DASHBOARD_COMMANDS.CHECK_SHSH, {
+              model: device?.model ?? '',
+            })
+          }
         />
-        
+
         <SpotlightFeatureCard
           icon={<Settings className="w-6 h-6 text-green-400" />}
           title="Activation"
           description="Check device activation state and FMI status"
           glowColor="green"
-          onClick={() => queueDashboardAction("Activation", DASHBOARD_COMMANDS.CHECK_ACTIVATION, {
-            udid: device?.id ?? "",
-          })}
+          onClick={() =>
+            queueDashboardAction('Activation', DASHBOARD_COMMANDS.CHECK_ACTIVATION, {
+              udid: device?.id ?? '',
+            })
+          }
         />
-        
+
         <SpotlightFeatureCard
           icon={<Zap className="w-6 h-6 text-orange-400" />}
           title="Restore"
           description="Restore device from latest backup"
           glowColor="orange"
-          onClick={() => queueDashboardAction("Restore", DASHBOARD_COMMANDS.RESTORE_LATEST)}
+          onClick={() => queueDashboardAction('Restore', DASHBOARD_COMMANDS.RESTORE_LATEST)}
         />
       </div>
 
@@ -256,11 +283,18 @@ export default function DashboardPage({
             Live Logs
           </button>
           <div className="row-between">
-            <button className="btn btn-ghost btn-sm" onClick={() => setLogLines([])}>Clear</button>
-            <button className="btn btn-ghost btn-sm" onClick={() => navigator.clipboard.writeText(logLines.join("\n"))}>Copy All</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setLogLines([])}>
+              Clear
+            </button>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigator.clipboard.writeText(logLines.join('\n'))}
+            >
+              Copy All
+            </button>
             {mobile && (
               <button className="btn btn-ghost btn-sm" onClick={() => setLogCollapsed((v) => !v)}>
-                {logCollapsed ? "Expand" : "Collapse"}
+                {logCollapsed ? 'Expand' : 'Collapse'}
               </button>
             )}
           </div>

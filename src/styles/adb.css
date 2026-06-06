@@ -3,10 +3,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: #0a0e1a;
+  background: var(--color-bg-base);
   min-height: 100vh;
-  color: #e2e8f0;
-  font-family: "JetBrains Mono", monospace;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
   position: relative;
   z-index: 1;
 }
@@ -27,7 +27,7 @@
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #60a5fa;
+  color: var(--color-info);
   position: relative;
   z-index: 100;
 }
@@ -36,23 +36,24 @@
 
 .adb-status {
   padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: #1e293b;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-muted);
   position: relative;
   z-index: 100;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-.adb-status--connected { background: #064e3b; color: #34d399; }
-.adb-status--scanning  { background: #1e3a5f; color: #60a5fa; }
-.adb-status--executing { background: #1e3a5f; color: #93c5fd; }
-.adb-status--erasing_frp { background: #7f1d1d; color: #f87171; }
-.adb-status--error     { background: #7f1d1d; color: #f87171; }
+.adb-status--connected { background: color-mix(in srgb, var(--color-success) 20%, transparent); color: var(--color-success); }
+.adb-status--scanning  { background: color-mix(in srgb, var(--color-info) 20%, transparent); color: var(--color-info); }
+.adb-status--executing { background: color-mix(in srgb, var(--color-info) 20%, transparent); color: var(--color-info); }
+.adb-status--erasing_frp { background: var(--color-error-glow); color: var(--color-error); }
+.adb-status--error     { background: var(--color-error-glow); color: var(--color-error); }
 
 .adb-scan-row {
   display: flex;
@@ -61,36 +62,36 @@
 
 .adb-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  background: #1e293b;
-  color: #94a3b8;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 0.85rem;
   font-family: inherit;
   transition: all 0.15s;
 }
 
-.adb-btn:hover { border-color: #60a5fa; color: #60a5fa; }
-.adb-btn--primary { background: #1e3a5f; border-color: #3b82f6; color: #93c5fd; }
-.adb-btn--primary:hover { background: #2563eb; color: white; }
-.adb-btn--secondary { border-color: #4b5563; color: #9ca3af; }
-.adb-btn--danger { border-color: #ef4444; color: #f87171; }
-.adb-btn--danger:hover { background: #7f1d1d; }
+.adb-btn:hover { border-color: var(--color-info); color: var(--color-info); }
+.adb-btn--primary { background: color-mix(in srgb, var(--color-info) 20%, transparent); border-color: var(--color-info); color: var(--color-info); }
+.adb-btn--primary:hover { background: var(--color-info); color: white; }
+.adb-btn--secondary { border-color: var(--color-border); color: var(--color-text-secondary); }
+.adb-btn--danger { border-color: var(--color-error); color: var(--color-error); }
+.adb-btn--danger:hover { background: var(--color-error-glow); }
 
 .adb-error {
   padding: 0.75rem;
-  background: #7f1d1d33;
-  border: 1px solid #ef4444;
-  border-radius: 6px;
-  color: #f87171;
+  background: var(--color-error-glow);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  color: var(--color-error);
   font-size: 0.85rem;
 }
 
 .adb-card {
-  background: #111827;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 1rem;
   position: relative;
   z-index: 5;
@@ -109,9 +110,9 @@
 .adb-table th {
   text-align: left;
   padding: 0.5rem;
-  color: #4b5563;
+  color: var(--color-text-muted);
   font-weight: 600;
-  border-bottom: 1px solid #1f2937;
+  border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -119,25 +120,25 @@
 
 .adb-table td {
   padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid #1f293733;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
 }
 
 .adb-table tr { cursor: pointer; transition: background 0.1s; }
-.adb-table tr:hover { background: #1e293b; }
-.adb-row--selected { background: #1e3a5f !important; }
+.adb-table tr:hover { background: color-mix(in srgb, var(--color-bg-elevated) 50%, transparent); }
+.adb-row--selected { background: color-mix(in srgb, var(--color-info) 20%, transparent) !important; }
 
-.adb-serial { color: #60a5fa; font-family: monospace; }
+.adb-serial { color: var(--color-info); font-family: var(--font-mono); }
 
-.adb-state { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; }
-.adb-state--device   { background: #064e3b; color: #34d399; }
-.adb-state--offline  { background: #451a03; color: #fb923c; }
-.adb-state--recovery { background: #312e81; color: #a5b4fc; }
-.adb-state--bootloader { background: #1e3a5f; color: #60a5fa; }
+.adb-state { padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-size: 0.75rem; }
+.adb-state--device   { background: color-mix(in srgb, var(--color-success) 20%, transparent); color: var(--color-success); }
+.adb-state--offline  { background: color-mix(in srgb, var(--color-warning) 20%, transparent); color: var(--color-warning); }
+.adb-state--recovery { background: var(--color-purple-glow); color: var(--color-purple); }
+.adb-state--bootloader { background: color-mix(in srgb, var(--color-info) 20%, transparent); color: var(--color-info); }
 
 .adb-device-info h2,
 .adb-card h2 {
   font-size: 0.9rem;
-  color: #60a5fa;
+  color: var(--color-info);
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -150,9 +151,9 @@
 }
 
 .adb-info-grid > div {
-  background: #1e293b;
+  background: var(--color-bg-secondary);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -162,8 +163,8 @@
   -webkit-backdrop-filter: none !important;
 }
 
-.adb-info-grid span { font-size: 0.65rem; color: #4b5563; text-transform: uppercase; }
-.adb-info-grid strong { font-size: 0.85rem; color: #e2e8f0; }
+.adb-info-grid span { font-size: 0.65rem; color: var(--color-text-secondary); text-transform: uppercase; }
+.adb-info-grid strong { font-size: 0.85rem; color: var(--color-text-primary); }
 
 .adb-ops-grid {
   display: flex;
@@ -178,16 +179,16 @@
   margin-bottom: 0.75rem;
 }
 
-.adb-prompt { color: #60a5fa; font-size: 1rem; }
+.adb-prompt { color: var(--color-info); font-size: 1rem; }
 
 .adb-shell-input {
   flex: 1;
-  background: #0a0e1a;
-  border: 1px solid #1f2937;
-  border-radius: 6px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0.5rem 0.75rem;
-  color: #e2e8f0;
-  font-family: "JetBrains Mono", monospace;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   outline: none;
   position: relative;
@@ -196,12 +197,12 @@
   -webkit-backdrop-filter: none !important;
 }
 
-.adb-shell-input:focus { border-color: #3b82f6; }
+.adb-shell-input:focus { border-color: var(--color-info); }
 
 .adb-shell-output {
-  background: #070b14;
-  border: 1px solid #1f2937;
-  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-bg-base) 80%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
   max-height: 240px;
   overflow-y: auto;
@@ -211,7 +212,7 @@
   z-index: 10;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 4px color-mix(in srgb, var(--color-bg-base) 30%, transparent);
 }
 
 .adb-shell-output::-webkit-scrollbar {
@@ -219,21 +220,21 @@
 }
 
 .adb-shell-output::-webkit-scrollbar-track {
-  background: #0a0e1a;
+  background: var(--color-bg-base);
   border-radius: 4px;
 }
 
 .adb-shell-output::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--color-border);
   border-radius: 4px;
 }
 
 .adb-shell-output::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--color-text-muted);
 }
 
 .adb-cmd-line { 
-  color: #60a5fa;
+  color: var(--color-info);
   font-weight: 600;
   margin-top: 0.5rem;
 }
@@ -241,7 +242,7 @@
   margin-top: 0;
 }
 .adb-out-line { 
-  color: #e2e8f0;
+  color: var(--color-text-primary);
   padding-left: 0.5rem;
 }
 

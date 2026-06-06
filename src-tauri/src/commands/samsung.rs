@@ -128,17 +128,16 @@ pub fn find_samsung_device() -> Result<SamsungDevice, SamsungError> {
     Err(SamsungError::DeviceNotFound)
 }
 
-pub fn samsung_odin_handshake() -> Result<OdinInfo, SamsungError> {
-    let handle = open_samsung()?;
-    write_bulk(&handle, b"ODIN")?;
-    let resp = read_bulk(&handle, 8)?;
+fn do_odin_handshake(handle: &DeviceHandle<GlobalContext>) -> Result<OdinInfo, SamsungError> {
+    write_bulk(handle, b"ODIN")?;
+    let resp = read_bulk(handle, 8)?;
     let resp_str = String::from_utf8_lossy(&resp);
     if !resp_str.contains("LOKE") {
         return Err(SamsungError::HandshakeFailed);
     }
     // request session info
-    write_bulk(&handle, &[0x64, 0x00, 0x00, 0x00])?;
-    let info = read_bulk(&handle, 256)?;
+    write_bulk(handle, &[0x64, 0x00, 0x00, 0x00])?;
+    let info = read_bulk(handle, 256)?;
     let pit_size = if info.len() >= 8 {
         u32::from_le_bytes([info[4], info[5], info[6], info[7]])
     } else {
@@ -150,8 +149,14 @@ pub fn samsung_odin_handshake() -> Result<OdinInfo, SamsungError> {
     })
 }
 
+pub fn samsung_odin_handshake() -> Result<OdinInfo, SamsungError> {
+    let handle = open_samsung()?;
+    do_odin_handshake(&handle)
+}
+
 pub fn samsung_read_pit() -> Result<Vec<PitEntry>, SamsungError> {
     let handle = open_samsung()?;
+    do_odin_handshake(&handle)?;
 
     // Request PIT dump: cmd 0x65
     write_bulk(&handle, &[0x65, 0x00, 0x00, 0x00])?;
@@ -228,6 +233,7 @@ pub fn samsung_flash_partition(
     on_progress: impl Fn(u32),
 ) -> Result<(), SamsungError> {
     let handle = open_samsung()?;
+    do_odin_handshake(&handle)?;
     let data = std::fs::read(file_path).map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
 
     let total = data.len();
@@ -272,9 +278,22 @@ pub fn samsung_erase_frp() -> Result<(), SamsungError> {
         .ok_or(SamsungError::FlashFailed("frp partition not found".into()))?;
 
     let size = frp.size as usize;
-    let zeros = vec![0u8; size];
     let tmp = std::env::temp_dir().join("frp_zero.bin");
-    std::fs::write(&tmp, &zeros).map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
+
+    use std::io::Write;
+    let mut file =
+        std::fs::File::create(&tmp).map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
+    let chunk_size = 1048576; // 1MB chunks
+    let zeros = vec![0u8; chunk_size];
+    let mut written = 0;
+    while written < size {
+        let to_write = std::cmp::min(chunk_size, size - written);
+        file.write_all(&zeros[..to_write])
+            .map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
+        written += to_write;
+    }
+    file.sync_all()
+        .map_err(|e| SamsungError::FlashFailed(e.to_string()))?;
 
     samsung_flash_partition("frp", &tmp, |_| {})?;
     let _ = std::fs::remove_file(&tmp);

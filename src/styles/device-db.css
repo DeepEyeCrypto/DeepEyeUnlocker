@@ -3,10 +3,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: #080a12;
+  background: var(--color-bg-base);
   min-height: 100vh;
-  color: #e2e8f0;
-  font-family: "JetBrains Mono", monospace;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
 }
 
 .db-header {
@@ -25,18 +25,18 @@
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
-.db-icon { color: #f59e0b; }
+.db-icon { color: var(--color-warning); }
 
 .db-count {
   font-size: 0.75rem;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   padding: 0.25rem 0.75rem;
-  background: #1f2937;
-  border-radius: 999px;
-  border: 1px solid #374151;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
 }
 
 /* Search */
@@ -50,17 +50,17 @@
 .db-search-icon {
   position: absolute;
   left: 0.75rem;
-  color: #4b5563;
+  color: var(--color-text-muted);
   pointer-events: none;
 }
 
 .db-search-input {
   width: 100%;
   padding: 0.6rem 0.75rem 0.6rem 2.25rem;
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: 8px;
-  color: #e2e8f0;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.85rem;
   outline: none;
@@ -68,12 +68,12 @@
 }
 
 .db-search-input:focus {
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+  border-color: var(--color-warning);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-warning) 15%, transparent);
 }
 
 .db-searching {
-  color: #f59e0b;
+  color: var(--color-warning);
   font-size: 0.9rem;
   animation: pulse 1s infinite;
 }
@@ -90,16 +90,16 @@
 }
 
 .db-device-card {
-  background: #111827;
-  border: 1px solid #1f2937;
-  border-radius: 10px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .db-device-card:hover {
-  border-color: #f59e0b44;
-  background: #1a1f2e;
+  border-color: color-mix(in srgb, var(--color-warning) 26%, transparent);
+  background: var(--color-bg-elevated);
 }
 
 .db-device-header {
@@ -112,18 +112,18 @@
 .db-device-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: var(--color-text-primary);
 }
 
 .db-codename {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-left: 0.4rem;
 }
 
 .db-device-soc {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin-top: 0.2rem;
   display: flex;
   align-items: center;
@@ -133,13 +133,13 @@
 
 .db-device-notes {
   font-size: 0.7rem;
-  color: #f59e0b99;
+  color: color-mix(in srgb, var(--color-warning) 60%, transparent);
   margin-top: 0.2rem;
 }
 
 .db-badge {
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid;
   font-size: 0.65rem;
   font-weight: 600;
@@ -151,10 +151,10 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.4rem 0.85rem;
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 6px;
-  color: #f59e0b;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-warning);
   font-family: inherit;
   font-size: 0.75rem;
   cursor: pointer;
@@ -164,12 +164,12 @@
 }
 
 .db-route-btn:hover {
-  background: #92400e33;
-  border-color: #f59e0b;
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-color: var(--color-warning);
 }
 
 .db-empty {
-  color: #374151;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   text-align: center;
   padding: 2rem;
@@ -177,16 +177,16 @@
 
 /* Routing Card */
 .db-routing-card {
-  background: #111827;
-  border: 1px solid #92400e55;
-  border-radius: 10px;
+  background: var(--color-bg-surface);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  border-radius: var(--radius-md);
   padding: 1rem;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-warning) 8%, transparent);
 }
 
 .db-routing-card h2 {
   font-size: 0.85rem;
-  color: #f59e0b;
+  color: var(--color-warning);
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -200,9 +200,9 @@
 }
 
 .db-routing-grid > div {
-  background: #1f2937;
+  background: var(--color-bg-secondary);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -210,37 +210,37 @@
 
 .db-routing-grid span {
   font-size: 0.65rem;
-  color: #4b5563;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
 .db-routing-grid strong {
   font-size: 0.82rem;
-  color: #f3f4f6;
+  color: var(--color-text-primary);
 }
 
-.db-route-path { color: #f59e0b; }
+.db-route-path { color: var(--color-warning); }
 
 .db-go-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 1.25rem;
-  background: linear-gradient(135deg, #92400e, #b45309);
-  border: 1px solid #f59e0b55;
-  border-radius: 8px;
-  color: #fef3c7;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 50%, var(--color-bg-base)), color-mix(in srgb, var(--color-warning) 70%, var(--color-bg-base)));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  border-radius: var(--radius-sm);
+  color: color-mix(in srgb, var(--color-warning) 20%, white);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 0 12px rgba(245,158,11,0.2);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-warning) 20%, transparent);
 }
 
 .db-go-btn:hover {
-  background: linear-gradient(135deg, #b45309, #d97706);
-  box-shadow: 0 0 20px rgba(245,158,11,0.4);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 70%, var(--color-bg-base)), var(--color-warning));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-warning) 40%, transparent);
   transform: translateY(-1px);
 }
 
@@ -250,9 +250,9 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.75rem;
-  background: #111827;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .db-legend-item {

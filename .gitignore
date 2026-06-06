@@ -37,3 +37,4 @@ src-tauri/target/
 # vendored python tools — strip their git history
 src-tauri/python/**/.git
 local.properties
+.vscode/roo-cline-mcp.json

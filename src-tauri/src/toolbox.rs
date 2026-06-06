@@ -40,3 +40,8 @@ pub async fn toolbox_get_logs(app: AppHandle) -> Result<String, String> {
 pub async fn toolbox_backup_device(app: AppHandle, path: String) -> Result<String, String> {
     run_bash(&app, &format!("idevicebackup2 backup '{path}' 2>&1")).await
 }
+/// Clear local baseband data cache
+#[tauri::command]
+pub async fn toolbox_clear_baseband(app: AppHandle) -> Result<String, String> {
+    run_bash(&app, "rm -rf /var/lib/deepeye/baseband_cache/* 2>&1").await
+}

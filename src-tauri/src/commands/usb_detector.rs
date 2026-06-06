@@ -1,7 +1,7 @@
 use rusb::{Context, UsbContext};
 use serde::Serialize;
 use std::time::Duration;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -141,6 +141,12 @@ pub fn start_usb_watcher(app: AppHandle) {
                     }
 
                     app.emit("usb-devices-changed", &detected).ok();
+
+                    if let Some(coordinator) =
+                        app.try_state::<crate::device::coordinator::DeviceProbeCoordinator>()
+                    {
+                        coordinator.handle_usb_change(detected.clone(), &app);
+                    }
 
                     // Feature 2: Auto-detect chipset/platform
                     for dev in &detected {

@@ -25,7 +25,7 @@ import com.deepeye.otg.ui.theme.DeepEyeType
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun GlassTabRow(
@@ -50,7 +50,7 @@ fun GlassTabRow(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .then(
-                if (!performanceMode) Modifier.hazeEffect(state = hazeState, style = hazeStyle)
+                if (!performanceMode) Modifier.hazeChild(state = hazeState, style = hazeStyle)
                 else Modifier.background(com.deepeye.otg.ui.theme.DeepEyeColors.BG_SURFACE)
             )
             .border(1.dp, com.deepeye.otg.ui.theme.DeepEyeColors.WHITE_LOW.copy(0.3f), RoundedCornerShape(16.dp)),

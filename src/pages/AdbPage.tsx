@@ -1,23 +1,23 @@
-import { useState } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { SpotlightFeatureCard } from "../components/ui/spotlight-feature-card";
-import { DeviceInfoDashboard } from "../components/device/DeviceInfoDashboard";
-import { Terminal, Smartphone, Download, Upload, RotateCcw, Trash } from "lucide-react";
-import { useAdb } from "../hooks/useAdb";
-import "../styles/adb.css";
+import { useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { SpotlightFeatureCard } from '../components/ui/spotlight-feature-card';
+import { DeviceInfoDashboard } from '../components/device/DeviceInfoDashboard';
+import { Terminal, Smartphone, Download, Upload, RotateCcw, Trash } from 'lucide-react';
+import { useAdb } from '../hooks/useAdb';
+import '../styles/adb.css';
 
 const STATUS_LABEL: Record<string, string> = {
-  idle: "Idle",
-  scanning: "Scanning...",
-  connected: "Connected",
-  executing: "Executing...",
-  installing: "Installing...",
-  pushing: "Pushing...",
-  pulling: "Pulling...",
-  rebooting: "Rebooting...",
-  sideloading: "Sideloading...",
-  erasing_frp: "Erasing FRP...",
-  error: "Error",
+  idle: 'Idle',
+  scanning: 'Scanning...',
+  connected: 'Connected',
+  executing: 'Executing...',
+  installing: 'Installing...',
+  pushing: 'Pushing...',
+  pulling: 'Pulling...',
+  rebooting: 'Rebooting...',
+  sideloading: 'Sideloading...',
+  erasing_frp: 'Erasing FRP...',
+  error: 'Error',
 };
 
 export default function AdbPage() {
@@ -38,7 +38,7 @@ export default function AdbPage() {
     eraseFrp,
   } = useAdb();
 
-  const [shellInput, setShellInput] = useState("");
+  const [shellInput, setShellInput] = useState('');
   const [shellOutput, setShellOutput] = useState<string[]>([]);
   const [lastScanned, setLastScanned] = useState<Date | null>(null);
 
@@ -46,15 +46,11 @@ export default function AdbPage() {
     if (!shellInput.trim()) return;
     try {
       const out = await shellCommand(shellInput);
-      setShellOutput((prev) => [
-        ...prev,
-        `$ ${shellInput}`,
-        out || "(no output)",
-      ]);
+      setShellOutput((prev) => [...prev, `$ ${shellInput}`, out || '(no output)']);
     } catch (e: any) {
       setShellOutput((prev) => [...prev, `$ ${shellInput}`, `ERROR: ${e}`]);
     }
-    setShellInput("");
+    setShellInput('');
   };
 
   const handleScanDevices = async () => {
@@ -63,17 +59,17 @@ export default function AdbPage() {
   };
 
   const handleInstall = async () => {
-    const file = await open({ filters: [{ name: "APK", extensions: ["apk"] }] });
+    const file = await open({ filters: [{ name: 'APK', extensions: ['apk'] }] });
     if (file) await installApk(file as string);
   };
 
   const handlePush = async () => {
     const file = await open();
-    if (file) await pushFile(file as string, `/sdcard/${(file as string).split("/").pop()}`);
+    if (file) await pushFile(file as string, `/sdcard/${(file as string).split('/').pop()}`);
   };
 
   const handleSideload = async () => {
-    const file = await open({ filters: [{ name: "ZIP", extensions: ["zip"] }] });
+    const file = await open({ filters: [{ name: 'ZIP', extensions: ['zip'] }] });
     if (file) await sideloadZip(file as string);
   };
 
@@ -84,7 +80,15 @@ export default function AdbPage() {
           <span className="adb-icon">📱</span>
           <h1>ADB DEVICES</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+          }}
+        >
           {lastScanned && (
             <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
               Last scan: {lastScanned.toLocaleTimeString()}
@@ -97,7 +101,10 @@ export default function AdbPage() {
       </div>
 
       {/* ADB Actions - Spotlight Cards */}
-      <div className="tools-grid" style={{ position: 'relative', zIndex: 10, marginBottom: '1.5rem' }}>
+      <div
+        className="tools-grid"
+        style={{ position: 'relative', zIndex: 10, marginBottom: '1.5rem' }}
+      >
         <SpotlightFeatureCard
           icon={<Smartphone className="w-5 h-5 text-cyan-400" />}
           title="Scan Devices"
@@ -105,7 +112,7 @@ export default function AdbPage() {
           glowColor="blue"
           onClick={handleScanDevices}
         />
-        
+
         {selectedSerial && (
           <SpotlightFeatureCard
             icon={<Terminal className="w-5 h-5 text-purple-400" />}
@@ -115,7 +122,7 @@ export default function AdbPage() {
             onClick={getDeviceInfo}
           />
         )}
-        
+
         {selectedSerial && (
           <>
             <SpotlightFeatureCard
@@ -123,7 +130,7 @@ export default function AdbPage() {
               title="Reboot"
               description="Reboot to system"
               glowColor="green"
-              onClick={() => rebootDevice("system")}
+              onClick={() => rebootDevice('system')}
             />
             <SpotlightFeatureCard
               icon={<Download className="w-5 h-5 text-orange-400" />}
@@ -154,8 +161,18 @@ export default function AdbPage() {
 
       {/* Device List */}
       {devices.length > 0 && (
-        <div className="adb-card" style={{ marginTop: '1rem' }}>
-          <h2 style={{ fontSize: '0.9rem', color: '#60a5fa', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Connected Devices</h2>
+        <div className="glass glass-hover" style={{ marginTop: '1rem' }}>
+          <h2
+            style={{
+              fontSize: '0.9rem',
+              color: '#60a5fa',
+              marginBottom: '0.75rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            Connected Devices
+          </h2>
           <table className="adb-table">
             <thead>
               <tr>
@@ -169,19 +186,15 @@ export default function AdbPage() {
               {devices.map((d) => (
                 <tr
                   key={d.serial}
-                  className={
-                    selectedSerial === d.serial ? "adb-row--selected" : ""
-                  }
+                  className={selectedSerial === d.serial ? 'adb-row--selected' : ''}
                   onClick={() => selectDevice(d.serial)}
                 >
                   <td className="adb-serial">{d.serial}</td>
-                  <td>{d.model || "—"}</td>
+                  <td>{d.model || '—'}</td>
                   <td>
-                    <span className={`adb-state adb-state--${d.state}`}>
-                      {d.state}
-                    </span>
+                    <span className={`adb-state adb-state--${d.state}`}>{d.state}</span>
                   </td>
-                  <td>{d.android_version || "—"}</td>
+                  <td>{d.android_version || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -191,41 +204,41 @@ export default function AdbPage() {
 
       {/* Device Info - Enhanced Dashboard */}
       {deviceInfo && (
-        <div className="adb-card adb-device-info" style={{ marginTop: '1rem', padding: '0' }}>
+        <div
+          className="glass glass-hover adb-device-info"
+          style={{ marginTop: '1rem', padding: '0' }}
+        >
           <DeviceInfoDashboard info={deviceInfo} />
         </div>
       )}
 
       {/* Operations */}
       {selectedSerial && (
-        <div className="adb-card" style={{ marginTop: '1rem' }}>
+        <div className="glass glass-hover" style={{ marginTop: '1rem' }}>
           <h2>Quick Operations</h2>
           <div className="adb-ops-grid">
-            <button className="adb-btn" onClick={() => rebootDevice("system")}>
+            <button className="btn" onClick={() => rebootDevice('system')}>
               Reboot System
             </button>
-            <button className="adb-btn" onClick={() => rebootDevice("recovery")}>
+            <button className="btn" onClick={() => rebootDevice('recovery')}>
               Recovery
             </button>
-            <button className="adb-btn" onClick={() => rebootDevice("bootloader")}>
+            <button className="btn" onClick={() => rebootDevice('bootloader')}>
               Bootloader
             </button>
-            <button className="adb-btn" onClick={() => rebootDevice("edl")}>
+            <button className="btn" onClick={() => rebootDevice('edl')}>
               EDL Mode
             </button>
-            <button className="adb-btn" onClick={handleInstall}>
+            <button className="btn" onClick={handleInstall}>
               Install APK
             </button>
-            <button className="adb-btn" onClick={handlePush}>
+            <button className="btn" onClick={handlePush}>
               Push File
             </button>
-            <button className="adb-btn" onClick={handleSideload}>
+            <button className="btn" onClick={handleSideload}>
               Sideload ZIP
             </button>
-            <button
-              className="adb-btn adb-btn--danger"
-              onClick={eraseFrp}
-            >
+            <button className="btn btn-danger" onClick={eraseFrp}>
               Erase FRP ⚠
             </button>
           </div>
@@ -234,7 +247,7 @@ export default function AdbPage() {
 
       {/* Shell */}
       {selectedSerial && (
-        <div className="adb-card adb-shell-card" style={{ marginTop: '1rem' }}>
+        <div className="glass glass-hover adb-shell-card" style={{ marginTop: '1rem' }}>
           <h2>ADB Shell Terminal</h2>
           <div className="adb-shell-input-row">
             <span className="adb-prompt">$</span>
@@ -242,19 +255,16 @@ export default function AdbPage() {
               className="adb-shell-input"
               value={shellInput}
               onChange={(e) => setShellInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleShell()}
+              onKeyDown={(e) => e.key === 'Enter' && handleShell()}
               placeholder="shell command..."
             />
-            <button className="adb-btn adb-btn--primary" onClick={handleShell}>
+            <button className="btn btn-primary" onClick={handleShell}>
               Run
             </button>
           </div>
           <div className="adb-shell-output">
             {shellOutput.map((line, i) => (
-              <div
-                key={i}
-                className={line.startsWith("$") ? "adb-cmd-line" : "adb-out-line"}
-              >
+              <div key={i} className={line.startsWith('$') ? 'adb-cmd-line' : 'adb-out-line'}>
                 {line}
               </div>
             ))}

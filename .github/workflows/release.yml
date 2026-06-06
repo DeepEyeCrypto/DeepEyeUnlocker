@@ -1,530 +1,156 @@
-name: DeepEyeUnlocker Release
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || github.ref_name }}
-  RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', github.event.inputs.release_tag) || github.ref }}
+name: Release
 
 on:
   push:
     tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: Git tag to release
-        required: true
-        type: string
+      - 'v*.*.*'
 
 permissions:
   contents: write
 
 jobs:
-  tauri-build:
-    name: Tauri build ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        uses: orhun/git-cliff-action@v3
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGELOG_RELEASE.md
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: DeepEyeUnlocker ${{ github.ref_name }}
+          body_path: CHANGELOG_RELEASE.md
+          draft: true
+          prerelease: false
+
+  build-tauri:
+    name: Build (${{ matrix.os }})
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            bundles: app
-            artifact_name: release-aarch64-apple-darwin
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            bundles: app
-            artifact_name: release-x86_64-apple-darwin
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             bundles: appimage,deb
-            artifact_name: release-x86_64-unknown-linux-gnu
+            artifact_pattern: '*.AppImage,*.deb'
+
+          - os: macos-latest
+            target: universal-apple-darwin
+            bundles: dmg
+            artifact_pattern: '*.dmg'
+
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bundles: nsis
-            artifact_name: release-x86_64-pc-windows-msvc
+            bundles: nsis,msi
+            artifact_pattern: '*.exe,*.msi'
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ env.RELEASE_REF }}
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Linux system dependencies
-        if: runner.os == 'Linux'
-        shell: bash
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y libudev-dev \
-            build-essential \
-            libdbus-1-dev \
-            libssl-dev \
-            libudev-dev \
-            libusb-1.0-0-dev \
-            libgtk-3-dev \
+          sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
-            librsvg2-dev \
-            patchelf \
+            libgtk-3-dev \
             libayatana-appindicator3-dev \
-            pkg-config
+            librsvg2-dev \
+            patchelf
 
-      - name: Install macOS system dependencies
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-          brew install libusb
-
-      - name: Install Windows system dependencies
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $vcpkgRoot = if ($env:VCPKG_INSTALLATION_ROOT) { $env:VCPKG_INSTALLATION_ROOT } else { 'C:\vcpkg' }
-          & "$vcpkgRoot\vcpkg.exe" install libusb:x64-windows
-
-      - name: Install JavaScript dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm install --no-frozen-lockfile
-
-      - name: Prepare Tauri release config
-        shell: bash
+      - name: Import macOS signing certificate
+        if: matrix.os == 'macos-latest'
         env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import json
-          import os
+          echo "$APPLE_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import cert.p12 -k build.keychain \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
-          config_path = Path("src-tauri/tauri.conf.json")
-          release_config_path = Path("src-tauri/tauri.release.conf.json")
-          config = json.loads(config_path.read_text(encoding="utf-8"))
-          has_updater_secrets = os.environ["HAS_TAURI_UPDATER_SECRETS"] == "true"
+      - name: Install npm deps
+        run: npm ci
 
-          if not has_updater_secrets:
-              config.setdefault("bundle", {})["createUpdaterArtifacts"] = False
-
-          release_config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-          print(
-              f"Prepared {release_config_path.as_posix()} with createUpdaterArtifacts="
-              f"{config.get('bundle', {}).get('createUpdaterArtifacts')}"
-          )
-          PY
-
-      - name: Build Tauri bundles
-        shell: bash
-        env:
-          CI: "true"
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: "-"
-          TAURI_SKIP_NOTARIZATION: "true"
-        run: |
-          set -euo pipefail
-          if [ "${HAS_TAURI_UPDATER_SECRETS}" != "true" ]; then
-            unset TAURI_SIGNING_PRIVATE_KEY
-            unset TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-          fi
-          pnpm tauri build --config src-tauri/tauri.release.conf.json --target "${{ matrix.target }}" --bundles "${{ matrix.bundles }}"
-
-      - name: Build macOS PKG installer
-        if: runner.os == 'macOS'
-        shell: bash
-        env:
-          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ secrets.APPLE_INSTALLER_SIGNING_IDENTITY }}
-        run: |
-          set -euo pipefail
-          chmod +x src-tauri/resources/macos/pkg/postinstall
-          bash ./scripts/build_macos_pkg.sh --skip-build --config src-tauri/tauri.release.conf.json --target "${{ matrix.target }}"
-
-      - name: Stage release artifacts
-        shell: bash
-        env:
-          TARGET: ${{ matrix.target }}
-          VERSION: ${{ env.RELEASE_TAG }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import os
-          import shutil
-          import sys
-
-          target = os.environ["TARGET"]
-          version = os.environ["VERSION"].removeprefix("v")
-          bundle_dir = Path("target") / target / "release" / "bundle"
-          staging = Path("release-artifacts")
-          staging.mkdir(parents=True, exist_ok=True)
-
-          files = []
-          if target == "aarch64-apple-darwin":
-              files.extend(bundle_dir.glob("pkg/*.pkg"))
-              files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
-              files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
-              rename = {
-                  ".pkg": f"DeepEyeUnlocker_{version}_aarch64.pkg",
-                  ".app.tar.gz": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz",
-                  ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_aarch64.app.tar.gz.sig",
-              }
-          elif target == "x86_64-apple-darwin":
-              files.extend(bundle_dir.glob("pkg/*.pkg"))
-              files.extend(bundle_dir.glob("macos/*.app.tar.gz"))
-              files.extend(bundle_dir.glob("macos/*.app.tar.gz.sig"))
-              rename = {
-                  ".pkg": f"DeepEyeUnlocker_{version}_x86_64.pkg",
-                  ".app.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz",
-                  ".app.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.app.tar.gz.sig",
-              }
-          elif target == "x86_64-unknown-linux-gnu":
-              files.extend(bundle_dir.glob("appimage/*.AppImage"))
-              files.extend(bundle_dir.glob("appimage/*.AppImage.tar.gz"))
-              files.extend(bundle_dir.glob("appimage/*.AppImage.tar.gz.sig"))
-              files.extend(bundle_dir.glob("deb/*.deb"))
-              rename = {
-                  ".AppImage": f"DeepEyeUnlocker_{version}_x86_64.AppImage",
-                  ".AppImage.tar.gz": f"DeepEyeUnlocker_{version}_x86_64.AppImage.tar.gz",
-                  ".AppImage.tar.gz.sig": f"DeepEyeUnlocker_{version}_x86_64.AppImage.tar.gz.sig",
-                  ".deb": f"DeepEyeUnlocker_{version}_x86_64.deb",
-              }
-          elif target == "x86_64-pc-windows-msvc":
-              files.extend(bundle_dir.glob("nsis/*.exe"))
-              files.extend(bundle_dir.glob("nsis-updater/*.zip"))
-              files.extend(bundle_dir.glob("nsis-updater/*.zip.sig"))
-              rename = {}
-          else:
-              print(f"Unsupported target: {target}", file=sys.stderr)
-              sys.exit(1)
-
-          copied = []
-          for file_path in sorted({path for path in files if path.is_file()}):
-              name = file_path.name
-              if target == "x86_64-pc-windows-msvc":
-                  if "nsis-updater" in file_path.as_posix() and name.endswith(".zip"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip"
-                  elif "nsis-updater" in file_path.as_posix() and name.endswith(".zip.sig"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-nsis.zip.sig"
-                  elif name.endswith(".exe"):
-                      dest_name = f"DeepEyeUnlocker_{version}_x86_64-setup.exe"
-                  else:
-                      continue
-              else:
-                  dest_name = None
-                  for suffix, candidate in rename.items():
-                      if name.endswith(suffix):
-                          dest_name = candidate
-                          break
-                  if dest_name is None:
-                      continue
-
-              destination = staging / dest_name
-              shutil.copy2(file_path, destination)
-              copied.append(destination.as_posix())
-
-          if not copied:
-              print(f"No release artifacts found for {target}", file=sys.stderr)
-              sys.exit(1)
-
-          print("Staged artifacts:")
-          for item in copied:
-              print(item)
-          PY
-
-      - name: Upload platform artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: release-artifacts/*
-          if-no-files-found: error
-          retention-days: 30
-
-  android-build:
-    name: Android build release APK
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ env.RELEASE_REF }}
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Remove local org.gradle.java.home
-        shell: bash
-        run: |
-          set -euo pipefail
-          sed -i '/org\.gradle\.java\.home/d' gradle.properties || true
-
-      - name: Grant execute permission
-        shell: bash
-        run: chmod +x gradlew
-
-      - name: Decode Android keystore
-        shell: bash
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          set -euo pipefail
-          keystore_base64="${ANDROID_KEYSTORE_BASE64:-${KEYSTORE_BASE64:-}}"
-          if [ -z "${keystore_base64}" ]; then
-            echo "Missing ANDROID_KEYSTORE_BASE64 or KEYSTORE_BASE64 secret"
-            exit 1
-          fi
-          echo "${keystore_base64}" | base64 --decode > app/deepeye-release.jks
-
-      - name: Write Android signing properties
-        shell: bash
-        env:
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          KEY_PASS: ${{ secrets.KEY_PASS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-
-          store_password="${ANDROID_STORE_PASSWORD:-}"
-          if [ -z "${store_password}" ]; then
-            store_password="${KEYSTORE_PASS:-${STORE_PASSWORD:-}}"
-          fi
-
-          key_alias="${ANDROID_KEY_ALIAS:-${KEY_ALIAS:-}}"
-
-          key_password="${ANDROID_KEY_PASSWORD:-}"
-          if [ -z "${key_password}" ]; then
-            key_password="${KEY_PASS:-${KEY_PASSWORD:-}}"
-          fi
-
-          if [ -z "${store_password}" ] || [ -z "${key_alias}" ] || [ -z "${key_password}" ]; then
-            echo "Missing Android signing secrets"
-            exit 1
-          fi
-
-          cat > local.properties <<EOF
-          KEYSTORE_PATH=app/deepeye-release.jks
-          KEYSTORE_PASS=${store_password}
-          KEY_ALIAS=${key_alias}
-          KEY_PASS=${key_password}
-          EOF
-
-      - name: Build Android release APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace --info
-
-      - name: Stage Android release artifact
-        shell: bash
-        env:
-          VERSION: ${{ env.RELEASE_TAG }}
-        run: |
-          set -euo pipefail
-          version="${VERSION#v}"
-          mkdir -p release-artifacts
-          cp app/build/outputs/apk/release/app-release.apk "release-artifacts/DeepEyeUnlocker_${version}_android.apk"
-
-      - name: Upload Android artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-android
-          path: release-artifacts/*
-          if-no-files-found: error
-          retention-days: 30
-
-  create-release:
-    name: Create GitHub release
-    runs-on: ubuntu-latest
-    needs: [tauri-build, android-build]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ env.RELEASE_REF }}
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Generate release notes from changelog
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-          sections = []
-          current = []
-          for line in changelog.splitlines():
-              if line.startswith("## ["):
-                  if current:
-                      sections.append("\n".join(current).strip())
-                  current = [line]
-              elif current:
-                  current.append(line)
-          if current:
-              sections.append("\n".join(current).strip())
-
-          release_notes = sections[0] if sections else "Release notes unavailable."
-          Path("release_notes.md").write_text(release_notes + "\n", encoding="utf-8")
-          PY
-
-      - name: Generate latest.json
-        shell: bash
-        env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
-        run: |
-          set -euo pipefail
-          if [ "${HAS_TAURI_UPDATER_SECRETS}" != "true" ]; then
-            echo "Skipping latest.json generation because updater signing secrets are unavailable"
-            exit 0
-          fi
-          python3 - <<'PY'
-          from pathlib import Path
-          from urllib.parse import quote
-          import datetime as dt
-          import json
-          import os
-          import sys
-
-          artifacts_dir = Path("artifacts")
-          files = {path.name: path for path in artifacts_dir.rglob("*") if path.is_file()}
-          tag = os.environ["GITHUB_REF_NAME"]
-          version = tag.removeprefix("v")
-          repository = os.environ["GITHUB_REPOSITORY"]
-          notes = Path("release_notes.md").read_text(encoding="utf-8").strip()
-          base_url = f"https://github.com/{repository}/releases/download/{tag}/"
-
-          def signature_for(filename: str) -> str:
-              sig_name = f"{filename}.sig"
-              sig_path = files.get(sig_name)
-              if sig_path is None:
-                  raise FileNotFoundError(sig_name)
-              return sig_path.read_text(encoding="utf-8").strip()
-
-          platforms: dict[str, dict[str, str]] = {}
-
-          for filename in sorted(files):
-              if filename.endswith("_aarch64.app.tar.gz"):
-                  platforms["darwin-aarch64"] = {
-                      "url": base_url + quote(filename),
-                      "signature": signature_for(filename),
-                  }
-              elif filename.endswith("_x86_64.app.tar.gz"):
-                  platforms["darwin-x86_64"] = {
-                      "url": base_url + quote(filename),
-                      "signature": signature_for(filename),
-                  }
-              elif filename.endswith("_x86_64.AppImage.tar.gz"):
-                  platforms["linux-x86_64"] = {
-                      "url": base_url + quote(filename),
-                      "signature": signature_for(filename),
-                  }
-              elif filename.endswith("_x86_64-nsis.zip"):
-                  platforms["windows-x86_64"] = {
-                      "url": base_url + quote(filename),
-                      "signature": signature_for(filename),
-                  }
-
-          if not platforms:
-              print("No updater artifacts found to build latest.json", file=sys.stderr)
-              sys.exit(1)
-
-          latest = {
-              "version": version,
-              "notes": notes,
-              "pub_date": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-              "platforms": platforms,
-          }
-
-          Path("latest.json").write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
-          PY
-
-      - name: Sync releases/latest.json to main branch
-        shell: bash
-        env:
-          HAS_TAURI_UPDATER_SECRETS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD && 'true' || 'false' }}
-          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
-        run: |
-          set -euo pipefail
-          if [ "${HAS_TAURI_UPDATER_SECRETS}" != "true" ]; then
-            echo "Skipping releases/latest.json sync because updater signing secrets are unavailable"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout -B main origin/main
-          mkdir -p releases
-          cp latest.json releases/latest.json
-          if ! git diff --quiet -- releases/latest.json; then
-            git add releases/latest.json
-            git commit -m "chore(release): update latest.json for ${GITHUB_REF_NAME}"
-            git push origin HEAD:main
-          else
-            echo "releases/latest.json already up to date"
-          fi
-
-      - name: Prepare release asset list
-        id: release_assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          {
-            echo 'files<<EOF'
-            echo 'artifacts/**/*'
-            if [ -f latest.json ]; then
-              echo 'latest.json'
-            fi
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          draft: false
-          prerelease: false
-          body_path: release_notes.md
-          files: ${{ steps.release_assets.outputs.files }}
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS signing
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Windows signing (optional)
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          # Tauri updater key
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: >-
+            --target ${{ matrix.target }}
+            --bundles ${{ matrix.bundles }}
+
+  publish-release:
+    name: Publish release
+    needs: [create-release, build-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ needs.create-release.outputs.release_id }},
+              draft: false
+            })

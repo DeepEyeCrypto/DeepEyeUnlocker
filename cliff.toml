@@ -1,12 +1,16 @@
 [changelog]
-header = "# Changelog\n\n"
+header = """
+# Changelog\n
+All notable changes to DeepEyeUnlocker Desktop.\n
+"""
 body = """
-## {{ version }} — {{ timestamp | date(format=\"%Y-%m-%d\") }}
-
-{% for group, commits in commits | group_by(attribute=\"group\") %}
-### {{ group }}
+## [{{ version | trim_start_matches(pat="v") }}] \
+- {{ timestamp | date(format="%Y-%m-%d") }}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
 {% for commit in commits %}
-- {{ commit.message }} ([{{ commit.id | truncate(length=7, end=\"\") }}](https://github.com/DeepEyeCrypto/DeepEyeUnlocker/commit/{{ commit.id }}))
+- {{ commit.message | upper_first }}\
+  {% if commit.breaking %}[BREAKING]{% endif %}
 {% endfor %}
 {% endfor %}
 """
@@ -14,14 +18,14 @@ trim = true
 
 [git]
 conventional_commits = true
+filter_unconventional = true
 commit_parsers = [
-  { message = "^feat", group = "✨ Features" },
-  { message = "^fix", group = "🐛 Bug Fixes" },
-  { message = "^perf", group = "⚡ Performance" },
-  { message = "^refactor", group = "♻️ Refactor" },
-  { message = "^docs", group = "📝 Docs" },
-  { message = "^chore", group = "🔧 Chore" },
-  { message = "^ci", group = "👷 CI" },
+  { message = "^feat",     group = "Features"      },
+  { message = "^fix",      group = "Bug Fixes"     },
+  { message = "^perf",     group = "Performance"   },
+  { message = "^refactor", group = "Refactoring"   },
+  { message = "^test",     group = "Testing"       },
+  { message = "^ci",       group = "CI/CD"         },
+  { message = "^chore",    skip = true             },
+  { message = "^docs",     skip = true             },
 ]
-filter_commits = true
-tag_pattern = "v[0-9]*"

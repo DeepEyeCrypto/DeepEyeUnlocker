@@ -11,13 +11,13 @@ import AdbPage from '../../pages/AdbPage';
 import EdlPage from '../../pages/EdlPage';
 import MtkBromPage from '../../pages/MtkBromPage';
 import SamsungPage from '../../pages/SamsungPage';
-import SettingsPage from '../../pages/SettingsPage';
+import { SettingsScreen } from '../../screens/SettingsScreen';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useUpdateStore } from '../../stores/useUpdateStore';
 import RomManager from '../pages/RomManager';
 import { FilesystemEngine } from '../../modules/FilesystemEngine';
 import { FeatureRemapStudio } from '../workspace/FeatureRemapStudio';
 import { useDevicePolling } from '../../hooks/useDevicePolling';
-import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '../../lib/settings';
-import { checkForUpdate, type UpdateInfo, type UpdateStatus } from '../../lib/updater';
 import { getPlatform, initPlatform, type Platform } from '../../lib/platform';
 import {
   FEATURE_SUMMARY,
@@ -43,18 +43,14 @@ function humanizeConnectionState(value: string): string {
     .trim();
 }
 
-function humanizeUpdateStatus(status: UpdateStatus): string {
+function humanizeUpdateStatus(status: string): string {
   switch (status) {
     case 'available':
       return 'Available';
     case 'checking':
       return 'Checking';
-    case 'upToDate':
+    case 'idle':
       return 'Up to date';
-    case 'installing':
-      return 'Installing';
-    case 'error':
-      return 'Error';
     default:
       return 'Idle';
   }
@@ -84,15 +80,19 @@ function get_default_sidebar_collapsed(): boolean {
 
 export function MainLayout() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('control-center');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => get_default_sidebar_collapsed());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() =>
+    get_default_sidebar_collapsed(),
+  );
   const [platform, setPlatform] = useState<Platform | null>(getPlatform());
-  const [settings, setSettings] = useState<AppSettings>(() => loadAppSettings());
+  const { loadSettings } = useSettingsStore();
+  const { info: updateInfo, isChecking } = useUpdateStore();
+
   const [consoleLines, setConsoleLines] = useState<string[]>([
     '[system] DeepEye integrated desktop workspace initialized',
   ]);
-  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
-  const [updateMessage, setUpdateMessage] = useState('Update channel idle.');
+
+  const updateStatus = isChecking ? 'checking' : updateInfo?.updateAvailable ? 'available' : 'idle';
+  const updateMessage = updateInfo?.updateAvailable ? 'Update available.' : 'Up to date.';
   const deviceLogIndexRef = useRef(0);
   const layoutZoneRef = useRef<LayoutZone>(get_layout_zone());
 
@@ -103,7 +103,7 @@ export function MainLayout() {
     error,
     logs,
     refresh,
-  } = useDevicePolling(settings.usbDetectIntervalMs);
+  } = useDevicePolling();
 
   const appendConsole = useCallback((line: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -122,41 +122,9 @@ export function MainLayout() {
     setConsoleLines([]);
   }, []);
 
-  const handleSettingsChange = useCallback((next: Partial<AppSettings>) => {
-    setSettings((previous) => (Object.keys(next).length === 0 ? DEFAULT_APP_SETTINGS : { ...previous, ...next }));
-    appendConsole(
-      Object.keys(next).length === 0
-        ? '[settings] Desktop bridge settings restored to defaults.'
-        : '[settings] Desktop bridge settings updated.',
-    );
-  }, [appendConsole]);
-
-  const handleCheckForUpdates = useCallback(async () => {
-    setUpdateStatus('checking');
-    setUpdateMessage('Checking for desktop updates...');
-    appendConsole('[updater] Checking for desktop updates.');
-
-    try {
-      const nextUpdate = await checkForUpdate();
-      if (nextUpdate) {
-        setUpdateInfo(nextUpdate);
-        setUpdateStatus('available');
-        setUpdateMessage(`Update v${nextUpdate.version} available.`);
-        appendConsole(`[updater] Update v${nextUpdate.version} available.`);
-        return;
-      }
-
-      setUpdateInfo(null);
-      setUpdateStatus('upToDate');
-      setUpdateMessage('DeepEye is up to date.');
-      appendConsole('[updater] No newer release found.');
-    } catch (updateError: unknown) {
-      const message = String(updateError);
-      setUpdateStatus('error');
-      setUpdateMessage(message);
-      appendConsole(`[updater] ${message}`);
-    }
-  }, [appendConsole]);
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   useEffect(() => {
     void initPlatform()
@@ -189,17 +157,13 @@ export function MainLayout() {
   }, []);
 
   useEffect(() => {
-    saveAppSettings(settings);
-  }, [settings]);
-
-  useEffect(() => {
     if (logs.length <= deviceLogIndexRef.current) {
       return;
     }
 
     const nextLogs = logs.slice(deviceLogIndexRef.current);
     deviceLogIndexRef.current = logs.length;
-    nextLogs.forEach((line) => appendConsole(line));
+    nextLogs.forEach((line: string) => appendConsole(line));
   }, [appendConsole, logs]);
 
   useEffect(() => {
@@ -260,7 +224,7 @@ export function MainLayout() {
       'samsung-odin': String(FEATURE_SUMMARY.workspaceCounts['samsung-odin']),
       'wireless-adb': 'ADB',
       'signal-bypass': 'A12+',
-      settings: updateInfo ? `v${updateInfo.version}` : undefined,
+      settings: updateInfo ? `v${updateInfo.latestVersion}` : undefined,
     };
 
     return NAVIGATION_ITEMS.map((item) => ({
@@ -270,7 +234,8 @@ export function MainLayout() {
   }, [devices.length, updateInfo]);
 
   const metricCards = useMemo<MetricCard[]>(() => {
-    const activeWorkspaceRemaps = FEATURE_SUMMARY.workspaceCounts[activeWorkspace] || FEATURE_SUMMARY.totalFeatures;
+    const activeWorkspaceRemaps =
+      FEATURE_SUMMARY.workspaceCounts[activeWorkspace] || FEATURE_SUMMARY.totalFeatures;
 
     return [
       {
@@ -293,24 +258,38 @@ export function MainLayout() {
       },
       {
         label: 'Updates',
-        value: updateInfo ? `v${updateInfo.version}` : humanizeUpdateStatus(updateStatus),
+        value: updateInfo ? `v${updateInfo.latestVersion}` : humanizeUpdateStatus(updateStatus),
         meta: updateMessage,
       },
     ];
-  }, [activeWorkspace, connectionState, devices.length, error, primaryDevice, updateInfo, updateMessage, updateStatus]);
+  }, [
+    activeWorkspace,
+    connectionState,
+    devices.length,
+    error,
+    primaryDevice,
+    updateInfo,
+    updateMessage,
+    updateStatus,
+  ]);
 
-  const handleOpenWorkspace = useCallback((workspaceId: WorkspaceId, feature: RemappedFeature) => {
-    appendConsole(
-      `[remap] ${feature.brand} • ${feature.label} → ${WORKSPACE_META[workspaceId].label}${feature.commandHint ? ` (${feature.commandHint})` : ''}`,
-    );
-    setActiveWorkspace(workspaceId);
-  }, [appendConsole]);
+  const handleOpenWorkspace = useCallback(
+    (workspaceId: WorkspaceId, feature: RemappedFeature) => {
+      appendConsole(
+        `[remap] ${feature.brand} • ${feature.label} → ${WORKSPACE_META[workspaceId].label}${feature.commandHint ? ` (${feature.commandHint})` : ''}`,
+      );
+      setActiveWorkspace(workspaceId);
+    },
+    [appendConsole],
+  );
 
   const workspaceMeta = WORKSPACE_META[activeWorkspace];
   const appBodyStyle = useMemo<CSSProperties>(
     () =>
       ({
-        '--sidebar-current-width': sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)',
+        '--sidebar-current-width': sidebarCollapsed
+          ? 'var(--sidebar-collapsed)'
+          : 'var(--sidebar-width)',
       }) as CSSProperties,
     [sidebarCollapsed],
   );
@@ -348,16 +327,7 @@ export function MainLayout() {
       case 'history':
         return <HistoryScreen />;
       case 'settings':
-        return (
-          <SettingsPage
-            settings={settings}
-            onSettingsChange={handleSettingsChange}
-            onCheckForUpdates={handleCheckForUpdates}
-            updateStatus={updateStatus}
-            updateInfo={updateInfo}
-            updateMessage={updateMessage}
-          />
-        );
+        return <SettingsScreen />;
       default:
         return null;
     }
@@ -366,7 +336,7 @@ export function MainLayout() {
   return (
     <div className="app-layout main-layout">
       <DeviceStatusBar />
-      
+
       <div className="app-body" style={appBodyStyle}>
         <Sidebar
           active={activeWorkspace}
@@ -377,15 +347,20 @@ export function MainLayout() {
           onSelect={setActiveWorkspace}
           onToggleCollapsed={() => setSidebarCollapsed((previous) => !previous)}
         />
-        
+
         <main className="main-content">
           <div className="main-scroll-region">
             <div className="workspace-shell">
-              <section className="workspace-header glass-card" style={{ '--workspace-accent': workspaceMeta.color } as CSSProperties}>
+              <section
+                className="workspace-header glass-card"
+                style={{ '--workspace-accent': workspaceMeta.color } as CSSProperties}
+              >
                 <div className="workspace-header__copy">
                   <span className="workspace-eyebrow">{workspaceMeta.eyebrow}</span>
                   <h1 className="workspace-title">
-                    <span className="workspace-title__icon" aria-hidden="true">{workspaceMeta.icon}</span>
+                    <span className="workspace-title__icon" aria-hidden="true">
+                      {workspaceMeta.icon}
+                    </span>
                     {workspaceMeta.label}
                   </h1>
                   <p className="workspace-description">{workspaceMeta.description}</p>
@@ -405,7 +380,10 @@ export function MainLayout() {
 
               <section className="workspace-metric-grid metrics-row">
                 {metricCards.map((metric) => (
-                  <article key={metric.label} className="workspace-metric-card metric-card glass-card">
+                  <article
+                    key={metric.label}
+                    className="workspace-metric-card metric-card glass-card"
+                  >
                     <span className="workspace-metric-card__label">{metric.label}</span>
                     <strong className="workspace-metric-card__value">{metric.value}</strong>
                     <span className="workspace-metric-card__meta">{metric.meta}</span>
@@ -413,14 +391,16 @@ export function MainLayout() {
                 ))}
               </section>
 
-              <section className="workspace-content">
-                {renderWorkspace()}
-              </section>
+              <section className="workspace-content">{renderWorkspace()}</section>
             </div>
           </div>
         </main>
 
-        <ExecutionConsole lines={consoleLines} onClear={clearConsole} title="DESKTOP OPERATIONS BUS" />
+        <ExecutionConsole
+          lines={consoleLines}
+          onClear={clearConsole}
+          title="DESKTOP OPERATIONS BUS"
+        />
       </div>
     </div>
   );

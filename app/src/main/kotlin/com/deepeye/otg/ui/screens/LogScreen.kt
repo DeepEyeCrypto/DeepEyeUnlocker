@@ -87,7 +87,7 @@ fun LogScreen(
                 )
             }
 
-            Divider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.3f))
+            HorizontalDivider(color = DeepEyeColors.WHITE_LOW.copy(0.3f).copy(alpha = 0.3f))
 
             LazyColumn(
                 state = listState,

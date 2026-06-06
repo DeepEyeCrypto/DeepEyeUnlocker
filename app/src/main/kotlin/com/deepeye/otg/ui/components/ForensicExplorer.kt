@@ -54,7 +54,7 @@ fun ForensicExplorer(
             LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                 items(carvedFiles) { file ->
                     CarvedFileItem(file, onRepair)
-                    Divider(color = Color.DarkGray.copy(alpha = 0.5f))
+                    HorizontalDivider(color = Color.DarkGray.copy(alpha = 0.5f))
                 }
             }
         }

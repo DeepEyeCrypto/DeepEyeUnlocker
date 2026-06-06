@@ -2,13 +2,14 @@ package com.deepeye.otg.service
 
 import android.util.Log
 import com.deepeye.otg.BuildConfig
+import com.deepeye.otg.network.NetworkClient
+import com.deepeye.otg.network.TrafficTagRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
+import okhttp3.Request
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * Handles OTA update checks via GitHub Releases API.
@@ -29,13 +30,20 @@ object UpdateManager {
 
     suspend fun checkForUpdates(): UpdateInfo = withContext(Dispatchers.IO) {
         try {
-            val url = URL(GITHUB_API)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.setRequestProperty("Accept", "application/vnd.github.v3+json")
-            conn.connectTimeout = 5000
+            val client = NetworkClient.getClient(TrafficTagRegistry.TAG_UPDATE)
+            val request = Request.Builder()
+                .url(GITHUB_API)
+                .header("Accept", "application/vnd.github.v3+json")
+                .build()
+                
+            val response = client.newCall(request).execute()
             
-            if (conn.responseCode == 200) {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
+            if (response.isSuccessful) {
+                val body = response.body?.string() ?: ""
+                if (body.isEmpty()) {
+                    return@withContext UpdateInfo(false, BuildConfig.VERSION_NAME)
+                }
+                
                 val json = JSONObject(body)
                 val latestTag = json.getString("tag_name").removePrefix("v")
                 val currentTag = BuildConfig.VERSION_NAME

@@ -1,8 +1,10 @@
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/A12ServerBypass.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/A12Bypass/TokenCache.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/DeviceDetector.swift
+/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/F3arRa1nEngine.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/IosChain/HelloBypass.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/Logger.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/NetworkClient.swift
+/Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner+Async.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/Utils/ProcessRunner.swift
 /Users/enayat/Documents/DeepEyeUnlocker/src-tauri/swift/Sources/DeepEyeCore/main.swift

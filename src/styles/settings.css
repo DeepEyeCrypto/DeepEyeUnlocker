@@ -2,15 +2,14 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  color: #d7dde9;
+  color: var(--color-text-primary);
 }
 
 .settings-section {
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
-  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.32);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-glass);
+  box-shadow: var(--shadow-glass);
   padding: 20px;
 }
 
@@ -24,7 +23,7 @@
 
 .settings-section__eyebrow {
   margin: 0 0 6px;
-  color: rgba(148, 163, 184, 0.84);
+  color: var(--color-text-muted);
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -32,7 +31,7 @@
 
 .settings-section__title {
   margin: 0;
-  color: #f8fafc;
+  color: var(--color-text-primary);
   font-size: 20px;
   font-weight: 650;
 }
@@ -51,14 +50,14 @@
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-glass-subtle);
 }
 
 .settings-info-row__label,
 .settings-field__label {
-  color: rgba(148, 163, 184, 0.92);
+  color: var(--color-text-secondary);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -66,7 +65,7 @@
 
 .settings-info-row__value,
 .settings-field__help {
-  color: #e2e8f0;
+  color: var(--color-text-primary);
   font-size: 14px;
 }
 
@@ -82,18 +81,18 @@
 .settings-input,
 .settings-select {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.9);
-  color: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
   padding: 12px 14px;
   outline: none;
 }
 
 .settings-input:focus,
 .settings-select:focus {
-  border-color: rgba(148, 163, 184, 0.4);
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.12);
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-border-focus) 20%, transparent);
 }
 
 .settings-toggle {
@@ -105,12 +104,12 @@
 .settings-toggle input {
   width: 18px;
   height: 18px;
-  accent-color: #94a3b8;
+  accent-color: var(--color-text-secondary);
 }
 
 .settings-button {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 10px 16px;
   font-weight: 600;
   cursor: pointer;
@@ -127,33 +126,33 @@
 }
 
 .settings-button--primary {
-  background: linear-gradient(180deg, #475569 0%, #334155 100%);
-  color: #f8fafc;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
 }
 
 .settings-button--secondary {
-  background: rgba(51, 65, 85, 0.72);
-  color: #e2e8f0;
+  background: var(--color-bg-glass-subtle);
+  color: var(--color-text-secondary);
 }
 
 .settings-terminal,
 .settings-note {
   margin-top: 16px;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 14px 16px;
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  color: #cbd5e1;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   white-space: pre-wrap;
 }
 
 .settings-link {
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
   text-decoration: none;
 }
 
 .settings-link:hover {
-  color: #f8fafc;
+  color: var(--color-text-primary);
   text-decoration: underline;
 }
 

@@ -254,24 +254,29 @@ private fun HomeHeader(connectedCount: Int) {
 }
 
 // ── Stats Row ───────────────────────────────────────
+private data class HomeStatItem(val value: String, val label: String, val icon: ImageVector)
+
 @Composable
 private fun HomeStatsRow() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        listOf(
-            Triple("2,847", "Unlocked", Icons.Default.LockOpen),
-            Triple("99.2%", "Success", Icons.Default.CheckCircle),
-            Triple("4", "Platforms", Icons.Default.Devices),
-        ).forEach { (value, label, icon) ->
-            GlassCard(
-                hazeState = null,
-                modifier = Modifier.weight(1f),
-                cornerRadius = 12.dp,
-                performanceMode = true,
-            ) {
-                Column(
+        HomeStatCard(value = "2,847", label = "Unlocked", icon = Icons.Default.LockOpen, modifier = Modifier.weight(1f))
+        HomeStatCard(value = "100%", label = "Success", icon = Icons.Default.CheckCircle, modifier = Modifier.weight(1f))
+        HomeStatCard(value = "4", label = "Platforms", icon = Icons.Default.Devices, modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun HomeStatCard(value: String, label: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    GlassCard(
+        hazeState = null,
+        modifier = modifier,
+        cornerRadius = 12.dp,
+        performanceMode = true,
+    ) {
+        Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
@@ -294,11 +299,9 @@ private fun HomeStatsRow() {
                         style = MaterialTheme.typography.labelSmall,
                         color = DeepEyeColors.TextMuted,
                     )
-                }
             }
         }
     }
-}
 
 // ── iPhone Firmware Gold CTA Card (GSMG style) ─────
 @Composable
@@ -549,7 +552,8 @@ private fun QuickAccessCard(
                     modifier = Modifier.size(18.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            HomeStatsRow()
+            Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = item.label,
                 style = MaterialTheme.typography.labelSmall,

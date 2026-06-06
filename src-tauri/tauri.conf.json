@@ -26,7 +26,10 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com; font-src 'self' https://api.fontshare.com https://fonts.gstatic.com; img-src 'self' ; connect-src 'self'",
+      "dangerousDisableAssetCspModification": false,
+      "freezePrototype": true,
+      "devCsp": null
     }
   },
   "bundle": {
@@ -58,7 +61,7 @@
     },
     "macOS": {
       "entitlements": "Entitlements.plist",
-      "minimumSystemVersion": "10.13"
+      "minimumSystemVersion": "10.15"
     }
   },
   "plugins": {

@@ -97,10 +97,19 @@ impl FastbootSession {
             self.write(chunk)?;
         }
 
-        // Wait for OKAY
+        // Wait for OKAY after download
         let status = self.read_response()?;
-        if status != "OKAY" {
-            return Err(format!("Flash failed: {}", status));
+        if !status.starts_with("OKAY") {
+            return Err(format!("Download failed: {}", status));
+        }
+
+        // Send actual flash command
+        self.send_command(&format!("flash:{}", partition))?;
+
+        // Wait for OKAY after flash
+        let flash_status = self.read_response()?;
+        if !flash_status.starts_with("OKAY") {
+            return Err(format!("Flash failed: {}", flash_status));
         }
 
         log::info!("[Fastboot] Successfully flashed '{}'", partition);
@@ -144,12 +153,9 @@ impl FastbootSession {
         self.send_command(&format!("getvar:{}", name))?;
         let response = self.read_response()?;
 
-        // Response format: "OKAY" or "<name>: <value>"
-        if response.starts_with(name) {
-            Ok(response
-                .split_once(':')
-                .map(|(_, value)| value.trim().to_string())
-                .unwrap_or_default())
+        // Fastboot protocol returns "OKAY<value>"
+        if let Some(stripped) = response.strip_prefix("OKAY") {
+            Ok(stripped.trim().to_string())
         } else {
             Ok(String::new())
         }

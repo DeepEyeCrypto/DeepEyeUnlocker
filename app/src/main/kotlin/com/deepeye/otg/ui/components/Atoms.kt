@@ -150,7 +150,7 @@ fun PulsingDot(color: Color, size: Dp = 5.dp, active: Boolean = true) {
 
 // ── NeonDivider ───────────────────────────────────────────────
 @Composable
-fun NeonDivider(color: Color = DeepEyeColors.WHITE_LOW, modifier: Modifier = Modifier) {
+fun NeonHorizontalDivider(color: Color = DeepEyeColors.WHITE_LOW, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxWidth()

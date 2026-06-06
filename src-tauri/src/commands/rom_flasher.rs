@@ -332,6 +332,24 @@ async fn reboot_via_adb_or_fastboot(
 /// Flash a custom ROM ZIP via TWRP sideload (device must be in TWRP sideload mode)
 #[tauri::command]
 pub async fn rom_sideload_zip(app: AppHandle, zip_path: String) -> Result<FlashResult, String> {
+    if zip_path.contains("..") {
+        return Err("Path traversal detected".to_string());
+    }
+    let path = Path::new(&zip_path);
+    let path_resolver = app.path();
+    let is_safe = [
+        path_resolver.document_dir(),
+        path_resolver.download_dir(),
+        path_resolver.desktop_dir(),
+    ]
+    .into_iter()
+    .flatten()
+    .any(|allowed| path.starts_with(allowed));
+
+    if !is_safe {
+        return Err("ZIP file must be in Documents, Downloads, or Desktop".to_string());
+    }
+
     ensure_existing_file(&zip_path, Some("zip"))?;
 
     let output = run_tool_command(&app, "adb", vec!["sideload".to_string(), zip_path]).await?;
@@ -359,6 +377,24 @@ pub async fn rom_flash_partition(
     image_path: String,
     serial: Option<String>,
 ) -> Result<FlashResult, String> {
+    if image_path.contains("..") {
+        return Err("Path traversal detected".to_string());
+    }
+    let path = Path::new(&image_path);
+    let path_resolver = app.path();
+    let is_safe = [
+        path_resolver.document_dir(),
+        path_resolver.download_dir(),
+        path_resolver.desktop_dir(),
+    ]
+    .into_iter()
+    .flatten()
+    .any(|allowed| path.starts_with(allowed));
+
+    if !is_safe {
+        return Err("Image file must be in Documents, Downloads, or Desktop".to_string());
+    }
+
     validate_token("partition", &partition)?;
     ensure_existing_file(&image_path, None)?;
 

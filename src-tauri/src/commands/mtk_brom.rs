@@ -385,23 +385,6 @@ fn lock_active_session() -> Result<MutexGuard<'static, Option<ActiveBromSession>
         .map_err(|_| BromError::UsbError("Active BROM session lock poisoned".to_string()))
 }
 
-fn replace_active_session(session: ActiveBromSession) -> Result<(), BromError> {
-    let previous_session = {
-        let mut guard = lock_active_session()?;
-        guard.replace(session)
-    };
-
-    if let Some(previous_session) = previous_session {
-        if let Err(error) =
-            release_claimed_interface(&previous_session.handle, previous_session.layout)
-        {
-            debug_log(format!("session cleanup warning: {error}"));
-        }
-    }
-
-    Ok(())
-}
-
 fn take_active_session() -> Result<Option<ActiveBromSession>, BromError> {
     let mut guard = lock_active_session()?;
     Ok(guard.take())
@@ -453,15 +436,10 @@ fn open_handshaken_session() -> Result<ActiveBromSession, BromError> {
 }
 
 fn ensure_active_session() -> Result<(), BromError> {
-    let has_active_session = {
-        let guard = lock_active_session()?;
-        guard.is_some()
-    };
-
-    if !has_active_session {
-        replace_active_session(open_handshaken_session()?)?;
+    let mut guard = lock_active_session()?;
+    if guard.is_none() {
+        *guard = Some(open_handshaken_session()?);
     }
-
     Ok(())
 }
 
@@ -868,13 +846,17 @@ pub fn da_read_imei(handle: &DeviceHandle<GlobalContext>) -> Result<ImeiInfo, Br
 
     let mut count_buf = [0u8; 4];
     read_exact(handle, &mut count_buf)?;
-    let count = u32::from_be_bytes(count_buf) as usize;
+    let mut count = u32::from_be_bytes(count_buf) as usize;
     debug_log(format!("da_read_imei: device reports {count} IMEI(s)"));
 
     if count == 0 {
         return Err(BromError::InvalidImei(
             "Device returned 0 IMEIs".to_string(),
         ));
+    }
+    if count > 4 {
+        count = 4;
+        debug_log("da_read_imei: capped IMEI count to 4");
     }
 
     let mut imeis: Vec<String> = Vec::with_capacity(count);
@@ -1022,6 +1004,11 @@ pub fn da_read_partition(
         if chunk_len == 0 {
             break;
         }
+        if chunk_len > 1048576 {
+            return Err(BromError::DaUploadFailed(format!(
+                "Device sent invalid chunk size: {chunk_len}"
+            )));
+        }
 
         let mut chunk = vec![0u8; chunk_len];
         read_exact(handle, &mut chunk)?;
@@ -1125,27 +1112,33 @@ pub fn da_erase_partition_generic(
 // ── DA blocking wrappers ────────────────────────────────────────────────────
 
 fn erase_frp_blocking() -> Result<(), BromError> {
-    with_temporary_brom_handle(da_erase_frp)
+    ensure_active_session()?;
+    with_active_session(|session| da_erase_frp(&session.handle))
 }
 
 fn format_userdata_blocking() -> Result<(), BromError> {
-    with_temporary_brom_handle(da_format_userdata)
+    ensure_active_session()?;
+    with_active_session(|session| da_format_userdata(&session.handle))
 }
 
 fn read_imei_blocking() -> Result<ImeiInfo, BromError> {
-    with_temporary_brom_handle(da_read_imei)
+    ensure_active_session()?;
+    with_active_session(|session| da_read_imei(&session.handle))
 }
 
 fn write_imei_blocking(imei1: String, imei2: Option<String>) -> Result<(), BromError> {
-    with_temporary_brom_handle(|handle| da_write_imei(handle, &imei1, imei2.as_deref()))
+    ensure_active_session()?;
+    with_active_session(|session| da_write_imei(&session.handle, &imei1, imei2.as_deref()))
 }
 
 fn reboot_blocking(mode: u8) -> Result<(), BromError> {
-    with_temporary_brom_handle(|handle| da_reboot(handle, mode))
+    ensure_active_session()?;
+    with_active_session(|session| da_reboot(&session.handle, mode))
 }
 
 fn list_partitions_blocking() -> Result<Vec<PartitionEntry>, BromError> {
-    with_temporary_brom_handle(da_list_partitions)
+    ensure_active_session()?;
+    with_active_session(|session| da_list_partitions(&session.handle))
 }
 
 fn read_partition_blocking(
@@ -1155,23 +1148,27 @@ fn read_partition_blocking(
     out_path: String,
 ) -> Result<u64, BromError> {
     let path = std::path::PathBuf::from(&out_path);
-    with_temporary_brom_handle(|handle| da_read_partition(handle, &name, offset, length, &path))
+    ensure_active_session()?;
+    with_active_session(|session| da_read_partition(&session.handle, &name, offset, length, &path))
 }
 
 fn write_partition_blocking(name: String, offset: u64, data_path: String) -> Result<(), BromError> {
     let data = fs::read(&data_path).map_err(|e| {
         BromError::DaUploadFailed(format!("Cannot read data file '{data_path}': {e}"))
     })?;
-    with_temporary_brom_handle(|handle| da_write_partition(handle, &name, offset, &data))
+    ensure_active_session()?;
+    with_active_session(|session| da_write_partition(&session.handle, &name, offset, &data))
 }
 
 fn dump_preloader_blocking(out_path: String) -> Result<u64, BromError> {
     let path = std::path::PathBuf::from(&out_path);
-    with_temporary_brom_handle(|handle| da_dump_preloader(handle, &path))
+    ensure_active_session()?;
+    with_active_session(|session| da_dump_preloader(&session.handle, &path))
 }
 
 fn erase_partition_blocking(name: String) -> Result<(), BromError> {
-    with_temporary_brom_handle(|handle| da_erase_partition_generic(handle, &name))
+    ensure_active_session()?;
+    with_active_session(|session| da_erase_partition_generic(&session.handle, &name))
 }
 
 #[tauri::command]

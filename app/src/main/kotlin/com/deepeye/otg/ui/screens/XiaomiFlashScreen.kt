@@ -205,7 +205,7 @@ fun DeviceInfoCard(
 
             if (deviceInfo != null) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider()
+                HorizontalDivider()
                 Spacer(modifier = Modifier.height(12.dp))
 
                 InfoRow("Model", deviceInfo.model)
@@ -498,7 +498,7 @@ fun ActionButtonsSection(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(12.dp))
 
             // Bootloader unlock

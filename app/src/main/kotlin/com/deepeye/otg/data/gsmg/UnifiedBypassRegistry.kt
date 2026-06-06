@@ -44,6 +44,49 @@ object UnifiedBypassRegistry {
     }
 
     val all: List<BypassFeature> = listOf(
+        // F3arRa1n Hello Screen Bypass
+        BypassFeature(
+            id           = "F3ARRAIN_HELLO_BYPASS",
+            source       = FeatureSource.F3ARRAIN,
+            displayName  = "Hello Screen Bypass (F3arRa1n)",
+            description  = "iCloud activation lock bypass. iPhone 5S–X. iOS 12–16.7.8",
+            category     = FeatureCategory.ICLOUD_BYPASS,
+            mechanism    = BypassMechanism.CHECKM8_IRAIN,
+            chipRange    = ChipRange.A7_TO_A11,
+            iosRange     = "iOS 12.0–16.7.8",
+            costCredits  = 0,
+            isFree       = true,
+            signalAfter  = false,
+            iServicesAfter = false,
+            isUntethered   = false,
+            dataLoss     = false,
+            riskLevel    = RiskLevel.LOW,
+            tags         = listOf("checkm8", "f3arrain", "hello", "activation",
+                                  "a7","a8","a9","a10","a11",
+                                  "5s","6","6s","7","8","x","se"),
+            executionSteps = listOf(
+                ExecutionStep(1, "Detect",     "Reading device via USB", true, 10),
+                ExecutionStep(2, "DFU Guide",  "Enter DFU mode", false, 30),
+                ExecutionStep(3, "checkm8",    "gaster pwn exploit", true, 30),
+                ExecutionStep(4, "Ramdisk",    "palera1n ramdisk boot", true, 180),
+                ExecutionStep(5, "Activation", "ideviceactivation patch", true, 60),
+            ),
+            iosMinVersion = "12.0",
+            iosMaxVersion = "16.7.8",
+            confidence = ConfidenceLevel.CONFIRMED,
+            requiresJailbreak = false,
+            isOffline = false,
+            noDataLoss = false,
+            requiresInternet = true,
+            requiresDfu = true,
+            requiresImei = false,
+            riskNotes = emptyList(),
+            supportedBrands = emptyList(),
+            supportedChipsets = emptyList(),
+            connectionMode = "DFU",
+            detailedDescription = "iCloud activation lock bypass via palera1n ramdisk.",
+            successSteps = emptyList()
+        ),
         // ICLOUD_HELLO_NO_SIGNAL
         BypassFeature(
             id                  = "ICLOUD_HELLO_NO_SIGNAL",

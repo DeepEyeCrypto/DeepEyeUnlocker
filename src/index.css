@@ -1,13 +1,48 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DeepEye Unlocker — Tailwind Theme Bridge
+   Maps unified CSS tokens to Tailwind's theme system.
+   All token definitions live in tokens.css — this file only bridges them.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-cyan-400: var(--color-accent);
+  --color-purple-400: var(--color-purple);
+  --color-green-400: var(--color-green);
+  --color-orange-400: var(--color-orange);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
-pre, code {
-  font-family: 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ── Shimmer Animation (skeleton loading) ────────────────────────────────── */
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ── Scrollbar Utilities ─────────────────────────────────────────────────── */
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Neon Pulse (skeleton/loading state) ─────────────────────────────────── */
+
+@keyframes neonPulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }

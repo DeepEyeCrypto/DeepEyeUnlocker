@@ -33,7 +33,7 @@ import com.deepeye.otg.ui.theme.DeepEyeColors
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun GlassCard(
@@ -91,7 +91,7 @@ fun GlassCard(
             .clip(shape)
             .then(
                 if (hazeState != null && !performanceMode) {
-                    Modifier.hazeEffect(state = hazeState, style = hazeStyle)
+                    Modifier.hazeChild(state = hazeState, style = hazeStyle)
                 } else {
                     Modifier.background(
                         brush = Brush.linearGradient(

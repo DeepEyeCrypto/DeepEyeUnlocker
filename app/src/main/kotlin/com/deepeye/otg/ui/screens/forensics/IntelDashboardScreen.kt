@@ -114,7 +114,7 @@ fun IntelDashboardScreen(
                 LazyColumn(Modifier.padding(8.dp)) {
                     items(report.vulnerabilities) { v ->
                         CveItem(v.id, v.score, v.description)
-                        Divider(color = DeepEyeColors.SurfaceSubtle, thickness = 0.5.dp)
+                        HorizontalDivider(color = DeepEyeColors.SurfaceSubtle, thickness = 0.5.dp)
                     }
                 }
             }

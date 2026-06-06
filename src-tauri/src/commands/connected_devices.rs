@@ -3,9 +3,7 @@ use tauri::AppHandle;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
-use crate::commands::activation::ios_check_activation_state;
 use crate::commands::edl::edl_find_device;
-use crate::commands::identity::ios_device_identity;
 use crate::commands::mtk::mtk_device_info;
 use crate::commands::orchestrator::ios_poll_orchestrator;
 use crate::commands::unisoc::unisoc_detect_device;
@@ -189,30 +187,32 @@ pub async fn get_connected_devices(app: AppHandle) -> Result<Vec<ConnectedDevice
 
     if let Ok(mode) = ios_poll_orchestrator(app.clone()).await {
         let normalized_mode = mode.mode.to_lowercase();
-        if !normalized_mode.contains("unknown") && !normalized_mode.contains("unsupported") {
-            let activation = ios_check_activation_state(app.clone(), String::new())
+        if !normalized_mode.contains("unknown")
+            && !normalized_mode.contains("unsupported")
+            && !normalized_mode.contains("disconnected")
+        {
+            let id = collect_command_output(&app, "idevice_id", vec!["-l".to_string()])
                 .await
-                .ok();
-            let identity = ios_device_identity(app.clone(), String::new()).await.ok();
+                .unwrap_or_default()
+                .lines()
+                .next()
+                .unwrap_or("apple-device")
+                .trim()
+                .to_string();
 
-            let id = identity
-                .as_ref()
-                .map(|entry| entry.udid.clone())
-                .filter(|value| !value.is_empty())
-                .or_else(|| identity.as_ref().and_then(|entry| entry.serial.clone()))
-                .unwrap_or_else(|| "apple-device".to_string());
+            let model = if normalized_mode == "normal" {
+                collect_command_output(
+                    &app,
+                    "ideviceinfo",
+                    vec!["-k".to_string(), "ProductType".to_string()],
+                )
+                .await
+                .unwrap_or_else(|_| "Apple Device".to_string())
+            } else {
+                "Apple Device (Recovery/DFU)".to_string()
+            };
 
-            let serial = identity
-                .as_ref()
-                .and_then(|entry| entry.serial.clone())
-                .filter(|value| !value.is_empty())
-                .unwrap_or_else(|| id.clone());
-
-            let model = activation
-                .as_ref()
-                .map(|entry| entry.model.clone())
-                .filter(|value| !value.is_empty())
-                .unwrap_or_else(|| "Apple Device".to_string());
+            let serial = id.clone();
 
             devices.push(ConnectedDevice {
                 id,

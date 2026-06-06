@@ -6,12 +6,16 @@ use serde::Serialize;
 pub enum ProtocolType {
     MtkBrom,
     MtkPreloader,
+    MtkDa,
     QualcommEdl,
     Fastboot,
     SamsungOdin,
     UnisocFdl,
     Adb,
     Mtp,
+    /// Android Recovery — supports ADB sideload, NOT fastboot
+    /// (only Pixel/AOSP have fastbootd in recovery)
+    Recovery,
     Unknown,
 }
 
@@ -28,7 +32,8 @@ pub struct DeviceConnectionStatus {
 pub struct ProtocolRouter;
 
 impl ProtocolRouter {
-    /// Auto-detect connected device
+    /// Auto-detect connected device.
+    /// Priority: BROM > EDL > SamsungOdin > Fastboot > PreLoader > UnisocFdl > Recovery > Adb
     pub fn auto_detect() -> Result<DetectedDevice, String> {
         let devices = scan_usb_devices()?;
 
@@ -36,14 +41,16 @@ impl ProtocolRouter {
             return Err("No supported devices found".into());
         }
 
-        // Return first detected device (prioritize by mode)
+        // Priority: low-level flash modes first, then higher-level modes
         let priority_order = [
             DeviceMode::Brom,
+            DeviceMode::MtkDa,
             DeviceMode::Edl,
-            DeviceMode::Fastboot,
             DeviceMode::SamsungOdin,
+            DeviceMode::Fastboot,
             DeviceMode::PreLoader,
             DeviceMode::UnisocFdl,
+            DeviceMode::Recovery,
             DeviceMode::Adb,
         ];
 
@@ -62,13 +69,17 @@ impl ProtocolRouter {
         match mode {
             DeviceMode::Brom => ProtocolType::MtkBrom,
             DeviceMode::PreLoader => ProtocolType::MtkPreloader,
+            DeviceMode::MtkDa => ProtocolType::MtkDa,
             DeviceMode::Edl => ProtocolType::QualcommEdl,
             DeviceMode::Fastboot => ProtocolType::Fastboot,
             DeviceMode::SamsungOdin => ProtocolType::SamsungOdin,
             DeviceMode::UnisocFdl => ProtocolType::UnisocFdl,
             DeviceMode::Adb => ProtocolType::Adb,
             DeviceMode::Mtp => ProtocolType::Mtp,
-            DeviceMode::Recovery => ProtocolType::Fastboot, // Recovery often supports fastboot
+            // Recovery uses ADB sideload protocol, NOT fastboot.
+            // Only Pixel/AOSP devices have fastbootd in recovery;
+            // Samsung/Xiaomi/OPPO recovery = ADB only.
+            DeviceMode::Recovery => ProtocolType::Recovery,
             DeviceMode::Unknown(_) => ProtocolType::Unknown,
         }
     }
@@ -78,6 +89,7 @@ impl ProtocolRouter {
         let mode_str = match &device.mode {
             DeviceMode::Brom => "MediaTek BROM",
             DeviceMode::PreLoader => "MediaTek PreLoader",
+            DeviceMode::MtkDa => "MediaTek DA",
             DeviceMode::Edl => "Qualcomm EDL",
             DeviceMode::Fastboot => "Fastboot",
             DeviceMode::Adb => "Android ADB",
@@ -88,34 +100,87 @@ impl ProtocolRouter {
             DeviceMode::Unknown(pid) => return format!("Unknown device (PID: {:04X})", pid),
         };
 
-        let serial_info = device
-            .serial
+        // Build description: mode + product name or serial
+        let extra = device
+            .product
             .as_ref()
-            .map(|s| format!(" [{}]", s))
+            .map(|p| format!(" — {}", p))
+            .or_else(|| device.serial.as_ref().map(|s| format!(" [{}]", s)))
             .unwrap_or_default();
 
-        format!("{}{}", mode_str, serial_info)
+        format!("{}{}", mode_str, extra)
     }
 
-    /// Get chipset info based on device characteristics
+    /// Get chipset info based on device characteristics.
+    /// Uses VID/PID + product string for more accurate identification.
     pub fn identify_chipset(device: &DetectedDevice) -> Option<String> {
-        // MTK chips can be identified from VID/PID patterns
-        if device.vid == 0x0E8D {
-            match device.pid {
-                0x0003 => Some("MediaTek BootROM".to_string()),
-                0x2000 => Some("MediaTek PreLoader".to_string()),
-                _ => None,
-            }
-        } else if device.vid == 0x05C6 {
-            match device.pid {
+        match device.vid {
+            // MediaTek — VID/PID based
+            0x0E8D => match device.pid {
+                0x0003 => {
+                    // BROM: try to extract SoC from product string
+                    device
+                        .product
+                        .as_ref()
+                        .and_then(|p| extract_mtk_soc(p))
+                        .or_else(|| Some("MediaTek BootROM".to_string()))
+                }
+                0x2000 | 0x0006 => Some("MediaTek PreLoader".to_string()),
+                0x2001 => Some("MediaTek DA".to_string()),
+                0x0C01 => Some("MediaTek Fastboot".to_string()),
+                _ => Some(format!("MediaTek (PID:{:04X})", device.pid)),
+            },
+
+            // Qualcomm — VID/PID based
+            0x05C6 => match device.pid {
                 0x9008 => Some("Qualcomm EDL 9008".to_string()),
                 0x900E => Some("Qualcomm EDL 900E".to_string()),
-                _ => None,
-            }
-        } else {
-            None
+                _ => Some(format!("Qualcomm (PID:{:04X})", device.pid)),
+            },
+
+            // Samsung — infer from product string
+            0x04E8 => device
+                .product
+                .as_ref()
+                .map(|p| format!("Samsung — {}", p))
+                .or_else(|| Some("Samsung".to_string())),
+
+            // Xiaomi
+            0x2717 => device
+                .product
+                .as_ref()
+                .map(|p| format!("Xiaomi — {}", p))
+                .or_else(|| Some("Xiaomi".to_string())),
+
+            // Huawei
+            0x12D1 => Some("Huawei/Honor".to_string()),
+
+            // OPPO/Realme
+            0x22D9 => Some("OPPO/Realme".to_string()),
+
+            // OnePlus
+            0x2A70 => Some("OnePlus".to_string()),
+
+            _ => None,
         }
     }
+}
+
+/// Try to extract MTK SoC name from USB product string.
+/// BROM product strings often contain chip identifiers like "MT6765" or "MT6833".
+fn extract_mtk_soc(product: &str) -> Option<String> {
+    // Look for MT#### pattern
+    let upper = product.to_uppercase();
+    if let Some(pos) = upper.find("MT") {
+        let soc: String = upper[pos..]
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric())
+            .collect();
+        if soc.len() >= 6 {
+            return Some(soc);
+        }
+    }
+    None
 }
 
 /// Scan and return all connected devices with status
